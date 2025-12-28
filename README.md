@@ -1,75 +1,13 @@
-# Nuxt Minimal Starter
+## 🚀 About
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+This is a personal tech blog for software engineers.
 
-## Setup
+### ✅ TODO
 
-Make sure to install dependencies:
-
-```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+- [ ] published: trueの記事のみ取得する関数を共通化する
+- [ ] 内部記事へのリンクのみ、hover時に内容をpreviewする(obsidian風)
+- [ ] <a>タグのスタイル最適化
+- [ ] 記事のdefaultサムネ画像の作成
+- [ ] ダークモード対応(https://b1san-blog.com/post/nuxt3/nuxt3-blog/)
+- [ ] 目次のisOpen時、目次以外をタップしたら目次を閉じるようにする(?)
+- [ ] 表示/非表示の挙動を、アニメーション -> 計算 にしたい
