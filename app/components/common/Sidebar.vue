@@ -5,7 +5,7 @@
       <slot name="toc" />
 
       <!-- Potential other widgets -->
-      <div class="bg-base border border-border rounded-lg p-6">
+      <div class="border border-border rounded-lg p-6">
         <h4 class="font-bold text-main mb-4 text-sm">Design Philosophy</h4>
         <p class="text-xs text-sub leading-relaxed">
           Functional Minimalism for Experts.

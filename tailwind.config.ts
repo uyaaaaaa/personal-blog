@@ -13,10 +13,10 @@ export default <Config>{
   theme: {
     extend: {
       colors: {
-        base: '#F9F9F9',
+        base: '#FAF5FF',
         main: '#1A1A1A',
         sub: '#888888',
-        accent: '#007AFF', // Tech Blue
+        accent: '#8B5CF6',
         border: '#E5E5E5',
         'code-bg': '#F5F5F5'
       },
