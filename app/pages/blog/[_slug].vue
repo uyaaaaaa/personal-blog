@@ -58,7 +58,7 @@ watch(() => page.value, async () => {
         <!-- Article Header -->
         <header class="space-y-4 border-b border-border pb-8">
           <div class="flex items-center gap-3 text-sm text-sub font-mono">
-             <span v-if="page.date">{{ new Date(page.date).toLocaleDateString() }}</span>
+             <span v-if="page.date">{{ formatDate(page.date) }}</span>
              <div v-if="page.tags" class="flex gap-2">
                <span v-for="tag in page.tags" :key="tag" class="text-accent">#{{ tag }}</span>
              </div>

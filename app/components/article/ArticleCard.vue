@@ -49,12 +49,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const formattedDate = computed(() => {
-  if (!props.date) return ''
-  return new Date(props.date).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).replace(/\//g, '.')
+  return formatDate(props.date)
 })
 </script>
 
