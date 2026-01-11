@@ -5,4 +5,7 @@ export default defineNuxtConfig({
     '@nuxt/content',
     '@nuxtjs/tailwindcss',
   ],
+  nitro: {
+    preset: 'cloudflare-pages'
+  },
 })
