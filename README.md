@@ -1,13 +1,11 @@
 ## 🚀 About
 
-This is a personal tech blog for software engineers.
+This is a personal tech blog system for me.
 
-### ✅ TODO
+### 📋 TODO
 
-- [ ] published: trueの記事のみ取得する関数を共通化する
-- [ ] 内部記事へのリンクのみ、hover時に内容をpreviewする(obsidian風)
-- [ ] <a>タグのスタイル最適化
-- [ ] 記事のdefaultサムネ画像の作成
-- [ ] ダークモード対応(https://b1san-blog.com/post/nuxt3/nuxt3-blog/)
-- [ ] 目次のisOpen時、目次以外をタップしたら目次を閉じるようにする(?)
-- [ ] 表示/非表示の挙動を、アニメーション -> 計算 にしたい
+- [ ] Update annotation style like obsidian.
+- [ ] Generalize method to fetch **only** articles of 'published: true'.
+- [ ] Apply dark mode (ref: https://b1san-blog.com/post/nuxt3/nuxt3-blog/)
+- [ ] Create default image.
+- [ ] Preview internal articles when hovering (like obsidian).
