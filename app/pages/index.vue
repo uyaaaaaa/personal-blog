@@ -29,7 +29,7 @@ const { data: articles } = await useAsyncData('home-articles', () =>
   queryCollection('blog')
     .where('published', '=', true)
     .order('date', 'DESC')
-    .limit(6) // Fetch top 10 articles
+    .limit(10) // Fetch top 10 articles
     .all()
 )
 
