@@ -20,6 +20,7 @@ layout: default
 2. `npx expo start`でローカルサーバー起動
 3. 表示されたQRコードをiPhoneのカメラで読み取り
 4. Expo Goアプリが起動し、作成したアプリが起動。ここで、**タップやスクロールが全く反応しなかった**...
+
 ※ なおxcodeのシミュレータでは再現せず、普通に動く...
 
 ## 原因と解決方法
@@ -27,7 +28,7 @@ layout: default
 - それっぽい[Githubのissues](https://github.com/expo/expo/issues/37265)をみつけた
 - 当初は`Reduce Motion`がよくわからずスルーしていたが、iPhone設定の「視差効果を減らす」だと判明
 - ios（実機）の設定から「視差効果を減らす」をOFFにすると一瞬で治った...
-    設定 > アクセシビリティ > 動作 > 視差効果を減らす（`Reduce Motion`）をOFFにする
+  * 設定 > アクセシビリティ > 動作 > 視差効果を減らす（`Reduce Motion`）をOFFにする
 
 ## さいごに
 慣れない開発はムズカシイ😓
