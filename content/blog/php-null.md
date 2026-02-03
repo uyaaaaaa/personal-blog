@@ -1,7 +1,7 @@
 ---
 title: "phpのnull合体演算子を深掘りする"
 description: ""
-published: false
+published: true
 date: 2026-01-24
 tags:
   - php

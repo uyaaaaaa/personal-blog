@@ -1,7 +1,7 @@
 ---
 title: "obsidianのリポジトリをGithubActionsで自動整形する"
 description: "ちょっとしたobsidianのイラつきを解消する方法です"
-published: false
+published: true
 date: 2026-01-26
 tags:
   - obsidian

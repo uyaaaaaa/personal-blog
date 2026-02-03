@@ -1,7 +1,7 @@
 ---
 title: "Linuxの標準出力をきちんと理解する"
 description: "よく見かける/dev/nullなど、意味をきちんと理解してますか？"
-published: false
+published: true
 date: 2026-01-28
 tags:
   - shell
