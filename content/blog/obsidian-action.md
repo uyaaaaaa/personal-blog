@@ -60,5 +60,16 @@ jobs:
 
 ```
 
-これで自動整形できるゼ！！
+## 解説
+
+1. **Checkout repository**
+    - リポジリトのチェックアウト
+2. **Replace tabs with 4 spaces in all files**
+    - マークダウンファイルを検索し（`find ./ -name "*.md" -type f`）、見つかった各ファイル内でタブ文字（`\t`）をスペース×4に一括で置換する（`-exec sed -i 's/\t/    /g' {} +`）。
+3. **Commit and push changes**
+    - 差分が発生する場合、Github ActionsのBotユーザーでコミット＆プッシュする。差分がない場合は何もしない。
+
+## おわりに
+
+これだけでちょっとしたイラつきが解消！！
 
