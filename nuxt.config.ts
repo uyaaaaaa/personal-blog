@@ -6,6 +6,13 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
   ],
   nitro: {
-    preset: 'cloudflare-pages'
+    preset: 'cloudflare-pages',
+    prerender: {
+      crawlLinks: true,
+      routes: ['/']
+    }
   },
+  features: {
+    inlineStyles: true
+  }
 })
