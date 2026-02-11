@@ -39,7 +39,7 @@ layout: default
 1. 【不採用】`AWS Database Migration Service(DMS)`を使った移行
     - 使ったことのないサービスであり、社内にを持つエンジニアがいなかったため、**時間的制約** + **リスク**を考慮して断念しました。もっと時間があれば、しっかり検証した上で採用してよかったかもしれません。
 
-1. 【⭐️**採用**】CSVファイルを`S3`に格納し、SQLで`Aurora`に取り込む
+1. 【**採用**】CSVファイルを`S3`に格納し、SQLで`Aurora`に取り込む
     - あまり知らなかった手法ですが、非常に高速かつ環境整備＆検証が容易にできそうでした。
     - Geminiに聞いてみても「**最もプロフェッショナルで、かつ本番環境への影響を最小限に抑えられます**」とのことで、しっかり検証すれば問題ないだろうと考えました。
 
@@ -47,7 +47,7 @@ layout: default
     - 1回きりの単純なデータ移行のためにアプリケーション実装をするのは若干コスパが悪いなと感じ、不採用にしました。
     - 複雑なデータ加工が必要なケースでは適切かもしれません。
 
-結果、`3番`の`S3`から直接ロードする手法を採用することに決めました。
+結果、**3番**の**S3から直接ロードする手法**を採用することに決めました。
 
 ## 実行クエリの作成
 
@@ -63,7 +63,7 @@ IGNORE 1 LINES            -- ヘッダー行をスキップする
 (col1, col2, col3, ...);  -- テーブルのカラム名とCSVの列の順序が一致している場合(CSVにないカラムは指定しない)
 ```
 
-※ 参考: <https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Integrating.LoadFromS3.html#AuroraMySQL.Integrating.LoadFromS3.Text>
+※ 参考: [Amazon S3 バケットのテキストファイルから Amazon Aurora MySQL DB クラスターへのデータのロード](https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Integrating.LoadFromS3.html#AuroraMySQL.Integrating.LoadFromS3.Text)
 
 ## S3へのファイル配置
 
@@ -85,7 +85,7 @@ IGNORE 1 LINES            -- ヘッダー行をスキップする
 
 ※ 詳細: [AmazonS3へのアクセスをAuroraに許可する](https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Integrating.LoadFromS3.html#AuroraMySQL.Integrating.LoadFromS3.Authorize)
 
-## 検証(LOAD DATE FROM S3)
+## 検証（LOAD DATE FROM S3）
 
 本番環境とほぼ同等のSTG環境にて、レコード数ごとに検証を行いました。下記がその結果です。
 
