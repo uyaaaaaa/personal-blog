@@ -63,6 +63,7 @@ const emit = defineEmits<{
 
 const menuItems = [
   { label: 'Blog', path: '/blog' },
+  { label: 'Book', path: '/book' },
   // { label: 'Tags', path: '/tags' },
   // { label: 'About', path: '/about' },
 ]
