@@ -1,7 +1,7 @@
 ---
 title: "【書評】アーキテクトの教科書"
 description: ""
-published: false
+published: true
 date: 2026-01-30
 tags:
   - book
