@@ -15,5 +15,18 @@ export default defineContentConfig({
         tags: z.array(z.string()).optional(),
       })
     }),
+    book: defineCollection({
+      type: "page",
+      source: "book/*.md",
+      schema: z.object({
+        title: z.string(),
+        description: z.string(),
+        image: z.string().optional(),
+        published: z.boolean(),
+        date: z.string(),
+        tags: z.array(z.string()).optional(),
+        affiliateUrl: z.string().optional(),
+      })
+    }),
   },
 })
