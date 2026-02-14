@@ -27,7 +27,7 @@ vimライクなキーボード操作でgitコマンドの実行ができます�
 
 実際の見た目は以下のようなイメージです。
 
-
+![intro](https://github.com/user-attachments/assets/1c5e1cbe-9ecf-4568-a2e7-1f4295ff4a9b)
 
 どうです？カッコいいでしょ...？😎
 
