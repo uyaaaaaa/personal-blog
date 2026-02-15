@@ -68,8 +68,7 @@ $ lazygit
 
 ここまでの流れを一連で操作すると、以下のようになります。カッコいいですね。
 
-![base-1.gif]
-
+![base-1](https://github.com/user-attachments/assets/46bf3da2-f043-49e2-a761-7087c5687a8a)
 
 ## 基本操作② : リモートリポジトリへのプッシュ・プル + PR作成
 
