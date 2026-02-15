@@ -25,6 +25,8 @@ vimライクなキーボード操作でgitコマンドの実行ができます�
 
 ※ Github: https://github.com/jesseduffield/lazygit
 
+<br/>
+
 実際の見た目は以下のようなイメージです。
 
 ![intro](https://github.com/user-attachments/assets/1c5e1cbe-9ecf-4568-a2e7-1f4295ff4a9b)
@@ -39,7 +41,7 @@ macでは、Homebrewを使ってインストールできます。（windowsは�
 $ brew install lazygit
 ```
 
-<br>
+<br/>
 
 起動は `lazygit` とコマンド実行するだけです。引数はありません。git管理されていないディレクトリではエラーとなり、起動できません。
 
@@ -49,27 +51,40 @@ $ lazygit
 
 ---
 
-## wip
+## 基本操作① : ブランチ作成〜コミットまで
 
-### 基本操作
+1. 左側ペイン間（`[1]` ~ `[5]`）の移動
+    - `h` / `l`
+2. ペイン内の上下移動
+    - 上下に移動: `j` / `k`
+    - タブ[^1]間を移動: `[` / `]`
+3. ブランチを切る
+    - `[3]` に移動し、ベースブランチ上で `n`
+4. 変更をステージする
+    - `[2]` に移動し、対象ファイル上で `space`
+    - すべての差分をステージしたい場合は `[2]` で `a` を押下
+5. コミットする
+    - `[3]` で `c` → コミットメッセージを入力して `Enter`
 
-1. ブランチを切る: 
-    - 任意のブランチ上で`n` -> 選択したブランチがbaseブランチとなる
-2. 変更をステージする: 
-    - 差分ファイル上で`space`
-3. コミットする:
-    - `[2] Files`上で`c` -> コミットメッセージ入力 -> `Enter`
-4. リモートリポジトリに変更を`push`する:
-    - `[3] Local branches`上で`Shift + p`
-5. Pull Requestを作成する（ブラウザを開く）
-    - 該当のブランチ上で`o`
-6. リモートブランチをローカルに`pull`する
-    - `[3] Remotes`で対象のリモート（`origin`など）を選択し、`Enter`
-    - 任意のブランチで`space` -> `New local branch`を選択
-7. ローカルブランチを削除する: 
-    - `[3] Local branches`の対象ブランチ上で`d` 
+ここまでの流れを一連で操作すると、以下のようになります。カッコいいですね。
 
-### よく使う機能
+![base-1.gif]
+
+
+## 基本操作② : リモートリポジトリへのプッシュ・プル + PR作成
+
+1. リモートリポジトリに変更を `push` する
+    - `[3]` 上で `P`
+2. Pull Requestを作成する（ブラウザを開く）
+    - 該当のブランチ上で `o`
+3. リモートブランチをローカルに `pull` する
+    - `[3] Remotes` に移動し、対象のリモート（`origin`など）を選択 →  任意のブランチで `space` 押下して `New local branch` を選択
+4. ローカルブランチを削除する: 
+    - `[3] Local branches` の対象ブランチ上で `d` 
+
+![base-2.gif]
+
+## （WIP）よく使う機能
 
 1. ブランチ名のコピー
     - コピーしたいブランチの上で `ctrl + o`
@@ -113,4 +128,5 @@ $ lazygit
 4. [Predefined branch name prefix](https://github.com/jesseduffield/lazygit/blob/master/docs/Config.md#predefined-branch-name-prefix)
     - ブランチ作成時の接頭辞を事前に定義しておける
     - `branchPrefix: "feature/"`
-5. 
+
+[^1]: ペイン `[3]` でいうと、`Local branches`, `Remotes`, `Tags` の3種類が存在する
