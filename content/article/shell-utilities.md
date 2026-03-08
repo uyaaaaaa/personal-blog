@@ -7,6 +7,7 @@ tags:
   - zsh
   - linux
 layout: default
+category: blog
 ---
 
 ## はじめに

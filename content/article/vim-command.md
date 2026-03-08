@@ -8,6 +8,7 @@ tags:
   - tools
   - beginner
 layout: default
+category: blog
 ---
 ## 毎回`vim .`で起動せず、`Ctrl + z`と`fg`で制御する
 

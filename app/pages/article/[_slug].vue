@@ -6,7 +6,7 @@ import TocMobile from '~/components/article/TocMobile.vue'
 
 const route = useRoute()
 const { data: page } = await useAsyncData(route.path, () =>
-  queryCollection('book').path(route.path).where('published', '=', true).first(),
+  queryCollection('article').path(route.path).where('published', '=', true).first(),
 )
 
 const tocLinks = computed(() => page.value?.body?.toc?.links || [])
@@ -52,7 +52,7 @@ watch(() => page.value, async () => {
       <article class="space-y-8">
         <!-- Back Navigation -->
         <div class="mb-4">
-          <BackButton :label="'Back to Books'" />
+          <BackButton :label="'Back to Articles'" />
         </div>
 
         <!-- Article Header -->
@@ -61,6 +61,9 @@ watch(() => page.value, async () => {
              <span v-if="page.date">{{ formatDate(page.date) }}</span>
              <div v-if="page.tags" class="flex gap-2">
                <span v-for="tag in page.tags" :key="tag" class="text-accent">#{{ tag }}</span>
+             </div>
+             <div v-if="page.category" class="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs uppercase">
+               {{ page.category }}
              </div>
           </div>
           
@@ -84,7 +87,7 @@ watch(() => page.value, async () => {
 
       <!-- Back Navigation -->
       <div class="mt-16">
-        <BackButton :label="'Back to Books'"  />
+        <BackButton :label="'Back to Articles'"  />
       </div>
     </main>
 
@@ -98,6 +101,6 @@ watch(() => page.value, async () => {
   
   <div v-else class="py-12 text-center">
     <h1 class="text-2xl font-bold text-main">Article not found</h1>
-    <NuxtLink to="/book" class="text-accent hover:underline mt-4 inline-block">Back to Books</NuxtLink>
+    <NuxtLink to="/article" class="text-accent hover:underline mt-4 inline-block">Back to Articles</NuxtLink>
   </div>
 </template>

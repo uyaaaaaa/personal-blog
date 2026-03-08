@@ -7,6 +7,7 @@ tags:
   - linux
   - beginner
 layout: default
+category: blog
 ---
 
 ## Arch Linuxを使ってみようと思ったきっかけ

@@ -8,6 +8,7 @@ tags:
   - plugins
   - beginner
 layout: default
+category: blog
 ---
 
 ## 事象

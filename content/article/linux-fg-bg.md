@@ -6,6 +6,7 @@ date: 2026-02-04
 tags:
   - linux
 layout: default
+category: blog
 ---
 ## はじめに
 

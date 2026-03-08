@@ -8,6 +8,7 @@ tags:
   - ExpoGo
   - ios
 layout: default
+category: blog
 ---
 
 ## 事象

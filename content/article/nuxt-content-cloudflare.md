@@ -8,6 +8,7 @@ tags:
   - cloudflare
   - "@nuxt/content"
 layout: default
+category: blog
 ---
 
 ## 前提条件・環境

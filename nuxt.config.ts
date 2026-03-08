@@ -14,5 +14,9 @@ export default defineNuxtConfig({
   },
   features: {
     inlineStyles: true
+  },
+  routeRules: {
+    '/blog/**': { redirect: { to: '/article/**', statusCode: 301 } },
+    '/book/**': { redirect: { to: '/article/**', statusCode: 301 } },
   }
 })
