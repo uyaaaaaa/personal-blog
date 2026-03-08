@@ -64,7 +64,6 @@ const emit = defineEmits<{
 const menuItems = [
   { label: 'Articles', path: '/article' },
   // { label: 'Tags', path: '/tags' },
-  // { label: 'Tags', path: '/tags' },
   // { label: 'About', path: '/about' },
 ]
 </script>

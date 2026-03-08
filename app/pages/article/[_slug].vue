@@ -85,14 +85,6 @@ watch(() => page.value, async () => {
         </div>
       </article>
 
-      <!-- Affiliate Link (if any) -->
-      <div v-if="page.affiliateUrl" class="mt-8 p-6 bg-secondary/5 border border-border rounded-lg text-center">
-        <p class="mb-4 text-main font-medium">興味を持たれた方はこちらから確認できます</p>
-        <a :href="page.affiliateUrl" target="_blank" rel="noopener noreferrer" class="inline-block px-6 py-2 bg-accent text-white rounded hover:bg-accent/90 transition-colors">
-          販売ページを見る
-        </a>
-      </div>
-
       <!-- Back Navigation -->
       <div class="mt-16">
         <BackButton :label="'Back to Articles'"  />

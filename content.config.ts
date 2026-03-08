@@ -12,7 +12,6 @@ export default defineContentConfig({
         published: z.boolean(),
         date: z.string(),
         tags: z.array(z.string()).optional(),
-        affiliateUrl: z.string().optional(),
         category: z.string().optional(),
       })
     }),
