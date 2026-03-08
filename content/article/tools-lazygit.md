@@ -8,6 +8,7 @@ tags:
   - git
   - terminal
 layout: default
+category: blog
 ---
 ## はじめに
 

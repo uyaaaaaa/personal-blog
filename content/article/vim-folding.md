@@ -7,6 +7,7 @@ tags:
   - vim
   - markdown
 layout: default
+category: blog
 ---
 
 ## 課題

@@ -7,6 +7,7 @@ tags:
   - test
   - verification
 layout: default
+category: blog
 ---
 
 # Link Verification

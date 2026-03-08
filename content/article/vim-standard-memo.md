@@ -7,6 +7,7 @@ tags:
   - vim
   - tools
 layout: default
+category: blog
 ---
 ## コピー&ペースト系
 

@@ -8,6 +8,7 @@ tags:
   - tips
   - beginner
 layout: default
+category: blog
 ---
 
 vimには`abbrev`という機能があるらしい

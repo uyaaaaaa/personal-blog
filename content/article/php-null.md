@@ -7,6 +7,7 @@ tags:
   - php
   - programing
 layout: default
+category: blog
 ---
 
 ## 不思議に思ったこと

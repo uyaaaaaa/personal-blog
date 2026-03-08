@@ -7,6 +7,7 @@ tags:
   - obsidian
   - github action
 layout: default
+category: blog
 ---
 
 ## きっかけと課題

@@ -5,7 +5,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  to: '/blog',
+  to: '/article',
   label: 'Back to Articles',
 })
 </script>

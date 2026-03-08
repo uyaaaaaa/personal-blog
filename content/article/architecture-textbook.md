@@ -7,6 +7,7 @@ tags:
   - book
   - architecture
 layout: default
+category: book
 ---
 
 ## どんな本か？

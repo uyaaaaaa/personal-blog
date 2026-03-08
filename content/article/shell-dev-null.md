@@ -7,6 +7,7 @@ tags:
   - shell
   - linux
 layout: default
+category: blog
 ---
 
 ## 主題

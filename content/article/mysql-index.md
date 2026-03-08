@@ -7,6 +7,7 @@ tags:
   - mysql
   - index
 layout: default
+category: blog
 ---
 ## 概要
 
