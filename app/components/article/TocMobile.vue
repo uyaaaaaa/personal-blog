@@ -2,12 +2,12 @@
   <div 
     ref="containerRef"
     class="sticky top-[74px] z-40 bg-gray-100 backdrop-blur-sm border border-border rounded-lg overflow-hidden lg:hidden transition-all duration-300"
-    :class="{ 'shadow-sm': isSticky }"
+    :class="{
+      'shadow-sm': isSticky,
+      '-translate-y-[120px] opacity-0 pointer-events-none': !isVisible
+    }"
   >
-    <!-- Sentinel for detecting sticky state -->
-    <div ref="sentinelRef" class="absolute -top-[75px] w-full h-[1px] pointer-events-none opacity-0"></div>
-
-    <button 
+    <button
       @click="isOpen = !isOpen"
       class="w-full px-4 py-3 flex items-center justify-between gap-2 text-sm text-main transition-colors text-left font-medium"
     >
@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 
 defineProps<{
   links: any[]
@@ -82,37 +82,37 @@ defineProps<{
 
 const isOpen = ref(false)
 const isSticky = ref(false)
-const sentinelRef = ref<HTMLElement | null>(null)
+
+// 下スクロール時は隠し、上スクロール時は表示する（sticky中のみ。メニュー展開中は隠さない）
+const { direction } = useScrollDirection()
+const isVisible = computed(() => !isSticky.value || isOpen.value || direction.value === 'up')
 const containerRef = ref<HTMLElement | null>(null)
 
-let observer: IntersectionObserver | null = null
+// sticky top と同値（CSSの top-[74px] と合わせる）
+const STICKY_TOP = 74
+
+const updateSticky = () => {
+  const el = containerRef.value
+  if (!el) return
+
+  // 非表示アニメーション中は translateY がかかるため、変換前の位置で判定する
+  const transform = getComputedStyle(el).transform
+  const translateY = transform && transform !== 'none'
+    ? new DOMMatrixReadOnly(transform).m42
+    : 0
+
+  isSticky.value = el.getBoundingClientRect().top - translateY <= STICKY_TOP + 1
+}
 
 onMounted(() => {
-  if (!sentinelRef.value) return
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      const entry = entries[0]
-      if (!entry) return
-      
-      // Actually, with sticky detection via sentinel:
-      // When sentinel is hidden above the viewport, we are sticky.
-      isSticky.value = !entry.isIntersecting && entry.boundingClientRect.top < 0
-    },
-    {
-      // Adjust threshold or rootMargin if needed. 
-      // Since header is 64px and top is 74px, we want to know when we hit that 74px mark.
-      // The sentinel is at -75px. 
-      threshold: 0,
-      rootMargin: '-74px 0px 0px 0px' 
-    }
-  )
-
-  observer.observe(sentinelRef.value)
+  updateSticky()
+  window.addEventListener('scroll', updateSticky, { passive: true })
+  window.addEventListener('resize', updateSticky, { passive: true })
 })
 
 onUnmounted(() => {
-  if (observer) observer.disconnect()
+  window.removeEventListener('scroll', updateSticky)
+  window.removeEventListener('resize', updateSticky)
 })
 
 const { scrollTo } = useScrollTo()
