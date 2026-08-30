@@ -1,7 +1,7 @@
 <template>
   <div 
     ref="containerRef"
-    class="sticky top-[74px] z-40 bg-gray-100 backdrop-blur-sm border border-border rounded-lg overflow-hidden lg:hidden transition-all duration-300"
+    class="sticky top-[74px] z-40 bg-gray-100 backdrop-blur-sm border border-border rounded-lg lg:hidden transition-all duration-300"
     :class="{
       'shadow-sm': isSticky,
       '-translate-y-[120px] opacity-0 pointer-events-none': !isVisible
@@ -29,14 +29,10 @@
       </svg>
     </button>
 
-    <div 
-      v-show="isOpen" 
-      :class="[
-        'w-full bg-white border-t border-border overflow-y-auto transition-all duration-200',
-        isSticky 
-          ? 'absolute top-full left-0 shadow-lg max-h-[60vh] rounded-b-lg -mt-[1px] border-x border-b' 
-          : 'relative max-h-none'
-      ]"
+    <!-- Dropdown: 記事コンテンツを押し下げず、常にオーバーレイで表示する -->
+    <div
+      v-show="isOpen"
+      class="absolute top-full left-0 -mt-[1px] w-full bg-white border border-border shadow-lg rounded-b-lg max-h-[60vh] overflow-y-auto transition-all duration-200"
     >
       <nav class="py-2 px-4 pb-4">
         <ul class="space-y-1">
@@ -64,10 +60,10 @@
       </nav>
     </div>
     
-    <!-- Backdrop to close when clicking outside (Only show when sticky) -->
-    <div 
-      v-if="isOpen && isSticky" 
-      class="fixed inset-0 top-[calc(64px+41px)] z-[-1] bg-black/20"
+    <!-- Backdrop to close when clicking outside -->
+    <div
+      v-if="isOpen"
+      class="fixed inset-0 z-[-1] bg-black/20"
       @click="isOpen = false"
     ></div>
   </div>
