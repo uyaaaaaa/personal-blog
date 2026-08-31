@@ -53,15 +53,12 @@ watch(() => page.value, async () => {
 
 <template>
   <div v-if="page" class="flex flex-col lg:flex-row gap-12">
-    <!-- Main Content -->
     <main class="flex-1 min-w-0 max-w-3xl">
       <article class="space-y-8">
-        <!-- Back Navigation -->
         <div class="mb-4">
           <BackButton :label="'Back to Articles'" />
         </div>
 
-        <!-- Article Header -->
         <header class="space-y-4 border-b border-border pb-8">
           <div class="flex items-center gap-3 text-sm text-sub font-mono">
              <span v-if="page.date">{{ formatDate(page.date) }}</span>
@@ -82,22 +79,18 @@ watch(() => page.value, async () => {
           </p>
         </header>
 
-        <!-- Mobile Sticky TOC -->
         <TocMobile :links="tocLinks" />
 
-        <!-- Article Body -->
         <div ref="articleRef" class="prose prose-slate max-w-none">
           <ContentRenderer :value="page" />
         </div>
       </article>
 
-      <!-- Back Navigation -->
       <div class="mt-16">
         <BackButton :label="'Back to Articles'"  />
       </div>
     </main>
 
-    <!-- Sidebar (Desktop) -->
     <Sidebar class="hidden lg:block">
       <template #toc>
         <Toc :links="tocLinks" />
@@ -112,7 +105,6 @@ watch(() => page.value, async () => {
 </template>
 
 <style>
-/* 本文リンクの配色は docs/DESIGN_GUIDELINE.md のアクセントカラー定義に準拠 */
 .prose a {
   color: var(--color-accent);
   text-decoration: none;

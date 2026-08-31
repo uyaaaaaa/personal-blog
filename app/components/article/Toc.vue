@@ -16,7 +16,6 @@
           >
             {{ link.text }}
           </a>
-          <!-- Nested links (h3) -->
           <ul v-if="link.children && link.children.length > 0" class="ml-2 mt-2 space-y-2">
             <li v-for="child in link.children" :key="child.id">
                <a

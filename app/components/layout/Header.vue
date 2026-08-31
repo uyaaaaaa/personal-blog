@@ -11,7 +11,6 @@
         <span>Tech Blog</span>
       </NuxtLink>
 
-      <!-- Search Trigger (Desktop) -->
       <div class="hidden md:flex flex-1 max-w-md mx-8">
         <button class="w-full flex items-center justify-between px-4 py-2 bg-base border border-border rounded-md text-sub hover:border-accent transition-colors group">
           <span class="flex items-center gap-2">

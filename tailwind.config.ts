@@ -3,7 +3,6 @@ import plugin from 'tailwindcss/plugin'
 import typography from '@tailwindcss/typography'
 import { colors, fontFamily, toCssVariables } from './theme/tokens'
 
-// トークンから `:root` のCSS変数を生成し、ユーティリティクラスと同じ値を共有する
 const cssVariables = plugin(({ addBase }) => {
   addBase({ ':root': toCssVariables() })
 })

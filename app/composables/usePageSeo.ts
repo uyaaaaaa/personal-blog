@@ -20,7 +20,6 @@ const SITE_DESCRIPTION
 const DEFAULT_OGP_IMAGE = '/ogp.png'
 
 /**
- * ページのtitle/descriptionとOGP・Twitter Cardのメタタグをまとめて設定する。
  * og:imageやog:urlは絶対URLでないとクローラが解決できないため、
  * runtimeConfig.public.siteUrl を基準に組み立てる。
  */

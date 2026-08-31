@@ -147,7 +147,6 @@ const normalizedType = computed<keyof typeof CALLOUT_CONFIG>(() => {
 
 const config = computed(() => CALLOUT_CONFIG[normalizedType.value])
 
-// タイトル省略時は記述されたタイプ名を先頭大文字で表示（Obsidianと同じ挙動）
 const displayTitle = computed(
   () => props.title || rawType.value.charAt(0).toUpperCase() + rawType.value.slice(1)
 )

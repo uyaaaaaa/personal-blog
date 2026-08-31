@@ -2,7 +2,6 @@ import { fileURLToPath } from 'node:url'
 // @ts-expect-error 型定義のないローカルESMモジュール
 import remarkObsidianCallout from './remark/obsidian-callout.mjs'
 
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   app: {
@@ -10,7 +9,6 @@ export default defineNuxtConfig({
       link: [
         // 旧ブラウザ・ブックマーク用のフォールバック（16/32/48pxを内包）
         { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
-        // モダンブラウザはこちらを優先して使用する
         { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml', sizes: 'any' },
         { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
@@ -39,7 +37,6 @@ export default defineNuxtConfig({
           theme: 'github-light',
           langs: [
             'js', 'ts', 'json', 'html', 'css', 'vue', 'shell', 'sh', 'bash', 'md', 'mdc', 'yaml',
-            // 記事で使用中の追加言語
             'vim', 'lua', 'sql', 'php',
           ],
         },

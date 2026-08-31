@@ -1,11 +1,8 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { isProgrammaticScroll } from './useScrollTo'
 
+// threshold: 方向を更新する最小スクロール量（px）。微小なスクロールによるちらつきを防ぐ
 export const useScrollDirection = (threshold = 8) => {
-  /**
-   * 画面のスクロール方向（'up' | 'down'）を追跡する
-   * @param threshold 方向を更新する最小スクロール量（px）。微小なスクロールによるちらつきを防ぐ
-   */
   const direction = ref<'up' | 'down'>('up')
 
   let lastY = 0

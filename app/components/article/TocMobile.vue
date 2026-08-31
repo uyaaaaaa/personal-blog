@@ -64,7 +64,6 @@
       </nav>
     </div>
     
-    <!-- Backdrop to close when clicking outside -->
     <div
       v-if="isOpen"
       class="fixed inset-0 z-[-1] bg-black/20"

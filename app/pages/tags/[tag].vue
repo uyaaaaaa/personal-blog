@@ -8,7 +8,6 @@ const { data: articles } = await useAsyncData(`tag-articles-${slug.value}`, () =
   queryCollection('article').where('published', '=', true).order('date', 'DESC').all(),
 )
 
-// スラグに一致するタグを持つ記事だけに絞り込む
 const filteredArticles = computed(() =>
   (articles.value ?? []).filter(article =>
     (article.tags ?? []).some(tag => tagToSlug(tag) === slug.value),
