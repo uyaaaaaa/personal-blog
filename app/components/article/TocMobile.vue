@@ -34,7 +34,7 @@
     <div
       v-show="isOpen"
       ref="dropdownRef"
-      class="absolute top-full left-0 -mt-[1px] w-full bg-white border border-border shadow-lg rounded-b-lg max-h-[60vh] overflow-y-auto overscroll-contain transition-all duration-200"
+      class="absolute top-full left-0 -mt-[1px] w-full bg-white border border-border shadow-lg rounded-b-lg max-h-[60vh] overflow-y-auto overflow-x-hidden overscroll-contain transition-all duration-200"
     >
       <nav class="py-2 px-4 pb-4">
         <ul class="space-y-1">
@@ -42,7 +42,7 @@
             <a
               :href="`#${link.id}`"
               @click.prevent="handleClick(link.id)"
-              class="block py-1.5 text-sm hover:text-accent border-l-2 hover:border-accent pl-3 -ml-[1px]"
+              class="block py-1.5 text-sm break-words hover:text-accent border-l-2 hover:border-accent pl-3 -ml-[1px]"
               :class="activeId === link.id ? 'text-accent border-accent font-medium' : 'text-sub border-transparent'"
             >
               {{ link.text }}
@@ -52,7 +52,7 @@
                  <a
                   :href="`#${child.id}`"
                   @click.prevent="handleClick(child.id)"
-                  class="block py-1.5 text-xs hover:text-accent pl-3 border-l-2 hover:border-accent -ml-[1px]"
+                  class="block py-1.5 text-xs break-words hover:text-accent pl-3 border-l-2 hover:border-accent -ml-[1px]"
                   :class="activeId === child.id ? 'text-accent border-accent font-medium' : 'text-sub border-transparent'"
                 >
                   {{ child.text }}
