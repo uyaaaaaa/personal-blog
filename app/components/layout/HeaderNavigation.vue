@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- Desktop Navigation -->
     <div class="header-right hidden md:flex">
       <nav class="nav">
         <NuxtLink
@@ -14,7 +13,6 @@
       </nav>
     </div>
 
-    <!-- Mobile Navigation -->
     <div class="md:hidden">
       <button
         class="mobile-menu-btn"
@@ -83,7 +81,6 @@ const emit = defineEmits<{
 const menuItems = [
   { label: 'Articles', path: '/article' },
   { label: 'Tags', path: '/tags' },
-  // { label: 'About', path: '/about' },
 ]
 
 // ドロワーに表示するタグは記事数上位のみ(残りは /tags で誘導)
@@ -93,7 +90,6 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 </script>
 
 <style scoped>
-/* Desktop Styles */
 /* 表示・非表示の切り替えはTailwindの md: に統一しているため、displayはここで指定しない */
 .header-right {
   align-items: center;
@@ -117,7 +113,6 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
   color: var(--color-accent);
 }
 
-/* Mobile Styles */
 .mobile-menu-btn {
   display: flex;
   flex-direction: column;

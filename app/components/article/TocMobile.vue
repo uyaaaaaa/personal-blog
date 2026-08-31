@@ -29,8 +29,6 @@
       </svg>
     </button>
 
-    <!-- Dropdown: 記事コンテンツを押し下げず、常にオーバーレイで表示する -->
-    <!-- overscroll-contain: 目次内スクロールが端に達しても背後のページまでスクロールさせない -->
     <div
       v-show="isOpen"
       ref="dropdownRef"
@@ -64,7 +62,6 @@
       </nav>
     </div>
     
-    <!-- Backdrop to close when clicking outside -->
     <div
       v-if="isOpen"
       class="fixed inset-0 z-[-1] bg-black/20"
@@ -83,10 +80,8 @@ const props = defineProps<{
 const isOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 
-// ヘッダー(64px) + 目次バーの下端あたりを通過判定ラインにする
 const { activeId } = useTocActive(computed(() => props.links), 140)
 
-// 目次を開いた時、現在読んでいる見出しが見える位置までドロップダウン内をスクロールする
 watch(isOpen, async (open) => {
   if (!open || !activeId.value) return
   await nextTick()
@@ -103,19 +98,16 @@ watch(isOpen, async (open) => {
 })
 const isSticky = ref(false)
 
-// 下スクロール時は隠し、上スクロール時は表示する（sticky中のみ。メニュー展開中は隠さない）
 const { direction } = useScrollDirection()
 const isVisible = computed(() => !isSticky.value || isOpen.value || direction.value === 'up')
 const containerRef = ref<HTMLElement | null>(null)
 
-// sticky top と同値（CSSの top-[74px] と合わせる）
 const STICKY_TOP = 74
 
 const updateSticky = () => {
   const el = containerRef.value
   if (!el) return
 
-  // 非表示アニメーション中は translateY がかかるため、変換前の位置で判定する
   const transform = getComputedStyle(el).transform
   const translateY = transform && transform !== 'none'
     ? new DOMMatrixReadOnly(transform).m42
@@ -137,9 +129,6 @@ onUnmounted(() => {
 
 const { scrollTo } = useScrollTo()
 
-// 着地位置のオフセットは記事側の見出しの scroll-margin-top（[_slug].vue）で一元管理している。
-// ジャンプ中は useScrollDirection が「下スクロール」を返すため目次バーは自動で隠れ、
-// バーの高さ分を確保する必要がない
 const handleClick = (id: string) => {
   isOpen.value = false
   scrollTo(id)

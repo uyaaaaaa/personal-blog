@@ -1,12 +1,10 @@
 <template>
   <div class="space-y-16">
-    <!-- Hero Section -->
     <Hero 
       v-if="heroArticle" 
       :article="heroArticle" 
     />
 
-    <!-- Articles -->
     <section>
       <div class="flex items-center justify-between mb-8">
         <h2 class="text-2xl font-bold font-mono text-main">Articles</h2>
@@ -24,16 +22,14 @@
 </template>
 
 <script setup lang="ts">
-// Fetch articles from 'article' content directory
 const { data: articles } = await useAsyncData('home-articles', () => 
   queryCollection('article')
     .where('published', '=', true)
     .order('date', 'DESC')
-    .limit(10) // Fetch top 10 articles
+    .limit(10)
     .all()
 )
 
-// Split into Hero (1st) and List (Rest)
 const heroArticle = computed(() => {
   return articles.value && articles.value.length > 0 ? articles.value[0] : null
 })
@@ -42,6 +38,5 @@ const listArticles = computed(() => {
   return articles.value && articles.value.length > 1 ? articles.value.slice(1) : []
 })
 
-// Set SEO Meta
 usePageSeo()
 </script>

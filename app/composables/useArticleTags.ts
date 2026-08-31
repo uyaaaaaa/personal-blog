@@ -4,7 +4,6 @@ export interface TagSummary {
   count: number
 }
 
-// 公開記事のfrontmatterからタグを集計する(記事数の多い順)
 export const useArticleTags = () => {
   return useAsyncData('article-tags', async () => {
     const articles = await queryCollection('article')

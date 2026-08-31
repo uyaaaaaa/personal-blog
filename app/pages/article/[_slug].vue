@@ -53,15 +53,12 @@ watch(() => page.value, async () => {
 
 <template>
   <div v-if="page" class="flex flex-col lg:flex-row gap-12">
-    <!-- Main Content -->
     <main class="flex-1 min-w-0 max-w-3xl">
       <article class="space-y-8">
-        <!-- Back Navigation -->
         <div class="mb-4">
           <BackButton :label="'Back to Articles'" />
         </div>
 
-        <!-- Article Header -->
         <header class="space-y-4 border-b border-border pb-8">
           <div class="flex items-center gap-3 text-sm text-sub font-mono">
              <span v-if="page.date">{{ formatDate(page.date) }}</span>
@@ -82,22 +79,18 @@ watch(() => page.value, async () => {
           </p>
         </header>
 
-        <!-- Mobile Sticky TOC -->
         <TocMobile :links="tocLinks" />
 
-        <!-- Article Body -->
         <div ref="articleRef" class="prose prose-slate max-w-none">
           <ContentRenderer :value="page" />
         </div>
       </article>
 
-      <!-- Back Navigation -->
       <div class="mt-16">
         <BackButton :label="'Back to Articles'"  />
       </div>
     </main>
 
-    <!-- Sidebar (Desktop) -->
     <Sidebar class="hidden lg:block">
       <template #toc>
         <Toc :links="tocLinks" />
@@ -112,7 +105,6 @@ watch(() => page.value, async () => {
 </template>
 
 <style>
-/* 本文リンクの配色は docs/DESIGN_GUIDELINE.md のアクセントカラー定義に準拠 */
 .prose a {
   color: var(--color-accent);
   text-decoration: none;
@@ -122,7 +114,6 @@ watch(() => page.value, async () => {
   text-decoration: underline;
 }
 
-/* Nuxt Contentは見出しテキストを<a>で包むため、上の本文リンク指定から除外する */
 .prose :where(h1, h2, h3, h4, h5, h6) a {
   color: inherit;
   text-decoration: none;
@@ -133,16 +124,12 @@ watch(() => page.value, async () => {
   text-decoration: none;
 }
 
-/* ページ内リンクの着地位置はここで一元管理する。
-   JSのスクロール（useScrollTo）とURLハッシュ直開きの両方に効く */
 .prose :where(h2, h3, h4, h5, h6) {
-  /* 固定ヘッダー64px + 余白24px */
   scroll-margin-top: 88px;
 }
 
 @media (min-width: 1024px) {
   .prose :where(h2, h3, h4, h5, h6) {
-    /* 固定ヘッダー64px + 余白32px */
     scroll-margin-top: 96px;
   }
 }
