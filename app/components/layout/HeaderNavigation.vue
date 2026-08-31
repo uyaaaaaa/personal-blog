@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Desktop Navigation -->
-    <div class="header-right desktop-only">
+    <div class="header-right hidden md:flex">
       <nav class="nav">
         <NuxtLink
           v-for="item in menuItems"
@@ -15,7 +15,7 @@
     </div>
 
     <!-- Mobile Navigation -->
-    <div class="mobile-only">
+    <div class="md:hidden">
       <button
         class="mobile-menu-btn"
         @click="emit('toggle')"
@@ -94,8 +94,8 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 
 <style scoped>
 /* Desktop Styles */
+/* 表示・非表示の切り替えはTailwindの md: に統一しているため、displayはここで指定しない */
 .header-right {
-  display: flex;
   align-items: center;
   gap: 2rem;
 }
@@ -259,18 +259,5 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--color-accent);
-}
-
-/* Responsive Switching */
-@media (max-width: 768px) {
-  .desktop-only {
-    display: none;
-  }
-}
-
-@media (min-width: 769px) {
-  .mobile-only {
-    display: none;
-  }
 }
 </style>
