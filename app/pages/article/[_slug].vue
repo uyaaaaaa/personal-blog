@@ -11,6 +11,15 @@ const { data: page } = await useAsyncData(route.path, () =>
 
 const tocLinks = computed(() => page.value?.body?.toc?.links || [])
 
+usePageSeo({
+  type: 'article',
+  title: () => page.value?.title,
+  description: () => page.value?.description,
+  image: () => page.value?.image,
+  publishedTime: () => page.value?.date,
+  tags: () => page.value?.tags,
+})
+
 const { scrollTo } = useScrollTo()
 const articleRef = ref<HTMLElement | null>(null)
 

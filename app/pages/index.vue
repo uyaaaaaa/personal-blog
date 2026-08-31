@@ -43,8 +43,5 @@ const listArticles = computed(() => {
 })
 
 // Set SEO Meta
-useSeoMeta({
-  title: 'Tech Blog',
-  description: 'Functional Minimalism for Experts. Technical articles on software engineering, architecture, and design.',
-})
+usePageSeo()
 </script>
