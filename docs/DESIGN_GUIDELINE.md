@@ -213,7 +213,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | :--- | :--- |
 | ヘッダーナビが未定義のCSS変数を参照しホバー色が効かない | [#38](https://github.com/uyaaaaaa/personal-blog/issues/38) |
 | 幅ちょうど768pxでヘッダーの表示が破綻する | [#45](https://github.com/uyaaaaaa/personal-blog/issues/45) |
-| 記事本文のどこにホバーしても全リンクが色変化する | [#39](https://github.com/uyaaaaaa/personal-blog/issues/39) |
 | タグページの記事カードで絵文字が常にデフォルトになる | [#40](https://github.com/uyaaaaaa/personal-blog/issues/40) |
 | 脚注とヘッダーの重なり | [#17](https://github.com/uyaaaaaa/personal-blog/issues/17) |
 | `` ` `` でリンクを囲めない | [#12](https://github.com/uyaaaaaa/personal-blog/issues/12) |

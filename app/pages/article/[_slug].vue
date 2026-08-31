@@ -112,7 +112,7 @@ watch(() => page.value, async () => {
 </template>
 
 <style>
-/* 本文リンクの配色はdoc/DESING_GUIDELINE.md「4. 記事内要素」に準拠 */
+/* 本文リンクの配色は docs/DESIGN_GUIDELINE.md のアクセントカラー定義に準拠 */
 .prose a {
   color: var(--color-accent);
   text-decoration: none;

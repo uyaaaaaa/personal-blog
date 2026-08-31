@@ -21,6 +21,21 @@ npm run generate  # 静的生成
 npm run preview   # ビルド結果のプレビュー
 ```
 
+## プレビュー環境
+
+Cloudflare Pages の Git 連携が有効なため、Pull Request を作ると自動でプレビューがデプロイされます。リポジトリ側にワークフローの設定は不要です。
+
+PR に `Cloudflare Pages` チェックが追加され、ビルド完了後に Cloudflare のボットが以下2種類の URL をコメントします。
+
+| 種類 | 形式 | 性質 |
+| :--- | :--- | :--- |
+| デプロイ単位 | `https://<デプロイID>.tech-blog-efb.pages.dev` | そのコミットに固定。後から push しても変わらない |
+| ブランチ単位 | `https://<ブランチ名>.tech-blog-efb.pages.dev` | 常にそのブランチの最新コミットを指す |
+
+ブランチ名の `/` は `-` に変換されます（例: `claude/issue-39-l2z4fz` → `claude-issue-39-l2z4fz.tech-blog-efb.pages.dev`）。
+
+プレビューは本番と同じ静的生成の出力を配信するため、記事のプリレンダリング結果やスタイルの最終確認に使えます。`main` にマージすると本番 <https://tech-blog-efb.pages.dev> に反映されます。
+
 ## ディレクトリ構成
 
 ```
