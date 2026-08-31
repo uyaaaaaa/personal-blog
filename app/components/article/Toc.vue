@@ -42,12 +42,8 @@ const props = defineProps<{
   links: any[]
 }>()
 
-const { scrollTo: scrollToAnchor } = useScrollTo()
-
-const scrollTo = (id: string) => {
-  const headerOffset = 80 // 64px header + 16px padding
-  scrollToAnchor(id, headerOffset)
-}
+// 着地位置のオフセットは記事側の見出しの scroll-margin-top（[_slug].vue）で一元管理している
+const { scrollTo } = useScrollTo()
 
 const navRef = ref<HTMLElement | null>(null)
 const { activeId } = useTocActive(computed(() => props.links), 100)
