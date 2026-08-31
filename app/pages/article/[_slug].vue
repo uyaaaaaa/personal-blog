@@ -86,7 +86,7 @@ watch(() => page.value, async () => {
         <TocMobile :links="tocLinks" />
 
         <!-- Article Body -->
-        <div ref="articleRef" class="prose prose-slate max-w-none hover:prose-a:text-accent">
+        <div ref="articleRef" class="prose prose-slate max-w-none">
           <ContentRenderer :value="page" />
         </div>
       </article>
@@ -112,6 +112,27 @@ watch(() => page.value, async () => {
 </template>
 
 <style>
+/* 本文リンクの配色はdoc/DESING_GUIDELINE.md「4. 記事内要素」に準拠 */
+.prose a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+}
+
+/* Nuxt Contentは見出しテキストを<a>で包むため、上の本文リンク指定から除外する */
+.prose :where(h1, h2, h3, h4, h5, h6) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.prose :where(h1, h2, h3, h4, h5, h6) a:hover {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
 /* ページ内リンクの着地位置はここで一元管理する。
    JSのスクロール（useScrollTo）とURLハッシュ直開きの両方に効く */
 .prose :where(h2, h3, h4, h5, h6) {
