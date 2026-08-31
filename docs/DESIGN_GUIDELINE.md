@@ -1,4 +1,4 @@
-# Desing guidelines
+# Design guidelines
 
 ---
 
