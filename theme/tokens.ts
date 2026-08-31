@@ -11,8 +11,6 @@
 export const colors = {
   /** ページ背景。`body` の背景色 */
   bg: '#F9F9F9',
-  /** ヘッダーの検索ボックス背景（ページ背景ではない → #44） */
-  base: '#FAF5FF',
   /** 見出し・本文の文字色 */
   main: '#1A1A1A',
   /** 投稿日、キャプション、説明文などのサブテキスト */
@@ -23,8 +21,8 @@ export const colors = {
   'accent-hover': '#7C3AED',
   /** カード枠線、セクション区切り、ヘッダー下線 */
   border: '#E5E5E5',
-  /** インラインコード、コードブロックの背景色 */
-  'code-bg': '#F5F5F5',
+  /** 淡いサーフェス。インラインコード、コードブロック、検索ボックス、ドロワーのタグホバー */
+  'surface-subtle': '#F5F5F5',
 } as const
 
 export const fontFamily = {

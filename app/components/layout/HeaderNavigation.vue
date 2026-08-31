@@ -232,7 +232,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 
 .drawer-tag-item:hover {
   color: var(--color-accent);
-  background-color: var(--color-code-bg);
+  background-color: var(--color-surface-subtle);
 }
 
 .drawer-tag-name {
