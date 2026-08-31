@@ -168,10 +168,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 ## 4. 記事本文（Markdown）の方針
 
-本文は `@tailwindcss/typography` の `prose prose-slate` をベースとし、差分を `tailwind.config.ts` の `typography` 拡張で上書きします。
-
-- **ベースに任せる。** 見出し・引用・リストなどは `prose` の既定を使い、独自CSSを増やさない。
-- **上書きは最小限に。** 現在の上書きはインラインコードとコードブロックのみ。
+- **タイポグラフィのベースに任せる。** 見出し・引用・リストなどは既定の体裁を活かし、必要な差分だけを整える。
 - **記法は Obsidian 互換を優先する。** 執筆環境（Obsidian）でそのまま書ける記法を採用する（Callout など）。
 - **コードの可読性を最優先する。** ハイライトはライトテーマで統一し、背景とボーダーでコード領域を明示する。
 
@@ -211,7 +208,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | 内容 | Issue |
 | :--- | :--- |
 | ヘッダーナビが未定義のCSS変数を参照しホバー色が効かない | [#38](https://github.com/uyaaaaaa/personal-blog/issues/38) |
-| 記事本文のどこにホバーしても全リンクが色変化する | [#39](https://github.com/uyaaaaaa/personal-blog/issues/39) |
 | タグページの記事カードで絵文字が常にデフォルトになる | [#40](https://github.com/uyaaaaaa/personal-blog/issues/40) |
 | 脚注とヘッダーの重なり | [#17](https://github.com/uyaaaaaa/personal-blog/issues/17) |
 | `` ` `` でリンクを囲めない | [#12](https://github.com/uyaaaaaa/personal-blog/issues/12) |
