@@ -491,6 +491,10 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 記事詳細ページで本文を表示できないときに、本文の代わりに出すカード。
 `app/error.vue` 経由の全画面エラーとは別物で、**ヘッダー・フッターを保ったままページ内に留まる**。
 
+サイトには「全画面エラー（`ErrorView`）」と「ページ内カード（本コンポーネント）」の2系統がある。
+記事詳細は読者が続きを選べるよう後者を使い、`/tags/[tag]` の0件など**そのページ自体が成立しない場合**は
+前者へ送る。文言はどちらも英語に統一する。
+
 **Props**
 
 | 名前 | 型 | 説明 |
@@ -520,13 +524,14 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 
 | 要素 | 要件 |
 | :--- | :--- |
+| 幅 | 本文と同じ `max-w-3xl`(768px) に揃え、中央寄せにする。サイドバーが無いぶんコンテナ幅いっぱいに広げない |
 | カード | 破線1px（`border-dashed` / ボーダー色）+ カード角丸 `10px` + 白背景。中央寄せの縦積み |
-| 見出し | `text-xl` / `700` / メイン色。`error` は「記事を読み込めませんでした」、`not-found` は「記事が見つかりませんでした」 |
+| 見出し | `text-xl` / `700` / メイン色。`error` は `Unable to Load Article`、`not-found` は `Article Not Found` |
 | パス表示 | `not-found` のみ。等幅フォント / `text-xs` / サブテキスト色 / コード背景の小角丸チップ |
 | 説明文 | `text-sm` / サブテキスト色 / `max-w-sm` |
-| 再試行ボタン | `error` のみ。背景はアクセント色、ホバーで `accent-hover`（`ErrorView` のボタンと同じ扱い）。`pending` 中は `disabled` にし、文言を「再試行中…」へ切り替え、不透明度を下げる |
+| 再試行ボタン | `error` のみ。背景はアクセント色、ホバーで `accent-hover`（`ErrorView` のボタンと同じ扱い）。文言は `Retry`。`pending` 中は `disabled` にし、`Retrying...` へ切り替えて不透明度を下げる |
 | 戻る導線 | 末尾に `BackButton`（既定の `Back to Articles`） |
-| 最近の記事 | `not-found` のみ。カード下に最大3件を日付（等幅）+ タイトルの一覧で表示し、下線で区切る |
+| 最近の記事 | `not-found` のみ。カード下に `Recent Articles` として最大3件を日付（等幅）+ タイトルの一覧で表示し、下線で区切る |
 
 **アクセシビリティ**
 
@@ -548,7 +553,7 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 
 記事を表示できないページは `og:type` を `website` にし、`article` を名乗らせない
 （`article:published_time` / `article:tag` も出さない）。
-`not-found` のときは専用の `title` / `description` を設定する。
+`not-found` のときは専用の `title`（`Article Not Found`）と `description` を設定する。
 
 ---
 

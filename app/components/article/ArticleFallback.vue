@@ -14,14 +14,15 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{ retry: [] }>()
 
+// UIの文言は英語で統一する（app/components/error/ErrorView.vue と同じ語り口）
 const heading = computed(() =>
-  props.variant === 'error' ? '記事を読み込めませんでした' : '記事が見つかりませんでした',
+  props.variant === 'error' ? 'Unable to Load Article' : 'Article Not Found',
 )
 
 const description = computed(() =>
   props.variant === 'error'
-    ? '通信が不安定な可能性があります。時間をおいて再試行してください。'
-    : '削除されたか、URLが間違っている可能性があります。',
+    ? 'The connection may be unstable. Please try again in a moment.'
+    : 'It may have been removed, or the URL may be incorrect.',
 )
 
 // 回遊導線は記事が存在しないときだけ出す。取得失敗時は同じ取得経路が不調なので出さない。
@@ -39,7 +40,8 @@ const { data: recentArticles } = useLazyAsyncData(
 </script>
 
 <template>
-  <div class="py-8">
+  <!-- 本文と同じ最大幅に揃える。サイドバーが無いぶん中央寄せにする -->
+  <div class="mx-auto max-w-3xl py-8">
     <!-- 破線で「本来ここに記事がある」ことを示す。面は塗らず枠と余白だけで区切る -->
     <!-- 取得失敗は再試行で内容が変わるため、支援技術へ変化を伝えるライブリージョンにする -->
     <div
@@ -62,14 +64,14 @@ const { data: recentArticles } = useLazyAsyncData(
         :disabled="pending"
         @click="emit('retry')"
       >
-        {{ pending ? '再試行中…' : '再試行' }}
+        {{ pending ? 'Retrying...' : 'Retry' }}
       </button>
 
       <BackButton class="mt-1" />
     </div>
 
     <section v-if="variant === 'not-found' && recentArticles?.length" class="mt-10">
-      <h2 class="mb-3 font-mono text-xs tracking-wider text-sub">最近の記事</h2>
+      <h2 class="mb-3 font-mono text-xs tracking-wider text-sub">Recent Articles</h2>
       <ul class="flex flex-col">
         <li v-for="article in recentArticles" :key="article.path" class="border-b border-border">
           <NuxtLink

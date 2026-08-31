@@ -25,9 +25,12 @@ const tocLinks = computed(() => page.value?.body?.toc?.links || [])
 // 記事を表示できないページはarticleを名乗らない（OGP上も記事として展開させない）
 usePageSeo({
   type: page.value ? 'article' : 'website',
-  title: () => page.value?.title ?? (isNotFound.value ? '記事が見つかりません' : undefined),
+  title: () => page.value?.title ?? (isNotFound.value ? 'Article Not Found' : undefined),
   description: () =>
-    page.value?.description ?? (isNotFound.value ? 'お探しの記事は見つかりませんでした。' : undefined),
+    page.value?.description
+    ?? (isNotFound.value
+      ? 'The article you are looking for may have been removed, or the URL may be incorrect.'
+      : undefined),
   image: () => page.value?.image,
   publishedTime: () => page.value?.date,
   tags: () => page.value?.tags,
