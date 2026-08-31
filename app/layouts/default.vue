@@ -19,6 +19,7 @@ import Footer from '../components/layout/Footer.vue'
   --color-text-main: #1A1A1A;
   --color-text-sub: #888888;
   --color-accent: #8B5CF6;
+  --color-accent-hover: #7C3AED;
   --color-border: #E5E5E5;
   --color-code-bg: #F5F5F5;
   --font-base: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;

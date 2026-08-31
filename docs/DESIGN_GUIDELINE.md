@@ -65,6 +65,7 @@
 | **メイン（文字色）** | `#1A1A1A` | `text-main` | `--color-text-main` | 見出し・本文の文字色。 |
 | **サブテキスト** | `#888888` | `text-sub` | `--color-text-sub` | 投稿日、キャプション、説明文、非アクティブなTOC項目。 |
 | **アクセント** | `#8B5CF6` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目、ロゴのスラッシュ。**唯一の色要素**。 |
+| **アクセント（ホバー）** | `#7C3AED` | `bg-accent-hover` | `--color-accent-hover` | アクセント色で塗りつぶした面のホバー時。エラーページの `Back to Top` ボタン。 |
 | **ボーダー** | `#E5E5E5` | `border-border` | `--color-border` | カード枠線、セクション区切り、ヘッダー下線。 |
 | **コード背景** | `#F5F5F5` | `bg-code-bg` | `--color-code-bg` | インラインコード、コードブロックの背景色。 |
 | **サブサーフェス** | `#F3F4F6` | `bg-gray-100` | — | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー。 |
@@ -203,8 +204,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | :--- | :--- |
 | **色の二重管理** | `tailwind.config.ts` と `app/layouts/default.vue` の `:root` に同じ色が別々に定義されている。CSS変数を Tailwind theme から生成する形に統一したい（[#43](https://github.com/uyaaaaaa/personal-blog/issues/43)）。 |
 | **`base` の命名** | Tailwind の `base` (`#FAF5FF`) は名前に反してページ背景ではなく検索ボックス背景専用。`surface-search` 等へのリネームを検討する（[#44](https://github.com/uyaaaaaa/personal-blog/issues/44)）。 |
-| **エラーページのトークン非準拠** | `error/NotFound.vue` と `error/Server.vue` が色とフォントをカラーコード直書きで持ち、ボタンが**旧アクセントカラー `#007AFF`（青）**のまま。サイト全体の `#8B5CF6` と矛盾している（[#42](https://github.com/uyaaaaaa/personal-blog/issues/42)）。 |
-| **エラーコンポーネントの重複** | `NotFound.vue` と `Server.vue` は文言以外ほぼ同一。共通化の余地がある。 |
 | **ブレークポイントの1pxずれ** | `HeaderNavigation.vue` だけ scoped CSS の `max-width: 768px` / `min-width: 769px` で切り替えており、Tailwind の `md:`（`min-width: 768px`）とずれる。幅ちょうど768pxで検索ボックスとハンバーガーが同時に出る（[#45](https://github.com/uyaaaaaa/personal-blog/issues/45)）。 |
 | **一覧グリッドの重複定義** | `ArticleList.vue`・`article/index.vue`・`tags/[tag].vue` が同じグリッドをそれぞれ記述している。`ArticleList` に寄せたい（[#46](https://github.com/uyaaaaaa/personal-blog/issues/46)）。 |
 
@@ -216,7 +215,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | 幅ちょうど768pxでヘッダーの表示が破綻する | [#45](https://github.com/uyaaaaaa/personal-blog/issues/45) |
 | 記事本文のどこにホバーしても全リンクが色変化する | [#39](https://github.com/uyaaaaaa/personal-blog/issues/39) |
 | タグページの記事カードで絵文字が常にデフォルトになる | [#40](https://github.com/uyaaaaaa/personal-blog/issues/40) |
-| エラーページのボタンが旧アクセントカラーのまま | [#42](https://github.com/uyaaaaaa/personal-blog/issues/42) |
 | 脚注とヘッダーの重なり | [#17](https://github.com/uyaaaaaa/personal-blog/issues/17) |
 | `` ` `` でリンクを囲めない | [#12](https://github.com/uyaaaaaa/personal-blog/issues/12) |
 
