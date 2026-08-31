@@ -8,7 +8,7 @@
 
 | ドキュメント | 扱う範囲 |
 | :--- | :--- |
-| **DESIGN_GUIDELINE.md**（本書） | 大方針。コンセプト、デザイントークン、レイアウト原則、UX要件、既知の課題。 |
+| **DESIGN_GUIDELINE.md**（本書） | 大方針。コンセプト、デザイントークン、レイアウト原則、UX要件。 |
 | **[COMPONENT_SPEC.md](./COMPONENT_SPEC.md)** | コンポーネント定義。各コンポーネントの props、表示要件、状態とインタラクション。 |
 | **[ICON_GUIDELINE.md](./ICON_GUIDELINE.md)** | アイコン定義。`u/` モノグラムの仕様、favicon 一式のファイル構成と生成手順。 |
 
@@ -54,7 +54,7 @@
 
 - 色を追加・変更する場合は `tailwind.config.ts` を先に更新し、`:root` の対応する CSS 変数を同じ値に揃える。
 - コンポーネント内で**カラーコードを直接書かない**。必ずトークン経由で参照する。
-- 将来的には CSS 変数側を Tailwind theme から生成し、二重管理を解消することを推奨します（→ 6章）。
+- 将来的には CSS 変数側を Tailwind theme から生成し、二重管理を解消することを推奨します（[#43](https://github.com/uyaaaaaa/personal-blog/issues/43)）。
 
 ### B. 配色（Color Palette）
 
@@ -72,7 +72,7 @@
 
 > **注意**: Tailwind の `base` (`#FAF5FF` / 淡い紫) は「ページ背景」ではなく、
 > ヘッダーの検索ボックス背景にのみ使用されています。`--color-bg` (`#F9F9F9`) とは別物です。
-> 名称が紛らわしいため、リネームを検討してください（→ 6章）。
+> 名称が紛らわしいため、リネームを検討してください（[#44](https://github.com/uyaaaaaa/personal-blog/issues/44)）。
 
 Callout は例外的に Obsidian デフォルトテーマ準拠の独自パレットを持ちます（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。
 
@@ -188,39 +188,5 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | **スクロール追従** | 見出し位置に応じて目次のアクティブ項目をハイライトする。 | 実装済 |
 | **スムーズスクロール** | 見出し・目次のクリックでスムーズに移動し、URLハッシュを更新する。着地位置は見出しの `scroll-margin-top` で一元管理し、URLハッシュの直接オープンにも同じ余白を効かせる。 | 実装済 |
 | **アイコン** | favicon / PWA / iOS 向けアイコンを一式提供する（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。 | 実装済 |
-| **検索** | `Cmd/Ctrl + K` で検索モーダルを起動する。 | **未実装** |
-| **ダークモード** | ヘッダーから切り替え可能にする。 | **未実装** |
-
----
-
-## 6. 既知の課題 / 今後の予定
-
-### デザイン定義まわりの技術的負債
-
-| 課題 | 内容 |
-| :--- | :--- |
-| **色の二重管理** | `tailwind.config.ts` と `app/layouts/default.vue` の `:root` に同じ色が別々に定義されている。CSS変数を Tailwind theme から生成する形に統一したい（[#43](https://github.com/uyaaaaaa/personal-blog/issues/43)）。 |
-| **`base` の命名** | Tailwind の `base` (`#FAF5FF`) は名前に反してページ背景ではなく検索ボックス背景専用。`surface-search` 等へのリネームを検討する（[#44](https://github.com/uyaaaaaa/personal-blog/issues/44)）。 |
-| **一覧グリッドの重複定義** | `ArticleList.vue`・`article/index.vue`・`tags/[tag].vue` が同じグリッドをそれぞれ記述している。`ArticleList` に寄せたい（[#46](https://github.com/uyaaaaaa/personal-blog/issues/46)）。 |
-
-### 修正待ちの不具合
-
-| 内容 | Issue |
-| :--- | :--- |
-| ヘッダーナビが未定義のCSS変数を参照しホバー色が効かない | [#38](https://github.com/uyaaaaaa/personal-blog/issues/38) |
-| タグページの記事カードで絵文字が常にデフォルトになる | [#40](https://github.com/uyaaaaaa/personal-blog/issues/40) |
-| 脚注とヘッダーの重なり | [#17](https://github.com/uyaaaaaa/personal-blog/issues/17) |
-| `` ` `` でリンクを囲めない | [#12](https://github.com/uyaaaaaa/personal-blog/issues/12) |
-
-### 未実装の機能
-
-| 機能 | Issue |
-| :--- | :--- |
-| コンテンツ検索 | [#13](https://github.com/uyaaaaaa/personal-blog/issues/13) |
-| タイトルによる記事検索 | [#14](https://github.com/uyaaaaaa/personal-blog/issues/14) |
-| ショートカットキーでのフォーカス（`Cmd/Ctrl + K`） | [#15](https://github.com/uyaaaaaa/personal-blog/issues/15) |
-| デフォルトサムネイル | [#4](https://github.com/uyaaaaaa/personal-blog/issues/4) |
-| OGP 画像 | [#29](https://github.com/uyaaaaaa/personal-blog/issues/29) |
-| 記事内への画像配置 | [#10](https://github.com/uyaaaaaa/personal-blog/issues/10) |
-| コードブロックのトグル | [#3](https://github.com/uyaaaaaa/personal-blog/issues/3) |
-| ダークモード対応 | （Issue未作成） |
+| **検索** | `Cmd/Ctrl + K` で検索モーダルを起動する（[#13](https://github.com/uyaaaaaa/personal-blog/issues/13) / [#14](https://github.com/uyaaaaaa/personal-blog/issues/14) / [#15](https://github.com/uyaaaaaa/personal-blog/issues/15)）。 | **未実装** |
+| **ダークモード** | ヘッダーから切り替え可能にする（[#55](https://github.com/uyaaaaaa/personal-blog/issues/55)）。 | **未実装** |
