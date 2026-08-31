@@ -1,0 +1,13 @@
+{
+  "name": "Tech Blog",
+  "short_name": "Tech Blog",
+  "description": "Functional Minimalism for Experts. Technical articles on software engineering, architecture, and design.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#FFFFFF",
+  "background_color": "#F9F9F9",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
