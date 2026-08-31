@@ -41,10 +41,10 @@ PR に `Cloudflare Pages` チェックが追加され、ビルド完了後に Cl
 ```
 app/
 ├── components/   # UIコンポーネント（layout / article / content / common / error）
-├── composables/  # 共有ロジック（目次追従、スクロール、タグ集計）
+├── composables/  # 共有ロジック（目次追従、スクロール、タグ集計、SEOメタタグ）
 ├── pages/        # ルーティング
 ├── utils/        # 日付・タグの整形
-└── layouts/      # 全ページ共通レイアウトとCSS変数
+└── layouts/      # 全ページ共通レイアウトとベーススタイル
 content/article/  # 記事（Markdown）
 theme/            # デザイントークン（色・フォントの単一情報源）
 remark/           # Markdown拡張（Obsidian互換Callout）
