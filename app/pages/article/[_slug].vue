@@ -77,7 +77,7 @@ watch(() => page.value, async () => {
         <TocMobile :links="tocLinks" />
 
         <!-- Article Body -->
-        <div ref="articleRef" class="prose prose-slate max-w-none hover:prose-a:text-accent">
+        <div ref="articleRef" class="prose prose-slate max-w-none">
           <ContentRenderer :value="page" />
         </div>
       </article>
@@ -103,6 +103,21 @@ watch(() => page.value, async () => {
 </template>
 
 <style>
+/* 本文リンクのスタイルはここで一元管理する（#39）。
+   Tailwindのprose-a/hoverバリアントは適用順（右のバリアントが内側）が読み取りにくく、
+   順序を誤るとコンテナ側に:hoverが付いて本文のどこにホバーしても全リンクが変色する。
+   リンク自身を指すセレクタをCSSで明示して、その事故を構造的に防ぐ。
+   配色はdoc/DESING_GUIDELINE.md「4. 記事内要素」の
+   「アクセントカラーで表示し、ホバー時にアンダーラインを付与」に準拠する */
+.prose a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+}
+
 /* ページ内リンクの着地位置はここで一元管理する。
    JSのスクロール（useScrollTo）とURLハッシュ直開きの両方に効く */
 .prose :where(h2, h3, h4, h5, h6) {
