@@ -207,7 +207,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | 課題 | 内容 |
 | :--- | :--- |
 | **`base` の命名** | `base` (`#FAF5FF`) は名前に反してページ背景ではなく検索ボックス背景専用。`surface-search` 等へのリネームを検討する（[#44](https://github.com/uyaaaaaa/personal-blog/issues/44)）。 |
-| **一覧グリッドの重複定義** | `ArticleList.vue`・`article/index.vue`・`tags/[tag].vue` が同じグリッドをそれぞれ記述している。`ArticleList` に寄せたい（[#46](https://github.com/uyaaaaaa/personal-blog/issues/46)）。 |
 
 ### 修正待ちの不具合
 

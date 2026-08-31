@@ -174,7 +174,9 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - `1カラム` → `md: 2カラム` → `lg: 3カラム`
 - ギャップ `1rem`（SP）/ `1.5rem`（md以上）
 
-> `article/index.vue` と `tags/[tag].vue` は本コンポーネントを使わず同じグリッドを直接記述しています。将来的に本コンポーネントへ寄せることを推奨します（[#46](https://github.com/uyaaaaaa/personal-blog/issues/46)）。
+**使用箇所**
+
+記事一覧のグリッドは本コンポーネントに集約しています。`index.vue`・`article/index.vue`・`tags/[tag].vue` はいずれも `articles` を渡すだけで、`ArticleCard` へのマッピングは本コンポーネントが行います。
 
 ---
 
