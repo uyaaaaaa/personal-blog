@@ -110,7 +110,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | `md` | `768px` | 記事グリッドが1→2カラム。ヘッダー検索ボックスの表示。 |
 | `lg` | `1024px` | 記事グリッドが2→3カラム。記事詳細が1→2カラム（サイドバー表示）。Hero が縦積み→左右分割。 |
 
-`app/components/layout/HeaderNavigation.vue` のみ scoped CSS のメディアクエリ（`max-width: 768px` / `min-width: 769px`）で切り替えており、Tailwind の `md:`（`min-width: 768px`）と1pxずれています（→ 6章）。
+`app/components/layout/HeaderNavigation.vue` のみ scoped CSS のメディアクエリ（`max-width: 768px` / `min-width: 769px`）で切り替えており、Tailwind の `md:`（`min-width: 768px`）と1pxずれています（[#45](https://github.com/uyaaaaaa/personal-blog/issues/45)）。
 
 ---
 
@@ -198,18 +198,19 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 | 課題 | 内容 |
 | :--- | :--- |
-| **色の二重管理** | `tailwind.config.ts` と `app/layouts/default.vue` の `:root` に同じ色が別々に定義されている。CSS変数を Tailwind theme から生成する形に統一したい。 |
-| **`base` の命名** | Tailwind の `base` (`#FAF5FF`) は名前に反してページ背景ではなく検索ボックス背景専用。`surface-search` 等へのリネームを検討する。 |
+| **色の二重管理** | `tailwind.config.ts` と `app/layouts/default.vue` の `:root` に同じ色が別々に定義されている。CSS変数を Tailwind theme から生成する形に統一したい（[#43](https://github.com/uyaaaaaa/personal-blog/issues/43)）。 |
+| **`base` の命名** | Tailwind の `base` (`#FAF5FF`) は名前に反してページ背景ではなく検索ボックス背景専用。`surface-search` 等へのリネームを検討する（[#44](https://github.com/uyaaaaaa/personal-blog/issues/44)）。 |
 | **エラーページのトークン非準拠** | `error/NotFound.vue` と `error/Server.vue` が色とフォントをカラーコード直書きで持ち、ボタンが**旧アクセントカラー `#007AFF`（青）**のまま。サイト全体の `#8B5CF6` と矛盾している（[#42](https://github.com/uyaaaaaa/personal-blog/issues/42)）。 |
 | **エラーコンポーネントの重複** | `NotFound.vue` と `Server.vue` は文言以外ほぼ同一。共通化の余地がある。 |
-| **ブレークポイントの1pxずれ** | `HeaderNavigation.vue` だけ scoped CSS の `max-width: 768px` / `min-width: 769px` で切り替えており、Tailwind の `md:`（`min-width: 768px`）とずれる。幅ちょうど768pxで検索ボックスとハンバーガーが同時に出る。 |
-| **一覧グリッドの重複定義** | `ArticleList.vue`・`article/index.vue`・`tags/[tag].vue` が同じグリッドをそれぞれ記述している。`ArticleList` に寄せたい。 |
+| **ブレークポイントの1pxずれ** | `HeaderNavigation.vue` だけ scoped CSS の `max-width: 768px` / `min-width: 769px` で切り替えており、Tailwind の `md:`（`min-width: 768px`）とずれる。幅ちょうど768pxで検索ボックスとハンバーガーが同時に出る（[#45](https://github.com/uyaaaaaa/personal-blog/issues/45)）。 |
+| **一覧グリッドの重複定義** | `ArticleList.vue`・`article/index.vue`・`tags/[tag].vue` が同じグリッドをそれぞれ記述している。`ArticleList` に寄せたい（[#46](https://github.com/uyaaaaaa/personal-blog/issues/46)）。 |
 
 ### 修正待ちの不具合
 
 | 内容 | Issue |
 | :--- | :--- |
 | ヘッダーナビが未定義のCSS変数を参照しホバー色が効かない | [#38](https://github.com/uyaaaaaa/personal-blog/issues/38) |
+| 幅ちょうど768pxでヘッダーの表示が破綻する | [#45](https://github.com/uyaaaaaa/personal-blog/issues/45) |
 | 記事本文のどこにホバーしても全リンクが色変化する | [#39](https://github.com/uyaaaaaa/personal-blog/issues/39) |
 | タグページの記事カードで絵文字が常にデフォルトになる | [#40](https://github.com/uyaaaaaa/personal-blog/issues/40) |
 | エラーページのボタンが旧アクセントカラーのまま | [#42](https://github.com/uyaaaaaa/personal-blog/issues/42) |
