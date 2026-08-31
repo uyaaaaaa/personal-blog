@@ -50,8 +50,39 @@ export default defineNuxtConfig({
     preset: 'cloudflare-pages',
     prerender: {
       crawlLinks: true,
-      routes: ['/']
-    }
+      routes: ['/', '/404.html']
+    },
+    cloudflare: {
+      pages: {
+        routes: {
+          include: ['/*'],
+          // プリレンダ済みのパスをWorkerに通さない。1ルートあたり1件で数えられ、
+          // Cloudflareの上限は100件のため、記事とタグはワイルドカードで畳む
+          exclude: [
+            '/article/*',
+            '/tags/*',
+            '/__nuxt_content/*',
+            '/',
+            '/_payload.json',
+            '/about',
+            '/about/_payload.json',
+            '/article',
+            '/tags',
+            '/dump.article.sql',
+            '/404.html',
+            '/apple-touch-icon.png',
+            '/favicon.ico',
+            '/favicon.svg',
+            '/icon-192.png',
+            '/icon-512.png',
+            '/ogp.png',
+            '/ogp.svg',
+            '/robots.txt',
+            '/site.webmanifest',
+          ],
+        },
+      },
+    },
   },
   features: {
     inlineStyles: true

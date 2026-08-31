@@ -183,7 +183,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | 項目 | 要件 | 状態 |
 | :--- | :--- | :--- |
 | **パフォーマンス** | 表示速度を最優先（Core Web Vitals の高水準達成）。Webフォントを使わず、`inlineStyles` を有効化。 | 実装済 |
-| **静的生成** | Cloudflare Pages 向けにプリレンダリング（`nitro.preset: cloudflare-pages`）。 | 実装済 |
+| **静的生成** | Cloudflare Pages 向けにプリレンダリング（`nitro.preset: cloudflare-pages`）。プリレンダ済みのパスは `_routes.json` の `exclude` で Worker を通さない。`exclude` は Cloudflare の上限が100件のため、記事とタグは `/article/*` `/tags/*` のワイルドカードで畳む（個別列挙のままだと記事追加で上限に達し、全記事が Worker 送りになって SSR が失敗する）。存在しないパスは静的な `404.html` が 404 で返る。 | 実装済 |
 | **公開制御** | `published: true` の記事のみを全ページで取得する。 | 実装済 |
 | **旧URL互換** | `/blog/**` `/book/**` は `/article/**` へ301リダイレクト。 | 実装済 |
 | **タグ機能** | 全タグの一覧ページと、タグによる絞り込みを提供する。 | 実装済 |
