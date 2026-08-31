@@ -137,24 +137,11 @@ onUnmounted(() => {
 
 const { scrollTo } = useScrollTo()
 
-const handleClick = async (id: string) => {
-  // Close menu first
+// 着地位置のオフセットは記事側の見出しの scroll-margin-top（[_slug].vue）で一元管理している。
+// ジャンプ中は useScrollDirection が「下スクロール」を返すため目次バーは自動で隠れ、
+// バーの高さ分を確保する必要がない
+const handleClick = (id: string) => {
   isOpen.value = false
-  
-  // Wait for DOM update to get the correct collapsed height
-  await nextTick()
-  
-  // Header (64) + Gap (10)
-  const headerOffset = 64 + 10
-  
-  // Dynamic TOC height (should be collapsed height now)
-  const tocHeight = containerRef.value?.offsetHeight || 45
-  
-  // Buffer
-  const buffer = 20
-  
-  const offset = headerOffset + tocHeight + buffer
-  
-  scrollTo(id, offset)
+  scrollTo(id)
 }
 </script>
