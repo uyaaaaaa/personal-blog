@@ -2,7 +2,7 @@
   <div class="toc-container flex flex-col min-h-0">
     <h4 class="font-bold text-main mb-4 flex-shrink-0">目次</h4>
     <!-- 目次が長い場合はサイドバー全体ではなく目次自身が内部スクロールする -->
-    <nav ref="navRef" class="toc-nav min-h-0 overflow-y-auto overscroll-contain pr-2">
+    <nav ref="navRef" class="toc-nav min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pr-2">
       <ul class="space-y-2 relative">
         <!-- Vertical connector line -->
         <div class="absolute left-[3px] top-2 bottom-2 w-[2px] bg-gray-100 -z-10"></div>
@@ -11,7 +11,7 @@
           <a
             :href="`#${link.id}`"
             @click.prevent="scrollTo(link.id)"
-            class="block pl-4 py-1 text-sm hover:text-accent focus:text-accent transition-colors duration-200 border-l-2 hover:border-accent focus:border-accent focus:outline-none"
+            class="block pl-4 py-1 text-sm break-words hover:text-accent focus:text-accent transition-colors duration-200 border-l-2 hover:border-accent focus:border-accent focus:outline-none"
             :class="activeId === link.id ? 'text-accent border-accent font-medium' : 'text-sub border-transparent'"
           >
             {{ link.text }}
@@ -22,7 +22,7 @@
                <a
                 :href="`#${child.id}`"
                 @click.prevent="scrollTo(child.id)"
-                class="block pl-4 py-1 text-xs hover:text-accent focus:text-accent transition-colors duration-200 focus:outline-none"
+                class="block pl-4 py-1 text-xs break-words hover:text-accent focus:text-accent transition-colors duration-200 focus:outline-none"
                 :class="activeId === child.id ? 'text-accent font-medium' : 'text-sub'"
               >
                 {{ child.text }}
