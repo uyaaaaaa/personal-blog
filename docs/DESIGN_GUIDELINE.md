@@ -193,7 +193,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | **アイコン** | favicon / PWA / iOS 向けアイコンを一式提供する（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。 | 実装済 |
 | **OGP** | SNS シェア用の OGP / Twitter Card メタタグを全ページに出力する。共通画像は `public/ogp.png`、記事はフロントマターの `image` で差し替え可（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。記事を表示できないページは `og:type` を `website` にし、`article` を名乗らせない。 | 実装済 |
 | **ローディング表示** | ルート遷移中は画面上端にアクセント色2pxのバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない。`throttle: 200ms` により、プリレンダ済みページのように即座に終わる遷移ではバーを出さない。`prefers-reduced-motion: reduce` ではトランジションを無効化する。なおバーはルート遷移にしか反応しないため、ページ内の再取得（再試行など）は各コンポーネントが自前で進行を示す。 | 実装済 |
-| **記事取得の状態分離** | 記事詳細では「取得失敗（再試行導線）」と「記事なし（404 + 回遊導線）」を区別して表示する（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md) の `ArticleFallback`）。 | 実装済 |
+| **記事取得の状態分離** | 記事詳細では「取得失敗」と「記事なし」を区別して表示し、HTTPステータスも実態に合わせる（取得失敗=500 / 記事なし=404 / 未確定は何も出さない）。（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md) の `ArticleFallback`） | 実装済 |
 | **検索** | `Cmd/Ctrl + K` で検索モーダルを起動する。 | **未実装** |
 | **ダークモード** | ヘッダーから切り替え可能にする。 | **未実装** |
 

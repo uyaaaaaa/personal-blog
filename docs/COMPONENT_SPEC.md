@@ -517,8 +517,17 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 | 条件 | 表示 | HTTPステータス |
 | :--- | :--- | :--- |
 | `data` あり | 記事本文 | 200 |
-| `error` あり | `ArticleFallback variant="error"` | 200（一時的な失敗のため404にはしない） |
-| `error` なし かつ `data` なし | `ArticleFallback variant="not-found"` | 404（SSR時に `setResponseStatus` で設定） |
+| `status` が `error` | `ArticleFallback variant="error"` | 500 |
+| `status` が `success` かつ `data` なし | `ArticleFallback variant="not-found"` | 404 |
+| 取得が未確定（`pending` / `idle`） | **何も出さない** | — |
+
+**確定するまでカードを出さない。** Cloudflare 上の SSR は `@nuxt/content` のクエリが失敗しうる
+（→ 記事「Nuxt Contentの記事がSSR時に取得できない問題とその解決策」）。この失敗はクライアントの
+再取得で復帰するため、確定前にカードを描画すると「一瞬エラー/404 → 記事」というちらつきになる。
+
+**パスは末尾スラッシュを落として揃える。** Cloudflare Pages は `/article/foo` を `/article/foo/` へ
+リダイレクトするが、記事のパスとプリレンダ済みペイロードのキーは末尾スラッシュを持たない。
+`route.path` をそのまま使うとハイドレーション時にクエリが一致せず、記事があるのに404と判定される。
 
 **表示要件**
 

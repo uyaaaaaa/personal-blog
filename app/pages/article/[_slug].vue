@@ -6,15 +6,48 @@ import TocMobile from '~/components/article/TocMobile.vue'
 import ArticleFallback from '~/components/article/ArticleFallback.vue'
 
 const route = useRoute()
-const { data: page, error, refresh, status } = await useAsyncData(route.path, () =>
-  queryCollection('article').path(route.path).where('published', '=', true).first(),
+
+// Cloudflare Pagesは /article/foo を /article/foo/ にリダイレクトするが、記事のパスと
+// プリレンダ済みペイロードのキーは末尾スラッシュなし。揃えないと記事があるのに無いと判定される
+const articlePath = computed(() => route.path.replace(/\/+$/, '') || '/')
+
+const { data: page, error, refresh, status } = await useAsyncData(articlePath.value, () =>
+  queryCollection('article').path(articlePath.value).where('published', '=', true).first(),
 )
 
-const isNotFound = computed(() => !error.value && !page.value)
+const isNotFound = computed(() => status.value === 'success' && !page.value)
 
-if (import.meta.server && isNotFound.value) {
+// CloudflareのSSRでは@nuxt/contentのクエリが失敗しうる。この失敗はクライアントの
+// 再取得で復帰するため、復帰するまではカードを出さない（出すと一瞬エラーが見えてしまう）
+const recovering = ref(Boolean(error.value))
+onMounted(async () => {
+  if (!recovering.value) return
+  try {
+    await refresh()
+  }
+  finally {
+    recovering.value = false
+  }
+})
+
+const retrying = ref(false)
+const retry = async () => {
+  retrying.value = true
+  try {
+    await refresh()
+  }
+  finally {
+    retrying.value = false
+  }
+}
+const showError = computed(() => !recovering.value && (retrying.value || status.value === 'error'))
+
+if (import.meta.server) {
   const event = useRequestEvent()
-  if (event) setResponseStatus(event, 404)
+  if (event) {
+    if (error.value) setResponseStatus(event, 500)
+    else if (isNotFound.value) setResponseStatus(event, 404)
+  }
 }
 
 const tocLinks = computed(() => page.value?.body?.toc?.links || [])
@@ -111,13 +144,13 @@ watch(() => page.value, async () => {
   </div>
   
   <ArticleFallback
-    v-else-if="error"
+    v-else-if="showError"
     variant="error"
-    :pending="status === 'pending'"
-    @retry="refresh()"
+    :pending="retrying"
+    @retry="retry()"
   />
 
-  <ArticleFallback v-else variant="not-found" :path="route.path" />
+  <ArticleFallback v-else-if="isNotFound" variant="not-found" :path="articlePath" />
 </template>
 
 <style>
