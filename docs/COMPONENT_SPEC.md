@@ -77,13 +77,13 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 `Articles` (`/article`) / `Tags` (`/tags`)。`About` (`/about`) はコメントアウトされており現在非表示。
 
-**デスクトップ（769px以上）**
+**デスクトップ（`md` = 768px以上）**
 
 - 右寄せに横並び。`font-weight: 500` / `0.95rem` / 項目間 `1.5rem`。
 - ホバーでアクセントカラーに変化する。**現状は未定義のCSS変数を参照しているため機能していない**（[#38](https://github.com/uyaaaaaa/personal-blog/issues/38)）。
-- 表示の切り替えは scoped CSS のメディアクエリで行っており、Tailwind の `md:` と1pxずれている（[#45](https://github.com/uyaaaaaa/personal-blog/issues/45)）。
+- 表示の切り替えは Tailwind のブレークポイントで行う（デスクトップ: `hidden md:flex` / モバイル: `md:hidden`）。ヘッダー検索ボックスと同じ `md` 境界に揃える。
 
-**モバイル（768px以下）**
+**モバイル（`md` 未満 = 767px以下）**
 
 | 項目 | 要件 |
 | :--- | :--- |
