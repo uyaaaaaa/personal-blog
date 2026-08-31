@@ -30,26 +30,30 @@
     </button>
 
     <!-- Dropdown: 記事コンテンツを押し下げず、常にオーバーレイで表示する -->
+    <!-- overscroll-contain: 目次内スクロールが端に達しても背後のページまでスクロールさせない -->
     <div
       v-show="isOpen"
-      class="absolute top-full left-0 -mt-[1px] w-full bg-white border border-border shadow-lg rounded-b-lg max-h-[60vh] overflow-y-auto transition-all duration-200"
+      ref="dropdownRef"
+      class="absolute top-full left-0 -mt-[1px] w-full bg-white border border-border shadow-lg rounded-b-lg max-h-[60vh] overflow-y-auto overscroll-contain transition-all duration-200"
     >
       <nav class="py-2 px-4 pb-4">
         <ul class="space-y-1">
           <li v-for="link in links" :key="link.id">
-            <a 
-              :href="`#${link.id}`" 
+            <a
+              :href="`#${link.id}`"
               @click.prevent="handleClick(link.id)"
-              class="block py-1.5 text-sm text-sub hover:text-accent border-l-2 border-transparent hover:border-accent pl-3 -ml-[1px]"
+              class="block py-1.5 text-sm hover:text-accent border-l-2 hover:border-accent pl-3 -ml-[1px]"
+              :class="activeId === link.id ? 'text-accent border-accent font-medium' : 'text-sub border-transparent'"
             >
               {{ link.text }}
             </a>
             <ul v-if="link.children && link.children.length > 0" class="ml-2 mt-1 space-y-1">
               <li v-for="child in link.children" :key="child.id">
-                 <a 
-                  :href="`#${child.id}`" 
+                 <a
+                  :href="`#${child.id}`"
                   @click.prevent="handleClick(child.id)"
-                  class="block py-1.5 text-xs text-sub hover:text-accent pl-3 border-l-2 border-transparent hover:border-accent -ml-[1px]"
+                  class="block py-1.5 text-xs hover:text-accent pl-3 border-l-2 hover:border-accent -ml-[1px]"
+                  :class="activeId === child.id ? 'text-accent border-accent font-medium' : 'text-sub border-transparent'"
                 >
                   {{ child.text }}
                 </a>
@@ -70,13 +74,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   links: any[]
 }>()
 
 const isOpen = ref(false)
+const dropdownRef = ref<HTMLElement | null>(null)
+
+// ヘッダー(64px) + 目次バーの下端あたりを通過判定ラインにする
+const { activeId } = useTocActive(computed(() => props.links), 140)
+
+// 目次を開いた時、現在読んでいる見出しが見える位置までドロップダウン内をスクロールする
+watch(isOpen, async (open) => {
+  if (!open || !activeId.value) return
+  await nextTick()
+
+  const container = dropdownRef.value
+  if (!container || container.scrollHeight <= container.clientHeight) return
+
+  const link = container.querySelector<HTMLElement>(`a[href="#${CSS.escape(activeId.value)}"]`)
+  if (!link) return
+
+  const containerRect = container.getBoundingClientRect()
+  const linkRect = link.getBoundingClientRect()
+  container.scrollTop += linkRect.top - containerRect.top - containerRect.height / 2 + linkRect.height / 2
+})
 const isSticky = ref(false)
 
 // 下スクロール時は隠し、上スクロール時は表示する（sticky中のみ。メニュー展開中は隠さない）
