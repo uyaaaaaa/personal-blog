@@ -1,5 +1,6 @@
 ---
 title: "シェルの小技・今後使っていきたい機能"
+emoji: "🐚"
 description: "普段使いできそうな機能をメモします。"
 published: true
 date: 2026-01-27

@@ -1,5 +1,6 @@
 ---
 title: "ReactNativeでのiOS実機確認(Expo Go)で、アプリが動かない事象とその解決法"
+emoji: "⚛️"
 description: "アプリ開発に挑戦した時の備忘録です。"
 published: true
 date: 2026-01-25

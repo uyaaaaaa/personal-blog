@@ -1,5 +1,6 @@
 ---
 title: "Vim標準機能で使いたいものメモ"
+emoji: "📗"
 description: "使い慣れてきた頃に知って驚いた、vimの便利機能を紹介します！"
 published: true
 date: 2026-01-11

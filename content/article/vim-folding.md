@@ -1,5 +1,6 @@
 ---
 title: "neovimのmarkdown折りたたみを改造した"
+emoji: "🪗"
 description: ""
 published: true
 date: 2026-01-16

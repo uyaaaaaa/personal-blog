@@ -8,6 +8,7 @@ export default defineContentConfig({
       schema: z.object({
         title: z.string(),
         description: z.string(),
+        emoji: z.string().optional(),
         image: z.string().optional(),
         published: z.boolean(),
         date: z.string(),

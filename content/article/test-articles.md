@@ -1,5 +1,6 @@
 ---
 title: "Link Verification Post"
+emoji: "🧪"
 description: "A post to verify external link behavior."
 published: false
 date: 2025-12-27

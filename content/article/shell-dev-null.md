@@ -1,5 +1,6 @@
 ---
 title: "Linuxの標準出力をきちんと理解する"
+emoji: "🕳️"
 description: "よく見かける/dev/nullなど、意味をきちんと理解してますか？"
 published: true
 date: 2026-01-28

@@ -1,5 +1,6 @@
 ---
 title: "vim標準で使いたいコマンド"
+emoji: "⌨️"
 description: "これが使えたらvimmer"
 published: true
 date: 2026-01-10

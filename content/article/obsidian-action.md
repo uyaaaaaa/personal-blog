@@ -1,5 +1,6 @@
 ---
 title: "obsidianのリポジトリをGithubActionsで自動整形する"
+emoji: "⚙️"
 description: "ちょっとしたobsidianのイラつきを解消する方法です"
 published: true
 date: 2026-01-26

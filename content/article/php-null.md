@@ -1,5 +1,6 @@
 ---
 title: "phpのnull合体演算子を深掘りする"
+emoji: "🐘"
 description: ""
 published: true
 date: 2026-01-24
