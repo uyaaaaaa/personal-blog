@@ -75,12 +75,12 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 **メニュー項目**
 
-`Articles` (`/article`) / `Tags` (`/tags`)。`About` (`/about`) はコメントアウトされており現在非表示。
+`Articles` (`/article`) / `Tags` (`/tags`)。
 
 **デスクトップ（`md` = 768px以上）**
 
 - 右寄せに横並び。`font-weight: 500` / `0.95rem` / 項目間 `1.5rem`。
-- ホバーでアクセントカラーに変化する。**現状は未定義のCSS変数を参照しているため機能していない**（[#38](https://github.com/uyaaaaaa/personal-blog/issues/38)）。
+- ホバーでアクセントカラーに変化する。
 - 表示の切り替えは Tailwind のブレークポイントで行う（デスクトップ: `hidden md:flex` / モバイル: `md:hidden`）。ヘッダー検索ボックスと同じ `md` 境界に揃える。
 
 **モバイル（`md` 未満 = 767px以下）**
@@ -97,7 +97,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 2. **Tags セクション** — 見出し `Tags`（`0.8rem` / 大文字 / 字間広め / サブテキスト色）。
    - 記事数の多い順に**上位10件**を表示（`TOP_TAGS_LIMIT = 10`）。
    - 各行はタグ名（等幅フォント）を左、記事数バッジ（枠線付きのピル）を右に配置。
-   - ホバーで文字がアクセント色、背景がコード背景色になる。
+   - ホバーで文字がアクセント色、背景が淡いサーフェス色になる。
    - 末尾に `View all tags →` を置き `/tags` へ誘導する。
 3. リンクをタップしたら必ずドロワーを閉じる。
 
@@ -233,16 +233,17 @@ PC版サイドバーに表示する目次。
 | 項目 | 要件 |
 | :--- | :--- |
 | 見出し | `目次`（太字 / メイン文字色） |
-| コネクタ線 | 項目リストの左端に縦線（幅2px / サブサーフェス色 / `z-index: -1`） |
-| h2 項目 | `0.875rem` / 左パディング `1rem` / 左ボーダー2px |
-| h3 項目 | h2 の下に入れ子。1段インデント / `0.75rem` |
-| 非アクティブ | サブテキスト色 / 左ボーダーは透明 |
-| **アクティブ** | アクセント色の文字 + アクセント色の左ボーダー + `font-medium` |
-| ホバー / フォーカス | アクセント色の文字とボーダー |
+| コネクタ線 | 項目リストの左端に縦線（幅2px / サブサーフェス色 / `-z-10`） |
+| h2 項目 | `0.875rem` / 左パディング `1rem` / 左ボーダー2px。コネクタ線に重ねる |
+| h3 項目 | h2 の下に入れ子。1段インデント / `0.75rem`。**左ボーダーは持たない**（コネクタ線から外れた位置に2本目の縦線が出るため） |
+| 非アクティブ | サブテキスト色 / h2 の左ボーダーは透明 |
+| **アクティブ** | アクセント色の文字 + `font-medium`。h2 はさらに左ボーダーがアクセント色になる |
+| ホバー / フォーカス | アクセント色の文字。h2 はボーダーも変化する |
 
 **スクロール挙動**
 
 - 目次が長い場合、**サイドバー全体ではなく目次自身が内部スクロール**する（`overflow-y: auto` / `overscroll-contain`）。
+- **縦だけをスクロールさせる。** `overflow-y` だけを指定すると `overflow-x` も `auto` に計算されるため、`overflow-x: hidden` を明示する。あわせて項目に `break-words` を与え、分割できない長い語（識別子・URLなど）を含む見出しも折り返す。
 - スクロールバーは幅4pxの細いもの（`#d1d5db` / 角丸 / トラックは透明）。
 - 読み進めてアクティブ項目がスクロール領域の外に出たら、**自動で領域の中央付近へ追従スクロール**する。
 - 項目クリックで該当見出しへスムーズスクロール。**着地位置のオフセットはコンポーネント側では持たず**、記事本文の見出しに指定した `scroll-margin-top` が決める（→ [Markdownスタイル](#markdownスタイル)）。
@@ -278,6 +279,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | ジャンプ中の挙動 | 目次リンクによるプログラムスクロール中は、**方向によらずバーを隠す**。上方向へジャンプした際にバーが現れて着地した見出しに被るのを防ぐ（`useScrollDirection` が `isProgrammaticScroll` を見て `'down'` を返す） |
 | 開いた時の位置合わせ | 開いた時点でアクティブな見出しが**領域の中央付近に来るよう内部スクロール**する |
 | スクロール貫通の抑止 | `overscroll-contain` で、目次内のスクロールが端に達しても背後のページを動かさない |
+| 横スクロールの抑止 | `Toc` と同じく `overflow-x: hidden` + 項目の `break-words` で、長い見出しがあっても横に伸びない |
 | 閉じる | 背景（`rgba(0,0,0,0.2)`）のタップ、または項目のタップ |
 | 項目タップ時のオフセット | **コンポーネント側では計算しない**。着地位置は見出しの `scroll-margin-top` が決める。ジャンプ中はバーが隠れるため、バーの高さを加味する必要がない |
 
@@ -341,7 +343,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | :--- | :--- |
 | **見出し (H2, H3)** | `prose` の既定に準拠。本文中の `h2`〜`h6` は**クリックで該当位置へスクロール**する。カーソルは `pointer`。 |
 | **コードブロック** | Nuxt Content のシンタックスハイライトを使用（テーマ **`github-light`**）。背景 `#F5F5F5` / 文字色 `#24292E` / 1pxボーダー。モバイルでは横スクロール。**行番号は表示しない**。 |
-| **インラインコード** | Obsidian風。コード背景色 + 1pxボーダー + 小角丸。パディング 上下 `0.125rem` / 左右 `0.375rem`。`font-weight: 400`、文字色は周囲から継承。**バッククォート（`code::before` / `code::after`）は非表示**にする。 |
+| **インラインコード** | Obsidian風。淡いサーフェス色 + 1pxボーダー + 小角丸。パディング 上下 `0.125rem` / 左右 `0.375rem`。`font-weight: 400`、文字色は周囲から継承。**バッククォート（`code::before` / `code::after`）は非表示**にする。 |
 | **リンク** | アクセントカラーで表示し、ホバーでアンダーラインを付与。見出しは Nuxt Content が `<a>` で包むため対象外とし、見出しの色を継承したままホバーでのみアクセントカラーに変化する。 |
 | **引用 (Blockquote)** | `prose` の既定に準拠。 |
 
@@ -462,8 +464,9 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 
 **表示要件**
 
-中央寄せの縦積み。最小高 `60vh` / 最大幅 `600px`。色とフォントはすべてデザイントークン
-（`--color-text-main` / `--color-text-sub` / `--font-base` / `--font-mono` / `--color-accent`）を参照する。
+中央寄せの縦積み。最小高 `60vh` / 最大幅 `600px`。色とフォントはデザイントークン
+（`--color-main` / `--color-sub` / `--font-sans` / `--font-mono` / `--color-accent` / `--color-accent-hover`）を参照する。
+ボタンの文字色 `#FFFFFF` だけは直値（→ [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) のトークン例外）。
 
 | 要素 | 要件 |
 | :--- | :--- |
@@ -497,6 +500,7 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 | `useScrollTo()` | `app/composables/useScrollTo.ts` | 指定IDへ `scrollIntoView({ behavior: 'smooth' })` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める） |
 | `isProgrammaticScroll` | `app/composables/useScrollTo.ts` | 目次リンク等によるスクロールが進行中かを表す共有 `ref`。スクロールイベントが `150ms` 止まったら終了とみなす（`scrollend` は Safari の対応が新しいためデバウンスで代用）。`useScrollDirection` が参照する |
 | `useArticleTags()` | `app/composables/useArticleTags.ts` | 公開記事のフロントマターからタグを集計し、`{ name, slug, count }` を**記事数の降順（同数なら名前順）**で返す |
+| `usePageSeo(input)` | `app/composables/usePageSeo.ts` | title / description と OGP・Twitter Card のメタタグをまとめて出力する。title は `<ページ名> \| Tech Blog`（省略時はサイト名のみ）、description は空ならサイト共通の説明文にフォールバックする。`og:image` は記事の `image`、無ければ `/ogp.png`。`og:image` と `og:url` は `runtimeConfig.public.siteUrl` を基準に絶対URL化する。`type: 'article'` のときだけ `article:published_time` / `article:tag` を出す（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
 | `formatDate(date)` | `app/utils/date.ts` | 日付を `YYYY.MM.DD` 形式に整形する（`ja-JP` ロケール / ゼロ埋め / ドット区切り）。空値は空文字を返す |
 | `tagToSlug(tag)` | `app/utils/tag.ts` | タグ名をURLセーフなスラグに変換する。小文字化し、英数字以外の連続を `-` に置換、前後の `-` を除去（例: `@nuxt/content` → `nuxt-content`） |
 

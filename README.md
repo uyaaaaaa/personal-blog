@@ -41,10 +41,10 @@ PR に `Cloudflare Pages` チェックが追加され、ビルド完了後に Cl
 ```
 app/
 ├── components/   # UIコンポーネント（layout / article / content / common / error）
-├── composables/  # 共有ロジック（目次追従、スクロール、タグ集計）
+├── composables/  # 共有ロジック（目次追従、スクロール、タグ集計、SEOメタタグ）
 ├── pages/        # ルーティング
 ├── utils/        # 日付・タグの整形
-└── layouts/      # 全ページ共通レイアウトとCSS変数
+└── layouts/      # 全ページ共通レイアウトとベーススタイル
 content/article/  # 記事（Markdown）
 theme/            # デザイントークン（色・フォントの単一情報源）
 remark/           # Markdown拡張（Obsidian互換Callout）
@@ -78,7 +78,7 @@ category: blog
 | `date` | ✓ | 公開日。一覧はこの降順で並ぶ |
 | `emoji` | | サムネイル代わりの絵文字。省略時は `📝` |
 | `tags` | | タグ。`/tags` での集計対象になる |
-| `category` | | `blog` または `book` |
+| `category` | | 記事の区分。記事詳細のヘッダーにバッジとして表示される。現状は `blog` / `book` を使用 |
 | `image` | | サムネイル画像。指定するとHeroで絵文字の代わりに表示される |
 
 ## ドキュメント

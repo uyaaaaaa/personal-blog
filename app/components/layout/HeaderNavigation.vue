@@ -83,7 +83,6 @@ const menuItems = [
   { label: 'Tags', path: '/tags' },
 ]
 
-// ドロワーに表示するタグは記事数上位のみ(残りは /tags で誘導)
 const TOP_TAGS_LIMIT = 10
 const { data: tags } = useArticleTags()
 const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))

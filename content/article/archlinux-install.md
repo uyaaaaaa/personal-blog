@@ -44,7 +44,7 @@ BIOS起動の場合は `Arch Linux install medium (X86_64, BIOS)`となってい
 
 ※ 補足: JIS配列を使いたい場合は以下を実行する。自分はUS配列のため実行しない。
 
-```terminal
+```
 $ loadkeys jp106
 ```
 
@@ -52,7 +52,7 @@ $ loadkeys jp106
 
 `ping`でインターネット接続を確認する。
 
-```terminal
+```
 $ ping -c 3 archlinux.jp
 ```
 
@@ -60,7 +60,7 @@ $ ping -c 3 archlinux.jp
 
 今回はwifiに接続したいので、`iwctl`を使う
 
-```terminal
+```
 $ iwctl
 
 [iwd]# device list  -- 'wlan0'のみ表示された
@@ -78,7 +78,7 @@ $ iwctl
 
 以下を実行する。
 
-```terminal
+```
 $ timedatectl set-ntp true
 ```
 

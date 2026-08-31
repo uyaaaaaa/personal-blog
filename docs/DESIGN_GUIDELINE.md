@@ -59,8 +59,16 @@ CSS変数名はトークンのキーからそのまま導出されます（`main
 **ルール**
 
 - 色・フォントを追加・変更する場合は `theme/tokens.ts` **だけ**を編集する。Tailwind側とCSS変数側の両方に自動で反映される。
-- コンポーネント内で**カラーコードを直接書かない**。必ずトークン経由で参照する。
-- CSS変数は Tailwind の base レイヤーに出力されるため、`default.vue` を経由しないページ（`app/error.vue`）でも参照できる。
+- CSS変数は Tailwind の base レイヤーに出力されるため、レイアウトのスタイル定義に依存せず全ページで参照できる。
+- **パレットにある色は、コンポーネントに値を書かずトークン経由で参照する。** 同じ色の定義が2箇所に増えるのを防ぐため。
+- 逆に、次の4つはパレットの外側なので直値で書いてよい。トークン化しても参照先が1箇所しかなく、パレットを実態より大きく見せるだけになる。
+
+  | 例外 | 該当箇所 |
+  | :--- | :--- |
+  | 外部テーマに追従する値 | コードブロックの文字色 `#24292E`（`github-light` に合わせる） |
+  | 白・黒とその透過 | ヘッダー背景 `rgba(255, 255, 255, 0.9)`、ドロワー背景 `#fff`、オーバーレイ `rgba(0, 0, 0, 0.5)`、ハンバーガー線 `#000`、エラーページのボタン文字色 `#FFFFFF` |
+  | UIクロームの色 | 目次のスクロールバー `#d1d5db` |
+  | アイコンのSVG | ヘッダーのロゴマーク（仕様は [ICON_GUIDELINE.md](./ICON_GUIDELINE.md) が持つ。アクセント色を含むため、パレットを変えたらこちらも直すこと） |
 
 ### B. 配色（Color Palette）
 
@@ -103,10 +111,12 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | **本文最大幅** | `max-w-3xl` (768px) | 記事詳細のメインカラム |
 | **サイドバー幅** | `300px` | 記事詳細の右カラム |
 | **ヘッダー高さ** | `64px` | sticky ヘッダー |
-| **ホバー** | 影の付与 + アクセント色への変化 + 矢印の `translate-x` | カード、リンク |
+| **ホバー** | 控えめな影の付与 + アクセント色への変化 + 矢印の `translate-x` | カード、リンク |
 | **トランジション** | `200ms`（色・影）/ `300ms`（変形・開閉）/ `500ms`（画像ズーム） | 全般 |
 
-影は `shadow-sm` / `shadow-md` のみを使用します。
+影は面を浮かせるためではなく、重なりを示すために使います（→ 設計原則 1）。
+使いどころはホバーや sticky 到達といった状態変化と、本文の上に重なる一時的な面（ドロップダウン等）で、
+強さは重なりの度合いに合わせます。
 
 ### E. ブレークポイント
 
@@ -202,8 +212,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 | 内容 | Issue |
 | :--- | :--- |
-| ヘッダーナビが未定義のCSS変数を参照しホバー色が効かない | [#38](https://github.com/uyaaaaaa/personal-blog/issues/38) |
-| タグページの記事カードで絵文字が常にデフォルトになる | [#40](https://github.com/uyaaaaaa/personal-blog/issues/40) |
 | 脚注とヘッダーの重なり | [#17](https://github.com/uyaaaaaa/personal-blog/issues/17) |
 | `` ` `` でリンクを囲めない | [#12](https://github.com/uyaaaaaa/personal-blog/issues/12) |
 
@@ -214,7 +222,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | コンテンツ検索 | [#13](https://github.com/uyaaaaaa/personal-blog/issues/13) |
 | タイトルによる記事検索 | [#14](https://github.com/uyaaaaaa/personal-blog/issues/14) |
 | ショートカットキーでのフォーカス（`Cmd/Ctrl + K`） | [#15](https://github.com/uyaaaaaa/personal-blog/issues/15) |
-| デフォルトサムネイル | [#4](https://github.com/uyaaaaaa/personal-blog/issues/4) |
 | 記事内への画像配置 | [#10](https://github.com/uyaaaaaa/personal-blog/issues/10) |
 | コードブロックのトグル | [#3](https://github.com/uyaaaaaa/personal-blog/issues/3) |
-| ダークモード対応 | （Issue未作成） |
+| ダークモード対応 | [#55](https://github.com/uyaaaaaa/personal-blog/issues/55) |

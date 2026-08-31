@@ -1,7 +1,6 @@
 <template>
   <div class="toc-container flex flex-col min-h-0">
     <h4 class="font-bold text-main mb-4 flex-shrink-0">目次</h4>
-    <!-- 目次が長い場合はサイドバー全体ではなく目次自身が内部スクロールする -->
     <nav ref="navRef" class="toc-nav min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pr-2">
       <ul class="space-y-2 relative">
         <div class="absolute left-[3px] top-2 bottom-2 w-[2px] bg-gray-100 -z-10"></div>
@@ -45,7 +44,6 @@ const { scrollTo } = useScrollTo()
 const navRef = ref<HTMLElement | null>(null)
 const { activeId } = useTocActive(computed(() => props.links), 100)
 
-// 現在の見出しが目次のスクロール領域外に出たら追従スクロールして見える位置に保つ
 watch(activeId, async (id) => {
   if (!id) return
   await nextTick()

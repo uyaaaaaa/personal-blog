@@ -40,7 +40,6 @@ export default function remarkObsidianCallout() {
       const type = calloutTypeFromSpan(paragraph.children?.[0])
       if (!type) return
 
-      // マーカー行の残り（`]` 直後の折りたたみ記号とタイトル）を後続テキストノードから読む
       let fold = ''
       let title = ''
       const next = paragraph.children[1]
@@ -51,7 +50,6 @@ export default function remarkObsidianCallout() {
         fold = match?.[1] || ''
         title = (match?.[2] || '').trim()
 
-        // マーカー行をツリーから取り除く（2行目以降は本文として残す）
         const rest = restLines.join('\n')
         if (rest) {
           next.value = rest

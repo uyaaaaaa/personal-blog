@@ -20,7 +20,7 @@ npm run preview   # ビルド結果のプレビュー
 
 ## 設計上の約束事
 
-- **色・フォントは `theme/tokens.ts` が単一情報源。** ここから `tailwind.config.ts` が Tailwind のユーティリティクラスと `:root` の CSS 変数の両方を生成します。コンポーネントに生の色値を書かず、`text-main` などのクラスか `var(--color-accent)` を使ってください。
+- **色・フォントは `theme/tokens.ts` が単一情報源。** ここから `tailwind.config.ts` が Tailwind のユーティリティクラスと `:root` の CSS 変数の両方を生成します。パレットにある色はコンポーネントに直接書かず、`text-main` などのクラスか `var(--color-accent)` を使ってください。白黒や外部テーマ由来の値など、パレット外の例外は [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) にまとめています。
 - **ページ内リンクの着地位置は `app/pages/article/[_slug].vue` の `scroll-margin-top` で決まります。** JS 側（`useScrollTo`）でオフセットを足さないでください。
 - **記事のフロントマターのスキーマは `content.config.ts`** で定義しています。項目を増やすときはここから。
 - **Markdown の Obsidian 互換 callout** は `remark/obsidian-callout.mjs` と `app/components/content/Callout.vue` の組み合わせで実装しています。

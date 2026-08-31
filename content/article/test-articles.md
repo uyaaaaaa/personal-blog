@@ -7,7 +7,6 @@ date: 2025-12-27
 tags:
   - test
   - verification
-layout: default
 category: blog
 ---
 
@@ -23,4 +22,4 @@ This is a test post to verify that external links open in a new tab.
 ## Internal Links
 
 - [Home](/) - Should open in same tab
-- [About](/about) - Should open in same tab
+- [Articles](/article) - Should open in same tab
