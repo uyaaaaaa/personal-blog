@@ -497,6 +497,7 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 | :--- | :--- | :--- |
 | `variant` | `'error' \| 'not-found'` | `error`: 取得に失敗した / `not-found`: 取得できたが記事が存在しない |
 | `path` | `string` | 開いていたURL。`not-found` のときだけ表示する |
+| `pending` | `boolean` | 再試行の実行中。ページ側が `useAsyncData` の `status === 'pending'` を渡す |
 
 **Emits**
 
@@ -523,15 +524,31 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 | 見出し | `text-xl` / `700` / メイン色。`error` は「記事を読み込めませんでした」、`not-found` は「記事が見つかりませんでした」 |
 | パス表示 | `not-found` のみ。等幅フォント / `text-xs` / サブテキスト色 / コード背景の小角丸チップ |
 | 説明文 | `text-sm` / サブテキスト色 / `max-w-sm` |
-| 再試行ボタン | `error` のみ。背景はアクセント色、ホバーで `accent-hover`（`ErrorView` のボタンと同じ扱い） |
+| 再試行ボタン | `error` のみ。背景はアクセント色、ホバーで `accent-hover`（`ErrorView` のボタンと同じ扱い）。`pending` 中は `disabled` にし、文言を「再試行中…」へ切り替え、不透明度を下げる |
 | 戻る導線 | 末尾に `BackButton`（既定の `Back to Articles`） |
 | 最近の記事 | `not-found` のみ。カード下に最大3件を日付（等幅）+ タイトルの一覧で表示し、下線で区切る |
+
+**アクセシビリティ**
+
+上端のローディングバー（`NuxtLoadingIndicator`）はルート遷移にしか反応せず、`refresh()` では出ない。
+そのため再試行の進行は**このコンポーネントが自前で示す**（ボタンの `disabled` と文言、`aria-busy`）。
+
+| 項目 | 要件 |
+| :--- | :--- |
+| ライブリージョン | `variant="error"` のときカードを `role="status"` にする。再試行で内容が変わるため、変化を支援技術へ伝える |
+| `aria-busy` | `variant="error"` のとき `pending` を反映する |
 
 **最近の記事の取得**
 
 `useLazyAsyncData` で取得し、本文側の描画をブロックしない。
 `immediate` は `variant === 'not-found'` のときだけ `true` にする
 （取得失敗時は同じ取得経路が不調なので、回遊導線を出さない）。
+
+**SEO**
+
+記事を表示できないページは `og:type` を `website` にし、`article` を名乗らせない
+（`article:published_time` / `article:tag` も出さない）。
+`not-found` のときは専用の `title` / `description` を設定する。
 
 ---
 

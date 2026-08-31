@@ -6,7 +6,7 @@ import TocMobile from '~/components/article/TocMobile.vue'
 import ArticleFallback from '~/components/article/ArticleFallback.vue'
 
 const route = useRoute()
-const { data: page, error, refresh } = await useAsyncData(route.path, () =>
+const { data: page, error, refresh, status } = await useAsyncData(route.path, () =>
   queryCollection('article').path(route.path).where('published', '=', true).first(),
 )
 
@@ -22,10 +22,12 @@ if (import.meta.server && isNotFound.value) {
 
 const tocLinks = computed(() => page.value?.body?.toc?.links || [])
 
+// 記事を表示できないページはarticleを名乗らない（OGP上も記事として展開させない）
 usePageSeo({
-  type: 'article',
+  type: page.value ? 'article' : 'website',
   title: () => page.value?.title ?? (isNotFound.value ? '記事が見つかりません' : undefined),
-  description: () => page.value?.description,
+  description: () =>
+    page.value?.description ?? (isNotFound.value ? 'お探しの記事は見つかりませんでした。' : undefined),
   image: () => page.value?.image,
   publishedTime: () => page.value?.date,
   tags: () => page.value?.tags,
@@ -117,7 +119,12 @@ watch(() => page.value, async () => {
   </div>
   
   <!-- 取得失敗: 再試行で同じクエリをやり直せる -->
-  <ArticleFallback v-else-if="error" variant="error" @retry="refresh()" />
+  <ArticleFallback
+    v-else-if="error"
+    variant="error"
+    :pending="status === 'pending'"
+    @retry="refresh()"
+  />
 
   <!-- 記事が存在しない -->
   <ArticleFallback v-else variant="not-found" :path="route.path" />

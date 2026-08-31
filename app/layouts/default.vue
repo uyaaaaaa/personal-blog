@@ -42,6 +42,13 @@ a:hover {
   margin: 0 auto;
   padding: 0 1rem;
 }
+
+/* NuxtLoadingIndicatorはtransitionをインラインstyleで当てるため、!importantでしか打ち消せない */
+@media (prefers-reduced-motion: reduce) {
+  .nuxt-loading-indicator {
+    transition: none !important;
+  }
+}
 </style>
 
 <style scoped>
