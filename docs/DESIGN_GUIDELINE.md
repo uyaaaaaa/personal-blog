@@ -43,35 +43,42 @@
 
 ### A. 定義場所と単一情報源のルール
 
-色・フォントは以下の2箇所に定義があり、**現状は二重管理**になっています。
+色・フォントの値は **`theme/tokens.ts` の1箇所だけ**に定義します。
+`tailwind.config.ts` がこのトークンを読み込み、Tailwind theme と `:root` のCSS変数の両方を生成します。
 
-| 定義場所 | 形式 | 主な参照元 |
-| :--- | :--- | :--- |
-| `tailwind.config.ts` | Tailwind theme (`text-main`, `bg-accent` など) | 各コンポーネントのユーティリティクラス |
-| `app/layouts/default.vue` の `:root` | CSS変数 (`var(--color-accent)` など) | `<style scoped>` を持つコンポーネント |
+```
+theme/tokens.ts（単一情報源）
+   └─ tailwind.config.ts
+        ├─ Tailwind theme   → ユーティリティクラス（`text-main` `bg-accent` など）
+        └─ :root のCSS変数  → `<style scoped>` からの参照（`var(--color-main)` など）
+```
+
+CSS変数名はトークンのキーからそのまま導出されます（`main` → `--color-main`、`sans` → `--font-sans`）。
+どちらの書き方で参照しても同じ値になるため、値がずれることはありません。
 
 **ルール**
 
-- 色を追加・変更する場合は `tailwind.config.ts` を先に更新し、`:root` の対応する CSS 変数を同じ値に揃える。
+- 色・フォントを追加・変更する場合は `theme/tokens.ts` **だけ**を編集する。Tailwind側とCSS変数側の両方に自動で反映される。
 - コンポーネント内で**カラーコードを直接書かない**。必ずトークン経由で参照する。
-- 将来的には CSS 変数側を Tailwind theme から生成し、二重管理を解消することを推奨します（→ 6章）。
+- CSS変数は Tailwind の base レイヤーに出力されるため、`default.vue` を経由しないページ（`app/error.vue`）でも参照できる。
 
 ### B. 配色（Color Palette）
 
 | 役割 | 値 | Tailwind | CSS変数 | 用途 |
 | :--- | :--- | :--- | :--- | :--- |
-| **ページ背景** | `#F9F9F9` | — | `--color-bg` | `body` の背景色。 |
+| **ページ背景** | `#F9F9F9` | `bg-bg` | `--color-bg` | `body` の背景色。 |
 | **サーフェス** | `#FFFFFF` | `bg-white` | — | カード、ヘッダー、モバイルドロワー、TOCドロップダウンの背景。 |
-| **メイン（文字色）** | `#1A1A1A` | `text-main` | `--color-text-main` | 見出し・本文の文字色。 |
-| **サブテキスト** | `#888888` | `text-sub` | `--color-text-sub` | 投稿日、キャプション、説明文、非アクティブなTOC項目。 |
+| **メイン（文字色）** | `#1A1A1A` | `text-main` | `--color-main` | 見出し・本文の文字色。 |
+| **サブテキスト** | `#888888` | `text-sub` | `--color-sub` | 投稿日、キャプション、説明文、非アクティブなTOC項目。 |
 | **アクセント** | `#8B5CF6` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目、ロゴのスラッシュ。**唯一の色要素**。 |
 | **アクセント（ホバー）** | `#7C3AED` | `bg-accent-hover` | `--color-accent-hover` | アクセント色で塗りつぶした面のホバー時。エラーページの `Back to Top` ボタン。 |
 | **ボーダー** | `#E5E5E5` | `border-border` | `--color-border` | カード枠線、セクション区切り、ヘッダー下線。 |
 | **コード背景** | `#F5F5F5` | `bg-code-bg` | `--color-code-bg` | インラインコード、コードブロックの背景色。 |
 | **サブサーフェス** | `#F3F4F6` | `bg-gray-100` | — | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー。 |
+| **検索ボックス背景** | `#FAF5FF` | `bg-base` | `--color-base` | ヘッダーの検索ボックスの背景。 |
 
-> **注意**: Tailwind の `base` (`#FAF5FF` / 淡い紫) は「ページ背景」ではなく、
-> ヘッダーの検索ボックス背景にのみ使用されています。`--color-bg` (`#F9F9F9`) とは別物です。
+> **注意**: `base` (`#FAF5FF` / 淡い紫) は名前に反して「ページ背景」ではなく、
+> ヘッダーの検索ボックス背景専用です。ページ背景の `bg` (`#F9F9F9`) とは別物です。
 > 名称が紛らわしいため、リネームを検討してください（→ 6章）。
 
 Callout は例外的に Obsidian デフォルトテーマ準拠の独自パレットを持ちます（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。
@@ -80,7 +87,7 @@ Callout は例外的に Obsidian デフォルトテーマ準拠の独自パレ�
 
 | 項目 | 指定 | Tailwind | CSS変数 |
 | :--- | :--- | :--- | :--- |
-| **見出し / 本文** | `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` | `font-sans` | `--font-base` |
+| **見出し / 本文** | `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` | `font-sans` | `--font-sans` |
 | **コード / 技術用語** | `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace` | `font-mono` | `--font-mono` |
 
 OSネイティブフォントを優先し、Webフォントは読み込まない（表示速度を最優先するため）。
@@ -199,8 +206,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 | 課題 | 内容 |
 | :--- | :--- |
-| **色の二重管理** | `tailwind.config.ts` と `app/layouts/default.vue` の `:root` に同じ色が別々に定義されている。CSS変数を Tailwind theme から生成する形に統一したい（[#43](https://github.com/uyaaaaaa/personal-blog/issues/43)）。 |
-| **`base` の命名** | Tailwind の `base` (`#FAF5FF`) は名前に反してページ背景ではなく検索ボックス背景専用。`surface-search` 等へのリネームを検討する（[#44](https://github.com/uyaaaaaa/personal-blog/issues/44)）。 |
+| **`base` の命名** | `base` (`#FAF5FF`) は名前に反してページ背景ではなく検索ボックス背景専用。`surface-search` 等へのリネームを検討する（[#44](https://github.com/uyaaaaaa/personal-blog/issues/44)）。 |
 
 ### 修正待ちの不具合
 

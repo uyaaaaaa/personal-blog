@@ -108,7 +108,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 .nav-item {
   font-weight: 500;
   font-size: 0.95rem;
-  color: var(--color-text-main);
+  color: var(--color-main);
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -200,7 +200,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 .mobile-nav-item {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-text-main);
+  color: var(--color-main);
   text-decoration: none;
 }
 
@@ -214,7 +214,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-sub);
+  color: var(--color-sub);
 }
 
 .drawer-tag-list {
@@ -232,7 +232,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
   padding: 0.5rem 0.25rem;
   border-radius: 0.375rem;
   font-size: 0.95rem;
-  color: var(--color-text-main);
+  color: var(--color-main);
 }
 
 .drawer-tag-item:hover {
@@ -247,7 +247,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 .drawer-tag-count {
   font-size: 0.75rem;
   font-family: var(--font-mono);
-  color: var(--color-text-sub);
+  color: var(--color-sub);
   border: 1px solid var(--color-border);
   border-radius: 9999px;
   padding: 0.05rem 0.5rem;

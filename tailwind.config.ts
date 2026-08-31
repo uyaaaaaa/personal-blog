@@ -1,7 +1,12 @@
 import type { Config } from 'tailwindcss'
+import plugin from 'tailwindcss/plugin'
 import typography from '@tailwindcss/typography'
+import { colors, fontFamily, toCssVariables } from './theme/tokens'
 
-const codeBg = '#F5F5F5'
+// トークンから `:root` のCSS変数を生成し、ユーティリティクラスと同じ値を共有する
+const cssVariables = plugin(({ addBase }) => {
+  addBase({ ':root': toCssVariables() })
+})
 
 export default <Config>{
   content: [
@@ -14,15 +19,7 @@ export default <Config>{
   ],
   theme: {
     extend: {
-      colors: {
-        base: '#FAF5FF',
-        main: '#1A1A1A',
-        sub: '#888888',
-        accent: '#8B5CF6',
-        'accent-hover': '#7C3AED',
-        border: '#E5E5E5',
-        'code-bg': codeBg
-      },
+      colors,
       typography: {
         DEFAULT: {
           css: {
@@ -31,13 +28,13 @@ export default <Config>{
             'code::after': { content: 'none' },
             // コードブロック: github-lightテーマに合わせたライト背景（#8）
             pre: {
-              backgroundColor: codeBg,
+              backgroundColor: colors['code-bg'],
               color: '#24292E',
-              border: '1px solid #E5E5E5',
+              border: `1px solid ${colors.border}`,
             },
             code: {
-              backgroundColor: codeBg,
-              border: '1px solid #E5E5E5',
+              backgroundColor: colors['code-bg'],
+              border: `1px solid ${colors.border}`,
               color: 'inherit',
               fontWeight: '400',
               borderRadius: '0.25rem',
@@ -49,29 +46,11 @@ export default <Config>{
           },
         },
       },
-      fontFamily: {
-        sans: [
-          'system-ui',
-          '-apple-system',
-          'BlinkMacSystemFont',
-          '"Segoe UI"',
-          'Roboto',
-          '"Helvetica Neue"',
-          'Arial',
-          'sans-serif'
-        ],
-        mono: [
-          'ui-monospace',
-          'SFMono-Regular',
-          'Menlo',
-          'Monaco',
-          'Consolas',
-          'monospace'
-        ]
-      }
+      fontFamily,
     }
   },
   plugins: [
     typography,
+    cssVariables,
   ],
 }
