@@ -17,6 +17,8 @@ const isExternal = computed(() => {
   return /^(http:\/\/|https:\/\/|\/\/)/.test(props.href)
 })
 
+const isSameDocumentHash = computed(() => props.href.startsWith('#'))
+
 const targetAttr = computed(() => {
   if (props.target) {
     return props.target
@@ -34,7 +36,14 @@ defineOptions({
 </script>
 
 <template>
+  <a
+    v-if="isSameDocumentHash"
+    :href="href"
+  >
+    <slot />
+  </a>
   <NuxtLink
+    v-else
     :href="href"
     :target="targetAttr"
     :rel="relAttr"

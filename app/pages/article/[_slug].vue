@@ -9,7 +9,12 @@ const { data: page } = await useAsyncData(route.path, () =>
   queryCollection('article').path(route.path).where('published', '=', true).first(),
 )
 
-const tocLinks = computed(() => page.value?.body?.toc?.links || [])
+// remark-gfmが脚注セクションに生成するsr-only見出し
+const FOOTNOTE_LABEL_ID = 'footnote-label'
+
+const tocLinks = computed(() =>
+  (page.value?.body?.toc?.links || []).filter((link: { id: string }) => link.id !== FOOTNOTE_LABEL_ID),
+)
 
 usePageSeo({
   type: 'article',
@@ -124,13 +129,29 @@ watch(() => page.value, async () => {
   text-decoration: none;
 }
 
-.prose :where(h2, h3, h4, h5, h6) {
-  scroll-margin-top: 88px;
+.prose {
+  --landing-offset: 88px;
 }
 
 @media (min-width: 1024px) {
-  .prose :where(h2, h3, h4, h5, h6) {
-    scroll-margin-top: 96px;
+  .prose {
+    --landing-offset: 96px;
   }
+}
+
+.prose :where(h2, h3, h4, h5, h6),
+.prose [data-footnote-ref],
+.prose [data-footnotes] li {
+  scroll-margin-top: var(--landing-offset);
+}
+
+.prose [data-footnotes] li:target::marker {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.prose [data-footnote-ref]:target {
+  font-weight: 700;
+  text-decoration: underline;
 }
 </style>
