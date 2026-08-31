@@ -114,7 +114,6 @@ watch(() => page.value, async () => {
   text-decoration: underline;
 }
 
-/* Nuxt Contentは見出しテキストを<a>で包むため、上の本文リンク指定から除外する */
 .prose :where(h1, h2, h3, h4, h5, h6) a {
   color: inherit;
   text-decoration: none;
@@ -125,16 +124,12 @@ watch(() => page.value, async () => {
   text-decoration: none;
 }
 
-/* ページ内リンクの着地位置はここで一元管理する。
-   JSのスクロール（useScrollTo）とURLハッシュ直開きの両方に効く */
 .prose :where(h2, h3, h4, h5, h6) {
-  /* 固定ヘッダー64px + 余白24px */
   scroll-margin-top: 88px;
 }
 
 @media (min-width: 1024px) {
   .prose :where(h2, h3, h4, h5, h6) {
-    /* 固定ヘッダー64px + 余白32px */
     scroll-margin-top: 96px;
   }
 }

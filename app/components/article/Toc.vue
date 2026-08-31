@@ -4,7 +4,6 @@
     <!-- 目次が長い場合はサイドバー全体ではなく目次自身が内部スクロールする -->
     <nav ref="navRef" class="toc-nav min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pr-2">
       <ul class="space-y-2 relative">
-        <!-- Vertical connector line -->
         <div class="absolute left-[3px] top-2 bottom-2 w-[2px] bg-gray-100 -z-10"></div>
 
         <li v-for="link in links" :key="link.id" class="toc-item">
@@ -41,7 +40,6 @@ const props = defineProps<{
   links: any[]
 }>()
 
-// 着地位置のオフセットは記事側の見出しの scroll-margin-top（[_slug].vue）で一元管理している
 const { scrollTo } = useScrollTo()
 
 const navRef = ref<HTMLElement | null>(null)

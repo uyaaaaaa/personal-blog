@@ -22,10 +22,8 @@ export default <Config>{
       typography: {
         DEFAULT: {
           css: {
-            // インラインコード: バッククォート非表示 + Obsidian風のグレー背景（#6）
             'code::before': { content: 'none' },
             'code::after': { content: 'none' },
-            // コードブロック: github-lightテーマに合わせたライト背景（#8）
             pre: {
               backgroundColor: colors['surface-subtle'],
               color: '#24292E',

@@ -7,13 +7,11 @@ export default defineNuxtConfig({
   app: {
     head: {
       link: [
-        // 旧ブラウザ・ブックマーク用のフォールバック（16/32/48pxを内包）
         { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
         { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml', sizes: 'any' },
         { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
       ],
-      // 追従ヘッダーの背景色に合わせる
       meta: [
         { name: 'theme-color', content: '#FFFFFF' },
       ],
@@ -21,7 +19,6 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      // og:imageやog:urlは絶対URLが必要。デプロイ先に合わせてNUXT_PUBLIC_SITE_URLで上書きできる
       siteUrl: 'https://tech-blog-efb.pages.dev',
     },
   },
@@ -33,7 +30,6 @@ export default defineNuxtConfig({
     build: {
       markdown: {
         highlight: {
-          // ライトテーマで統一（#8）。preの背景はtailwind.config.tsのtypography拡張で上書き
           theme: 'github-light',
           langs: [
             'js', 'ts', 'json', 'html', 'css', 'vue', 'shell', 'sh', 'bash', 'md', 'mdc', 'yaml',
@@ -43,7 +39,6 @@ export default defineNuxtConfig({
         remarkPlugins: {
           'remark-obsidian-callout': {
             instance: remarkObsidianCallout,
-            // MDC側のテンプレート生成はimportパス文字列を要求するためsrcも渡す
             src: fileURLToPath(new URL('./remark/obsidian-callout.mjs', import.meta.url)),
             options: {},
           },
