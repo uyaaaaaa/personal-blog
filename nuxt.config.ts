@@ -12,6 +12,15 @@ export default defineNuxtConfig({
   content: {
     build: {
       markdown: {
+        highlight: {
+          // ライトテーマで統一（#8）。preの背景はtailwind.config.tsのtypography拡張で上書き
+          theme: 'github-light',
+          langs: [
+            'js', 'ts', 'json', 'html', 'css', 'vue', 'shell', 'sh', 'bash', 'md', 'mdc', 'yaml',
+            // 記事で使用中の追加言語
+            'vim', 'lua', 'sql', 'php',
+          ],
+        },
         remarkPlugins: {
           'remark-obsidian-callout': {
             instance: remarkObsidianCallout,
