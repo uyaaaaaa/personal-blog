@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
   <title>Tech Blog</title>
-  <desc>Open Graph 用のデフォルト画像。生成手順は doc/ICON_GUIDELINE.md を参照。</desc>
+  <desc>Open Graph 用のデフォルト画像。生成手順は docs/ICON_GUIDELINE.md を参照。</desc>
 
   <defs>
     <style>

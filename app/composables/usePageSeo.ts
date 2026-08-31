@@ -16,7 +16,7 @@ type PageSeoInput = {
 const SITE_NAME = 'Tech Blog'
 const SITE_DESCRIPTION
   = 'Functional Minimalism for Experts. Technical articles on software engineering, architecture, and design.'
-/** public/ogp.png。1200x630で生成している（doc/ICON_GUIDELINE.md 参照） */
+/** public/ogp.png。1200x630で生成している（docs/ICON_GUIDELINE.md 参照） */
 const DEFAULT_OGP_IMAGE = '/ogp.png'
 
 /**

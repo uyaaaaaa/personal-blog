@@ -69,12 +69,12 @@ SNS などにシェアされたときのカード画像。`public/ogp.png`（120
 
 ### 生成方法
 
-元データは `doc/ogp.svg`。サブセット化した woff2 を data URI で内包しているため、
+元データは `docs/ogp.svg`。サブセット化した woff2 を data URI で内包しているため、
 フォントを別途インストールしなくても同じ絵になる。Chromium でラスタライズする。
 
 ```sh
 chromium --headless --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
-  --window-size=1360,790 --screenshot=raw.png "file://$PWD/doc/ogp.svg"
+  --window-size=1360,790 --screenshot=raw.png "file://$PWD/docs/ogp.svg"
 # ウィンドウちょうどのサイズだと下端に白帯が出るため、大きめに描いて 1200x630 に切り出す
 python3 -c "from PIL import Image; Image.open('raw.png').convert('RGB').crop((0,0,1200,630)).save('public/ogp.png', optimize=True)"
 ```
