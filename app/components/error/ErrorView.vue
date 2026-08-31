@@ -28,8 +28,8 @@ const handleError = () => clearError({ redirect: '/' })
   align-items: center;
   justify-content: center;
   min-height: 60vh;
-  color: var(--color-text-main);
-  font-family: var(--font-base);
+  color: var(--color-main);
+  font-family: var(--font-sans);
   text-align: center;
   padding: 1rem;
 }
@@ -60,7 +60,7 @@ const handleError = () => clearError({ redirect: '/' })
 
 .error-description {
   font-size: 1rem;
-  color: var(--color-text-sub);
+  color: var(--color-sub);
   margin-bottom: 2rem;
   line-height: 1.6;
 }

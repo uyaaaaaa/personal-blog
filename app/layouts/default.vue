@@ -14,23 +14,12 @@ import Footer from '../components/layout/Footer.vue'
 </script>
 
 <style>
-:root {
-  --color-bg: #F9F9F9;
-  --color-text-main: #1A1A1A;
-  --color-text-sub: #888888;
-  --color-accent: #8B5CF6;
-  --color-accent-hover: #7C3AED;
-  --color-border: #E5E5E5;
-  --color-code-bg: #F5F5F5;
-  --font-base: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
+/* 色・フォントのCSS変数は theme/tokens.ts から tailwind.config.ts 経由で `:root` に生成される */
 body {
   margin: 0;
-  font-family: var(--font-base);
+  font-family: var(--font-sans);
   background-color: var(--color-bg);
-  color: var(--color-text-main);
+  color: var(--color-main);
   line-height: 1.6;
 }
 

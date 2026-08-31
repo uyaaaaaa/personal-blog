@@ -11,7 +11,7 @@
   padding: 2rem 0;
   border-top: 1px solid var(--color-border);
   text-align: center;
-  color: var(--color-text-sub);
+  color: var(--color-sub);
   font-size: 0.9rem;
 }
 </style>
