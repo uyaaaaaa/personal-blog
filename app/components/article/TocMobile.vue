@@ -1,7 +1,7 @@
 <template>
   <div 
     ref="containerRef"
-    class="sticky top-[74px] z-40 bg-gray-100 backdrop-blur-sm border border-border rounded-lg lg:hidden transition-all duration-300"
+    class="sticky top-[74px] z-40 bg-gray-100 border border-border rounded-lg lg:hidden transition-all duration-300"
     :class="{
       'shadow-sm': isSticky,
       '-translate-y-[120px] opacity-0 pointer-events-none': !isVisible

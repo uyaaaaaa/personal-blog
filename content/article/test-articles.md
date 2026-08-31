@@ -7,7 +7,6 @@ date: 2025-12-27
 tags:
   - test
   - verification
-layout: default
 category: blog
 ---
 
