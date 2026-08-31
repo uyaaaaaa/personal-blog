@@ -32,7 +32,7 @@
     <!-- Dropdown: 記事コンテンツを押し下げず、常にオーバーレイで表示する -->
     <div
       v-show="isOpen"
-      class="absolute top-full left-0 -mt-[1px] w-full bg-white border border-border shadow-lg rounded-b-lg max-h-[60vh] overflow-y-auto transition-all duration-200"
+      class="absolute top-full left-0 -mt-[1px] w-full bg-white border border-border shadow-lg rounded-b-lg max-h-[60vh] overflow-y-auto overscroll-contain transition-all duration-200"
     >
       <nav class="py-2 px-4 pb-4">
         <ul class="space-y-1">
@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
 defineProps<{
   links: any[]
@@ -100,15 +100,45 @@ const updateSticky = () => {
   isSticky.value = el.getBoundingClientRect().top - translateY <= STICKY_TOP + 1
 }
 
+// 目次が開いている間にページがスクロールされたら閉じる
+// アドレスバーの伸縮などによる微小なスクロールでは閉じないよう閾値を設ける
+const SCROLL_CLOSE_THRESHOLD = 8
+let openedScrollY = 0
+
+watch(isOpen, (open) => {
+  if (open) openedScrollY = Math.max(0, window.scrollY)
+})
+
+const handleScroll = () => {
+  updateSticky()
+
+  if (
+    isOpen.value &&
+    Math.abs(Math.max(0, window.scrollY) - openedScrollY) >= SCROLL_CLOSE_THRESHOLD
+  ) {
+    isOpen.value = false
+  }
+}
+
+// バックドロップより手前にある要素（ヘッダーなど）がタップされた場合も閉じる
+const handlePointerDown = (e: PointerEvent) => {
+  const el = containerRef.value
+  if (isOpen.value && el && e.target instanceof Node && !el.contains(e.target)) {
+    isOpen.value = false
+  }
+}
+
 onMounted(() => {
   updateSticky()
-  window.addEventListener('scroll', updateSticky, { passive: true })
+  window.addEventListener('scroll', handleScroll, { passive: true })
   window.addEventListener('resize', updateSticky, { passive: true })
+  document.addEventListener('pointerdown', handlePointerDown)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', updateSticky)
+  window.removeEventListener('scroll', handleScroll)
   window.removeEventListener('resize', updateSticky)
+  document.removeEventListener('pointerdown', handlePointerDown)
 })
 
 const { scrollTo } = useScrollTo()
