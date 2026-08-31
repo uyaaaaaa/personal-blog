@@ -14,7 +14,6 @@ const filteredArticles = computed(() =>
   ),
 )
 
-// 表示用のタグ名は記事のfrontmatterに書かれた元の表記を使う
 const tagName = computed(() => {
   for (const article of articles.value ?? []) {
     const matched = (article.tags ?? []).find(tag => tagToSlug(tag) === slug.value)
