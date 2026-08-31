@@ -118,6 +118,20 @@ watch(() => page.value, async () => {
   text-decoration: underline;
 }
 
+/* 見出しのアンカーは本文リンクとは別扱いにする。
+   Nuxt Contentが見出しテキストを<a href="#...">で包むため、上の本文リンク指定を
+   そのまま拾うと見出し自体がアクセントカラーになってしまう。
+   通常時は見出しの色を継承し、クリック可能であることを示すホバーのみ残す */
+.prose :where(h1, h2, h3, h4, h5, h6) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.prose :where(h1, h2, h3, h4, h5, h6) a:hover {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
 /* ページ内リンクの着地位置はここで一元管理する。
    JSのスクロール（useScrollTo）とURLハッシュ直開きの両方に効く */
 .prose :where(h2, h3, h4, h5, h6) {
