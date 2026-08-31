@@ -466,7 +466,7 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 
 中央寄せの縦積み。最小高 `60vh` / 最大幅 `600px`。色とフォントはデザイントークン
 （`--color-main` / `--color-sub` / `--font-sans` / `--font-mono` / `--color-accent` / `--color-accent-hover`）を参照する。
-ボタンの文字色のみ、パレットにCSS変数を持たない白のため `#FFFFFF` を直接指定している。
+ボタンの文字色 `#FFFFFF` だけは直値（→ [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) のトークン例外）。
 
 | 要素 | 要件 |
 | :--- | :--- |
