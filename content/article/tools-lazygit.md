@@ -1,5 +1,6 @@
 ---
 title: "おすすめツール紹介 - lazygit編"
+emoji: "🦥"
 description: "gitをかっこよく操作しよう"
 published: true
 date: 2026-02-10

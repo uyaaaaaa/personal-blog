@@ -1,5 +1,6 @@
 ---
 title: "fgとbgでプロセスを操る"
+emoji: "🔀"
 description: "推しコマンドの一つです"
 published: true
 date: 2026-02-04

@@ -1,5 +1,6 @@
 ---
 title: "vimで略語展開設定してみる"
+emoji: "🔤"
 description: ""
 published: true
 date: 2026-01-17

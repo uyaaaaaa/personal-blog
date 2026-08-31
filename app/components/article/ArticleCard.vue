@@ -1,31 +1,24 @@
 <template>
-  <NuxtLink :to="path" class="article-card block h-full bg-white border border-border rounded-lg p-6 hover:shadow-sm transition-shadow duration-200">
-    <!-- Header: Icon & Date -->
-    <div class="flex justify-between items-start mb-4">
-      <div class="flex items-center gap-2">
-        <span class="text-accent font-mono text-xl font-bold">&lt;/&gt;</span>
+  <NuxtLink :to="path" class="article-card flex flex-col gap-3 bg-white border border-border rounded-[10px] p-4 md:p-5 hover:shadow-sm transition-shadow duration-200">
+    <!-- Header: Emoji tile & Date -->
+    <div class="flex justify-between items-center">
+      <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+        <span class="text-[28px] leading-none">{{ emoji }}</span>
       </div>
-      <div class="text-sub text-sm font-mono">
-        {{ formattedDate }}
-      </div>
+      <time class="text-sub text-sm font-mono" :datetime="date">{{ formattedDate }}</time>
     </div>
 
     <!-- Title -->
-    <h3 class="text-xl font-bold text-main mb-3 line-clamp-2">
+    <h3 class="text-base font-bold leading-snug text-main line-clamp-2 min-h-[2.6em]">
       {{ title }}
     </h3>
 
-    <!-- Description -->
-    <p class="text-sub text-sm leading-relaxed mb-4 line-clamp-2">
-      {{ description }}
-    </p>
-
     <!-- Footer: Tags -->
-    <div class="mt-auto flex flex-wrap gap-2">
-      <span 
-        v-for="tag in tags" 
+    <div class="mt-auto flex flex-wrap gap-1.5">
+      <span
+        v-for="tag in tags"
         :key="tag"
-        class="tag text-xs px-2 py-1 rounded border border-accent text-accent font-mono bg-white"
+        class="tag text-xs px-2 py-0.5 rounded border border-accent text-accent font-mono bg-white"
       >
         {{ tag }}
       </span>
@@ -37,14 +30,14 @@
 interface Props {
   title: string
   path: string
-  description?: string
   date?: string
+  emoji?: string
   tags?: string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  description: '',
   date: '',
+  emoji: '📝',
   tags: () => []
 })
 
@@ -60,9 +53,5 @@ const formattedDate = computed(() => {
 
 .article-card:hover {
   border-color: theme('colors.accent');
-}
-
-.tag:hover {
-  background-color: theme('colors.gray.50');
 }
 </style>

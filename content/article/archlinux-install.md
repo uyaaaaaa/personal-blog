@@ -1,5 +1,6 @@
 ---
 title: " Arch Linux インストールの悪戦苦闘メモ"
+emoji: "🐧"
 description: ""
 published: true
 date: 2026-01-14

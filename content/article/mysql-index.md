@@ -1,5 +1,6 @@
 ---
 title: "6,500万件のテーブルにindexを貼る"
+emoji: "🐬"
 description: "大量データを持つテーブルの操作は慎重にね。"
 published: true
 date: 2026-01-22
