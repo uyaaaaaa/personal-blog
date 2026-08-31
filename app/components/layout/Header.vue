@@ -1,7 +1,15 @@
 <template>
   <header class="global-header">
     <div class="container header-inner">
-      <NuxtLink to="/" class="logo" @click="closeMenu">&lt;/&gt; Tech Blog</NuxtLink>
+      <NuxtLink to="/" class="logo" @click="closeMenu">
+        <svg class="logo-mark" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true" focusable="false">
+          <rect width="32" height="32" rx="7" fill="#1A1A1A" />
+          <path d="M8.5 10.5 v6.2 a4.6 4.6 0 0 0 9.2 0 v-6.2" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" />
+          <path d="M17.7 10.5 v11" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" />
+          <line x1="26" y1="9.5" x2="22.4" y2="22.5" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round" />
+        </svg>
+        <span>Tech Blog</span>
+      </NuxtLink>
 
       <!-- Search Trigger (Desktop) -->
       <div class="hidden md:flex flex-1 max-w-md mx-8">
@@ -66,12 +74,20 @@ const closeMenu = () => {
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 700;
   font-size: 1.25rem;
   font-family: var(--font-mono);
   letter-spacing: -0.5px;
   position: relative;
   z-index: 102; /* Ensure logo is above mobile menu */
+}
+
+.logo-mark {
+  flex: none;
+  display: block;
 }
 
 </style>
