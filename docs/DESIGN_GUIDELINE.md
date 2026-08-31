@@ -202,8 +202,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 | 内容 | Issue |
 | :--- | :--- |
-| ヘッダーナビが未定義のCSS変数を参照しホバー色が効かない | [#38](https://github.com/uyaaaaaa/personal-blog/issues/38) |
-| タグページの記事カードで絵文字が常にデフォルトになる | [#40](https://github.com/uyaaaaaa/personal-blog/issues/40) |
 | 脚注とヘッダーの重なり | [#17](https://github.com/uyaaaaaa/personal-blog/issues/17) |
 | `` ` `` でリンクを囲めない | [#12](https://github.com/uyaaaaaa/personal-blog/issues/12) |
 
@@ -214,7 +212,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | コンテンツ検索 | [#13](https://github.com/uyaaaaaa/personal-blog/issues/13) |
 | タイトルによる記事検索 | [#14](https://github.com/uyaaaaaa/personal-blog/issues/14) |
 | ショートカットキーでのフォーカス（`Cmd/Ctrl + K`） | [#15](https://github.com/uyaaaaaa/personal-blog/issues/15) |
-| デフォルトサムネイル | [#4](https://github.com/uyaaaaaa/personal-blog/issues/4) |
 | 記事内への画像配置 | [#10](https://github.com/uyaaaaaa/personal-blog/issues/10) |
 | コードブロックのトグル | [#3](https://github.com/uyaaaaaa/personal-blog/issues/3) |
-| ダークモード対応 | （Issue未作成） |
+| ダークモード対応 | [#55](https://github.com/uyaaaaaa/personal-blog/issues/55) |

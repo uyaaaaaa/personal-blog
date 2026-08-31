@@ -14,7 +14,6 @@ import Footer from '../components/layout/Footer.vue'
 </script>
 
 <style>
-/* 色・フォントのCSS変数は theme/tokens.ts から tailwind.config.ts 経由で `:root` に生成される */
 body {
   margin: 0;
   font-family: var(--font-sans);
