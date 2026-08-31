@@ -46,6 +46,7 @@ app/
 ├── utils/        # 日付・タグの整形
 └── layouts/      # 全ページ共通レイアウトとCSS変数
 content/article/  # 記事（Markdown）
+theme/            # デザイントークン（色・フォントの単一情報源）
 remark/           # Markdown拡張（Obsidian互換Callout）
 public/           # favicon・PWAアイコン等の静的ファイル
 docs/             # 設計ドキュメント
