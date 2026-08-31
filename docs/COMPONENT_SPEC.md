@@ -19,7 +19,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - [2. 記事表示](#2-記事表示)
   - [Hero](#hero) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
-  - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [ProseA](#prosea)
+  - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea)
 - [4. エラー](#4-エラー)
   - [ErrorView](#errorview) / [NotFound / Server](#notfound--server)
 - [5. 共有ロジック](#5-共有ロジック)
@@ -88,7 +88,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | 項目 | 要件 |
 | :--- | :--- |
 | **ハンバーガーボタン** | 3本線（`20 × 15px` / 線幅2px）。開くと上下の線が回転して×印になり、中央の線が消える（`300ms`）。`z-index: 102`。 |
-| **オーバーレイ** | ヘッダー直下（`top: 64px`）から画面下端まで。`rgba(0, 0, 0, 0.5)`。タップで閉じる。`opacity` と `visibility` を `300ms` で遷移させる。 |
+| **オーバーレイ** | ヘッダー直下（`top: 64px`）から画面下端まで。`rgba(0, 0, 0, 0.5)`。タップで閉じる。`opacity` と `visibility` を `300ms` で遷移させる。`overflow: hidden` で画面外に退避したドロワーを切り取る（**外すとページ全体が横スクロールする**）。 |
 | **ドロワー** | **右端からスライドイン**（`translateX(100%)` → `0`）。幅 `80%` / 最大 `320px`。背景白、左端に1pxボーダー。内容が多い場合は縦スクロールする。 |
 
 **ドロワーの中身**
@@ -226,7 +226,7 @@ PC版サイドバーに表示する目次。
 
 | 名前 | 型 | 説明 |
 | :--- | :--- | :--- |
-| `links` | `TocLink[]` | Nuxt Content が生成した目次データ（`children` に h3 を含む） |
+| `links` | `TocLink[]` | Nuxt Content が生成した目次データ（`children` に h3 を含む）。脚注セクションの `sr-only` 見出しは `[_slug].vue` の側で除外済み（→ [脚注](#脚注)） |
 
 **表示要件**
 
@@ -423,6 +423,33 @@ Obsidian の `> [!TYPE]` 記法に対応した注釈ブロック。remark プラ
 
 ---
 
+### 脚注
+
+`app/pages/article/[_slug].vue`（スタイルと目次のフィルタ） / `tailwind.config.ts`（`safelist`）
+
+GFM の脚注記法（`[^1]` と `[^1]: 脚注の本文`）をそのまま使う。remark-gfm が本文に参照リンクを、
+記事末尾に脚注セクションを生成する。
+
+| 要素 | セレクタ |
+| :--- | :--- |
+| 本文の参照 | `sup > a[data-footnote-ref]`（`id="user-content-fnref-N"`） |
+| 脚注セクション | `section[data-footnotes]` |
+| 脚注の定義 | `[data-footnotes] li`（`id="user-content-fn-N"`） |
+| 本文へ戻るリンク | `a.data-footnote-backref`（`↩`） |
+
+**要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| 着地位置 | 参照・定義の両方に見出しと同じ `scroll-margin-top` を効かせ、固定ヘッダーに潜り込ませない（→ [5. 共有ロジック](#5-共有ロジック) の「ページ内リンクの着地位置」） |
+| ジャンプ先の強調 | `:target` で示す。定義は番号（`::marker`）をアクセント色 + `font-weight: 700`、本文の参照は `font-weight: 700` + アンダーライン。次のフラグメント遷移まで残す |
+| ジャンプの経路 | 参照 ↔ 定義の往復はブラウザ標準のフラグメント遷移に任せる（→ [ProseA](#prosea)）。`:target` が更新されるのはこの経路とURLハッシュの直接オープンだけ |
+| セクション見出し | remark-gfm が生成する `<h2 id="footnote-label" class="sr-only">Footnotes</h2>` は**読み上げ用のラベル**として隠す（各参照が `aria-describedby` で指す）。視覚的な区切りは直前の `<hr>` が担う |
+| `sr-only` の生成 | 上の `sr-only` はソースコードに現れずパージされるため、`tailwind.config.ts` の `safelist` で残す。**外すと見出しが可視になる** |
+| 目次からの除外 | 上の `sr-only` 見出しを目次から除く。読者に見えない見出しが目次に並ぶのを防ぐため |
+
+---
+
 ### ProseA
 
 `app/components/content/ProseA.vue`
@@ -441,6 +468,8 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 - `href` が `http://` / `https://` / `//` で始まる場合を**外部リンク**と判定する。
 - 外部リンクには `target="_blank"` と `rel="noopener noreferrer"` を自動付与する。
 - 内部リンクは `NuxtLink` によるクライアントサイド遷移にする。
+- `#` で始まる**同一ドキュメント内のハッシュリンクだけは素の `<a>`** で描画し、`NuxtLink` を通さない。
+  ルーターの `pushState` ではブラウザの `:target` が更新されず、脚注のジャンプ先を強調できないため（→ [脚注](#脚注)）。
 - `target` が明示的に渡された場合はそちらを優先する。
 
 ---
@@ -506,11 +535,13 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 
 **ページ内リンクの着地位置**
 
-固定ヘッダーとの重なりは、**呼び出し側のオフセット計算ではなく見出し側の `scroll-margin-top` で一元管理**します。定義は `app/pages/article/[_slug].vue` の非scopedスタイルにあります。
+固定ヘッダーとの重なりは、**呼び出し側のオフセット計算ではなく着地する要素側の `scroll-margin-top` で一元管理**します。定義は `app/pages/article/[_slug].vue` の非scopedスタイルにあり、値は `.prose` に置いた `--landing-offset` を見出しと脚注で共有します。
 
-| 画面幅 | `scroll-margin-top` | 内訳 |
+| 画面幅 | `--landing-offset` | 内訳 |
 | :--- | :--- | :--- |
 | 〜1023px | `88px` | ヘッダー64 + 余白24 |
 | 1024px〜 | `96px` | ヘッダー64 + 余白32 |
 
-CSSで持つことで、**JSによるスクロール（目次・見出しクリック）とURLハッシュの直接オープンの両方に同じ着地位置が効きます**。オフセットを変えたい場合は、各コンポーネントではなくこのスタイルを修正してください。
+適用先は本文の `h2`〜`h6`、脚注の参照（`[data-footnote-ref]`）、脚注の定義（`[data-footnotes] li`）です。
+
+CSSで持つことで、**JSによるスクロール（目次・見出しクリック）、ブラウザ標準のフラグメント遷移（脚注）、URLハッシュの直接オープンのすべてに同じ着地位置が効きます**。オフセットを変えたい場合は、各コンポーネントではなくこのスタイルを修正してください。
