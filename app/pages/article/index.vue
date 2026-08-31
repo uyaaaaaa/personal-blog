@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ArticleCard from '~/components/article/ArticleCard.vue'
+import ArticleList from '~/components/ArticleList.vue'
 
 const { data: articles } = await useAsyncData('article-list', () =>
   queryCollection('article').where('published', '=', true).order('date', 'DESC').all(),
@@ -18,16 +18,6 @@ usePageSeo({
       <p class="text-sub">All tech articles and book reviews.</p>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-      <ArticleCard
-        v-for="article in articles"
-        :key="article.path"
-        :title="article.title"
-        :path="article.path"
-        :date="article.date"
-        :emoji="article.emoji"
-        :tags="article.tags"
-      />
-    </div>
+    <ArticleList :articles="articles ?? []" />
   </div>
 </template>

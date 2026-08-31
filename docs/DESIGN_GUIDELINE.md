@@ -201,7 +201,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | :--- | :--- |
 | **色の二重管理** | `tailwind.config.ts` と `app/layouts/default.vue` の `:root` に同じ色が別々に定義されている。CSS変数を Tailwind theme から生成する形に統一したい（[#43](https://github.com/uyaaaaaa/personal-blog/issues/43)）。 |
 | **`base` の命名** | Tailwind の `base` (`#FAF5FF`) は名前に反してページ背景ではなく検索ボックス背景専用。`surface-search` 等へのリネームを検討する（[#44](https://github.com/uyaaaaaa/personal-blog/issues/44)）。 |
-| **一覧グリッドの重複定義** | `ArticleList.vue`・`article/index.vue`・`tags/[tag].vue` が同じグリッドをそれぞれ記述している。`ArticleList` に寄せたい（[#46](https://github.com/uyaaaaaa/personal-blog/issues/46)）。 |
 
 ### 修正待ちの不具合
 
