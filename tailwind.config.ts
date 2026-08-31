@@ -19,6 +19,7 @@ export default <Config>{
         main: '#1A1A1A',
         sub: '#888888',
         accent: '#8B5CF6',
+        'accent-hover': '#7C3AED',
         border: '#E5E5E5',
         'code-bg': codeBg
       },

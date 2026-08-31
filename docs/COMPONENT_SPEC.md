@@ -21,7 +21,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
   - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [ProseA](#prosea)
 - [4. エラー](#4-エラー)
-  - [NotFound / Server](#notfound--server)
+  - [ErrorView](#errorview) / [NotFound / Server](#notfound--server)
 - [5. 共有ロジック](#5-共有ロジック)
 
 ---
@@ -443,30 +443,44 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 
 ## 4. エラー
 
+### ErrorView
+
+`app/components/error/ErrorView.vue`
+
+エラーページの見た目とボタン挙動の実体。`NotFound` / `Server` は文言を渡すだけのラッパーで、
+スタイルはこのコンポーネントだけが持つ。
+
+**Props**
+
+| 名前 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `code` | `number \| string` | 大きく表示するエラーコード |
+| `message` | `string` | 見出しの一文 |
+| `description` | `string` | 補足の説明文 |
+
+**表示要件**
+
+中央寄せの縦積み。最小高 `60vh` / 最大幅 `600px`。色とフォントはすべてデザイントークン
+（`--color-text-main` / `--color-text-sub` / `--font-base` / `--font-mono` / `--color-accent`）を参照する。
+
+| 要素 | 要件 |
+| :--- | :--- |
+| エラーコード | `8rem` / `700` / 等幅フォント / 字間 `-5px` / `line-height: 1` |
+| メッセージ | `2rem` / `600` |
+| 説明文 | `1rem` / サブテキスト色 / `line-height: 1.6` |
+| ボタン | `Back to Top`。背景はアクセント色、ホバーで `--color-accent-hover`。押下で `clearError({ redirect: '/' })` を実行しトップへ戻す |
+
 ### NotFound / Server
 
 `app/components/error/NotFound.vue` / `app/components/error/Server.vue`
 （`app/error.vue` が `statusCode === 404` で振り分ける）
 
-**Props**
+`ErrorView` に文言を渡すだけのコンポーネント。
 
-| コンポーネント | 名前 | 型 |
+| コンポーネント | Props | `ErrorView` へ渡す値 |
 | :--- | :--- | :--- |
-| `Server` | `statusCode` | `number` |
-| `NotFound` | — | — |
-
-**表示要件**
-
-中央寄せの縦積み。最小高 `60vh` / 最大幅 `600px`。
-
-| 要素 | 要件 |
-| :--- | :--- |
-| エラーコード | `8rem` / `700` / 等幅フォント / 字間 `-5px` / `line-height: 1`。`NotFound` は `404`、`Server` は `statusCode` を表示 |
-| メッセージ | `2rem` / `600`。`Page Not Found` または `An Error Occurred` |
-| 説明文 | `1rem` / サブテキスト色 / `line-height: 1.6` |
-| ボタン | `Back to Top`。押下で `clearError({ redirect: '/' })` を実行しトップへ戻す |
-
-> **注意**: 両コンポーネントとも色とフォントをカラーコード直書きで持ち、ボタンが旧アクセントカラー `#007AFF` のままです（[#42](https://github.com/uyaaaaaa/personal-blog/issues/42)）。また両者は文言以外ほぼ同一のため、共通化の余地があります。
+| `NotFound` | — | `404` / `Page Not Found` / 該当ページが存在しない旨の説明 |
+| `Server` | `statusCode: number` | `statusCode` / `An Error Occurred` / 時間をおいて再試行する旨の説明 |
 
 ---
 
