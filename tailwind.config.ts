@@ -36,6 +36,7 @@ export default <Config>{
             },
             code: {
               backgroundColor: codeBg,
+              border: '1px solid #E5E5E5',
               color: 'inherit',
               fontWeight: '400',
               borderRadius: '0.25rem',
