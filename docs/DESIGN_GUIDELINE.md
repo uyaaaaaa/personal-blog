@@ -193,15 +193,18 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | 項目 | 要件 | 状態 |
 | :--- | :--- | :--- |
 | **パフォーマンス** | 表示速度を最優先（Core Web Vitals の高水準達成）。Webフォントを使わず、`inlineStyles` を有効化。 | 実装済 |
-| **静的生成** | Cloudflare Pages 向けにプリレンダリング（`nitro.preset: cloudflare-pages`）。 | 実装済 |
+| **静的生成** | Cloudflare Pages 向けにプリレンダリング（`nitro.preset: cloudflare-pages`）。プリレンダ済みのパスは `_routes.json` の `exclude` で Worker を通さない。`exclude` は Cloudflare の上限が100件のため、記事とタグは `/article/*` `/tags/*` のワイルドカードで畳む（個別列挙のままだと記事追加で上限に達し、全記事が Worker 送りになって SSR が失敗する）。存在しないパスは静的な `404.html` が 404 で返る。 | 実装済 |
 | **公開制御** | `published: true` の記事のみを全ページで取得する。 | 実装済 |
 | **旧URL互換** | `/blog/**` `/book/**` は `/article/**` へ301リダイレクト。 | 実装済 |
 | **タグ機能** | 全タグの一覧ページと、タグによる絞り込みを提供する。 | 実装済 |
 | **スクロール追従** | 見出し位置に応じて目次のアクティブ項目をハイライトする。 | 実装済 |
 | **スムーズスクロール** | 見出し・目次のクリックでスムーズに移動し、URLハッシュを更新する。着地位置は見出しと脚注の `scroll-margin-top` で一元管理し、URLハッシュの直接オープンにも同じ余白を効かせる。 | 実装済 |
-| **脚注** | 本文の参照と記事末尾の脚注を相互にジャンプできる。どちらの向きも固定ヘッダーに潜り込ませず、ジャンプ先を `:target` で強調する（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。 | 実装済 |
+| **脚注** | 本文の参照と記事末尾の脚注を相互にジャンプできる。どちらの向きも固定ヘッダーやモバイル目次バーに潜り込ませず、ジャンプ先を `:target` で強調する（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。 | 実装済 |
+| **UI文言** | ナビゲーション、ボタン、エラーなどUI側の文言は**英語**を基本とする（記事本文は日本語）。既存の例外は目次の「目次」。 | 実装済 |
 | **アイコン** | favicon / PWA / iOS 向けアイコンを一式提供する（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。 | 実装済 |
-| **OGP** | SNS シェア用の OGP / Twitter Card メタタグを全ページに出力する。共通画像は `public/ogp.png`、記事はフロントマターの `image` で差し替え可（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。 | 実装済 |
+| **OGP** | SNS シェア用の OGP / Twitter Card メタタグを全ページに出力する。共通画像は `public/ogp.png`、記事はフロントマターの `image` で差し替え可（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。記事を表示できないページは `og:type` を `website` にし、`article` を名乗らせない。 | 実装済 |
+| **ローディング表示** | ルート遷移中は画面上端にアクセント色2pxのバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない。`throttle: 200ms` により、プリレンダ済みページのように即座に終わる遷移ではバーを出さない。`prefers-reduced-motion: reduce` ではトランジションを無効化する。なおバーはルート遷移にしか反応しないため、ページ内の再取得（再試行など）は各コンポーネントが自前で進行を示す。 | 実装済 |
+| **記事取得の状態分離** | 記事詳細では「取得失敗」と「記事なし」を区別して表示し、HTTPステータスも実態に合わせる（取得失敗=500 / 記事なし=404 / 未確定は何も出さない）。（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md) の `ArticleFallback`） | 実装済 |
 | **検索** | `Cmd/Ctrl + K` で検索モーダルを起動する。 | **未実装** |
 | **ダークモード** | ヘッダーから切り替え可能にする。 | **未実装** |
 
@@ -213,6 +216,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 | 内容 | Issue |
 | :--- | :--- |
+| 外部リンクの `rel` が `noopener noreferrer` にならない | [#69](https://github.com/uyaaaaaa/personal-blog/issues/69) |
 | `` ` `` でリンクを囲めない | [#12](https://github.com/uyaaaaaa/personal-blog/issues/12) |
 
 ### 未実装の機能
