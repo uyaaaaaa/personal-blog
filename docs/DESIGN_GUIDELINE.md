@@ -73,13 +73,8 @@ CSS変数名はトークンのキーからそのまま導出されます（`main
 | **アクセント** | `#8B5CF6` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目、ロゴのスラッシュ。**唯一の色要素**。 |
 | **アクセント（ホバー）** | `#7C3AED` | `bg-accent-hover` | `--color-accent-hover` | アクセント色で塗りつぶした面のホバー時。エラーページの `Back to Top` ボタン。 |
 | **ボーダー** | `#E5E5E5` | `border-border` | `--color-border` | カード枠線、セクション区切り、ヘッダー下線。 |
-| **コード背景** | `#F5F5F5` | `bg-code-bg` | `--color-code-bg` | インラインコード、コードブロックの背景色。 |
+| **淡いサーフェス** | `#F5F5F5` | `bg-surface-subtle` | `--color-surface-subtle` | インラインコード、コードブロック、ヘッダーの検索ボックス、ドロワーのタグホバーの背景色。 |
 | **サブサーフェス** | `#F3F4F6` | `bg-gray-100` | — | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー。 |
-| **検索ボックス背景** | `#FAF5FF` | `bg-base` | `--color-base` | ヘッダーの検索ボックスの背景。 |
-
-> **注意**: `base` (`#FAF5FF` / 淡い紫) は名前に反して「ページ背景」ではなく、
-> ヘッダーの検索ボックス背景専用です。ページ背景の `bg` (`#F9F9F9`) とは別物です。
-> 名称が紛らわしいため、リネームを検討してください（→ 6章）。
 
 Callout は例外的に Obsidian デフォルトテーマ準拠の独自パレットを持ちます（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。
 
@@ -196,6 +191,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | **スムーズスクロール** | 見出し・目次のクリックでスムーズに移動し、URLハッシュを更新する。着地位置は見出しの `scroll-margin-top` で一元管理し、URLハッシュの直接オープンにも同じ余白を効かせる。 | 実装済 |
 | **UI文言** | ナビゲーション、ボタン、エラーなどUI側の文言は**英語**を基本とする（記事本文は日本語）。既存の例外は目次の「目次」。 | 実装済 |
 | **アイコン** | favicon / PWA / iOS 向けアイコンを一式提供する（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。 | 実装済 |
+| **OGP** | SNS シェア用の OGP / Twitter Card メタタグを全ページに出力する。共通画像は `public/ogp.png`、記事はフロントマターの `image` で差し替え可（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。記事を表示できないページは `og:type` を `website` にし、`article` を名乗らせない。 | 実装済 |
 | **ローディング表示** | ルート遷移中は画面上端にアクセント色2pxのバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない。`throttle: 200ms` により、プリレンダ済みページのように即座に終わる遷移ではバーを出さない。`prefers-reduced-motion: reduce` ではトランジションを無効化する。なおバーはルート遷移にしか反応しないため、ページ内の再取得（再試行など）は各コンポーネントが自前で進行を示す。 | 実装済 |
 | **記事取得の状態分離** | 記事詳細では「取得失敗（再試行導線）」と「記事なし（404 + 回遊導線）」を区別して表示する（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md) の `ArticleFallback`）。 | 実装済 |
 | **検索** | `Cmd/Ctrl + K` で検索モーダルを起動する。 | **未実装** |
@@ -204,12 +200,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 ---
 
 ## 6. 既知の課題 / 今後の予定
-
-### デザイン定義まわりの技術的負債
-
-| 課題 | 内容 |
-| :--- | :--- |
-| **`base` の命名** | `base` (`#FAF5FF`) は名前に反してページ背景ではなく検索ボックス背景専用。`surface-search` 等へのリネームを検討する（[#44](https://github.com/uyaaaaaa/personal-blog/issues/44)）。 |
 
 ### 修正待ちの不具合
 
@@ -228,7 +218,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | タイトルによる記事検索 | [#14](https://github.com/uyaaaaaa/personal-blog/issues/14) |
 | ショートカットキーでのフォーカス（`Cmd/Ctrl + K`） | [#15](https://github.com/uyaaaaaa/personal-blog/issues/15) |
 | デフォルトサムネイル | [#4](https://github.com/uyaaaaaa/personal-blog/issues/4) |
-| OGP 画像 | [#29](https://github.com/uyaaaaaa/personal-blog/issues/29) |
 | 記事内への画像配置 | [#10](https://github.com/uyaaaaaa/personal-blog/issues/10) |
 | コードブロックのトグル | [#3](https://github.com/uyaaaaaa/personal-blog/issues/3) |
 | ダークモード対応 | （Issue未作成） |

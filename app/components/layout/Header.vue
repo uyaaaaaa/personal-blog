@@ -11,9 +11,8 @@
         <span>Tech Blog</span>
       </NuxtLink>
 
-      <!-- Search Trigger (Desktop) -->
       <div class="hidden md:flex flex-1 max-w-md mx-8">
-        <button class="w-full flex items-center justify-between px-4 py-2 bg-base border border-border rounded-md text-sub hover:border-accent transition-colors group">
+        <button class="w-full flex items-center justify-between px-4 py-2 bg-surface-subtle border border-border rounded-md text-sub hover:border-accent transition-colors group">
           <span class="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 group-hover:text-accent"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <span class="text-sm">Search...</span>

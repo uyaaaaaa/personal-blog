@@ -2,11 +2,9 @@
 import BackButton from '~/components/common/BackButton.vue'
 
 interface Props {
-  /** `error`: 取得に失敗した / `not-found`: 取得できたが記事が存在しない */
   variant: 'error' | 'not-found'
-  /** 記事が存在しないときに、どのURLを開いたのかを示す */
   path?: string
-  /** 再試行の実行中。上端のローディングバーはルート遷移にしか反応しないため、ここで自前に示す */
+  // NuxtLoadingIndicatorはルート遷移にしか反応しないため、再試行の進行はここで示す
   pending?: boolean
 }
 
@@ -14,7 +12,6 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{ retry: [] }>()
 
-// UIの文言は英語で統一する（app/components/error/ErrorView.vue と同じ語り口）
 const heading = computed(() =>
   props.variant === 'error' ? 'Unable to Load Article' : 'Article Not Found',
 )
@@ -25,8 +22,7 @@ const description = computed(() =>
     : 'It may have been removed, or the URL may be incorrect.',
 )
 
-// 回遊導線は記事が存在しないときだけ出す。取得失敗時は同じ取得経路が不調なので出さない。
-// 本文側の描画をブロックしないよう遅延取得する
+// 取得失敗時は同じ経路が不調なため、回遊導線は出さない
 const { data: recentArticles } = useLazyAsyncData(
   'article-fallback-recent',
   () =>
@@ -40,10 +36,7 @@ const { data: recentArticles } = useLazyAsyncData(
 </script>
 
 <template>
-  <!-- 本文と同じ最大幅に揃える。サイドバーが無いぶん中央寄せにする -->
   <div class="mx-auto max-w-3xl py-8">
-    <!-- 破線で「本来ここに記事がある」ことを示す。面は塗らず枠と余白だけで区切る -->
-    <!-- 取得失敗は再試行で内容が変わるため、支援技術へ変化を伝えるライブリージョンにする -->
     <div
       class="flex flex-col items-center gap-3 rounded-[10px] border border-dashed border-border bg-white px-6 py-10 text-center"
       :role="variant === 'error' ? 'status' : undefined"
@@ -51,7 +44,7 @@ const { data: recentArticles } = useLazyAsyncData(
     >
       <h1 class="text-xl font-bold text-main">{{ heading }}</h1>
 
-      <p v-if="variant === 'not-found' && path" class="rounded bg-code-bg px-2 py-1 font-mono text-xs text-sub">
+      <p v-if="variant === 'not-found' && path" class="rounded bg-surface-subtle px-2 py-1 font-mono text-xs text-sub">
         {{ path }}
       </p>
 

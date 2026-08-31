@@ -527,7 +527,7 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 | 幅 | 本文と同じ `max-w-3xl`(768px) に揃え、中央寄せにする。サイドバーが無いぶんコンテナ幅いっぱいに広げない |
 | カード | 破線1px（`border-dashed` / ボーダー色）+ カード角丸 `10px` + 白背景。中央寄せの縦積み |
 | 見出し | `text-xl` / `700` / メイン色。`error` は `Unable to Load Article`、`not-found` は `Article Not Found` |
-| パス表示 | `not-found` のみ。等幅フォント / `text-xs` / サブテキスト色 / コード背景の小角丸チップ |
+| パス表示 | `not-found` のみ。等幅フォント / `text-xs` / サブテキスト色 / 淡いサーフェス（`bg-surface-subtle`）の小角丸チップ |
 | 説明文 | `text-sm` / サブテキスト色 / `max-w-sm` |
 | 再試行ボタン | `error` のみ。背景はアクセント色、ホバーで `accent-hover`（`ErrorView` のボタンと同じ扱い）。文言は `Retry`。`pending` 中は `disabled` にし、`Retrying...` へ切り替えて不透明度を下げる |
 | 戻る導線 | 末尾に `BackButton`（既定の `Back to Articles`） |
