@@ -99,7 +99,9 @@ watch(isOpen, async (open) => {
 const isSticky = ref(false)
 
 const { direction } = useScrollDirection()
-const isVisible = computed(() => !isSticky.value || isOpen.value || direction.value === 'up')
+const isVisible = computed(() =>
+  !isSticky.value || isOpen.value || (direction.value === 'up' && !isProgrammaticScroll.value),
+)
 const containerRef = ref<HTMLElement | null>(null)
 
 const STICKY_TOP = 74

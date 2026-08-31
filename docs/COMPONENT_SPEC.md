@@ -276,7 +276,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | 開閉 | バーのタップでトグル。シェブロンが180度回転（`200ms`） |
 | **記事を押し下げない** | ドロップダウンは `absolute` のオーバーレイとし、本文レイアウトを変化させない |
 | スクロール連動 | sticky 状態のとき、**下スクロールで隠れ（`-translate-y-[120px]` + `opacity-0`）、上スクロールで再表示**。開いている間は隠れない |
-| ジャンプ中の挙動 | 目次リンクによるプログラムスクロール中は、**方向によらずバーを隠す**。上方向へジャンプした際にバーが現れて着地した見出しに被るのを防ぐ（`useScrollDirection` が `isProgrammaticScroll` を見て `'down'` を返す） |
+| ジャンプ中の挙動 | ページ内ジャンプ中は、**方向によらずバーを隠す**。上方向へジャンプした際にバーが現れて着地した見出しや脚注に被るのを防ぐ。`isVisible` が `isProgrammaticScroll` を直接見るため、目次・見出しのスクロール（`useScrollTo`）と脚注のフラグメント遷移（`beginProgrammaticScroll`）の両方で効く |
 | 開いた時の位置合わせ | 開いた時点でアクティブな見出しが**領域の中央付近に来るよう内部スクロール**する |
 | スクロール貫通の抑止 | `overscroll-contain` で、目次内のスクロールが端に達しても背後のページを動かさない |
 | 横スクロールの抑止 | `Toc` と同じく `overflow-x: hidden` + 項目の `break-words` で、長い見出しがあっても横に伸びない |
@@ -425,7 +425,7 @@ Obsidian の `> [!TYPE]` 記法に対応した注釈ブロック。remark プラ
 
 ### 脚注
 
-`app/pages/article/[_slug].vue`（スタイルと目次のフィルタ） / `tailwind.config.ts`（`safelist`）
+`app/pages/article/[_slug].vue`（スタイル・目次のフィルタ・ジャンプ時のリスナー） / `tailwind.config.ts`（`safelist`）
 
 GFM の脚注記法（`[^1]` と `[^1]: 脚注の本文`）をそのまま使う。remark-gfm が本文に参照リンクを、
 記事末尾に脚注セクションを生成する。
@@ -444,6 +444,8 @@ GFM の脚注記法（`[^1]` と `[^1]: 脚注の本文`）をそのまま使う
 | 着地位置 | 参照・定義の両方に見出しと同じ `scroll-margin-top` を効かせ、固定ヘッダーに潜り込ませない（→ [5. 共有ロジック](#5-共有ロジック) の「ページ内リンクの着地位置」） |
 | ジャンプ先の強調 | `:target` で示す。定義は番号（`::marker`）をアクセント色 + `font-weight: 700`、本文の参照は `font-weight: 700` + アンダーライン。次のフラグメント遷移まで残す |
 | ジャンプの経路 | 参照 ↔ 定義の往復はブラウザ標準のフラグメント遷移に任せる（→ [ProseA](#prosea)）。`:target` が更新されるのはこの経路とURLハッシュの直接オープンだけ |
+| モバイル目次バーの退避 | 脚注リンクの `pointerdown` / `click` で `beginProgrammaticScroll()` を呼び、ジャンプ中はバーを隠す（→ [TocMobile](#tocmobile)）。**これが無いと上方向のジャンプでバーが現れ、着地した参照（`88px`）をバー（`74`〜`120px`）が覆う** |
+| リスナーの張り方 | 上記は本文のリンクに直接張らず、`.prose` のラッパーでイベント委譲する。ContentRenderer の出力に `onMounted` で張った処理はハイドレーションで失われる（→ [#68](https://github.com/uyaaaaaa/personal-blog/issues/68)） |
 | セクション見出し | remark-gfm が生成する `<h2 id="footnote-label" class="sr-only">Footnotes</h2>` は**読み上げ用のラベル**として隠す（各参照が `aria-describedby` で指す）。視覚的な区切りは直前の `<hr>` が担う |
 | `sr-only` の生成 | 上の `sr-only` はソースコードに現れずパージされるため、`tailwind.config.ts` の `safelist` で残す。**外すと見出しが可視になる** |
 | 目次からの除外 | 上の `sr-only` 見出しを目次から除く。読者に見えない見出しが目次に並ぶのを防ぐため |
@@ -526,8 +528,8 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 | :--- | :--- | :--- |
 | `useTocActive(links, offset)` | `app/composables/useTocActive.ts` | 現在読んでいる見出しのIDを追跡する。ビューポート上端から `offset` px を最後に通過した見出しを採用。**ページ最下部では最後の見出しを強制的にアクティブ**にする。既定 `offset` は `140`（`Toc` は `100`、`TocMobile` は `140` を渡す） |
 | `useScrollDirection(threshold)` | `app/composables/useScrollDirection.ts` | スクロール方向（`'up'` / `'down'`）を追跡する。`threshold`（既定 `8px`）未満の移動は無視してちらつきを防ぐ。iOSのラバーバンドで負値になるため `scrollY` を0でクランプする。**プログラムスクロール中は方向によらず `'down'` を返す** |
-| `useScrollTo()` | `app/composables/useScrollTo.ts` | 指定IDへ `scrollIntoView({ behavior: 'smooth' })` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める） |
-| `isProgrammaticScroll` | `app/composables/useScrollTo.ts` | 目次リンク等によるスクロールが進行中かを表す共有 `ref`。スクロールイベントが `150ms` 止まったら終了とみなす（`scrollend` は Safari の対応が新しいためデバウンスで代用）。`useScrollDirection` が参照する |
+| `useScrollTo()` | `app/composables/useScrollTo.ts` | `scrollTo(id)` は指定IDへ `scrollIntoView({ behavior: 'smooth' })` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める）。`beginProgrammaticScroll()` は**スクロールせずジャンプ中フラグだけを立てる**入口で、ブラウザ標準のフラグメント遷移（脚注）をこの仕組みに乗せるために使う |
+| `isProgrammaticScroll` | `app/composables/useScrollTo.ts` | ページ内ジャンプが進行中かを表す共有 `ref`。スクロールイベントが `150ms` 止まったら終了とみなす（`scrollend` は Safari の対応が新しいためデバウンスで代用）。`useScrollDirection` と `TocMobile` が参照する |
 | `useArticleTags()` | `app/composables/useArticleTags.ts` | 公開記事のフロントマターからタグを集計し、`{ name, slug, count }` を**記事数の降順（同数なら名前順）**で返す |
 | `usePageSeo(input)` | `app/composables/usePageSeo.ts` | title / description と OGP・Twitter Card のメタタグをまとめて出力する。title は `<ページ名> \| Tech Blog`（省略時はサイト名のみ）、description は空ならサイト共通の説明文にフォールバックする。`og:image` は記事の `image`、無ければ `/ogp.png`。`og:image` と `og:url` は `runtimeConfig.public.siteUrl` を基準に絶対URL化する。`type: 'article'` のときだけ `article:published_time` / `article:tag` を出す（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
 | `formatDate(date)` | `app/utils/date.ts` | 日付を `YYYY.MM.DD` 形式に整形する（`ja-JP` ロケール / ゼロ埋め / ドット区切り）。空値は空文字を返す |

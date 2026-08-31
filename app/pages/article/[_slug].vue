@@ -25,7 +25,7 @@ usePageSeo({
   tags: () => page.value?.tags,
 })
 
-const { scrollTo } = useScrollTo()
+const { scrollTo, beginProgrammaticScroll } = useScrollTo()
 const articleRef = ref<HTMLElement | null>(null)
 
 const setupHeaderClickListeners = () => {
@@ -43,6 +43,16 @@ const setupHeaderClickListeners = () => {
       }
     }
   })
+}
+
+const FOOTNOTE_LINK_SELECTOR = 'a[data-footnote-ref], a[data-footnote-backref]'
+
+// pointerdownで目次バーの退避を先行させ、キーボード操作を拾うためにclickでも呼ぶ
+const handleFootnoteJump = (event: Event) => {
+  const target = event.target as HTMLElement | null
+  if (!target?.closest(FOOTNOTE_LINK_SELECTOR)) return
+
+  beginProgrammaticScroll()
 }
 
 onMounted(() => {
@@ -86,7 +96,12 @@ watch(() => page.value, async () => {
 
         <TocMobile :links="tocLinks" />
 
-        <div ref="articleRef" class="prose prose-slate max-w-none">
+        <div
+          ref="articleRef"
+          class="prose prose-slate max-w-none"
+          @pointerdown="handleFootnoteJump"
+          @click="handleFootnoteJump"
+        >
           <ContentRenderer :value="page" />
         </div>
       </article>
