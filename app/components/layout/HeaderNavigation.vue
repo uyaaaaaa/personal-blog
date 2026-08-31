@@ -108,13 +108,13 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 .nav-item {
   font-weight: 500;
   font-size: 0.95rem;
-  color: var(--color-text);
+  color: var(--color-text-main);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .nav-item:hover {
-  color: var(--color-primary);
+  color: var(--color-accent);
 }
 
 /* Mobile Styles */
@@ -200,7 +200,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 .mobile-nav-item {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--color-text-main);
   text-decoration: none;
 }
 
@@ -232,7 +232,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
   padding: 0.5rem 0.25rem;
   border-radius: 0.375rem;
   font-size: 0.95rem;
-  color: var(--color-text);
+  color: var(--color-text-main);
 }
 
 .drawer-tag-item:hover {
