@@ -103,12 +103,7 @@ watch(() => page.value, async () => {
 </template>
 
 <style>
-/* 本文リンクのスタイルはここで一元管理する（#39）。
-   Tailwindのprose-a/hoverバリアントは適用順（右のバリアントが内側）が読み取りにくく、
-   順序を誤るとコンテナ側に:hoverが付いて本文のどこにホバーしても全リンクが変色する。
-   リンク自身を指すセレクタをCSSで明示して、その事故を構造的に防ぐ。
-   配色はdoc/DESING_GUIDELINE.md「4. 記事内要素」の
-   「アクセントカラーで表示し、ホバー時にアンダーラインを付与」に準拠する */
+/* 本文リンクの配色はdoc/DESING_GUIDELINE.md「4. 記事内要素」に準拠 */
 .prose a {
   color: var(--color-accent);
   text-decoration: none;
@@ -118,10 +113,7 @@ watch(() => page.value, async () => {
   text-decoration: underline;
 }
 
-/* 見出しのアンカーは本文リンクとは別扱いにする。
-   Nuxt Contentが見出しテキストを<a href="#...">で包むため、上の本文リンク指定を
-   そのまま拾うと見出し自体がアクセントカラーになってしまう。
-   通常時は見出しの色を継承し、クリック可能であることを示すホバーのみ残す */
+/* Nuxt Contentは見出しテキストを<a>で包むため、上の本文リンク指定から除外する */
 .prose :where(h1, h2, h3, h4, h5, h6) a {
   color: inherit;
   text-decoration: none;
