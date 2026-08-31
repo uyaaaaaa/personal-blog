@@ -1,28 +1,27 @@
 <template>
-  <NuxtLink :to="path" class="article-card flex items-start gap-3.5 group">
-    <!-- Emoji thumbnail -->
-    <div class="flex-shrink-0 w-16 h-16 rounded-[10px] bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-200">
-      <span class="text-4xl leading-none">{{ emoji }}</span>
+  <NuxtLink :to="path" class="article-card flex flex-col gap-3 bg-white border border-border rounded-[10px] p-4 md:p-5 hover:shadow-sm transition-shadow duration-200">
+    <!-- Header: Emoji tile & Date -->
+    <div class="flex justify-between items-center">
+      <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+        <span class="text-[28px] leading-none">{{ emoji }}</span>
+      </div>
+      <time class="text-sub text-sm font-mono" :datetime="date">{{ formattedDate }}</time>
     </div>
 
-    <!-- Title & Meta -->
-    <div class="min-w-0 flex-1">
-      <h3 class="text-[15px] font-bold leading-5 text-main line-clamp-3 group-hover:text-accent transition-colors duration-200">
-        {{ title }}
-      </h3>
+    <!-- Title -->
+    <h3 class="text-base font-bold leading-snug text-main line-clamp-2 min-h-[2.6em]">
+      {{ title }}
+    </h3>
 
-      <div class="mt-2.5 flex items-center gap-2">
-        <img
-          :src="author.avatar"
-          :alt="author.name"
-          class="w-[22px] h-[22px] rounded-full flex-shrink-0"
-          loading="lazy"
-          width="22"
-          height="22"
-        >
-        <span class="text-[13px] font-medium text-main truncate">{{ author.name }}</span>
-        <time class="text-[13px] text-sub flex-shrink-0" :datetime="date">{{ formattedDate }}</time>
-      </div>
+    <!-- Footer: Tags -->
+    <div class="mt-auto flex flex-wrap gap-1.5">
+      <span
+        v-for="tag in tags"
+        :key="tag"
+        class="tag text-xs px-2 py-0.5 rounded border border-accent text-accent font-mono bg-white"
+      >
+        {{ tag }}
+      </span>
     </div>
   </NuxtLink>
 </template>
@@ -33,16 +32,26 @@ interface Props {
   path: string
   date?: string
   emoji?: string
+  tags?: string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
   date: '',
-  emoji: '📝'
+  emoji: '📝',
+  tags: () => []
 })
-
-const { author } = useAppConfig()
 
 const formattedDate = computed(() => {
-  return formatRelativeDate(props.date)
+  return formatDate(props.date)
 })
 </script>
+
+<style scoped>
+.article-card:hover h3 {
+  color: theme('colors.accent');
+}
+
+.article-card:hover {
+  border-color: theme('colors.accent');
+}
+</style>

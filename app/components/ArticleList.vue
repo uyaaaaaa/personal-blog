@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-7">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
     <ArticleCard
       v-for="article in articles"
       :key="article.path"
@@ -7,6 +7,7 @@
       :path="article.path"
       :date="article.date"
       :emoji="article.emoji"
+      :tags="article.tags"
     />
   </div>
 </template>
@@ -19,6 +20,7 @@ interface Article {
   title: string
   date: string
   emoji?: string
+  tags?: string[]
 }
 
 defineProps<{
