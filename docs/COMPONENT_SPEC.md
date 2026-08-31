@@ -21,7 +21,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
   - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [ProseA](#prosea)
 - [4. エラー](#4-エラー)
-  - [ErrorView](#errorview) / [NotFound / Server](#notfound--server)
+  - [ErrorView](#errorview) / [NotFound / Server](#notfound--server) / [ArticleFallback](#articlefallback)
 - [5. 共有ロジック](#5-共有ロジック)
 
 ---
@@ -483,6 +483,55 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 | :--- | :--- | :--- |
 | `NotFound` | — | `404` / `Page Not Found` / 該当ページが存在しない旨の説明 |
 | `Server` | `statusCode: number` | `statusCode` / `An Error Occurred` / 時間をおいて再試行する旨の説明 |
+
+### ArticleFallback
+
+`app/components/article/ArticleFallback.vue`
+
+記事詳細ページで本文を表示できないときに、本文の代わりに出すカード。
+`app/error.vue` 経由の全画面エラーとは別物で、**ヘッダー・フッターを保ったままページ内に留まる**。
+
+**Props**
+
+| 名前 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `variant` | `'error' \| 'not-found'` | `error`: 取得に失敗した / `not-found`: 取得できたが記事が存在しない |
+| `path` | `string` | 開いていたURL。`not-found` のときだけ表示する |
+
+**Emits**
+
+| 名前 | 説明 |
+| :--- | :--- |
+| `retry` | `variant="error"` の再試行ボタン押下。ページ側で `useAsyncData` の `refresh()` を呼ぶ |
+
+**状態の切り分け**
+
+判定はページ側（`app/pages/article/[_slug].vue`）が持つ。`error` を捨てると通信失敗と記事なしが
+同じ `null` に潰れて誤った文言を出すため、必ず両方を受け取って区別する。
+
+| 条件 | 表示 | HTTPステータス |
+| :--- | :--- | :--- |
+| `data` あり | 記事本文 | 200 |
+| `error` あり | `ArticleFallback variant="error"` | 200（一時的な失敗のため404にはしない） |
+| `error` なし かつ `data` なし | `ArticleFallback variant="not-found"` | 404（SSR時に `setResponseStatus` で設定） |
+
+**表示要件**
+
+| 要素 | 要件 |
+| :--- | :--- |
+| カード | 破線1px（`border-dashed` / ボーダー色）+ カード角丸 `10px` + 白背景。中央寄せの縦積み |
+| 見出し | `text-xl` / `700` / メイン色。`error` は「記事を読み込めませんでした」、`not-found` は「記事が見つかりませんでした」 |
+| パス表示 | `not-found` のみ。等幅フォント / `text-xs` / サブテキスト色 / コード背景の小角丸チップ |
+| 説明文 | `text-sm` / サブテキスト色 / `max-w-sm` |
+| 再試行ボタン | `error` のみ。背景はアクセント色、ホバーで `accent-hover`（`ErrorView` のボタンと同じ扱い） |
+| 戻る導線 | 末尾に `BackButton`（既定の `Back to Articles`） |
+| 最近の記事 | `not-found` のみ。カード下に最大3件を日付（等幅）+ タイトルの一覧で表示し、下線で区切る |
+
+**最近の記事の取得**
+
+`useLazyAsyncData` で取得し、本文側の描画をブロックしない。
+`immediate` は `variant === 'not-found'` のときだけ `true` にする
+（取得失敗時は同じ取得経路が不調なので、回遊導線を出さない）。
 
 ---
 

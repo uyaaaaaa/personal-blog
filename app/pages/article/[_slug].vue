@@ -3,17 +3,28 @@ import Sidebar from '~/components/common/Sidebar.vue'
 import BackButton from '~/components/common/BackButton.vue'
 import Toc from '~/components/article/Toc.vue'
 import TocMobile from '~/components/article/TocMobile.vue'
+import ArticleFallback from '~/components/article/ArticleFallback.vue'
 
 const route = useRoute()
-const { data: page } = await useAsyncData(route.path, () =>
+const { data: page, error, refresh } = await useAsyncData(route.path, () =>
   queryCollection('article').path(route.path).where('published', '=', true).first(),
 )
+
+// 取得失敗と「記事が存在しない」は表示も導線も別物なので、ここで区別する。
+// errorが無いのに中身が無い場合だけが「存在しない」
+const isNotFound = computed(() => !error.value && !page.value)
+
+// 存在しない記事はHTTPステータスも404で返す（見た目はページ内に留めたままSEO上の正しさを保つ）
+if (import.meta.server && isNotFound.value) {
+  const event = useRequestEvent()
+  if (event) setResponseStatus(event, 404)
+}
 
 const tocLinks = computed(() => page.value?.body?.toc?.links || [])
 
 usePageSeo({
   type: 'article',
-  title: () => page.value?.title,
+  title: () => page.value?.title ?? (isNotFound.value ? '記事が見つかりません' : undefined),
   description: () => page.value?.description,
   image: () => page.value?.image,
   publishedTime: () => page.value?.date,
@@ -105,10 +116,11 @@ watch(() => page.value, async () => {
     </Sidebar>
   </div>
   
-  <div v-else class="py-12 text-center">
-    <h1 class="text-2xl font-bold text-main">Article not found</h1>
-    <NuxtLink to="/article" class="text-accent hover:underline mt-4 inline-block">Back to Articles</NuxtLink>
-  </div>
+  <!-- 取得失敗: 再試行で同じクエリをやり直せる -->
+  <ArticleFallback v-else-if="error" variant="error" @retry="refresh()" />
+
+  <!-- 記事が存在しない -->
+  <ArticleFallback v-else variant="not-found" :path="route.path" />
 </template>
 
 <style>

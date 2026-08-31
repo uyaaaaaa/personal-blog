@@ -1,0 +1,80 @@
+<script setup lang="ts">
+import BackButton from '~/components/common/BackButton.vue'
+
+interface Props {
+  /** `error`: 取得に失敗した / `not-found`: 取得できたが記事が存在しない */
+  variant: 'error' | 'not-found'
+  /** 記事が存在しないときに、どのURLを開いたのかを示す */
+  path?: string
+}
+
+const props = defineProps<Props>()
+
+const emit = defineEmits<{ retry: [] }>()
+
+const heading = computed(() =>
+  props.variant === 'error' ? '記事を読み込めませんでした' : '記事が見つかりませんでした',
+)
+
+const description = computed(() =>
+  props.variant === 'error'
+    ? '通信が不安定な可能性があります。時間をおいて再試行してください。'
+    : '削除されたか、URLが間違っている可能性があります。',
+)
+
+// 回遊導線は記事が存在しないときだけ出す。取得失敗時は同じ取得経路が不調なので出さない。
+// 本文側の描画をブロックしないよう遅延取得する
+const { data: recentArticles } = useLazyAsyncData(
+  'article-fallback-recent',
+  () =>
+    queryCollection('article')
+      .where('published', '=', true)
+      .order('date', 'DESC')
+      .limit(3)
+      .all(),
+  { immediate: props.variant === 'not-found', default: () => [] },
+)
+</script>
+
+<template>
+  <div class="py-8">
+    <!-- 破線で「本来ここに記事がある」ことを示す。面は塗らず枠と余白だけで区切る -->
+    <div
+      class="flex flex-col items-center gap-3 rounded-[10px] border border-dashed border-border bg-white px-6 py-10 text-center"
+    >
+      <h1 class="text-xl font-bold text-main">{{ heading }}</h1>
+
+      <p v-if="variant === 'not-found' && path" class="rounded bg-code-bg px-2 py-1 font-mono text-xs text-sub">
+        {{ path }}
+      </p>
+
+      <p class="max-w-sm text-sm text-sub">{{ description }}</p>
+
+      <button
+        v-if="variant === 'error'"
+        type="button"
+        class="mt-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-accent-hover"
+        @click="emit('retry')"
+      >
+        再試行
+      </button>
+
+      <BackButton class="mt-1" />
+    </div>
+
+    <section v-if="variant === 'not-found' && recentArticles?.length" class="mt-10">
+      <h2 class="mb-3 font-mono text-xs tracking-wider text-sub">最近の記事</h2>
+      <ul class="flex flex-col">
+        <li v-for="article in recentArticles" :key="article.path" class="border-b border-border">
+          <NuxtLink
+            :to="article.path"
+            class="flex flex-col gap-1 py-3 text-sm text-main transition-colors duration-200 hover:text-accent sm:flex-row sm:items-baseline sm:gap-3"
+          >
+            <span class="flex-none font-mono text-xs text-sub">{{ formatDate(article.date) }}</span>
+            <span>{{ article.title }}</span>
+          </NuxtLink>
+        </li>
+      </ul>
+    </section>
+  </div>
+</template>
