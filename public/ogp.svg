@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <title>Tech Blog</title>
+  <desc>Open Graph 用のデフォルト画像。生成手順は docs/ICON_GUIDELINE.md を参照。</desc>
+
+  <defs>
+    <style>
+      /* サブセット化した JetBrains Mono を埋め込み、環境に依存せず同じ絵が出るようにしている */
+      @font-face {
+        font-family: 'JetBrains Mono';
+        font-style: normal;
+        font-weight: 400 700;
+        src: url(data:font/woff2;base64,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) format('woff2');
+      }
+    </style>
+  </defs>
+
+  <!-- 地とヘッダー帯（サイトの追従ヘッダーを再現している） -->
+  <rect width="1200" height="630" fill="#F9F9F9"/>
+  <rect width="1200" height="150" fill="#FFFFFF"/>
+  <rect y="148" width="1200" height="2" fill="#E5E5E5"/>
+  <rect width="14" height="630" fill="#8B5CF6"/>
+
+  <!-- ヘッダーのロゴロックアップ -->
+  <g transform="translate(110 45) scale(1.875)">
+    <rect width="32" height="32" rx="7" fill="#1A1A1A"/>
+    <path d="M8.5 10.5 v6.2 a4.6 4.6 0 0 0 9.2 0 v-6.2" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M17.7 10.5 v11" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
+    <line x1="26" y1="9.5" x2="22.4" y2="22.5" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="188" y="105" font-family="JetBrains Mono, monospace" font-size="40" font-weight="700"
+        letter-spacing="-1" fill="#1A1A1A">Tech Blog</text>
+
+  <!-- 本文 -->
+  <text x="110" y="330" font-family="JetBrains Mono, monospace" font-size="72" font-weight="700"
+        letter-spacing="-2" fill="#1A1A1A">Functional Minimalism</text>
+  <text x="110" y="426" font-family="JetBrains Mono, monospace" font-size="72" font-weight="700"
+        letter-spacing="-2" fill="#8B5CF6">for Experts</text>
+  <text x="110" y="516" font-family="JetBrains Mono, monospace" font-size="26" font-weight="400"
+        fill="#888888">software engineering / architecture / design</text>
+</svg>

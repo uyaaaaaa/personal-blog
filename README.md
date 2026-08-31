@@ -71,7 +71,7 @@ category: blog
 | :--- | :--- |
 | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) | デザインの大方針。コンセプト、デザイントークン、レイアウト原則、UX要件。 |
 | [docs/COMPONENT_SPEC.md](./docs/COMPONENT_SPEC.md) | コンポーネント定義。各コンポーネントの props、表示要件、インタラクション。 |
-| [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) | アイコン定義。`u/` モノグラムの仕様と favicon 一式の生成手順。 |
+| [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) | アイコン定義。`u/` モノグラムの仕様と、favicon 一式・OGP 画像の生成手順。 |
 
 UI を変更した際は、該当するドキュメントも併せて更新してください。
 

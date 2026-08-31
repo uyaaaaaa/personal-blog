@@ -21,6 +21,12 @@ export default defineNuxtConfig({
       ],
     },
   },
+  runtimeConfig: {
+    public: {
+      // og:imageやog:urlは絶対URLが必要。デプロイ先に合わせてNUXT_PUBLIC_SITE_URLで上書きできる
+      siteUrl: 'https://tech-blog-efb.pages.dev',
+    },
+  },
   modules: [
     '@nuxt/content',
     '@nuxtjs/tailwindcss',

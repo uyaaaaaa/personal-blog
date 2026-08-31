@@ -1,5 +1,10 @@
 <script setup lang="ts">
 const { data: tags } = useArticleTags()
+
+usePageSeo({
+  title: 'Tags',
+  description: '記事に付けられたタグの一覧。',
+})
 </script>
 
 <template>

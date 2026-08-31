@@ -4,6 +4,11 @@ import ArticleCard from '~/components/article/ArticleCard.vue'
 const { data: articles } = await useAsyncData('article-list', () =>
   queryCollection('article').where('published', '=', true).order('date', 'DESC').all(),
 )
+
+usePageSeo({
+  title: 'Articles',
+  description: '公開中の記事の一覧。',
+})
 </script>
 
 <template>

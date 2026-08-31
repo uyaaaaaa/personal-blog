@@ -49,3 +49,45 @@
 形を変える場合は SVG を編集したうえで、全ラスタを描き直すこと。
 `theme-color` は追従ヘッダーの背景（白）に合わせているため、
 ヘッダーの配色を変える場合は `nuxt.config.ts` と `site.webmanifest` の両方を更新する。
+
+## OGP 画像
+
+SNS などにシェアされたときのカード画像。`public/ogp.png`（1200×630）が
+全ページ共通のデフォルトで、記事側でフロントマターの `image` を指定すれば
+その記事だけ差し替わる。
+
+構図はサイトそのものを縮めたもので、上部の白帯 + 下線でサイトの追従ヘッダーを、
+その中にヘッダーと同じロゴロックアップを置いている。左端のアクセントバーと
+`for Experts` の 1 行だけに `#8B5CF6` を使い、それ以外は無彩色に寄せている。
+
+| 項目 | 値 |
+| :-- | :-- |
+| サイズ | 1200×630（`summary_large_image` / 1.91:1） |
+| 地 | `#F9F9F9` / ヘッダー帯 `#FFFFFF` / 罫 `#E5E5E5` |
+| 文字 | 見出し `#1A1A1A` / アクセント `#8B5CF6` / 補足 `#888888` |
+| 書体 | JetBrains Mono（使用文字のみサブセット化して SVG に埋め込み済み） |
+
+### 生成方法
+
+元データは `public/ogp.svg`。サブセット化した woff2 を data URI で内包しているため、
+フォントを別途インストールしなくても同じ絵になる。Chromium でラスタライズする。
+
+```sh
+chromium --headless --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
+  --window-size=1360,790 --screenshot=raw.png "file://$PWD/public/ogp.svg"
+# ウィンドウちょうどのサイズだと下端に白帯が出るため、大きめに描いて 1200x630 に切り出す
+python3 -c "from PIL import Image; Image.open('raw.png').convert('RGB').crop((0,0,1200,630)).save('public/ogp.png', optimize=True)"
+```
+
+文言を変えて文字種が増える場合は、SVG 内の `@font-face` も
+[Google Fonts の `text=` サブセット](https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&text=AB)
+で作り直す。埋め込まれていない文字は等幅のフォールバックで描かれてしまう。
+
+### メタタグ
+
+`app/composables/usePageSeo.ts` が title / description と OGP・Twitter Card を
+まとめて出力する。各ページはこれを呼ぶだけでよい。
+
+`og:image` と `og:url` は絶対 URL でないとクローラが解決できないため、
+`nuxt.config.ts` の `runtimeConfig.public.siteUrl` を基準に組み立てている。
+独自ドメインに移すときはここか、環境変数 `NUXT_PUBLIC_SITE_URL` を変更する。

@@ -27,6 +27,11 @@ const tagName = computed(() => {
 if (filteredArticles.value.length === 0) {
   throw createError({ statusCode: 404, statusMessage: 'Tag not found', fatal: true })
 }
+
+usePageSeo({
+  title: () => `#${tagName.value}`,
+  description: () => `${tagName.value} タグが付いた記事の一覧。`,
+})
 </script>
 
 <template>
