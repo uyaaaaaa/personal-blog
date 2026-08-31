@@ -25,10 +25,7 @@ const setupHeaderClickListeners = () => {
     el.onclick = (e) => {
       e.preventDefault()
       if (el.id) {
-        const isDesktop = window.matchMedia('(min-width: 1024px)').matches
-        const offset = isDesktop ? 80 : 130
-        
-        scrollTo(el.id, offset)
+        scrollTo(el.id)
       }
     }
   })
@@ -104,3 +101,19 @@ watch(() => page.value, async () => {
     <NuxtLink to="/article" class="text-accent hover:underline mt-4 inline-block">Back to Articles</NuxtLink>
   </div>
 </template>
+
+<style>
+/* ページ内リンクの着地位置はここで一元管理する。
+   JSのスクロール（useScrollTo）とURLハッシュ直開きの両方に効く */
+.prose :where(h2, h3, h4, h5, h6) {
+  /* 固定ヘッダー64px + 余白24px */
+  scroll-margin-top: 88px;
+}
+
+@media (min-width: 1024px) {
+  .prose :where(h2, h3, h4, h5, h6) {
+    /* 固定ヘッダー64px + 余白32px */
+    scroll-margin-top: 96px;
+  }
+}
+</style>
