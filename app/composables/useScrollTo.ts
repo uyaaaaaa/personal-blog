@@ -39,6 +39,7 @@ export const useScrollTo = () => {
   }
 
   return {
-    scrollTo
+    scrollTo,
+    beginProgrammaticScroll: trackProgrammaticScroll
   }
 }

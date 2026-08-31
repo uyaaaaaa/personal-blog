@@ -156,6 +156,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
   z-index: 90;
   opacity: 0;
   visibility: hidden;
+  overflow: hidden;
   transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
 

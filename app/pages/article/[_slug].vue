@@ -50,7 +50,12 @@ if (import.meta.server) {
   }
 }
 
-const tocLinks = computed(() => page.value?.body?.toc?.links || [])
+// remark-gfmが脚注セクションに生成するsr-only見出し
+const FOOTNOTE_LABEL_ID = 'footnote-label'
+
+const tocLinks = computed(() =>
+  (page.value?.body?.toc?.links || []).filter((link: { id: string }) => link.id !== FOOTNOTE_LABEL_ID),
+)
 
 usePageSeo({
   type: page.value ? 'article' : 'website',
@@ -65,7 +70,7 @@ usePageSeo({
   tags: () => page.value?.tags,
 })
 
-const { scrollTo } = useScrollTo()
+const { scrollTo, beginProgrammaticScroll } = useScrollTo()
 const articleRef = ref<HTMLElement | null>(null)
 
 const setupHeaderClickListeners = () => {
@@ -83,6 +88,16 @@ const setupHeaderClickListeners = () => {
       }
     }
   })
+}
+
+const FOOTNOTE_LINK_SELECTOR = 'a[data-footnote-ref], a[data-footnote-backref]'
+
+// pointerdownで目次バーの退避を先行させ、キーボード操作を拾うためにclickでも呼ぶ
+const handleFootnoteJump = (event: Event) => {
+  const target = event.target as HTMLElement | null
+  if (!target?.closest(FOOTNOTE_LINK_SELECTOR)) return
+
+  beginProgrammaticScroll()
 }
 
 onMounted(() => {
@@ -126,7 +141,12 @@ watch(() => page.value, async () => {
 
         <TocMobile :links="tocLinks" />
 
-        <div ref="articleRef" class="prose prose-slate max-w-none">
+        <div
+          ref="articleRef"
+          class="prose prose-slate max-w-none"
+          @pointerdown="handleFootnoteJump"
+          @click="handleFootnoteJump"
+        >
           <ContentRenderer :value="page" />
         </div>
       </article>
@@ -173,13 +193,29 @@ watch(() => page.value, async () => {
   text-decoration: none;
 }
 
-.prose :where(h2, h3, h4, h5, h6) {
-  scroll-margin-top: 88px;
+.prose {
+  --landing-offset: 88px;
 }
 
 @media (min-width: 1024px) {
-  .prose :where(h2, h3, h4, h5, h6) {
-    scroll-margin-top: 96px;
+  .prose {
+    --landing-offset: 96px;
   }
+}
+
+.prose :where(h2, h3, h4, h5, h6),
+.prose [data-footnote-ref],
+.prose [data-footnotes] li {
+  scroll-margin-top: var(--landing-offset);
+}
+
+.prose [data-footnotes] li:target::marker {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.prose [data-footnote-ref]:target {
+  font-weight: 700;
+  text-decoration: underline;
 }
 </style>
