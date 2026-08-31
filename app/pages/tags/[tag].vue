@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ArticleCard from '~/components/article/ArticleCard.vue'
+import ArticleList from '~/components/ArticleList.vue'
 
 const route = useRoute()
 const slug = computed(() => String(route.params.tag))
@@ -38,17 +38,7 @@ if (filteredArticles.value.length === 0) {
       <p class="text-sub">{{ filteredArticles.length }} article{{ filteredArticles.length === 1 ? '' : 's' }} tagged with "{{ tagName }}".</p>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <ArticleCard
-        v-for="article in filteredArticles"
-        :key="article.path"
-        :title="article.title"
-        :path="article.path"
-        :description="article.description"
-        :date="article.date"
-        :tags="article.tags"
-      />
-    </div>
+    <ArticleList :articles="filteredArticles" />
 
     <NuxtLink to="/tags" class="inline-block text-accent font-semibold">
       &larr; All tags
