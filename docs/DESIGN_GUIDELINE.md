@@ -3,12 +3,14 @@
 当ブログのデザイン**大方針**を定めるドキュメントです。
 コンセプト、デザイントークン、レイアウト原則、UX要件といった「サイト全体に横断的に効くルール」を扱います。
 
-個々のコンポーネントの詳細な表示要件・インタラクション仕様は **[COMPONENT_SPEC.md](./COMPONENT_SPEC.md)** に分離しています。
+個々のコンポーネントの詳細な表示要件・インタラクション仕様は **[COMPONENT_SPEC.md](./COMPONENT_SPEC.md)** に、
+アイコン・favicon の仕様は **[ICON_GUIDELINE.md](./ICON_GUIDELINE.md)** に分離しています。
 
 | ドキュメント | 扱う範囲 |
 | :--- | :--- |
 | **DESIGN_GUIDELINE.md**（本書） | 大方針。コンセプト、デザイントークン、レイアウト原則、UX要件、既知の課題。 |
 | **[COMPONENT_SPEC.md](./COMPONENT_SPEC.md)** | コンポーネント定義。各コンポーネントの props、表示要件、状態とインタラクション。 |
+| **[ICON_GUIDELINE.md](./ICON_GUIDELINE.md)** | アイコン定義。`u/` モノグラムの仕様、favicon 一式のファイル構成と生成手順。 |
 
 **実装が正**です。実装を変更した際は該当するドキュメントも併せて更新してください。
 
@@ -62,7 +64,7 @@
 | **サーフェス** | `#FFFFFF` | `bg-white` | — | カード、ヘッダー、モバイルドロワー、TOCドロップダウンの背景。 |
 | **メイン（文字色）** | `#1A1A1A` | `text-main` | `--color-text-main` | 見出し・本文の文字色。 |
 | **サブテキスト** | `#888888` | `text-sub` | `--color-text-sub` | 投稿日、キャプション、説明文、非アクティブなTOC項目。 |
-| **アクセント** | `#8B5CF6` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目。**唯一の色要素**。 |
+| **アクセント** | `#8B5CF6` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目、ロゴのスラッシュ。**唯一の色要素**。 |
 | **ボーダー** | `#E5E5E5` | `border-border` | `--color-border` | カード枠線、セクション区切り、ヘッダー下線。 |
 | **コード背景** | `#F5F5F5` | `bg-code-bg` | `--color-code-bg` | インラインコード、コードブロックの背景色。 |
 | **サブサーフェス** | `#F3F4F6` | `bg-gray-100` | — | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー。 |
@@ -186,7 +188,8 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | **旧URL互換** | `/blog/**` `/book/**` は `/article/**` へ301リダイレクト。 | 実装済 |
 | **タグ機能** | 全タグの一覧ページと、タグによる絞り込みを提供する。 | 実装済 |
 | **スクロール追従** | 見出し位置に応じて目次のアクティブ項目をハイライトする。 | 実装済 |
-| **スムーズスクロール** | 見出し・目次のクリックは固定ヘッダー分をオフセットして移動し、URLハッシュを更新する。 | 実装済 |
+| **スムーズスクロール** | 見出し・目次のクリックでスムーズに移動し、URLハッシュを更新する。着地位置は見出しの `scroll-margin-top` で一元管理し、URLハッシュの直接オープンにも同じ余白を効かせる。 | 実装済 |
+| **アイコン** | favicon / PWA / iOS 向けアイコンを一式提供する（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。 | 実装済 |
 | **検索** | `Cmd/Ctrl + K` で検索モーダルを起動する。 | **未実装** |
 | **ダークモード** | ヘッダーから切り替え可能にする。 | **未実装** |
 
@@ -225,7 +228,6 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | タイトルによる記事検索 | [#14](https://github.com/uyaaaaaa/personal-blog/issues/14) |
 | ショートカットキーでのフォーカス（`Cmd/Ctrl + K`） | [#15](https://github.com/uyaaaaaa/personal-blog/issues/15) |
 | デフォルトサムネイル | [#4](https://github.com/uyaaaaaa/personal-blog/issues/4) |
-| favicon 画像 | [#28](https://github.com/uyaaaaaa/personal-blog/issues/28) |
 | OGP 画像 | [#29](https://github.com/uyaaaaaa/personal-blog/issues/29) |
 | 記事内への画像配置 | [#10](https://github.com/uyaaaaaa/personal-blog/issues/10) |
 | コードブロックのトグル | [#3](https://github.com/uyaaaaaa/personal-blog/issues/3) |

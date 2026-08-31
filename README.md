@@ -32,6 +32,7 @@ app/
 └── layouts/      # 全ページ共通レイアウトとCSS変数
 content/article/  # 記事（Markdown）
 remark/           # Markdown拡張（Obsidian互換Callout）
+public/           # favicon・PWAアイコン等の静的ファイル
 docs/             # 設計ドキュメント
 ```
 
@@ -70,6 +71,7 @@ category: blog
 | :--- | :--- |
 | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) | デザインの大方針。コンセプト、デザイントークン、レイアウト原則、UX要件。 |
 | [docs/COMPONENT_SPEC.md](./docs/COMPONENT_SPEC.md) | コンポーネント定義。各コンポーネントの props、表示要件、インタラクション。 |
+| [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) | アイコン定義。`u/` モノグラムの仕様と favicon 一式の生成手順。 |
 
 UI を変更した際は、該当するドキュメントも併せて更新してください。
 
