@@ -16,6 +16,8 @@ export default <Config>{
     './app/app.vue',
     './app/error.vue'
   ],
+  // remark-gfmが脚注セクションの見出しに付ける。ソースに現れないためパージされる
+  safelist: ['sr-only'],
   theme: {
     extend: {
       colors,
