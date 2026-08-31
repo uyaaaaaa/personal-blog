@@ -3,18 +3,63 @@ import Sidebar from '~/components/common/Sidebar.vue'
 import BackButton from '~/components/common/BackButton.vue'
 import Toc from '~/components/article/Toc.vue'
 import TocMobile from '~/components/article/TocMobile.vue'
+import ArticleFallback from '~/components/article/ArticleFallback.vue'
 
 const route = useRoute()
-const { data: page } = await useAsyncData(route.path, () =>
-  queryCollection('article').path(route.path).where('published', '=', true).first(),
+
+// Cloudflare Pagesは /article/foo を /article/foo/ にリダイレクトするが、記事のパスと
+// プリレンダ済みペイロードのキーは末尾スラッシュなし。揃えないと記事があるのに無いと判定される
+const articlePath = computed(() => route.path.replace(/\/+$/, '') || '/')
+
+const { data: page, error, refresh, status } = await useAsyncData(articlePath.value, () =>
+  queryCollection('article').path(articlePath.value).where('published', '=', true).first(),
 )
+
+const isNotFound = computed(() => status.value === 'success' && !page.value)
+
+// CloudflareのSSRでは@nuxt/contentのクエリが失敗しうる。この失敗はクライアントの
+// 再取得で復帰するため、復帰するまではカードを出さない（出すと一瞬エラーが見えてしまう）
+const recovering = ref(Boolean(error.value))
+onMounted(async () => {
+  if (!recovering.value) return
+  try {
+    await refresh()
+  }
+  finally {
+    recovering.value = false
+  }
+})
+
+const retrying = ref(false)
+const retry = async () => {
+  retrying.value = true
+  try {
+    await refresh()
+  }
+  finally {
+    retrying.value = false
+  }
+}
+const showError = computed(() => !recovering.value && (retrying.value || status.value === 'error'))
+
+if (import.meta.server) {
+  const event = useRequestEvent()
+  if (event) {
+    if (error.value) setResponseStatus(event, 500)
+    else if (isNotFound.value) setResponseStatus(event, 404)
+  }
+}
 
 const tocLinks = computed(() => page.value?.body?.toc?.links || [])
 
 usePageSeo({
-  type: 'article',
-  title: () => page.value?.title,
-  description: () => page.value?.description,
+  type: page.value ? 'article' : 'website',
+  title: () => page.value?.title ?? (isNotFound.value ? 'Article Not Found' : undefined),
+  description: () =>
+    page.value?.description
+    ?? (isNotFound.value
+      ? 'The article you are looking for may have been removed, or the URL may be incorrect.'
+      : undefined),
   image: () => page.value?.image,
   publishedTime: () => page.value?.date,
   tags: () => page.value?.tags,
@@ -98,10 +143,14 @@ watch(() => page.value, async () => {
     </Sidebar>
   </div>
   
-  <div v-else class="py-12 text-center">
-    <h1 class="text-2xl font-bold text-main">Article not found</h1>
-    <NuxtLink to="/article" class="text-accent hover:underline mt-4 inline-block">Back to Articles</NuxtLink>
-  </div>
+  <ArticleFallback
+    v-else-if="showError"
+    variant="error"
+    :pending="retrying"
+    @retry="retry()"
+  />
+
+  <ArticleFallback v-else-if="isNotFound" variant="not-found" :path="articlePath" />
 </template>
 
 <style>
