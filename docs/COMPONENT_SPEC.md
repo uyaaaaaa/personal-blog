@@ -17,7 +17,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - [1. レイアウト](#1-レイアウト)
   - [Header](#header) / [ThemeToggle](#themetoggle) / [HeaderNavigation](#headernavigation) / [Footer](#footer)
 - [2. 記事表示](#2-記事表示)
-  - [Hero](#hero) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
+  - [Hero](#hero) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
   - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea) / [ProseTable](#prosetable)
 - [4. エラー](#4-エラー)
@@ -241,6 +241,34 @@ props、表示要件、状態とインタラクションを、実装単位で記
 **日付の形式**
 
 `formatDate()` により `YYYY.MM.DD`（ゼロ埋め・ドット区切り）で表示する。
+
+---
+
+### 記事ヘッダー
+
+`app/pages/article/[_slug].vue`
+
+記事詳細ページのタイトル周り。下端に1pxボーダーと `2rem` の下パディングを持ち、要素間は `1rem`。
+
+**構成（上から）**
+
+1. **メタ情報**（下記）
+2. タイトル（`h1` / SP `1.875rem`・md以上 `2.25rem` / 太字 / `leading-tight`）
+3. 説明文（サブテキスト色 / `1.125rem`）
+
+**メタ情報**
+
+サブテキスト色 / 等幅フォント / `0.875rem` の縦2行。行間 `0.625rem`。
+
+| 行 | 要件 |
+| :--- | :--- |
+| **1行目** | 日付を左、カテゴリバッジ（アクセント色 / `bg-accent/10` / ピル / `0.75rem` / 大文字）を**右端**に配置する。バッジは `ml-auto` で右へ寄せ、日付が無い記事でも右端に留まる。日付・カテゴリがどちらも無ければ行ごと出さない |
+| **2行目** | タグ（アクセント色 / `#` 付き）を横並びにし、**幅が足りなければ折り返す**（`flex-wrap` / 間隔 横 `0.75rem`・縦 `0.5rem`）。タグが無ければ行ごと出さない |
+
+**1行に詰めない。** 日付・タグ・カテゴリは件数の増え方が異なるため、これらを1行に並べると
+タグの多い記事でSP幅（375px想定）を超え、**ページ全体が横スクロールする**。
+件数が可変なのはタグだけなので、タグを独立した行に出して折り返させ、
+本数によらず1行目のレイアウトが動かないようにする。
 
 ---
 

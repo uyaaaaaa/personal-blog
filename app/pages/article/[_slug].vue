@@ -120,14 +120,16 @@ watch(() => page.value, async () => {
         </div>
 
         <header class="space-y-4 border-b border-border pb-8">
-          <div class="flex items-center gap-3 text-sm text-sub font-mono">
-             <span v-if="page.date">{{ formatDate(page.date) }}</span>
-             <div v-if="page.tags" class="flex gap-2">
-               <span v-for="tag in page.tags" :key="tag" class="text-accent">#{{ tag }}</span>
-             </div>
-             <div v-if="page.category" class="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs uppercase">
-               {{ page.category }}
-             </div>
+          <div class="flex flex-col gap-2.5 text-sm text-sub font-mono">
+            <div v-if="page.date || page.category" class="flex items-center gap-3">
+              <span v-if="page.date">{{ formatDate(page.date) }}</span>
+              <div v-if="page.category" class="ml-auto px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs uppercase">
+                {{ page.category }}
+              </div>
+            </div>
+            <div v-if="page.tags?.length" class="flex flex-wrap gap-x-3 gap-y-2">
+              <span v-for="tag in page.tags" :key="tag" class="text-accent">#{{ tag }}</span>
+            </div>
           </div>
           
           <h1 class="text-3xl md:text-4xl font-bold text-main leading-tight">
