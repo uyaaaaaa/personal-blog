@@ -179,6 +179,7 @@ watch(() => page.value, async () => {
 .prose a {
   color: var(--color-accent);
   text-decoration: none;
+  overflow-wrap: break-word;
 }
 
 .prose a:hover {
