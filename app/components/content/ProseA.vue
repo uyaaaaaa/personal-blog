@@ -8,6 +8,11 @@ const props = defineProps({
     type: String,
     default: undefined,
     required: false
+  },
+  rel: {
+    type: String,
+    default: undefined,
+    required: false
   }
 })
 
@@ -26,8 +31,16 @@ const targetAttr = computed(() => {
   return isExternal.value ? '_blank' : undefined
 })
 
+// Nuxt Content が外部リンクに付ける rel（既定は nofollow）を捨てず、要件の2つを足す
 const relAttr = computed(() => {
-  return isExternal.value ? 'noopener noreferrer' : undefined
+  const tokens = new Set(props.rel?.split(/\s+/).filter(Boolean))
+
+  if (isExternal.value) {
+    tokens.add('noopener')
+    tokens.add('noreferrer')
+  }
+
+  return tokens.size ? [...tokens].join(' ') : undefined
 })
 
 defineOptions({
@@ -39,6 +52,8 @@ defineOptions({
   <a
     v-if="isSameDocumentHash"
     :href="href"
+    :target="targetAttr"
+    :rel="relAttr"
   >
     <slot />
   </a>
