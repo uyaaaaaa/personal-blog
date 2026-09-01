@@ -19,7 +19,7 @@ Vue / Nuxt を採用するプロジェクトでは、このファイルを残し
 
 ## 暗黙解決の設定（`A-11` 〜 `A-13`）
 
-**決定④の実装上の主戦場がここです。**
+**Nuxt では、この設定が `A-11` 〜 `A-13` の成否をそのまま決めます。**
 
 Nuxt の auto-import は既定で `app/components/`・`app/composables/`・`app/utils/` を対象にします。
 このうち**自作の composable / util / コンポーネントは `A-12` により明示 import が必須**です。
@@ -39,9 +39,12 @@ export default defineNuxtConfig({
 
 **Nuxt Layers を使う場合**：公式に「層で構成する場合は auto-import に頼らず明示的に import せよ、
 さもないと層のオーバーライド機能が壊れる」という警告があります。
-決定④はこの警告と同じ方向を向いており、**両立します。**
+`A-11` 〜 `A-13` はこの警告と同じ方向を向いており、**両立します。**
 
 `unplugin-auto-import` / `unplugin-vue-components` を新規に導入しません（`A-13` の証明が必要）。
+
+`autoImport: false` にしたとき Nuxt 組み込み composable の解決がどこまで残るかはバージョン依存です。
+設定後に `ref` / `useRoute` 等が解決されることを確認してください。
 
 ---
 
@@ -63,7 +66,7 @@ madge --circular --extensions ts,vue src
 
 ---
 
-## 柱Bの実装（`S-6` 〜 `S-11`）
+## 状態の実装（`S-6` 〜 `S-11`）
 
 - サーバキャッシュ層：Pinia Colada、もしくは `useAsyncData` / `useFetch`
 - クライアント状態：Pinia。ただし `S-1` の「最後の手段」
@@ -78,7 +81,7 @@ nullish な値で繰り返し実行される既知の問題があります。
 
 ---
 
-## 柱Cの実装
+## コンポーネントの実装
 
 - `C-7`（ネイティブ属性を塞がない）：Vue の attribute fallthrough は既定で機能しますが、
   **ルート要素が複数、または `inheritAttrs: false` にすると壊れます。**
@@ -92,7 +95,7 @@ nullish な値で繰り返し実行される既知の問題があります。
 
 ---
 
-## 柱Dの lint（`P-7` / `P-14` / `P-18`）
+## プラットフォームの lint（`P-7` / `P-14` / `P-18`）
 
 - `P-7`：`eslint-plugin-vuejs-accessibility`
 - `P-2`：`no-restricted-properties` で `navigator.userAgent`
@@ -109,9 +112,3 @@ nullish な値で繰り返し実行される既知の問題があります。
 - 1コンポーネント1ファイル
 - ファイル名の casing はリポジトリ全体で1つに固定する
 
----
-
-## 要確認事項
-
-- `imports.autoImport: false` にした際の、Nuxt 組み込み composable の解決挙動（バージョン依存）
-- Baseline の各機能の確定日とブラウザバージョン（`P-1`）— webstatus.dev で機能名検索

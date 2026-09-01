@@ -70,8 +70,11 @@ CI 側（`A-4` / `A-13`）：
 
 ```sh
 madge --circular --extensions ts,tsx src
-depcruise src --config --ignore-known   # ベースライン運用（M-3）
+depcruise src --config --ignore-known   # ベースライン運用
 ```
+
+`entry-point` が同一 element 内部の import をどう扱うかはバージョンによって異なります。
+導入時に、`features/<name>/model` からの相対 import が通ることを実際に確認してください。
 
 ---
 
@@ -89,7 +92,7 @@ React には標準の auto-import 機構がないため、`A-11` は概ね自動
 
 ---
 
-## 柱Bの実装（`S-6` 〜 `S-11`）
+## 状態の実装（`S-6` 〜 `S-11`）
 
 - サーバキャッシュ層：TanStack Query
 - クライアント状態：必要になってから。既定はローカル state（`S-1` の「最後の手段」）
@@ -105,7 +108,7 @@ new QueryClient({ defaultOptions: { queries: { staleTime: /* 要決定 */ } } })
 
 ---
 
-## 柱Cの実装
+## コンポーネントの実装
 
 - headless プリミティブ（`C-11`）：採用するライブラリをここに記載する。
   **アプリコードから直接 import せず、`ui/` の wrapper 経由にする**（差し替え可能性の確保）
@@ -124,17 +127,8 @@ new QueryClient({ defaultOptions: { queries: { staleTime: /* 要決定 */ } } })
 
 ---
 
-## 柱Dの lint（`P-7` / `P-14` / `P-18`）
+## プラットフォームの lint（`P-7` / `P-14` / `P-18`）
 
 - `P-7`：`eslint-plugin-jsx-a11y` の `no-static-element-interactions` / `click-events-have-key-events`
 - `P-2`：`no-restricted-properties` で `navigator.userAgent`
 - `P-14` / `P-18`：既製ルールがないため、`no-restricted-syntax` で個別に書く
-
----
-
-## 要確認事項
-
-規約本体を書いた時点で裏取りできなかった項目です。採用前に確認してください。
-
-- `eslint-plugin-boundaries` の `entry-point` が、同一 element 内部の import をどう扱うか（バージョン依存）
-- Baseline の各機能の確定日とブラウザバージョン（`P-1`）— webstatus.dev で機能名検索

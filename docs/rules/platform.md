@@ -1,8 +1,8 @@
-# 柱D：Webプラットフォーム
+# Webプラットフォーム
 
 > プラットフォームが基底層、フレームワークはその上の薄い層。
 
-親ドキュメント：[../ARCHITECTURE.md](../ARCHITECTURE.md)
+[../ARCHITECTURE.md](../ARCHITECTURE.md)（設計原則） / [README.md](./README.md)（表記と適用方法）
 レンダリング戦略は [rendering.md](./rendering.md) に分離しています。
 
 ---
