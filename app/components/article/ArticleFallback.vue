@@ -53,7 +53,7 @@ const { data: recentArticles } = useLazyAsyncData(
       <button
         v-if="variant === 'error'"
         type="button"
-        class="mt-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-accent"
+        class="mt-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-contrast transition-colors duration-200 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-accent"
         :disabled="pending"
         @click="emit('retry')"
       >
