@@ -31,7 +31,7 @@ const targetAttr = computed(() => {
   return isExternal.value ? '_blank' : undefined
 })
 
-// Nuxt Content が外部リンクに付ける rel（既定は nofollow）を捨てず、要件の2つを足す
+// Nuxt Content（rehype-external-links）が外部リンクに rel="nofollow" を付ける
 const relAttr = computed(() => {
   const tokens = new Set(props.rel?.split(/\s+/).filter(Boolean))
 
