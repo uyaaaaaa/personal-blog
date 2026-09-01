@@ -19,7 +19,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - [2. 記事表示](#2-記事表示)
   - [Hero](#hero) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
-  - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea)
+  - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea) / [ProseTable](#prosetable)
 - [4. エラー](#4-エラー)
   - [ErrorView](#errorview) / [NotFound / Server](#notfound--server) / [ArticleFallback](#articlefallback)
 - [5. 共有ロジック](#5-共有ロジック)
@@ -374,6 +374,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | **インラインコード** | Obsidian風。淡いサーフェス色 + 1pxボーダー + 小角丸。パディング 上下 `0.125rem` / 左右 `0.375rem`。`font-weight: 400`、文字色は周囲から継承。**バッククォート（`code::before` / `code::after`）は非表示**にする。 |
 | **リンク** | アクセントカラーで表示し、ホバーでアンダーラインを付与。見出しは Nuxt Content が `<a>` で包むため対象外とし、見出しの色を継承したままホバーでのみアクセントカラーに変化する。 |
 | **引用 (Blockquote)** | `prose` の既定に準拠。 |
+| **テーブル** | `prose` の既定に準拠。列幅が収まらない場合は**テーブル単体で横スクロール**する（→ [ProseTable](#prosetable)）。セルの折り返しは既定のままで、まず折り返し、それでも収まらない時だけスクロールが出る。 |
 
 **対応言語**
 
@@ -509,6 +510,23 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 - `#` で始まる**同一ドキュメント内のハッシュリンクだけは素の `<a>`** で描画し、`NuxtLink` を通さない。
   ルーターの `pushState` ではブラウザの `:target` が更新されず、脚注のジャンプ先を強調できないため（→ [脚注](#脚注)）。
 - `target` が明示的に渡された場合はそちらを優先する。
+
+---
+
+### ProseTable
+
+`app/components/content/ProseTable.vue`
+
+Nuxt Content が本文中の `<table>` に使用するコンポーネント。既定の実装は `<table>` を直接出力するだけで、`@tailwindcss/typography` もコードブロック（`pre`）と違ってテーブルにはスクロール領域を与えない。そのため列幅の合計がビューポートを超えると**ページ全体が横にはみ出し**、右端の列が読めなくなる。これを防ぐため、`overflow-x: auto` の `div` で包む。
+
+**要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| ラッパー | `<table>` を `overflow-x: auto` の `div` で包む。はみ出しはテーブル内で閉じ、ページ全体の横スクロールは発生させない。 |
+| セルの折り返し | 既定のまま（`nowrap` にしない）。狭い画面ではまず折り返し、それでも収まらない時だけスクロールする。 |
+| 余白 | `overflow-x: auto` がBFCを作るため、`prose` がテーブルに与える上下マージンはラッパー内に保持される。ラッパー側で余白を指定しない。 |
+| 幅が足りる画面 | テーブルは `width: 100%` のままで、スクロールは発生しない。 |
 
 ---
 
