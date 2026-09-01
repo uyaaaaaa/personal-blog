@@ -8,6 +8,11 @@ const props = defineProps({
     type: String,
     default: undefined,
     required: false
+  },
+  rel: {
+    type: String,
+    default: undefined,
+    required: false
   }
 })
 
@@ -26,8 +31,16 @@ const targetAttr = computed(() => {
   return isExternal.value ? '_blank' : undefined
 })
 
+// Nuxt Content（rehype-external-links）が外部リンクに rel="nofollow" を付ける
 const relAttr = computed(() => {
-  return isExternal.value ? 'noopener noreferrer' : undefined
+  const tokens = new Set(props.rel?.split(/\s+/).filter(Boolean))
+
+  if (isExternal.value) {
+    tokens.add('noopener')
+    tokens.add('noreferrer')
+  }
+
+  return tokens.size ? [...tokens].join(' ') : undefined
 })
 
 defineOptions({
@@ -39,6 +52,8 @@ defineOptions({
   <a
     v-if="isSameDocumentHash"
     :href="href"
+    :target="targetAttr"
+    :rel="relAttr"
   >
     <slot />
   </a>
