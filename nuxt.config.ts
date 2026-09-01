@@ -12,9 +12,6 @@ export default defineNuxtConfig({
         { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
       ],
-      meta: [
-        { name: 'theme-color', content: '#FFFFFF' },
-      ],
     },
   },
   runtimeConfig: {
@@ -25,12 +22,19 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/content',
     '@nuxtjs/tailwindcss',
+    '@nuxtjs/color-mode',
   ],
+  colorMode: {
+    classSuffix: '',
+  },
   content: {
     build: {
       markdown: {
         highlight: {
-          theme: 'github-light',
+          theme: {
+            default: 'github-light',
+            dark: 'github-dark',
+          },
           langs: [
             'js', 'ts', 'json', 'html', 'css', 'vue', 'shell', 'sh', 'bash', 'md', 'mdc', 'yaml',
             'vim', 'lua', 'sql', 'php',

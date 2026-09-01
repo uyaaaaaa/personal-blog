@@ -15,6 +15,24 @@ export const colors = {
   'code-text': '#24292E',
 } as const
 
+export const darkColors: Record<keyof typeof colors, string> = {
+  bg: '#121212',
+  main: '#E8E8E8',
+  sub: '#A0A0A0',
+  accent: '#A78BFA',
+  'accent-hover': '#8B5CF6',
+  'accent-contrast': '#FFFFFF',
+  border: '#2E2E2E',
+  surface: '#1A1A1A',
+  'surface-subtle': '#1E1E1E',
+  'surface-muted': '#262626',
+  'header-bg': 'rgba(18, 18, 18, 0.85)',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  scrollbar: '#3A3A3A',
+  // github-darkの前景色
+  'code-text': '#E6EDF3',
+}
+
 export const fontFamily = {
   sans: [
     'system-ui',
@@ -42,18 +60,26 @@ function hexToRgbChannels(hex: string): string {
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(' ')
 }
 
+function toColorVariables(palette: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(palette).flatMap(([name, value]) => [
+      [`--color-${name}`, value],
+      ...(isHex(value) ? [[`--color-${name}-rgb`, hexToRgbChannels(value)]] : []),
+    ]),
+  )
+}
+
 export function toCssVariables(): Record<string, string> {
   return {
-    ...Object.fromEntries(
-      Object.entries(colors).flatMap(([name, value]) => [
-        [`--color-${name}`, value],
-        ...(isHex(value) ? [[`--color-${name}-rgb`, hexToRgbChannels(value)]] : []),
-      ]),
-    ),
+    ...toColorVariables(colors),
     ...Object.fromEntries(
       Object.entries(fontFamily).map(([name, stack]) => [`--font-${name}`, stack.join(', ')]),
     ),
   }
+}
+
+export function toDarkCssVariables(): Record<string, string> {
+  return toColorVariables(darkColors)
 }
 
 // Tailwindが不透明度修飾子(bg-accent/10 等)を解決できるのは<alpha-value>プレースホルダを含む定義のみ

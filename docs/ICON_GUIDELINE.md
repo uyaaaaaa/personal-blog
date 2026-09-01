@@ -47,8 +47,9 @@
 
 ラスタ画像（`.ico` / `.png`）は `public/favicon.svg` から生成している。
 形を変える場合は SVG を編集したうえで、全ラスタを描き直すこと。
-`theme-color` は追従ヘッダーの背景（白）に合わせているため、
-ヘッダーの配色を変える場合は `nuxt.config.ts` と `site.webmanifest` の両方を更新する。
+`theme-color` は追従ヘッダーの背景（ライトは白 / ダークは `#121212`）に合わせ、
+`app/app.vue` が `theme/tokens.ts` のトークンを参照してテーマごとに出し分けている。
+ヘッダーの配色を変える場合は `app/app.vue` と `site.webmanifest` の両方を更新する。
 
 ## OGP 画像
 

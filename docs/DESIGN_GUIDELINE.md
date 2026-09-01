@@ -57,7 +57,7 @@ theme/tokens.ts（単一情報源）
 CSS変数名はトークンのキーからそのまま導出されます（`main` → `--color-main`、`sans` → `--font-sans`）。
 ユーティリティクラスも `<style scoped>` の `var(--color-*)` も同じCSS変数に解決されるため、値がずれることはありません。
 
-色の実体値を持つのはCSS変数の定義だけなので、`.dark` クラス配下で変数を上書きすればテーマ全体が切り替わる構造です（`darkMode: 'class'` 設定済み。ダークパレット自体は未定義で、現状はライトテーマのみ → [#55](https://github.com/uyaaaaaa/personal-blog/issues/55)）。
+色の実体値を持つのはCSS変数の定義だけで、ライト・ダーク両パレットを `theme/tokens.ts` に定義しています。`:root` にライト、`.dark` クラス配下にダークの変数が出力され（`darkMode: 'class'`）、`<html>` への `.dark` クラスの付け外しでテーマ全体が切り替わります。テーマの検出・切り替え・永続化は `@nuxtjs/color-mode`（`classSuffix: ''`）が担います。
 RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accent/10` など）を変数参照のまま効かせるためのものです。
 
 **ルール**
@@ -74,24 +74,25 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 
 ### B. 配色（Color Palette）
 
-| 役割 | 値 | Tailwind | CSS変数 | 用途 |
-| :--- | :--- | :--- | :--- | :--- |
-| **ページ背景** | `#F9F9F9` | `bg-bg` | `--color-bg` | `body` の背景色。 |
-| **サーフェス** | `#FFFFFF` | `bg-surface` | `--color-surface` | カード、モバイルドロワー、TOCドロップダウン、タグチップ、`Cmd+K` バッジの背景。 |
-| **メイン（文字色）** | `#1A1A1A` | `text-main` | `--color-main` | 見出し・本文の文字色。ハンバーガーボタンの線。 |
-| **サブテキスト** | `#888888` | `text-sub` | `--color-sub` | 投稿日、キャプション、説明文、非アクティブなTOC項目。 |
-| **アクセント** | `#8B5CF6` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目、ロゴのスラッシュ。**唯一の色要素**。 |
-| **アクセント（ホバー）** | `#7C3AED` | `bg-accent-hover` | `--color-accent-hover` | アクセント色で塗りつぶした面のホバー時。エラーページの `Back to Top` ボタン。 |
-| **アクセント上の文字** | `#FFFFFF` | `text-accent-contrast` | `--color-accent-contrast` | アクセント色で塗りつぶした面の文字色。エラーページの `Back to Top` ボタン。 |
-| **ボーダー** | `#E5E5E5` | `border-border` | `--color-border` | カード枠線、セクション区切り、ヘッダー下線。 |
-| **淡いサーフェス** | `#F5F5F5` | `bg-surface-subtle` | `--color-surface-subtle` | インラインコード、コードブロック、ヘッダーの検索ボックス、ドロワーのタグホバーの背景色。 |
-| **サブサーフェス** | `#F3F4F6` | `bg-surface-muted` | `--color-surface-muted` | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー、目次のガイド線。 |
-| **ヘッダー背景** | `rgba(255, 255, 255, 0.9)` | — | `--color-header-bg` | sticky ヘッダーの半透明背景（`backdrop-filter: blur` と併用）。 |
-| **オーバーレイ** | `rgba(0, 0, 0, 0.5)` | — | `--color-overlay` | モバイルドロワーのオーバーレイ。 |
-| **スクロールバー** | `#D1D5DB` | — | `--color-scrollbar` | 目次のスクロールバー。 |
-| **コード文字色** | `#24292E` | — | `--color-code-text` | コードブロックの文字色（`github-light` に合わせる）。 |
+| 役割 | ライト | ダーク | Tailwind | CSS変数 | 用途 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **ページ背景** | `#F9F9F9` | `#121212` | `bg-bg` | `--color-bg` | `body` の背景色。 |
+| **サーフェス** | `#FFFFFF` | `#1A1A1A` | `bg-surface` | `--color-surface` | カード、モバイルドロワー、TOCドロップダウン、タグチップ、`Cmd+K` バッジの背景。 |
+| **メイン（文字色）** | `#1A1A1A` | `#E8E8E8` | `text-main` | `--color-main` | 見出し・本文の文字色。ハンバーガーボタンの線。 |
+| **サブテキスト** | `#888888` | `#A0A0A0` | `text-sub` | `--color-sub` | 投稿日、キャプション、説明文、非アクティブなTOC項目。テーマトグルのアイコン。 |
+| **アクセント** | `#8B5CF6` | `#A78BFA` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目、ロゴのスラッシュ。**唯一の色要素**。 |
+| **アクセント（ホバー）** | `#7C3AED` | `#8B5CF6` | `bg-accent-hover` | `--color-accent-hover` | アクセント色で塗りつぶした面のホバー時。エラーページの `Back to Top` ボタン。 |
+| **アクセント上の文字** | `#FFFFFF` | `#FFFFFF` | `text-accent-contrast` | `--color-accent-contrast` | アクセント色で塗りつぶした面の文字色。エラーページの `Back to Top` ボタン。ダークの `accent` 上でのコントラスト検証は [#73](https://github.com/uyaaaaaa/personal-blog/issues/73)。 |
+| **ボーダー** | `#E5E5E5` | `#2E2E2E` | `border-border` | `--color-border` | カード枠線、セクション区切り、ヘッダー下線。 |
+| **淡いサーフェス** | `#F5F5F5` | `#1E1E1E` | `bg-surface-subtle` | `--color-surface-subtle` | インラインコード、コードブロック、ヘッダーの検索ボックス、ドロワーのタグホバーの背景色。 |
+| **サブサーフェス** | `#F3F4F6` | `#262626` | `bg-surface-muted` | `--color-surface-muted` | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー、目次のガイド線。 |
+| **ヘッダー背景** | `rgba(255, 255, 255, 0.9)` | `rgba(18, 18, 18, 0.85)` | — | `--color-header-bg` | sticky ヘッダーの半透明背景（`backdrop-filter: blur` と併用）。 |
+| **オーバーレイ** | `rgba(0, 0, 0, 0.5)` | `rgba(0, 0, 0, 0.5)` | — | `--color-overlay` | モバイルドロワーのオーバーレイ。 |
+| **スクロールバー** | `#D1D5DB` | `#3A3A3A` | — | `--color-scrollbar` | 目次のスクロールバー。 |
+| **コード文字色** | `#24292E` | `#E6EDF3` | — | `--color-code-text` | コードブロックの文字色（Shiki のテーマ `github-light` / `github-dark` の前景色に合わせる）。 |
 
 Callout は例外的に Obsidian デフォルトテーマ準拠の独自パレットを持ちます（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。
+記事本文（prose）のタイポグラフィ色も Tailwind typography プラグインの `prose-slate`（ダークは `dark:prose-invert`）由来でパレットの外側です（トークンへの寄せは [#73](https://github.com/uyaaaaaa/personal-blog/issues/73) で検討）。
 
 ### C. タイポグラフィ
 
@@ -213,7 +214,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | **ローディング表示** | ルート遷移中は画面上端にアクセント色2pxのバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない。`throttle: 200ms` により、プリレンダ済みページのように即座に終わる遷移ではバーを出さない。`prefers-reduced-motion: reduce` ではトランジションを無効化する。なおバーはルート遷移にしか反応しないため、ページ内の再取得（再試行など）は各コンポーネントが自前で進行を示す。 | 実装済 |
 | **記事取得の状態分離** | 記事詳細では「取得失敗」と「記事なし」を区別して表示し、HTTPステータスも実態に合わせる（取得失敗=500 / 記事なし=404 / 未確定は何も出さない）。（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md) の `ArticleFallback`） | 実装済 |
 | **検索** | `Cmd/Ctrl + K` で検索モーダルを起動する。 | **未実装** |
-| **ダークモード** | ヘッダーから切り替え可能にする。 | **未実装** |
+| **ダークモード** | ヘッダーのトグル（`ThemeToggle`）でライト / ダークを切り替える。初期値は `prefers-color-scheme` に従い、明示的な選択は localStorage に永続化（FOUC 防止込みで `@nuxtjs/color-mode` が担う）。シンタックスハイライト（Shiki デュアルテーマ）と `theme-color` メタもテーマに追従する。 | 実装済 |
 
 ---
 
@@ -235,4 +236,4 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | ショートカットキーでのフォーカス（`Cmd/Ctrl + K`） | [#15](https://github.com/uyaaaaaa/personal-blog/issues/15) |
 | 記事内への画像配置 | [#10](https://github.com/uyaaaaaa/personal-blog/issues/10) |
 | コードブロックのトグル | [#3](https://github.com/uyaaaaaa/personal-blog/issues/3) |
-| ダークモード対応 | [#55](https://github.com/uyaaaaaa/personal-blog/issues/55) |
+| ダークテーマの仕上げ（Callout・コントラスト検証・ロゴ） | [#73](https://github.com/uyaaaaaa/personal-blog/issues/73) |
