@@ -9,7 +9,7 @@ Nuxt 4 + Nuxt Content 3 で構築した個人技術ブログ。Cloudflare Pages 
 
 ## 記事を書くとき
 
-`content/article/` の記事を書く・レビューする・リライトするときは [.claude/skills/article/SKILL.md](./.claude/skills/article/SKILL.md) の方針に従ってください。曖昧なネタを質問で1本に詰めるフェーズから、型別の全体構成、削るものの基準、フロントマターと callout の作法までをまとめています。
+`content/article/` の記事を書く・レビューする・リライトするときは [.claude/skills/article/SKILL.md](./.claude/skills/article/SKILL.md) の方針に従ってください。素材の所在（業務・手元の環境・読んだ本など、多くはリポジトリ外）を見極めるところから、質問で1本に詰めるフェーズ、型別の全体構成、削るものの基準、フロントマターと callout の作法までをまとめています。
 
 ## コマンド
 
