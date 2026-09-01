@@ -1,7 +1,7 @@
 <template>
   <section v-if="article" class="relative group cursor-pointer" @click="navigateTo(article.path)">
-    <div class="grid grid-cols-1 lg:grid-cols-2 items-center bg-white border border-border rounded-[10px] overflow-hidden hover:shadow-md transition-all duration-300">
-      <div class="relative h-40 lg:h-full lg:min-h-[230px] w-full overflow-hidden bg-gray-100">
+    <div class="grid grid-cols-1 lg:grid-cols-2 items-center bg-surface border border-border rounded-[10px] overflow-hidden hover:shadow-md transition-all duration-300">
+      <div class="relative h-40 lg:h-full lg:min-h-[230px] w-full overflow-hidden bg-surface-muted">
         <img
           v-if="article.image"
           :src="article.image"
@@ -16,7 +16,7 @@
       <div class="p-5 lg:p-10 flex flex-col gap-3 justify-center h-full">
         <div class="flex items-center gap-3">
           <span class="text-accent text-xs font-bold font-mono tracking-widest">PICKUP</span>
-          <span v-if="article.tags?.[0]" class="text-xs px-2 py-0.5 rounded border border-accent text-accent font-mono bg-white">
+          <span v-if="article.tags?.[0]" class="text-xs px-2 py-0.5 rounded border border-accent text-accent font-mono bg-surface">
             {{ article.tags[0] }}
           </span>
           <time class="text-sub text-sm font-mono" :datetime="article.date">{{ formattedDate }}</time>

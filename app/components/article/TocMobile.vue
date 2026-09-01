@@ -1,7 +1,7 @@
 <template>
   <div 
     ref="containerRef"
-    class="sticky top-[74px] z-40 bg-gray-100 border border-border rounded-lg lg:hidden transition-all duration-300"
+    class="sticky top-[74px] z-40 bg-surface-muted border border-border rounded-lg lg:hidden transition-all duration-300"
     :class="{
       'shadow-sm': isSticky,
       '-translate-y-[120px] opacity-0 pointer-events-none': !isVisible
@@ -32,7 +32,7 @@
     <div
       v-show="isOpen"
       ref="dropdownRef"
-      class="absolute top-full left-0 -mt-[1px] w-full bg-white border border-border shadow-lg rounded-b-lg max-h-[60vh] overflow-y-auto overflow-x-hidden overscroll-contain transition-all duration-200"
+      class="absolute top-full left-0 -mt-[1px] w-full bg-surface border border-border shadow-lg rounded-b-lg max-h-[60vh] overflow-y-auto overflow-x-hidden overscroll-contain transition-all duration-200"
     >
       <nav class="py-2 px-4 pb-4">
         <ul class="space-y-1">
