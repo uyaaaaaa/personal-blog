@@ -14,7 +14,7 @@
 
 **実装が正**です。実装を変更した際は該当するドキュメントも併せて更新してください。
 
-- 最終更新: 2026-08-31
+- 最終更新: 2026-09-01
 - 対象: Nuxt 4 / Nuxt Content 3 / Tailwind CSS 3 (+ @tailwindcss/typography)
 
 ---
@@ -44,30 +44,32 @@
 ### A. 定義場所と単一情報源のルール
 
 色・フォントの値は **`theme/tokens.ts` の1箇所だけ**に定義します。
-`tailwind.config.ts` がこのトークンを読み込み、Tailwind theme と `:root` のCSS変数の両方を生成します。
+`tailwind.config.ts` がこのトークンを読み込み、`:root` のCSS変数と、その変数を参照するTailwind themeを生成します。
 
 ```
 theme/tokens.ts（単一情報源）
    └─ tailwind.config.ts
-        ├─ Tailwind theme   → ユーティリティクラス（`text-main` `bg-accent` など）
-        └─ :root のCSS変数  → `<style scoped>` からの参照（`var(--color-main)` など）
+        ├─ :root のCSS変数 → `--color-main` など（hex色にはRGBチャンネル版 `--color-main-rgb` も生成）
+        └─ Tailwind theme  → ユーティリティクラス（`text-main` `bg-accent` など）
+                              値は hex ではなく上記CSS変数への参照
 ```
 
 CSS変数名はトークンのキーからそのまま導出されます（`main` → `--color-main`、`sans` → `--font-sans`）。
-どちらの書き方で参照しても同じ値になるため、値がずれることはありません。
+ユーティリティクラスも `<style scoped>` の `var(--color-*)` も同じCSS変数に解決されるため、値がずれることはありません。
+
+色の実体値を持つのはCSS変数の定義だけなので、`.dark` クラス配下で変数を上書きすればテーマ全体が切り替わる構造です（`darkMode: 'class'` 設定済み。ダークパレット自体は未定義で、現状はライトテーマのみ → [#55](https://github.com/uyaaaaaa/personal-blog/issues/55)）。
+RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accent/10` など）を変数参照のまま効かせるためのものです。
 
 **ルール**
 
 - 色・フォントを追加・変更する場合は `theme/tokens.ts` **だけ**を編集する。Tailwind側とCSS変数側の両方に自動で反映される。
 - CSS変数は Tailwind の base レイヤーに出力されるため、レイアウトのスタイル定義に依存せず全ページで参照できる。
 - **パレットにある色は、コンポーネントに値を書かずトークン経由で参照する。** 同じ色の定義が2箇所に増えるのを防ぐため。
-- 逆に、次の4つはパレットの外側なので直値で書いてよい。トークン化しても参照先が1箇所しかなく、パレットを実態より大きく見せるだけになる。
+- 逆に、次の2つはパレットの外側なので直値で書いてよい。
 
   | 例外 | 該当箇所 |
   | :--- | :--- |
-  | 外部テーマに追従する値 | コードブロックの文字色 `#24292E`（`github-light` に合わせる） |
-  | 白・黒とその透過 | ヘッダー背景 `rgba(255, 255, 255, 0.9)`、ドロワー背景 `#fff`、オーバーレイ `rgba(0, 0, 0, 0.5)`、ハンバーガー線 `#000`、エラーページのボタン文字色 `#FFFFFF` |
-  | UIクロームの色 | 目次のスクロールバー `#d1d5db` |
+  | 白・黒とその透過 | モバイルTOC展開時の背面スクリム `bg-black/20`（テーマによらず黒の半透明でよい） |
   | アイコンのSVG | ヘッダーのロゴマーク（仕様は [ICON_GUIDELINE.md](./ICON_GUIDELINE.md) が持つ。アクセント色を含むため、パレットを変えたらこちらも直すこと） |
 
 ### B. 配色（Color Palette）
@@ -75,14 +77,19 @@ CSS変数名はトークンのキーからそのまま導出されます（`main
 | 役割 | 値 | Tailwind | CSS変数 | 用途 |
 | :--- | :--- | :--- | :--- | :--- |
 | **ページ背景** | `#F9F9F9` | `bg-bg` | `--color-bg` | `body` の背景色。 |
-| **サーフェス** | `#FFFFFF` | `bg-white` | — | カード、ヘッダー、モバイルドロワー、TOCドロップダウンの背景。 |
-| **メイン（文字色）** | `#1A1A1A` | `text-main` | `--color-main` | 見出し・本文の文字色。 |
+| **サーフェス** | `#FFFFFF` | `bg-surface` | `--color-surface` | カード、モバイルドロワー、TOCドロップダウン、タグチップ、`Cmd+K` バッジの背景。 |
+| **メイン（文字色）** | `#1A1A1A` | `text-main` | `--color-main` | 見出し・本文の文字色。ハンバーガーボタンの線。 |
 | **サブテキスト** | `#888888` | `text-sub` | `--color-sub` | 投稿日、キャプション、説明文、非アクティブなTOC項目。 |
 | **アクセント** | `#8B5CF6` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目、ロゴのスラッシュ。**唯一の色要素**。 |
 | **アクセント（ホバー）** | `#7C3AED` | `bg-accent-hover` | `--color-accent-hover` | アクセント色で塗りつぶした面のホバー時。エラーページの `Back to Top` ボタン。 |
+| **アクセント上の文字** | `#FFFFFF` | `text-accent-contrast` | `--color-accent-contrast` | アクセント色で塗りつぶした面の文字色。エラーページの `Back to Top` ボタン。 |
 | **ボーダー** | `#E5E5E5` | `border-border` | `--color-border` | カード枠線、セクション区切り、ヘッダー下線。 |
 | **淡いサーフェス** | `#F5F5F5` | `bg-surface-subtle` | `--color-surface-subtle` | インラインコード、コードブロック、ヘッダーの検索ボックス、ドロワーのタグホバーの背景色。 |
-| **サブサーフェス** | `#F3F4F6` | `bg-gray-100` | — | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー。 |
+| **サブサーフェス** | `#F3F4F6` | `bg-surface-muted` | `--color-surface-muted` | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー、目次のガイド線。 |
+| **ヘッダー背景** | `rgba(255, 255, 255, 0.9)` | — | `--color-header-bg` | sticky ヘッダーの半透明背景（`backdrop-filter: blur` と併用）。 |
+| **オーバーレイ** | `rgba(0, 0, 0, 0.5)` | — | `--color-overlay` | モバイルドロワーのオーバーレイ。 |
+| **スクロールバー** | `#D1D5DB` | — | `--color-scrollbar` | 目次のスクロールバー。 |
+| **コード文字色** | `#24292E` | — | `--color-code-text` | コードブロックの文字色（`github-light` に合わせる）。 |
 
 Callout は例外的に Obsidian デフォルトテーマ準拠の独自パレットを持ちます（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。
 

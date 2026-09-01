@@ -3,7 +3,7 @@
     <h4 class="font-bold text-main mb-4 flex-shrink-0">目次</h4>
     <nav ref="navRef" class="toc-nav min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pr-2">
       <ul class="space-y-2 relative">
-        <div class="absolute left-[3px] top-2 bottom-2 w-[2px] bg-gray-100 -z-10"></div>
+        <div class="absolute left-[3px] top-2 bottom-2 w-[2px] bg-surface-muted -z-10"></div>
 
         <li v-for="link in links" :key="link.id" class="toc-item">
           <a
@@ -66,7 +66,7 @@ watch(activeId, async (id) => {
 <style scoped>
 .toc-nav {
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
+  scrollbar-color: var(--color-scrollbar) transparent;
 }
 
 .toc-nav::-webkit-scrollbar {
@@ -74,7 +74,7 @@ watch(activeId, async (id) => {
 }
 
 .toc-nav::-webkit-scrollbar-thumb {
-  background-color: #d1d5db;
+  background-color: var(--color-scrollbar);
   border-radius: 9999px;
 }
 
