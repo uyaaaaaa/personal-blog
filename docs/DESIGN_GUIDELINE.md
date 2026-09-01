@@ -70,7 +70,7 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
   | 例外 | 該当箇所 |
   | :--- | :--- |
   | 白・黒とその透過 | モバイルTOC展開時の背面スクリム `bg-black/20`（テーマによらず黒の半透明でよい） |
-  | アイコンのSVG | ヘッダーのロゴマーク（仕様は [ICON_GUIDELINE.md](./ICON_GUIDELINE.md) が持つ。アクセント色を含むため、パレットを変えたらこちらも直すこと） |
+  | アイコンのSVG | ヘッダーのロゴマーク（仕様は [ICON_GUIDELINE.md](./ICON_GUIDELINE.md) が持つ。アクセント色を含むため、パレットを変えたらこちらも直すこと）。ダークテーマでも固定色のまま使う。タイルがヘッダー背景に馴染む代わりに、白のグリフとアクセントのスラッシュで識別する意匠として確定済み |
 
 ### B. 配色（Color Palette）
 
@@ -81,8 +81,8 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 | **メイン（文字色）** | `#1A1A1A` | `#E8E8E8` | `text-main` | `--color-main` | 見出し・本文の文字色。ハンバーガーボタンの線。 |
 | **サブテキスト** | `#888888` | `#A0A0A0` | `text-sub` | `--color-sub` | 投稿日、キャプション、説明文、非アクティブなTOC項目。テーマトグルのアイコン。 |
 | **アクセント** | `#8B5CF6` | `#A78BFA` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目、ロゴのスラッシュ。**唯一の色要素**。 |
-| **アクセント（ホバー）** | `#7C3AED` | `#8B5CF6` | `bg-accent-hover` | `--color-accent-hover` | アクセント色で塗りつぶした面のホバー時。エラーページの `Back to Top` ボタン。 |
-| **アクセント上の文字** | `#FFFFFF` | `#FFFFFF` | `text-accent-contrast` | `--color-accent-contrast` | アクセント色で塗りつぶした面の文字色。エラーページの `Back to Top` ボタン。ダークの `accent` 上でのコントラスト検証は [#73](https://github.com/uyaaaaaa/personal-blog/issues/73)。 |
+| **アクセント（ホバー）** | `#7C3AED` | `#C4B5FD` | `bg-accent-hover` | `--color-accent-hover` | アクセント色で塗りつぶした面のホバー時（ライトは暗く、ダークは明るくずらす）。エラーページの `Back to Top` ボタン。 |
+| **アクセント上の文字** | `#FFFFFF` | `#121212` | `text-accent-contrast` | `--color-accent-contrast` | アクセント色で塗りつぶした面の文字色。エラーページの `Back to Top` ボタン。ダークの `accent` 上では白がコントラスト比 2.7:1 と不足するため暗色にする（`#121212` で 6.9:1）。 |
 | **ボーダー** | `#E5E5E5` | `#2E2E2E` | `border-border` | `--color-border` | カード枠線、セクション区切り、ヘッダー下線。 |
 | **淡いサーフェス** | `#F5F5F5` | `#1E1E1E` | `bg-surface-subtle` | `--color-surface-subtle` | インラインコード、コードブロック、ヘッダーの検索ボックス、ドロワーのタグホバーの背景色。 |
 | **サブサーフェス** | `#F3F4F6` | `#262626` | `bg-surface-muted` | `--color-surface-muted` | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー、目次のガイド線。 |
@@ -91,8 +91,8 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 | **スクロールバー** | `#D1D5DB` | `#3A3A3A` | — | `--color-scrollbar` | 目次のスクロールバー。 |
 | **コード文字色** | `#24292E` | `#E6EDF3` | — | `--color-code-text` | コードブロックの文字色（Shiki のテーマ `github-light` / `github-dark` の前景色に合わせる）。 |
 
-Callout は例外的に Obsidian デフォルトテーマ準拠の独自パレットを持ちます（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。
-記事本文（prose）のタイポグラフィ色も Tailwind typography プラグインの `prose-slate`（ダークは `dark:prose-invert`）由来でパレットの外側です（トークンへの寄せは [#73](https://github.com/uyaaaaaa/personal-blog/issues/73) で検討）。
+Callout は例外的に独自パレットを持ちます。Obsidian デフォルトテーマの色相をベースに、タイトル文字が両テーマでコントラスト比 4.5:1 以上になるようテーマ別に明度を調整した値です（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。
+記事本文（prose）のタイポグラフィ色も Tailwind typography プラグインの `prose-slate`（ダークは `dark:prose-invert`）由来でパレットの外側です。
 
 ### C. タイポグラフィ
 
@@ -236,4 +236,3 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | ショートカットキーでのフォーカス（`Cmd/Ctrl + K`） | [#15](https://github.com/uyaaaaaa/personal-blog/issues/15) |
 | 記事内への画像配置 | [#10](https://github.com/uyaaaaaa/personal-blog/issues/10) |
 | コードブロックのトグル | [#3](https://github.com/uyaaaaaa/personal-blog/issues/3) |
-| ダークテーマの仕上げ（Callout・コントラスト検証・ロゴ） | [#73](https://github.com/uyaaaaaa/personal-blog/issues/73) |
