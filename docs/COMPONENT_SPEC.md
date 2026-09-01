@@ -17,7 +17,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - [1. レイアウト](#1-レイアウト)
   - [Header](#header) / [ThemeToggle](#themetoggle) / [HeaderNavigation](#headernavigation) / [Footer](#footer)
 - [2. 記事表示](#2-記事表示)
-  - [Hero](#hero) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
+  - [Hero](#hero) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
   - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea) / [ProseTable](#prosetable)
 - [4. エラー](#4-エラー)
@@ -244,6 +244,34 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 ---
 
+### 記事ヘッダー
+
+`app/pages/article/[_slug].vue`
+
+記事詳細ページのタイトル周り。下端に1pxボーダーと `2rem` の下パディングを持ち、要素間は `1rem`。
+
+**構成（上から）**
+
+1. **メタ情報**（下記）
+2. タイトル（`h1` / SP `1.875rem`・md以上 `2.25rem` / 太字 / `leading-tight`）
+3. 説明文（サブテキスト色 / `1.125rem`）。**空なら要素ごと出さない**。フロントマターの `description` は空文字を許すため、無条件に描画するとタイトルと区切り線の間に空の1行分の余白が残る
+
+**メタ情報**
+
+サブテキスト色 / 等幅フォント / `0.875rem` の縦2行。行間 `0.625rem`。
+
+| 行 | 要件 |
+| :--- | :--- |
+| **1行目** | 日付を左、カテゴリバッジ（アクセント色 / `bg-accent/10` / ピル / `0.75rem` / 大文字）を**右端**に配置する。バッジは `ml-auto` で右へ寄せ、日付が無い記事でも右端に留まる。日付・カテゴリがどちらも無ければ行ごと出さない |
+| **2行目** | タグ（アクセント色 / `#` 付き）を横並びにし、**幅が足りなければ折り返す**（`flex-wrap` / 間隔 横 `0.75rem`・縦 `0.5rem`）。タグが無ければ行ごと出さない |
+
+**1行に詰めない。** 日付・タグ・カテゴリは件数の増え方が異なるため、これらを1行に並べると
+タグの多い記事でSP幅（375px想定）を超え、**ページ全体が横スクロールする**。
+件数が可変なのはタグだけなので、タグを独立した行に出して折り返させ、
+本数によらず1行目のレイアウトが動かないようにする。
+
+---
+
 ### Toc
 
 `app/components/article/Toc.vue`
@@ -372,7 +400,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | **見出し (H2, H3)** | `prose` の既定に準拠。本文中の `h2`〜`h6` は**クリックで該当位置へスクロール**する。カーソルは `pointer`。 |
 | **コードブロック** | Nuxt Content のシンタックスハイライトを使用（テーマはライト **`github-light`** / ダーク **`github-dark`** のデュアル指定で、`.dark` クラスに追従）。背景 `var(--color-surface-subtle)` / 文字色 `var(--color-code-text)` / 1pxボーダー。モバイルでは横スクロール。**行番号は表示しない**。 |
 | **インラインコード** | Obsidian風。淡いサーフェス色 + 1pxボーダー + 小角丸。パディング 上下 `0.125rem` / 左右 `0.375rem`。`font-weight: 400`、文字色は周囲から継承。**バッククォート（`code::before` / `code::after`）は非表示**にする。 |
-| **リンク** | アクセントカラーで表示し、ホバーでアンダーラインを付与。見出しは Nuxt Content が `<a>` で包むため対象外とし、見出しの色を継承したままホバーでのみアクセントカラーに変化する。 |
+| **リンク** | アクセントカラーで表示し、ホバーでアンダーラインを付与。見出しは Nuxt Content が `<a>` で包むため対象外とし、見出しの色を継承したままホバーでのみアクセントカラーに変化する。`overflow-wrap: break-word` で**URLをそのまま書いたリンクを折り返す**（`<https://...>` の自動リンクはリンクテキスト自体が長いため、折り返さないとSP幅でページ全体が横スクロールする）。 |
 | **引用 (Blockquote)** | `prose` の既定に準拠。 |
 | **テーブル** | `prose` の既定に準拠。列幅が収まらない場合は**テーブル単体で横スクロール**する（→ [ProseTable](#prosetable)）。セルの折り返しは既定のままで、まず折り返し、それでも収まらない時だけスクロールが出る。 |
 
