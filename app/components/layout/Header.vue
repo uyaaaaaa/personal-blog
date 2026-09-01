@@ -21,11 +21,14 @@
         </button>
       </div>
 
-      <Navigation 
-        :is-open="isMenuOpen" 
-        @toggle="toggleMenu" 
-        @close="closeMenu" 
-      />
+      <div class="flex items-center gap-3 md:gap-5">
+        <ThemeToggle />
+        <Navigation
+          :is-open="isMenuOpen"
+          @toggle="toggleMenu"
+          @close="closeMenu"
+        />
+      </div>
     </div>
   </header>
 </template>
@@ -33,6 +36,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Navigation from '@/components/layout/HeaderNavigation.vue'
+import ThemeToggle from '@/components/layout/ThemeToggle.vue'
 
 const isMenuOpen = ref(false)
 

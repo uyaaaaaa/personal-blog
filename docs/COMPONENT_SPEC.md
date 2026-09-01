@@ -15,7 +15,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 ## 目次
 
 - [1. レイアウト](#1-レイアウト)
-  - [Header](#header) / [HeaderNavigation](#headernavigation) / [Footer](#footer)
+  - [Header](#header) / [ThemeToggle](#themetoggle) / [HeaderNavigation](#headernavigation) / [Footer](#footer)
 - [2. 記事表示](#2-記事表示)
   - [Hero](#hero) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
@@ -40,7 +40,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | :--- | :--- |
 | 配置 | `position: sticky` / `top: 0` / `z-index: 100` |
 | 高さ | `64px` 固定 |
-| 背景 | `var(--color-header-bg)`（半透明の白） + `backdrop-filter: blur(10px)` |
+| 背景 | `var(--color-header-bg)`（半透明。ライトは白 / ダークは近黒） + `backdrop-filter: blur(10px)` |
 | ボーダー | 下端に1px（ボーダー色） |
 | 内側 | `.container`（最大1200px）で左右に振り分ける |
 
@@ -50,12 +50,40 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | :--- | :--- |
 | **ロゴ** | 左寄せ。`u/` モノグラムのインラインSVG（26px / 角丸タイル版）と `Tech Blog` のテキストを `0.5rem` の間隔で横並びにする。テキストは等幅フォント / `700` / `1.25rem` / 字間 `-0.5px`。クリックで `/` へ遷移し、モバイルメニューが開いていれば閉じる。`z-index: 102` でドロワーより前面に置く。マークの仕様は [ICON_GUIDELINE.md](./ICON_GUIDELINE.md) を参照。 |
 | **検索ボックス** | 中央。`md` 以上でのみ表示（`hidden md:flex`）。最大幅 `28rem`。虫眼鏡アイコン + `Search...` を左、`Cmd+K` バッジを右に配置。ホバーで枠線とアイコンがアクセント色になる。**現状はUIのみで検索機能は未実装**（[#13](https://github.com/uyaaaaaa/personal-blog/issues/13) / [#15](https://github.com/uyaaaaaa/personal-blog/issues/15)）。 |
+| **テーマトグル** | 右寄せ。ナビゲーションの左に横並び（間隔はモバイル `0.75rem` / `md` 以上 `1.25rem`）。`ThemeToggle` に委譲する。 |
 | **ナビゲーション** | 右寄せ。`HeaderNavigation` に委譲する。 |
 
 **状態**
 
 - `isMenuOpen`: モバイルメニューの開閉状態を保持する。
 - メニューを開いている間は `document.body.style.overflow = 'hidden'` で背後のスクロールを固定し、閉じる際に必ず解除する。
+
+---
+
+### ThemeToggle
+
+`app/components/layout/ThemeToggle.vue`
+
+ライト / ダークテーマを切り替える2状態トグル。全ビューポートでヘッダーに表示する。
+
+**表示要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| 形状 | `32×32px` のアイコンボタン。`aria-label="Toggle theme"`。 |
+| アイコン | `20px` のストロークアイコン。ライト表示中は太陽、ダーク表示中は月。 |
+| 色 | サブテキスト色。ホバーでアクセント色。 |
+
+**インタラクション**
+
+- クリックで `colorMode.preference` をライト ⇄ ダークに切り替える。
+- アイコンの出し分けは `dark:hidden` / `hidden dark:block` の CSS だけで行う。SSR 時にどちらのテーマかをサーバーが知れないため、JS での出し分けは hydration mismatch になる。
+
+**テーマ管理の仕様**（`@nuxtjs/color-mode` / `classSuffix: ''`）
+
+- 初回訪問時は `prefers-color-scheme` に従う。明示的に選択すると localStorage（`nuxt-color-mode`）に永続化され、リロード後も保持される。
+- インラインスクリプトが描画前に `<html>` へ `.dark` / `.light` クラスを付けるため、リロード時に FOUC は起きない。
+- `theme-color` メタは `app/app.vue` がテーマに追従させる（値は `theme/tokens.ts` から参照）。
 
 ---
 
@@ -342,7 +370,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | 要素 | 要件 |
 | :--- | :--- |
 | **見出し (H2, H3)** | `prose` の既定に準拠。本文中の `h2`〜`h6` は**クリックで該当位置へスクロール**する。カーソルは `pointer`。 |
-| **コードブロック** | Nuxt Content のシンタックスハイライトを使用（テーマ **`github-light`**）。背景 `var(--color-surface-subtle)` / 文字色 `var(--color-code-text)` / 1pxボーダー。モバイルでは横スクロール。**行番号は表示しない**。 |
+| **コードブロック** | Nuxt Content のシンタックスハイライトを使用（テーマはライト **`github-light`** / ダーク **`github-dark`** のデュアル指定で、`.dark` クラスに追従）。背景 `var(--color-surface-subtle)` / 文字色 `var(--color-code-text)` / 1pxボーダー。モバイルでは横スクロール。**行番号は表示しない**。 |
 | **インラインコード** | Obsidian風。淡いサーフェス色 + 1pxボーダー + 小角丸。パディング 上下 `0.125rem` / 左右 `0.375rem`。`font-weight: 400`、文字色は周囲から継承。**バッククォート（`code::before` / `code::after`）は非表示**にする。 |
 | **リンク** | アクセントカラーで表示し、ホバーでアンダーラインを付与。見出しは Nuxt Content が `<a>` で包むため対象外とし、見出しの色を継承したままホバーでのみアクセントカラーに変化する。 |
 | **引用 (Blockquote)** | `prose` の既定に準拠。 |

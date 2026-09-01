@@ -143,7 +143,7 @@ watch(() => page.value, async () => {
 
         <div
           ref="articleRef"
-          class="prose prose-slate max-w-none"
+          class="prose prose-slate dark:prose-invert max-w-none"
           @pointerdown="handleFootnoteJump"
           @click="handleFootnoteJump"
         >

@@ -1,10 +1,13 @@
 import type { Config } from 'tailwindcss'
 import plugin from 'tailwindcss/plugin'
 import typography from '@tailwindcss/typography'
-import { fontFamily, toCssVariables, toTailwindColors } from './theme/tokens'
+import { fontFamily, toCssVariables, toDarkCssVariables, toTailwindColors } from './theme/tokens'
 
 const cssVariables = plugin(({ addBase }) => {
-  addBase({ ':root': toCssVariables() })
+  addBase({
+    ':root': toCssVariables(),
+    '.dark': toDarkCssVariables(),
+  })
 })
 
 export default <Config>{
