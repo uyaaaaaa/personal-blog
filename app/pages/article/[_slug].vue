@@ -136,7 +136,7 @@ watch(() => page.value, async () => {
             {{ page.title }}
           </h1>
 
-          <p class="text-sub text-lg leading-relaxed">
+          <p v-if="page.description" class="text-sub text-lg leading-relaxed">
             {{ page.description }}
           </p>
         </header>
