@@ -253,7 +253,6 @@ TOPページだけはグリッドではなく、カテゴリ単位の棚（`Arti
 
 | 内容 | Issue |
 | :--- | :--- |
-| 外部リンクの `rel` が `noopener noreferrer` にならない | [#69](https://github.com/uyaaaaaa/personal-blog/issues/69) |
 | `` ` `` でリンクを囲めない | [#12](https://github.com/uyaaaaaa/personal-blog/issues/12) |
 
 ### 未実装の機能
