@@ -8,7 +8,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 **実装が正**です。コンポーネントを変更した際は本書も併せて更新してください。
 
-- 最終更新: 2026-09-01
+- 最終更新: 2026-09-02
 
 ---
 
@@ -17,7 +17,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - [1. レイアウト](#1-レイアウト)
   - [Header](#header) / [ThemeToggle](#themetoggle) / [HeaderNavigation](#headernavigation) / [Footer](#footer)
 - [2. 記事表示](#2-記事表示)
-  - [Hero](#hero) / [ArticleShelf](#articleshelf) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton) / [Pagination](#pagination)
+  - [Hero](#hero) / [ArticleShelf](#articleshelf) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton) / [Pagination](#pagination) / [ScrollToTopButton](#scrolltotopbutton)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
   - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea) / [ProseTable](#prosetable)
 - [4. エラー](#4-エラー)
@@ -71,7 +71,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | 項目 | 要件 |
 | :--- | :--- |
 | 形状 | `32×32px` のアイコンボタン。`aria-label="Toggle theme"`。 |
-| アイコン | `20px` のストロークアイコン。ライト表示中は太陽、ダーク表示中は月。 |
+| アイコン | `20px` のストロークアイコン。クリックで切り替わる先を示す。ライト表示中は月、ダーク表示中は太陽。 |
 | 色 | サブテキスト色。ホバーでアクセント色。 |
 
 **インタラクション**
@@ -468,6 +468,36 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 
 ---
 
+### ScrollToTopButton
+
+`app/components/common/ScrollToTopButton.vue`
+
+記事詳細ページの「先頭に戻る」導線。画面右下に浮かべる円形ボタン。
+
+**Props**
+
+なし。
+
+**表示要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| 配置 | `fixed` / 右下から `1.5rem` / `z-index: 30`（`TocMobile` のドロップダウンとその背景より後ろ） |
+| 形状 | `44px` 角丸円 / サーフェス色（不透明度90%） + `backdrop-blur` / 1pxボーダー / `shadow-sm` |
+| 中身 | 上向きシェブロン（`^`）アイコン（18px / サブテキスト色）**のみ**。ラベルは持たず、`aria-label` に `Back to top` を持つ |
+
+**インタラクション**
+
+| 挙動 | 要件 |
+| :--- | :--- |
+| 表示条件 | スクロール量が **`ビューポート1画面分` と `ページ全体の1/3` の大きい方**を超えたら現れる。不透明度が `0` の間は DOM から外し、フォーカスも拾わせない |
+| 濃さ | **スクロール量に連動**させ、表示開始位置から `240px`（`FADE_DISTANCE`）かけて不透明度を `0` → `1` に上げる。同じ式で戻るため、上へスクロールすると同じ距離をかけて薄れる。CSSトランジションは持たせない（スクロールに追従させるため） |
+| ホバー | ボーダーとアイコンがアクセント色になり、**シェブロンが上に `-translate-y-0.5` 移動**する（`200ms`） |
+| クリック | `scrollToTop()`（→ [5. 共有ロジック](#5-共有ロジック)）でページ先頭までスムーズスクロールし、**URLのハッシュを取り除く** |
+| ジャンプ中の挙動 | `isProgrammaticScroll` が立つため、上方向に戻る間も `TocMobile` のバーは現れない。先頭へ戻る道中も濃さがスクロールに追従するため、そのままフェードアウトする |
+
+---
+
 ## 3. 記事本文（Markdown）
 
 ### Markdownスタイル
@@ -768,7 +798,7 @@ Nuxt Content が本文中の `<table>` に使用するコンポーネント。�
 | :--- | :--- | :--- |
 | `useTocActive(links, offset)` | `app/composables/useTocActive.ts` | 現在読んでいる見出しのIDを追跡する。ビューポート上端から `offset` px を最後に通過した見出しを採用。**ページ最下部では最後の見出しを強制的にアクティブ**にする。既定 `offset` は `140`（`Toc` は `100`、`TocMobile` は `140` を渡す） |
 | `useScrollDirection(threshold)` | `app/composables/useScrollDirection.ts` | スクロール方向（`'up'` / `'down'`）を追跡する。`threshold`（既定 `8px`）未満の移動は無視してちらつきを防ぐ。iOSのラバーバンドで負値になるため `scrollY` を0でクランプする。**プログラムスクロール中は方向によらず `'down'` を返す** |
-| `useScrollTo()` | `app/composables/useScrollTo.ts` | `scrollTo(id)` は指定IDへ `scrollIntoView({ behavior: 'smooth' })` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める）。`beginProgrammaticScroll()` は**スクロールせずジャンプ中フラグだけを立てる**入口で、ブラウザ標準のフラグメント遷移（脚注）をこの仕組みに乗せるために使う |
+| `useScrollTo()` | `app/composables/useScrollTo.ts` | `scrollTo(id)` は指定IDへ `scrollIntoView({ behavior: 'smooth' })` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める）。`beginProgrammaticScroll()` は**スクロールせずジャンプ中フラグだけを立てる**入口で、ブラウザ標準のフラグメント遷移（脚注）をこの仕組みに乗せるために使う。`scrollToTop()` はページ先頭へスムーズスクロールし、`history.replaceState` で**ハッシュを取り除いたURLに戻す**（履歴を増やさないため、戻る操作は記事の1つ前へ抜ける） |
 | `isProgrammaticScroll` | `app/composables/useScrollTo.ts` | ページ内ジャンプが進行中かを表す共有 `ref`。スクロールイベントが `150ms` 止まったら終了とみなす（`scrollend` は Safari の対応が新しいためデバウンスで代用）。`useScrollDirection` と `TocMobile` が参照する |
 | `useArticleTags()` | `app/composables/useArticleTags.ts` | 公開記事のフロントマターからタグを集計し、`{ name, slug, count }` を**記事数の降順（同数なら名前順）**で返す |
 | `usePageSeo(input)` | `app/composables/usePageSeo.ts` | title / description と OGP・Twitter Card のメタタグをまとめて出力する。title は `<ページ名> \| Tech Blog`（省略時はサイト名のみ）、description は空ならサイト共通の説明文にフォールバックする。`og:image` は記事の `image`、無ければ `/ogp.png`。`og:image` と `og:url` は `runtimeConfig.public.siteUrl` を基準に絶対URL化する。`type: 'article'` のときだけ `article:published_time` / `article:tag` を出す（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
