@@ -41,15 +41,6 @@ a:hover {
   margin: 0 auto;
   padding: 0 1rem;
 }
-
-/* NuxtLoadingIndicatorのようにインラインstyleでtransitionを当てるものを打ち消すため !important */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
 </style>
 
 <style scoped>

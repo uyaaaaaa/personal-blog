@@ -584,9 +584,7 @@ onBeforeUnmount(() => {
 .drawer-subrow-name {
   font-family: var(--font-mono);
   font-size: 0.875rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .drawer-subrow-count {

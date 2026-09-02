@@ -122,14 +122,19 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | **ホバー** | 控えめな影の付与 + アクセント色への変化 + 矢印の `translate-x` | カード、リンク |
 | **トランジション** | `200ms`（色・影）/ `300ms`（変形・開閉）/ `500ms`（画像ズーム） | 全般 |
 
-**モーションの無効化は1箇所で行います。**
+**`prefers-reduced-motion` は参照しません。**
 
-`prefers-reduced-motion: reduce` への対応は、コンポーネント側では書きません。書く場所は次の2つだけです。
+サイトのモーションは OS の「視差効果を減らす（Reduce Motion）」設定に関わらず、常に同じように動きます。
+`@media (prefers-reduced-motion: reduce)` も `matchMedia` による判定も、コンポーネント・グローバルCSS・composable のいずれにも置きません。
 
-| 対象 | 置き場 | 理由 |
-| :--- | :--- | :--- |
-| CSSのトランジション・アニメーション | `app/layouts/default.vue` のグローバルな `@media (prefers-reduced-motion: reduce)` | `*` セレクタで `transition-duration` と `animation-duration` を潰すため、新しいコンポーネントは何も書かなくても効く。`NuxtLoadingIndicator` のようにインラインstyleで当ててくるものを打ち消すため `!important` が要る |
-| JSから起こすスクロール | `app/composables/useScrollTo.ts` | JSが `behavior: 'smooth'` を明示するとCSSの `scroll-behavior` では止められない。判定できる唯一の場所なので、ここに閉じる |
+これは**意図的にユーザーの申告を無視する選択**です。前庭障害への配慮という本来の趣旨には反するため、
+将来この判断を戻す場合は次の3箇所に手を入れることになります（以前はここに実装がありました）。
+
+| 対象 | 置き場 |
+| :--- | :--- |
+| CSSのトランジション・アニメーション | `app/layouts/default.vue` のグローバルな `*` セレクタ。`NuxtLoadingIndicator` のようにインラインstyleで当ててくるものを打ち消すため `!important` が要る |
+| JSから起こすスクロール | `app/composables/useScrollTo.ts`。JSが `behavior: 'smooth'` を明示するとCSSの `scroll-behavior` では止められないため、判定できる唯一の場所 |
+| Exploreパネルの開閉 | `app/components/layout/HeaderMenuPanel.vue` |
 
 `html` に `scroll-behavior: smooth` は**置きません**。Nuxt 既定の `scrollBehavior` は遷移時のスクロール位置を `behavior` 抜きで返すため、置くとページ遷移とブラウザバックの位置復元までアニメーションします。避けるには `app/router.options.ts` で `scrollBehavior` を丸ごと置き換えるしかなく、ハッシュ着地に `scroll-margin-top` を効かせている既定の処理まで自前で抱えることになります。
 
@@ -244,7 +249,7 @@ TOPページだけはグリッドではなく、カテゴリ単位の棚（`Arti
 | **UI文言** | ナビゲーション、ボタン、エラーなどUI側の文言は**英語**を基本とする（記事本文は日本語）。既存の例外は目次の「目次」。 | 実装済 |
 | **アイコン** | favicon / PWA / iOS 向けアイコンを一式提供する（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。 | 実装済 |
 | **OGP** | SNS シェア用の OGP / Twitter Card メタタグを全ページに出力する。共通画像は `public/ogp.png`、記事はフロントマターの `image` で差し替え可（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。記事を表示できないページは `og:type` を `website` にし、`article` を名乗らせない。 | 実装済 |
-| **ローディング表示** | ルート遷移中は画面上端にアクセント色2pxのバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない。`throttle: 200ms` により、プリレンダ済みページのように即座に終わる遷移ではバーを出さない。トランジションの無効化はグローバルな `prefers-reduced-motion` のルールが担う（→ 2-D）。なおバーはルート遷移にしか反応しないため、ページ内の再取得（再試行など）は各コンポーネントが自前で進行を示す。 | 実装済 |
+| **ローディング表示** | ルート遷移中は画面上端にアクセント色2pxのバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない。`throttle: 200ms` により、プリレンダ済みページのように即座に終わる遷移ではバーを出さない。なおバーはルート遷移にしか反応しないため、ページ内の再取得（再試行など）は各コンポーネントが自前で進行を示す。 | 実装済 |
 | **記事取得の状態分離** | 記事詳細では「取得失敗」と「記事なし」を区別して表示し、HTTPステータスも実態に合わせる（取得失敗=500 / 記事なし=404 / 未確定は何も出さない）。（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md) の `ArticleFallback`） | 実装済 |
 | **検索** | `Cmd/Ctrl + K` で検索モーダルを起動する。 | **未実装** |
 | **ダークモード** | ヘッダーのトグル（`ThemeToggle`）でライト / ダークを切り替える。初期値は `prefers-color-scheme` に従い、明示的な選択は localStorage に永続化（FOUC 防止込みで `@nuxtjs/color-mode` が担う）。シンタックスハイライト（Shiki デュアルテーマ）と `theme-color` メタもテーマに追従する。 | 実装済 |

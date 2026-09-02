@@ -160,7 +160,7 @@ Explore               （セクションラベル）
 | **アクティブ状態** | 現在のページに対応する行（`router-link-exact-active`）は、背景を淡いサーフェス色にして文字を `600` にする。**アクセント色は使わない**（他の行と文字色を揃え、色ではなく面と太さで示す）。ホバーも同じ背景色。 |
 
 1. **Latest** — 公開記事を新しい順に**5件**（`LATEST_ARTICLES_LIMIT = 5`）。各行はタイトル（`0.875rem` / 2行でクランプ）の下に日付（等幅フォント / `0.7rem` / サブテキスト色 / 表記は `formatRelativeDate`）。
-2. **Tags** — 記事数の多い順に**上位10件**（`TOP_TAGS_LIMIT = 10`）。各行はタグ名（等幅フォント）を左、記事数を右に置く。枠線付きのバッジにはしない。
+2. **Tags** — 記事数の多い順に**上位10件**（`TOP_TAGS_LIMIT = 10`）。各行はタグ名（等幅フォント）を左、記事数を右に置く。枠線付きのバッジにはしない。タグ名は**省略記号で切らず、収まらなければ折り返す**（`overflow: hidden` + `text-overflow: ellipsis` を持つ flex アイテムは、折りたたみが `0fr` の間に幅0で確定してしまうと iOS Safari では開いても再計算されず、文字がまるごと消える）。
 3. リンクをタップしたら必ずドロワーを閉じる。
 
 ---
@@ -188,7 +188,7 @@ Explore               （セクションラベル）
 | **ヘッダーとの間隔** | **空けない。** ヘッダーの下端ボーダーからそのまま下がる。ホバーの経路が途切れないので、隙間を埋める仕掛けも要らない。 |
 | **パネル** | 幅 `960px`（`max-width: 100%`）。内側 `1.5rem`、1pxボーダー、`shadow-lg`、背景はサーフェス色。**上端はボーダーを持たず角丸も付けない**（ヘッダーのボーダーを共有し、線が二重にならないようにする）。下端のみ角丸 `10px`。 |
 | **カラム分割** | `grid-auto-flow: column` + `grid-auto-columns: minmax(0, 1fr)` で、**カラム数を問わず均等割り**。カラム数を props や CSS 変数で渡す必要はない。 |
-| **遷移** | `opacity` と `translateY(-4px)` を `160ms`。閉じている間は `visibility: hidden`、レイヤーは `pointer-events: none` で、リンクをフォーカスもクリックもできないようにする。`prefers-reduced-motion: reduce` では遷移しない。 |
+| **遷移** | `opacity` と `translateY(-4px)` を `160ms`。閉じている間は `visibility: hidden`、レイヤーは `pointer-events: none` で、リンクをフォーカスもクリックもできないようにする。 |
 
 ---
 
@@ -890,7 +890,7 @@ Nuxt Content が本文中の `<table>` に使用するコンポーネント。�
 | :--- | :--- | :--- |
 | `useTocActive(links, offset)` | `app/composables/useTocActive.ts` | 現在読んでいる見出しのIDを追跡する。ビューポート上端から `offset` px を最後に通過した見出しを採用。**ページ最下部では最後の見出しを強制的にアクティブ**にする。既定 `offset` は `140`（`Toc` は `100`、`TocMobile` は `140` を渡す） |
 | `useScrollDirection(threshold)` | `app/composables/useScrollDirection.ts` | スクロール方向（`'up'` / `'down'`）を追跡する。`threshold`（既定 `8px`）未満の移動は無視してちらつきを防ぐ。iOSのラバーバンドで負値になるため `scrollY` を0でクランプする。**プログラムスクロール中は方向によらず `'down'` を返す** |
-| `useScrollTo()` | `app/composables/useScrollTo.ts` | JSからのスクロールをまとめる。`scrollTo(id)` は指定IDへ `scrollIntoView` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める）。`scrollToTop()` はページ先頭へスクロールする。`clearHash()` は `history.replaceState` で**ハッシュを取り除いたURLに戻す**（履歴を増やさないため、戻る操作は記事の1つ前へ抜ける）。スクロールと履歴操作を別の関数に分けているのは、ハッシュを消したいのが `ScrollToTopButton` だけのため。**`prefers-reduced-motion: reduce` の判定はここに閉じている**（JSが `behavior` を明示するとCSSからは止められないため、判定できる唯一の場所） |
+| `useScrollTo()` | `app/composables/useScrollTo.ts` | JSからのスクロールをまとめる。`scrollTo(id)` は指定IDへ `scrollIntoView` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める）。`scrollToTop()` はページ先頭へスクロールする。`clearHash()` は `history.replaceState` で**ハッシュを取り除いたURLに戻す**（履歴を増やさないため、戻る操作は記事の1つ前へ抜ける）。スクロールと履歴操作を別の関数に分けているのは、ハッシュを消したいのが `ScrollToTopButton` だけのため。**`behavior: 'smooth'` は常に指定する**（`prefers-reduced-motion` は参照しない → [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) の 2-D） |
 | `isProgrammaticScroll` / `beginProgrammaticScroll()` | `app/composables/useProgrammaticScroll.ts` | 「いま起きているスクロールをプログラムが起こしたか」を表す共有 `ref` と、それを立てる関数。スクロールイベントが `150ms` 止まったら終了とみなす（`scrollend` は Safari の対応が新しいためデバウンスで代用）。**生産側**は `useScrollTo` の各関数と、ブラウザ標準のフラグメント遷移（脚注）を乗せるために直接呼ぶ `[_slug].vue`。**消費側**は `useScrollDirection` と `TocMobile`。「スクロールさせること」とは別の関心事なので `useScrollTo` から切り出している |
 | `useArticleTags()` | `app/composables/useArticleTags.ts` | 公開記事のフロントマターからタグを集計し、`{ name, slug, count }` を**記事数の降順（同数なら名前順）**で返す |
 | `usePagination(items, perPage)` | `app/composables/usePagination.ts` | 一覧を1ページ `ARTICLES_PER_PAGE`（既定 `9`）件に区切る。現在ページは `route.params.page` からの `computed`（無ければ1）で、状態を別に持たない。`2` のような正の整数の表記だけを受け付け、範囲外のページ番号・`/page/1`・`2.0` のような別表記は404にする（`basePath` が剥がせる形とページ番号として認める形を一致させるため）。`basePath` はページ番号を除いた一覧のパスで、`Pagination` のリンク組み立てに渡す |
