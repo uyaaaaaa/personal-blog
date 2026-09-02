@@ -17,6 +17,7 @@ const { data: articles } = await useAsyncData(`category-articles-${category}`, (
     .where('published', '=', true)
     .where('category', '=', category)
     .order('date', 'DESC')
+    .select('path', 'title', 'date', 'emoji', 'tags')
     .all(),
 )
 

@@ -3,7 +3,11 @@ import ArticleList from '~/components/ArticleList.vue'
 import Pagination from '~/components/common/Pagination.vue'
 
 const { data: articles } = await useAsyncData('article-list', () =>
-  queryCollection('article').where('published', '=', true).order('date', 'DESC').all(),
+  queryCollection('article')
+    .where('published', '=', true)
+    .order('date', 'DESC')
+    .select('path', 'title', 'date', 'emoji', 'tags')
+    .all(),
 )
 
 const { page, totalPages, pagedItems, basePath } = usePagination(computed(() => articles.value ?? []))

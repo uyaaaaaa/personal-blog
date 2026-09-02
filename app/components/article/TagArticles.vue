@@ -7,7 +7,11 @@ const route = useRoute()
 const slug = computed(() => String(route.params.tag))
 
 const { data: articles } = await useAsyncData(`tag-articles-${slug.value}`, () =>
-  queryCollection('article').where('published', '=', true).order('date', 'DESC').all(),
+  queryCollection('article')
+    .where('published', '=', true)
+    .order('date', 'DESC')
+    .select('path', 'title', 'date', 'emoji', 'tags')
+    .all(),
 )
 
 const filteredArticles = computed(() =>
