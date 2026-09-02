@@ -146,8 +146,10 @@
 </template>
 
 <script setup lang="ts">
-import HeaderMenuPanel from '@/components/layout/HeaderMenuPanel.vue'
-import HeaderMenuColumn from '@/components/layout/HeaderMenuColumn.vue'
+import HeaderMenuPanel from '~/components/layout/HeaderMenuPanel.vue'
+import HeaderMenuColumn from '~/components/layout/HeaderMenuColumn.vue'
+import { useArticleTags } from '~/composables/useArticleTags'
+import { formatRelativeDate } from '~/utils/date'
 
 defineProps<{
   isOpen: boolean

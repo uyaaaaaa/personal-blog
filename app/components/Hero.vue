@@ -55,6 +55,8 @@
 </template>
 
 <script setup lang="ts">
+import { formatDate } from '~/utils/date'
+
 interface Article {
   path: string
   title: string

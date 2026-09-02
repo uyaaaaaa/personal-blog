@@ -15,8 +15,15 @@
 
 ## 適用状況
 
-**このリポジトリでは未適用です。** 各ルールの「強制」欄に書かれた lint はいずれも導入されておらず、
-現時点でこれらが CI で落ちることはありません。位置づけは [../ARCHITECTURE.md](../ARCHITECTURE.md) を参照してください。
+**`A-11` 〜 `A-13`（暗黙解決の制限）のみ適用済みです。それ以外は未適用です。**
+
+`A-11` 〜 `A-13` は `nuxt.config.ts` の `imports: { scan: false }` / `components: false` と
+`eslint.config.mjs` の `vue/no-undef-components` で強制しています。詳細は
+[../appendix/vue.md](../appendix/vue.md) を参照してください。
+
+それ以外のルールの「強制」欄に書かれた lint は導入されていません。またこのリポジトリには CI が無いため、
+適用済みのものも含めて**落ちるのはローカルで `npm run lint` / `npm run build` を実行したときだけ**です。
+位置づけは [../ARCHITECTURE.md](../ARCHITECTURE.md) を参照してください。
 
 ---
 
@@ -64,3 +71,6 @@ lint の `message` には必ず該当ルールの URL を含めます。ルー�
 Vue / Nuxt では `A-11` 〜 `A-13`（暗黙解決の制限）が 1〜2 の前提条件です。
 auto-import が有効なままでは依存グラフに import が現れず、`A-4` `A-5` の強制が無言で無効になります。
 → [../appendix/vue.md](../appendix/vue.md)
+
+**この前提条件は満たされました。** 自作モジュール間の依存はすべて `import` 文として現れているため、
+次の着手先は 1（循環禁止）です。

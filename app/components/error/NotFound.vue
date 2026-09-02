@@ -7,5 +7,5 @@
 </template>
 
 <script setup lang="ts">
-import ErrorView from './ErrorView.vue'
+import ErrorView from '~/components/error/ErrorView.vue'
 </script>

@@ -9,8 +9,8 @@
 
 <script setup lang="ts">
 import type { NuxtError } from '#app'
-import NotFound from './components/error/NotFound.vue';
-import ServerError from './components/error/Server.vue';
+import NotFound from '~/components/error/NotFound.vue'
+import ServerError from '~/components/error/Server.vue'
 
 defineProps<{
   error: NuxtError

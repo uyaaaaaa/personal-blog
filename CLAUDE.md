@@ -18,9 +18,12 @@ npm run dev       # 開発サーバー
 npm run build     # 本番ビルド
 npm run generate  # 静的生成
 npm run preview   # ビルド結果のプレビュー
+npm run lint      # ESLint
 ```
 
-テストランナーと Lint は未導入です。変更の確認は `npm run build` が通ることと、開発サーバーでの目視で行います。
+テストランナーは未導入です。変更の確認は `npm run lint` と `npm run build` が通ることと、開発サーバーでの目視で行います。
+ESLint は `A-12`（自作モジュールの明示 import）を強制する `vue/no-undef-components` だけを有効にしています。
+スタイルガイドの類は入れていないので、それ以外の指摘は出ません。
 
 ## 設計上の約束事
 
@@ -36,9 +39,15 @@ npm run preview   # ビルド結果のプレビュー
 | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) | デザインの大方針。コンセプト、デザイントークン、レイアウト原則、UX要件。 |
 | [docs/COMPONENT_SPEC.md](./docs/COMPONENT_SPEC.md) | コンポーネント定義。各コンポーネントの props、表示要件、インタラクション。 |
 | [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) | アイコン定義。`u/` モノグラムの仕様と、favicon 一式・OGP 画像の生成手順。 |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | フロントエンド設計原則。**このリポジトリには未適用**で、これから寄せていく先。 |
-| [docs/rules/](./docs/rules/) | 上記から導かれる個別の規約。同じく**未適用**で、強制する lint も未導入。 |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | フロントエンド設計原則。**`A-11` 〜 `A-13` を除きこのリポジトリには未適用**で、これから寄せていく先。 |
+| [docs/rules/](./docs/rules/) | 上記から導かれる個別の規約。適用済みは `A-11` 〜 `A-13`（暗黙解決の制限）のみ。 |
 
 UI を変更したら、該当するドキュメントも併せて更新してください。**実装が正**です。
 
-`docs/ARCHITECTURE.md` と `docs/rules/` は現行のコードベースの説明ではありません。実装や指摘の根拠にせず、寄せる作業を明示的に依頼されたときだけ参照してください。
+`docs/ARCHITECTURE.md` と `docs/rules/` は、`A-11` 〜 `A-13` を除き現行のコードベースの説明ではありません。
+未適用の項目を実装や指摘の根拠にせず、寄せる作業を明示的に依頼されたときだけ参照してください。
+
+**自作の composable / util / コンポーネントは明示 import が必須です**（`A-12`、適用済み）。
+auto-import は `nuxt.config.ts` で止めてあります。書き方は既存ファイルに合わせ、コンポーネント → composable → util の順、
+`~/` エイリアス（composable 同士は相対パス）。例外は `app/components/content/` で、ここは markdown 側が名前で解決するため
+auto-import のままです。詳細は [docs/appendix/vue.md](./docs/appendix/vue.md)。

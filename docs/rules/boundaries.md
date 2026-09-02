@@ -178,7 +178,9 @@ auto-import、コンポーネント自動登録、グローバル型、マジッ
 
 依存グラフに現れない依存を作りません。自作の composable / util / コンポーネントは、すべて明示 import します。
 
-- **強制**：フレームワークの設定（[appendix/](../appendix/) 参照）＋ 依存グラフの網羅率チェック
+- **強制**：フレームワークの設定（[appendix/](../appendix/) 参照）。composable / util は未 import が
+  実行時 `ReferenceError` になり prerender が落ちるため `npm run build` で、コンポーネントは
+  `vue/no-undef-components` で `npm run lint` が落ちる。どちらもローカル実行のみで、CI は未導入
 - **根拠**：**auto-import が隠すのは「フレームワークへの依存」ではなく「機能間の依存」。**
   後者こそが長期プロダクトで管理したい唯一のものであり、これが見えないと `A-1` `A-4` `A-5` がすべて空文化する
 - **対価**：素の状態より DX が落ちる。ただし書かずに済む import の大半（`ref` `computed` の類）は依然として書かずに済む
