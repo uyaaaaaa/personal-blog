@@ -84,8 +84,6 @@ const closeMenu = () => {
   font-size: 1.25rem;
   font-family: var(--font-mono);
   letter-spacing: -0.5px;
-  position: relative;
-  z-index: 102; /* Ensure logo is above mobile menu */
 }
 
 .logo-mark {

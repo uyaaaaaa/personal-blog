@@ -17,8 +17,7 @@
       <button
         class="mobile-menu-btn"
         @click="emit('toggle')"
-        aria-label="Toggle menu"
-        :class="{ 'is-active': isOpen }"
+        aria-label="Open menu"
       >
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
@@ -31,6 +30,15 @@
         @click="emit('close')"
       >
         <aside class="mobile-drawer" @click.stop>
+          <div class="drawer-header">
+            <button type="button" class="drawer-close" aria-label="Close menu" @click="emit('close')">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
+
           <nav class="drawer-nav">
             <NuxtLink to="/" class="drawer-row" @click="emit('close')">
               <svg class="drawer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -45,23 +53,23 @@
             <button
               type="button"
               class="drawer-row"
-              :aria-expanded="isRecentOpen"
-              aria-controls="drawer-group-recent"
-              @click="isRecentOpen = !isRecentOpen"
+              :aria-expanded="isLatestOpen"
+              aria-controls="drawer-group-latest"
+              @click="isLatestOpen = !isLatestOpen"
             >
               <svg class="drawer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="9" />
                 <path d="M12 7v5l3.5 2" />
               </svg>
-              <span class="drawer-row-label">Recents</span>
-              <svg class="drawer-chevron" :class="{ 'is-open': isRecentOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <span class="drawer-row-label">Latest</span>
+              <svg class="drawer-chevron" :class="{ 'is-open': isLatestOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
 
-            <div id="drawer-group-recent" class="drawer-collapse" :class="{ 'is-open': isRecentOpen }">
+            <div id="drawer-group-latest" class="drawer-collapse" :class="{ 'is-open': isLatestOpen }">
               <ul class="drawer-sublist">
-                <li v-for="article in recentArticles" :key="article.path">
+                <li v-for="article in latestArticles" :key="article.path">
                   <NuxtLink :to="article.path" class="drawer-subrow" @click="emit('close')">
                     <span class="drawer-subrow-title">{{ article.title }}</span>
                     <time class="drawer-subrow-meta" :datetime="article.date">{{ formatDate(article.date) }}</time>
@@ -121,19 +129,19 @@ const menuItems = [
 ]
 
 const TOP_TAGS_LIMIT = 10
-const RECENT_ARTICLES_LIMIT = 5
+const LATEST_ARTICLES_LIMIT = 5
 
-const isRecentOpen = ref(true)
+const isLatestOpen = ref(true)
 const isTagsOpen = ref(true)
 
 const { data: tags } = useArticleTags()
 const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 
-const { data: recentArticles } = useAsyncData('drawer-recent-articles', () =>
+const { data: latestArticles } = useAsyncData('drawer-latest-articles', () =>
   queryCollection('article')
     .where('published', '=', true)
     .order('date', 'DESC')
-    .limit(RECENT_ARTICLES_LIMIT)
+    .limit(LATEST_ARTICLES_LIMIT)
     .select('path', 'title', 'date')
     .all(),
 )
@@ -172,7 +180,6 @@ const { data: recentArticles } = useAsyncData('drawer-recent-articles', () =>
   background: none;
   border: none;
   cursor: pointer;
-  z-index: 102;
   padding: 0;
 }
 
@@ -185,26 +192,15 @@ const { data: recentArticles } = useAsyncData('drawer-recent-articles', () =>
   transition: all 0.3s ease-in-out;
 }
 
-.mobile-menu-btn.is-active .hamburger-line:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-
-.mobile-menu-btn.is-active .hamburger-line:nth-child(2) {
-  opacity: 0;
-}
-
-.mobile-menu-btn.is-active .hamburger-line:nth-child(3) {
-  transform: translateY(-6px) rotate(-45deg);
-}
-
 .mobile-menu-overlay {
   position: fixed;
-  top: 64px;
+  top: 0;
   left: 0;
   width: 100%;
-  height: calc(100vh - 64px);
+  height: 100vh;
+  height: 100dvh;
   background-color: var(--color-overlay);
-  z-index: 90;
+  z-index: 110;
   opacity: 0;
   visibility: hidden;
   overflow: hidden;
@@ -225,7 +221,7 @@ const { data: recentArticles } = useAsyncData('drawer-recent-articles', () =>
   height: 100%;
   background-color: var(--color-surface);
   border-left: 1px solid var(--color-border);
-  padding: 0.75rem 0.75rem 2rem;
+  padding: 0 0.75rem 2rem;
   overflow-y: auto;
   overscroll-behavior: contain;
   transform: translateX(100%);
@@ -234,6 +230,43 @@ const { data: recentArticles } = useAsyncData('drawer-recent-articles', () =>
 
 .mobile-menu-overlay.is-open .mobile-drawer {
   transform: translateX(0);
+}
+
+.drawer-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 64px;
+  margin: 0 -0.75rem 0.5rem;
+  padding: 0 0.5rem;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.drawer-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  background: none;
+  color: var(--color-main);
+  cursor: pointer;
+}
+
+.drawer-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.drawer-close:hover {
+  background-color: var(--color-surface-subtle);
 }
 
 .drawer-nav {
