@@ -19,7 +19,7 @@ usePageSeo({
         v-for="tag in tags"
         :key="tag.slug"
         :to="`/tags/${tag.slug}`"
-        class="tag-link flex items-center gap-2 px-3 py-1.5 rounded border border-border bg-white font-mono text-sm text-main transition-colors"
+        class="tag-link flex items-center gap-2 px-3 py-1.5 rounded border border-border bg-surface font-mono text-sm text-main transition-colors"
       >
         <span>{{ tag.name }}</span>
         <span class="text-xs text-sub">{{ tag.count }}</span>
@@ -30,7 +30,7 @@ usePageSeo({
 
 <style scoped>
 .tag-link:hover {
-  border-color: theme('colors.accent');
-  color: theme('colors.accent');
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 </style>

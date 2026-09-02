@@ -129,7 +129,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
   display: block;
   width: 100%;
   height: 2px;
-  background-color: #000;
+  background-color: var(--color-main);
   border-radius: 2px;
   transition: all 0.3s ease-in-out;
 }
@@ -152,7 +152,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
   left: 0;
   width: 100%;
   height: calc(100vh - 64px);
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--color-overlay);
   z-index: 90;
   opacity: 0;
   visibility: hidden;
@@ -172,7 +172,7 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
   width: 80%;
   max-width: 320px;
   height: 100%;
-  background-color: #fff;
+  background-color: var(--color-surface);
   border-left: 1px solid var(--color-border);
   padding: 1.5rem 1.25rem 2rem;
   overflow-y: auto;

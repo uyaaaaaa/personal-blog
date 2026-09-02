@@ -17,15 +17,18 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 group-hover:text-accent"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <span class="text-sm">Search...</span>
           </span>
-          <span class="text-xs bg-white border border-border px-1.5 py-0.5 rounded text-sub">Cmd+K</span>
+          <span class="text-xs bg-surface border border-border px-1.5 py-0.5 rounded text-sub">Cmd+K</span>
         </button>
       </div>
 
-      <Navigation 
-        :is-open="isMenuOpen" 
-        @toggle="toggleMenu" 
-        @close="closeMenu" 
-      />
+      <div class="flex items-center gap-3 md:gap-5">
+        <ThemeToggle />
+        <Navigation
+          :is-open="isMenuOpen"
+          @toggle="toggleMenu"
+          @close="closeMenu"
+        />
+      </div>
     </div>
   </header>
 </template>
@@ -33,6 +36,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Navigation from '@/components/layout/HeaderNavigation.vue'
+import ThemeToggle from '@/components/layout/ThemeToggle.vue'
 
 const isMenuOpen = ref(false)
 
@@ -57,7 +61,7 @@ const closeMenu = () => {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: var(--color-header-bg);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--color-border);
   height: 64px;

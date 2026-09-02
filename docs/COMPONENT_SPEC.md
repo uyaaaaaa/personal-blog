@@ -8,18 +8,18 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 **実装が正**です。コンポーネントを変更した際は本書も併せて更新してください。
 
-- 最終更新: 2026-08-31
+- 最終更新: 2026-09-02
 
 ---
 
 ## 目次
 
 - [1. レイアウト](#1-レイアウト)
-  - [Header](#header) / [HeaderNavigation](#headernavigation) / [Footer](#footer)
+  - [Header](#header) / [ThemeToggle](#themetoggle) / [HeaderNavigation](#headernavigation) / [Footer](#footer)
 - [2. 記事表示](#2-記事表示)
-  - [Hero](#hero) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
+  - [Hero](#hero) / [ArticleShelf](#articleshelf) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton) / [Pagination](#pagination) / [ScrollToTopButton](#scrolltotopbutton)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
-  - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea)
+  - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea) / [ProseTable](#prosetable)
 - [4. エラー](#4-エラー)
   - [ErrorView](#errorview) / [NotFound / Server](#notfound--server) / [ArticleFallback](#articlefallback)
 - [5. 共有ロジック](#5-共有ロジック)
@@ -40,7 +40,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | :--- | :--- |
 | 配置 | `position: sticky` / `top: 0` / `z-index: 100` |
 | 高さ | `64px` 固定 |
-| 背景 | `rgba(255, 255, 255, 0.9)` + `backdrop-filter: blur(10px)` |
+| 背景 | `var(--color-header-bg)`（半透明。ライトは白 / ダークは近黒） + `backdrop-filter: blur(10px)` |
 | ボーダー | 下端に1px（ボーダー色） |
 | 内側 | `.container`（最大1200px）で左右に振り分ける |
 
@@ -50,12 +50,40 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | :--- | :--- |
 | **ロゴ** | 左寄せ。`u/` モノグラムのインラインSVG（26px / 角丸タイル版）と `Tech Blog` のテキストを `0.5rem` の間隔で横並びにする。テキストは等幅フォント / `700` / `1.25rem` / 字間 `-0.5px`。クリックで `/` へ遷移し、モバイルメニューが開いていれば閉じる。`z-index: 102` でドロワーより前面に置く。マークの仕様は [ICON_GUIDELINE.md](./ICON_GUIDELINE.md) を参照。 |
 | **検索ボックス** | 中央。`md` 以上でのみ表示（`hidden md:flex`）。最大幅 `28rem`。虫眼鏡アイコン + `Search...` を左、`Cmd+K` バッジを右に配置。ホバーで枠線とアイコンがアクセント色になる。**現状はUIのみで検索機能は未実装**（[#13](https://github.com/uyaaaaaa/personal-blog/issues/13) / [#15](https://github.com/uyaaaaaa/personal-blog/issues/15)）。 |
+| **テーマトグル** | 右寄せ。ナビゲーションの左に横並び（間隔はモバイル `0.75rem` / `md` 以上 `1.25rem`）。`ThemeToggle` に委譲する。 |
 | **ナビゲーション** | 右寄せ。`HeaderNavigation` に委譲する。 |
 
 **状態**
 
 - `isMenuOpen`: モバイルメニューの開閉状態を保持する。
 - メニューを開いている間は `document.body.style.overflow = 'hidden'` で背後のスクロールを固定し、閉じる際に必ず解除する。
+
+---
+
+### ThemeToggle
+
+`app/components/layout/ThemeToggle.vue`
+
+ライト / ダークテーマを切り替える2状態トグル。全ビューポートでヘッダーに表示する。
+
+**表示要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| 形状 | `32×32px` のアイコンボタン。`aria-label="Toggle theme"`。 |
+| アイコン | `20px` のストロークアイコン。クリックで切り替わる先を示す。ライト表示中は月、ダーク表示中は太陽。 |
+| 色 | サブテキスト色。ホバーでアクセント色。 |
+
+**インタラクション**
+
+- クリックで `colorMode.preference` をライト ⇄ ダークに切り替える。
+- アイコンの出し分けは `dark:hidden` / `hidden dark:block` の CSS だけで行う。SSR 時にどちらのテーマかをサーバーが知れないため、JS での出し分けは hydration mismatch になる。
+
+**テーマ管理の仕様**（`@nuxtjs/color-mode` / `classSuffix: ''`）
+
+- 初回訪問時は `prefers-color-scheme` に従う。明示的に選択すると localStorage（`nuxt-color-mode`）に永続化され、リロード後も保持される。
+- インラインスクリプトが描画前に `<html>` へ `.dark` / `.light` クラスを付けるため、リロード時に FOUC は起きない。
+- `theme-color` メタは `app/app.vue` がテーマに追従させる（値は `theme/tokens.ts` から参照）。
 
 ---
 
@@ -88,8 +116,8 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | 項目 | 要件 |
 | :--- | :--- |
 | **ハンバーガーボタン** | 3本線（`20 × 15px` / 線幅2px）。開くと上下の線が回転して×印になり、中央の線が消える（`300ms`）。`z-index: 102`。 |
-| **オーバーレイ** | ヘッダー直下（`top: 64px`）から画面下端まで。`rgba(0, 0, 0, 0.5)`。タップで閉じる。`opacity` と `visibility` を `300ms` で遷移させる。`overflow: hidden` で画面外に退避したドロワーを切り取る（**外すとページ全体が横スクロールする**）。 |
-| **ドロワー** | **右端からスライドイン**（`translateX(100%)` → `0`）。幅 `80%` / 最大 `320px`。背景白、左端に1pxボーダー。内容が多い場合は縦スクロールする。 |
+| **オーバーレイ** | ヘッダー直下（`top: 64px`）から画面下端まで。`var(--color-overlay)`。タップで閉じる。`opacity` と `visibility` を `300ms` で遷移させる。`overflow: hidden` で画面外に退避したドロワーを切り取る（**外すとページ全体が横スクロールする**）。 |
+| **ドロワー** | **右端からスライドイン**（`translateX(100%)` → `0`）。幅 `80%` / 最大 `320px`。背景はサーフェス色、左端に1pxボーダー。内容が多い場合は縦スクロールする。 |
 
 **ドロワーの中身**
 
@@ -133,7 +161,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 | 項目 | 要件 |
 | :--- | :--- |
-| 枠 | 白背景 / 1pxボーダー / カード角丸(`10px`) / `overflow: hidden` |
+| 枠 | サーフェス色背景 / 1pxボーダー / カード角丸(`10px`) / `overflow: hidden` |
 | レイアウト | SPは縦積み、`lg` 以上で左右2分割（サムネイル / コンテンツ） |
 | サムネイル | 高さ SP `10rem` / lg以上は `min-height: 230px` で追従。背景はサブサーフェス色。 |
 | サムネイルの中身 | `image` があれば `object-cover` の画像、なければ**絵文字を大きく表示**（`text-7xl`〜`8xl`、既定 `📝`） |
@@ -144,7 +172,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 1. `PICKUP` ラベル（アクセント色 / 等幅 / 太字 / 字間広め）+ 先頭タグ1件（アクセント色の枠線チップ）+ 日付（サブテキスト色 / 等幅）
 2. タイトル（`h2` / SP `1.25rem`・lg `1.875rem` / 太字）
 3. 説明文（サブテキスト色 / `0.875rem` / SP 2行・lg 3行でクランプ）
-4. `Read Article` + 右矢印アイコン（アクセント色 / 太字）
+4. `more` + 細い右矢印（等幅 / `0.75rem` / 字間広め / サブテキスト色）。テキストのみで、背景も枠線も持たない
 
 **インタラクション**
 
@@ -153,7 +181,46 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - 影が `shadow-md` に変化（`300ms`）
 - 画像は `scale-105`（`500ms`）/ 絵文字は `scale-110`（`300ms`）
 - タイトルがアクセント色に変化
-- `Read Article` の行が右に `translate-x-2` 移動（`200ms`）
+- `more` がメインテキスト色に変化し、矢印が右に `translate-x-1` 移動（`200ms`）
+
+---
+
+### ArticleShelf
+
+`app/components/article/ArticleShelf.vue`
+
+TOPページで、1カテゴリ分の記事を横並びに見せる棚。見出し・件数・`View All` 導線と、カードの列で構成する。
+
+**Props**
+
+| 名前 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `title` | `string` | 棚の見出し（カテゴリの表示名） |
+| `articles` | `Array<{ path, title, date, emoji?, tags? }>` | 並べる記事。上限の適用は呼び出し側 |
+| `total` | `number` | そのカテゴリの公開記事の総数。見出し横に添える |
+| `viewAllPath` | `string` | `View All` の遷移先 |
+
+**表示要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| 見出し | `h2` / 等幅 / 太字 / `1.5rem`。右に総数（サブテキスト色 / `0.875rem`）。見出し自体が `viewAllPath` へのリンクで、ホバーでアクセント色になる |
+| `View All` | 見出しの右端。アクセント色・太字。ホバーで矢印が `translate-x-2`。**棚に出ていない記事が無いとき（`total <= articles.length`）は出さない** |
+| **〜1023px** | 横スクロールの列。カード幅 `264px` 固定、ギャップ `1rem`。左右 `-1rem` のネガティブマージンで画面端まで抜き、内側に `1rem` のパディングを戻す |
+| **1024px〜** | 4カラムのグリッド（ギャップ `1.5rem`）に切り替え、横スクロールを解除。5件目以降は `lg:hidden` で落とす |
+
+**スクロールの挙動（〜1023px）**
+
+- `scroll-snap-type: x mandatory` + カードの `snap-start` でカード単位にスナップする。
+- スナップ位置は**パディングボックス基準**で決まるため、`scroll-padding-left` を左パディングと同じ `1rem` に合わせる。これが無いと、初期表示でコンテナのパディングが無視され、先頭カードだけが画面端に張り付いて見出しと揃わない。
+
+**取得件数との関係**
+
+呼び出し側は常に6件を渡し、1024px以上では5・6件目をCSSで落とす。ビューポート幅で取得件数を変えると静的生成できないため、DOMには2枚多く残る。
+
+**カテゴリページへの導線**
+
+`View All` は棚に収まりきらない記事があるときだけ出すため、全件が棚に出ているカテゴリでは消える。導線が無くならないよう、見出し自体を同じ `viewAllPath` へのリンクにしている。
 
 ---
 
@@ -176,7 +243,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 **使用箇所**
 
-記事一覧のグリッドは本コンポーネントに集約しています。`index.vue`・`article/index.vue`・`tags/[tag].vue` はいずれも `articles` を渡すだけで、`ArticleCard` へのマッピングは本コンポーネントが行います。
+記事一覧のグリッドは本コンポーネントに集約しています。`article/index.vue`・`tags/[tag].vue`・`category/[category].vue` はいずれも `articles` を渡すだけで、`ArticleCard` へのマッピングは本コンポーネントが行います。TOPページはグリッドではなく `ArticleShelf` を使います。
 
 ---
 
@@ -200,11 +267,11 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 | 項目 | 要件 |
 | :--- | :--- |
-| 枠 | 白背景 / 1pxボーダー / カード角丸(`10px`) / パディング `1rem`（SP）・`1.25rem`（md以上） |
+| 枠 | サーフェス色背景 / 1pxボーダー / カード角丸(`10px`) / パディング `1rem`（SP）・`1.25rem`（md以上） |
 | 構造 | 縦フレックス、要素間 `0.75rem` |
 | **上段** | 左に `48px` の絵文字タイル（サブサーフェス色 / `rounded-lg` / 絵文字 `28px`）、右に日付（サブテキスト色 / 等幅 / `0.875rem`） |
 | **中段** | タイトル（`h3` / `1rem` / 太字 / 2行でクランプ）。`min-height: 2.6em` で**カードの高さを揃える** |
-| **下段** | タグチップ（`0.75rem` / アクセント色の枠線と文字 / 等幅 / 白背景 / 小角丸）。`mt-auto` で下端に固定 |
+| **下段** | タグチップ（`0.75rem` / アクセント色の枠線と文字 / 等幅 / サーフェス色背景 / 小角丸）。`mt-auto` で下端に固定 |
 
 **インタラクション**
 
@@ -213,6 +280,34 @@ props、表示要件、状態とインタラクションを、実装単位で記
 **日付の形式**
 
 `formatDate()` により `YYYY.MM.DD`（ゼロ埋め・ドット区切り）で表示する。
+
+---
+
+### 記事ヘッダー
+
+`app/pages/article/[_slug].vue`
+
+記事詳細ページのタイトル周り。下端に1pxボーダーと `2rem` の下パディングを持ち、要素間は `1rem`。
+
+**構成（上から）**
+
+1. **メタ情報**（下記）
+2. タイトル（`h1` / SP `1.875rem`・md以上 `2.25rem` / 太字 / `leading-tight`）
+3. 説明文（サブテキスト色 / `1.125rem`）。**空なら要素ごと出さない**。フロントマターの `description` は空文字を許すため、無条件に描画するとタイトルと区切り線の間に空の1行分の余白が残る
+
+**メタ情報**
+
+サブテキスト色 / 等幅フォント / `0.875rem` の縦2行。行間 `0.625rem`。
+
+| 行 | 要件 |
+| :--- | :--- |
+| **1行目** | 日付を左、カテゴリバッジ（アクセント色 / `bg-accent/10` / ピル / `0.75rem` / 大文字）を**右端**に配置する。バッジは `ml-auto` で右へ寄せ、日付が無い記事でも右端に留まる。日付・カテゴリがどちらも無ければ行ごと出さない |
+| **2行目** | タグ（アクセント色 / `#` 付き）を横並びにし、**幅が足りなければ折り返す**（`flex-wrap` / 間隔 横 `0.75rem`・縦 `0.5rem`）。タグが無ければ行ごと出さない |
+
+**1行に詰めない。** 日付・タグ・カテゴリは件数の増え方が異なるため、これらを1行に並べると
+タグの多い記事でSP幅（375px想定）を超え、**ページ全体が横スクロールする**。
+件数が可変なのはタグだけなので、タグを独立した行に出して折り返させ、
+本数によらず1行目のレイアウトが動かないようにする。
 
 ---
 
@@ -244,7 +339,7 @@ PC版サイドバーに表示する目次。
 
 - 目次が長い場合、**サイドバー全体ではなく目次自身が内部スクロール**する（`overflow-y: auto` / `overscroll-contain`）。
 - **縦だけをスクロールさせる。** `overflow-y` だけを指定すると `overflow-x` も `auto` に計算されるため、`overflow-x: hidden` を明示する。あわせて項目に `break-words` を与え、分割できない長い語（識別子・URLなど）を含む見出しも折り返す。
-- スクロールバーは幅4pxの細いもの（`#d1d5db` / 角丸 / トラックは透明）。
+- スクロールバーは幅4pxの細いもの（`var(--color-scrollbar)` / 角丸 / トラックは透明）。
 - 読み進めてアクティブ項目がスクロール領域の外に出たら、**自動で領域の中央付近へ追従スクロール**する。
 - 項目クリックで該当見出しへスムーズスクロール。**着地位置のオフセットはコンポーネント側では持たず**、記事本文の見出しに指定した `scroll-margin-top` が決める（→ [Markdownスタイル](#markdownスタイル)）。
 
@@ -267,7 +362,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | 配置 | `sticky` / `top: 74px` / `z-index: 40` |
 | バー | サブサーフェス色 / 1pxボーダー / `rounded-lg`。`目次` ラベルとシェブロンを左右に配置 |
 | sticky 到達時 | `shadow-sm` を付与 |
-| ドロップダウン | バー直下に**オーバーレイ表示**（`absolute`）。白背景 / 影 / 下側だけ角丸。最大高 `60vh` |
+| ドロップダウン | バー直下に**オーバーレイ表示**（`absolute`）。サーフェス色背景 / 影 / 下側だけ角丸。最大高 `60vh` |
 
 **インタラクション**
 
@@ -331,6 +426,76 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 左矢印アイコン（18px）+ ラベル（`0.875rem` / サブテキスト色）。
 ホバーで文字がアクセント色になり、**矢印が左に `-translate-x-1` 移動**する（`200ms`）。
 
+**使用箇所**
+
+戻り導線は本コンポーネントに統一しています。記事詳細（本文の上下）、`ArticleFallback`、`tags/[tag]`（`All tags`）、`category/[category]`（`Back to top`）。
+
+---
+
+### Pagination
+
+`app/components/common/Pagination.vue`
+
+記事一覧を10件ずつに区切るページャ。`article/index.vue`・`tags/[tag].vue`・`category/[category].vue` で使う。
+
+**Props**
+
+| 名前 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `page` | `number` | 現在のページ（1始まり） |
+| `totalPages` | `number` | 総ページ数 |
+
+**表示要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| 表示条件 | `totalPages` が1のときは何も出さない |
+| 並び | 中央寄せ、要素間 `0.5rem`。前へ（`<`）/ ページ番号 / 次へ（`>`）|
+| ボタン | 最小幅 `2.25rem` / 高さ `2.25rem` / 1pxボーダー / 小角丸 / サーフェス色背景 / 等幅 / `0.875rem` |
+| 現在のページ | ボーダーと文字がアクセント色。`aria-current="page"` を付け、リンクにしない |
+| 前後の矢印 | lucide の chevron（18px / `stroke-width: 2`）。BackButton と同じ線のアイコン |
+| 端のページ | 進めない側の矢印はリンクにせず、サブテキスト色にする |
+| ホバー | リンクのみボーダーと文字がアクセント色（`200ms`） |
+| 省略 | ページが多いときは先頭・末尾・現在の前後1ページだけを残し、間を `…` で畳む |
+
+**ページの持ち方**
+
+ページ番号はパスではなくクエリ（`?page=2`）で持ちます。1ページ目のリンクはクエリを外します。
+
+静的生成されるHTMLは常に1ページ目のため、`?page=2` に直接着地したときはハイドレーション後に2ページ目へ切り替わります。ハイドレーションのミスマッチを避けるため、`usePagination` はクエリの反映を `onMounted` まで遅らせています（初回のクライアント描画をSSRの結果と一致させるため）。この方式では2ページ目以降がプリレンダされないので、検索エンジンからは1ページ目しか見えません。
+
+ページ切り替え時は先頭までスクロールします。`prefers-reduced-motion: reduce` のときはスムーススクロールを使いません。
+
+---
+
+### ScrollToTopButton
+
+`app/components/common/ScrollToTopButton.vue`
+
+記事詳細ページの「先頭に戻る」導線。画面右下に浮かべる円形ボタン。
+
+**Props**
+
+なし。
+
+**表示要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| 配置 | `fixed` / 右下から `1.5rem` / `z-index: 30`（`TocMobile` のドロップダウンとその背景より後ろ） |
+| 形状 | `44px` 角丸円 / サーフェス色（不透明度90%） + `backdrop-blur` / 1pxボーダー / `shadow-sm` |
+| 中身 | 上向きシェブロン（`^`）アイコン（18px / サブテキスト色）**のみ**。ラベルは持たず、`aria-label` に `Back to top` を持つ |
+
+**インタラクション**
+
+| 挙動 | 要件 |
+| :--- | :--- |
+| 表示条件 | スクロール量が **`ビューポート1画面分` と `ページ全体の1/3` の大きい方**を超えたら現れる。不透明度が `0` の間は DOM から外し、フォーカスも拾わせない |
+| 濃さ | **スクロール量に連動**させ、表示開始位置から `240px`（`FADE_DISTANCE`）かけて不透明度を `0` → `1` に上げる。同じ式で戻るため、上へスクロールすると同じ距離をかけて薄れる。CSSトランジションは持たせない（スクロールに追従させるため） |
+| ホバー | ボーダーとアイコンがアクセント色になり、**シェブロンが上に `-translate-y-0.5` 移動**する（`200ms`） |
+| クリック | `scrollToTop()`（→ [5. 共有ロジック](#5-共有ロジック)）でページ先頭までスムーズスクロールし、**URLのハッシュを取り除く** |
+| ジャンプ中の挙動 | `isProgrammaticScroll` が立つため、上方向に戻る間も `TocMobile` のバーは現れない。先頭へ戻る道中も濃さがスクロールに追従するため、そのままフェードアウトする |
+
 ---
 
 ## 3. 記事本文（Markdown）
@@ -342,10 +507,11 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | 要素 | 要件 |
 | :--- | :--- |
 | **見出し (H2, H3)** | `prose` の既定に準拠。本文中の `h2`〜`h6` は**クリックで該当位置へスクロール**する。カーソルは `pointer`。 |
-| **コードブロック** | Nuxt Content のシンタックスハイライトを使用（テーマ **`github-light`**）。背景 `#F5F5F5` / 文字色 `#24292E` / 1pxボーダー。モバイルでは横スクロール。**行番号は表示しない**。 |
+| **コードブロック** | Nuxt Content のシンタックスハイライトを使用（テーマはライト **`github-light`** / ダーク **`github-dark`** のデュアル指定で、`.dark` クラスに追従）。背景 `var(--color-surface-subtle)` / 文字色 `var(--color-code-text)` / 1pxボーダー。モバイルでは横スクロール。**行番号は表示しない**。 |
 | **インラインコード** | Obsidian風。淡いサーフェス色 + 1pxボーダー + 小角丸。パディング 上下 `0.125rem` / 左右 `0.375rem`。`font-weight: 400`、文字色は周囲から継承。**バッククォート（`code::before` / `code::after`）は非表示**にする。 |
-| **リンク** | アクセントカラーで表示し、ホバーでアンダーラインを付与。見出しは Nuxt Content が `<a>` で包むため対象外とし、見出しの色を継承したままホバーでのみアクセントカラーに変化する。 |
+| **リンク** | アクセントカラーで表示し、ホバーでアンダーラインを付与。見出しは Nuxt Content が `<a>` で包むため対象外とし、見出しの色を継承したままホバーでのみアクセントカラーに変化する。`overflow-wrap: break-word` で**URLをそのまま書いたリンクを折り返す**（`<https://...>` の自動リンクはリンクテキスト自体が長いため、折り返さないとSP幅でページ全体が横スクロールする）。 |
 | **引用 (Blockquote)** | `prose` の既定に準拠。 |
+| **テーブル** | `prose` の既定に準拠。列幅が収まらない場合は**テーブル単体で横スクロール**する（→ [ProseTable](#prosetable)）。セルの折り返しは既定のままで、まず折り返し、それでも収まらない時だけスクロールが出る。 |
 
 **対応言語**
 
@@ -380,15 +546,20 @@ Obsidian の `> [!TYPE]` 記法に対応した注釈ブロック。remark プラ
 
 **タイプと配色**
 
-| 色 | RGB | タイプ |
-| :--- | :--- | :--- |
-| ブルー | `8, 109, 221` | `note` `info` `todo` |
-| シアン | `0, 191, 188` | `abstract` `tip` |
-| グリーン | `8, 185, 78` | `success` |
-| オレンジ | `236, 117, 0` | `question` `warning` |
-| レッド | `233, 49, 71` | `failure` `danger` `bug` |
-| パープル | `120, 82, 238` | `example` |
-| グレー | `158, 158, 158` | `quote` |
+Obsidian デフォルトテーマの色相をベースに、10%不透明度の背景に載るタイトル文字が両テーマで
+コントラスト比 **4.5:1 以上**になるよう、テーマごとに明度を調整した独自の値を使う。
+ライトの値はインラインの `--callout-rgb-light`、ダークは `--callout-rgb-dark` に出力し、
+`html.dark` 配下では `--callout-rgb` の参照先をダーク側へ切り替える。
+
+| 色 | ライト RGB | ダーク RGB | タイプ |
+| :--- | :--- | :--- | :--- |
+| ブルー | `7, 102, 206` | `28, 132, 247` | `note` `info` `todo` |
+| シアン | `0, 117, 115` | `0, 191, 188` | `abstract` `tip` |
+| グリーン | `5, 121, 51` | `8, 185, 78` | `success` |
+| オレンジ | `165, 82, 0` | `236, 117, 0` | `question` `warning` |
+| レッド | `202, 22, 43` | `235, 72, 92` | `failure` `danger` `bug` |
+| パープル | `111, 70, 237` | `144, 112, 241` | `example` |
+| グレー | `104, 104, 104` | `158, 158, 158` | `quote` |
 
 **エイリアス（Obsidian互換）**
 
@@ -464,18 +635,35 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 | :--- | :--- | :--- |
 | `href` | `string` | `''` |
 | `target` | `string?` | `undefined` |
+| `rel` | `string?` | `undefined` |
 
 **要件**
 
 - `href` が `http://` / `https://` / `//` で始まる場合を**外部リンク**と判定する。
-- 外部リンクには `target="_blank"` を自動付与する。
-- 外部リンクの `rel` はこのコンポーネントでは付けない。Nuxt Content が本文中の `<a>` に付ける属性が
-  フォールスルー属性としてルート要素を上書きするため、ここで指定しても捨てられる。
-  値は `nuxt.config.ts` の `rehype-external-links` の `rel`（`nofollow noopener noreferrer`）が単一情報源。
+- 外部リンクには `target="_blank"` と `rel="noopener noreferrer"` を自動付与する。
+- `rel` は**上書きせず合流させる**。Nuxt Content（rehype-external-links）が外部リンクに `rel="nofollow"` を付けるため、出力は `rel="nofollow noopener noreferrer"` になる。
+  `target` と同じく `rel` を props として宣言しているのは、**宣言しないとフォールスルー属性がテンプレートの `:rel` を上書きし、`noopener noreferrer` が消えるため**。
 - 内部リンクは `NuxtLink` によるクライアントサイド遷移にする。
 - `#` で始まる**同一ドキュメント内のハッシュリンクだけは素の `<a>`** で描画し、`NuxtLink` を通さない。
   ルーターの `pushState` ではブラウザの `:target` が更新されず、脚注のジャンプ先を強調できないため（→ [脚注](#脚注)）。
 - `target` が明示的に渡された場合はそちらを優先する。
+
+---
+
+### ProseTable
+
+`app/components/content/ProseTable.vue`
+
+Nuxt Content が本文中の `<table>` に使用するコンポーネント。既定の実装は `<table>` を直接出力するだけで、`@tailwindcss/typography` もコードブロック（`pre`）と違ってテーブルにはスクロール領域を与えない。そのため列幅の合計がビューポートを超えると**ページ全体が横にはみ出し**、右端の列が読めなくなる。これを防ぐため、`overflow-x: auto` の `div` で包む。
+
+**要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| ラッパー | `<table>` を `overflow-x: auto` の `div` で包む。はみ出しはテーブル内で閉じ、ページ全体の横スクロールは発生させない。 |
+| セルの折り返し | 既定のまま（`nowrap` にしない）。狭い画面ではまず折り返し、それでも収まらない時だけスクロールする。 |
+| 余白 | `overflow-x: auto` がBFCを作るため、`prose` がテーブルに与える上下マージンはラッパー内に保持される。ラッパー側で余白を指定しない。 |
+| 幅が足りる画面 | テーブルは `width: 100%` のままで、スクロールは発生しない。 |
 
 ---
 
@@ -499,8 +687,7 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 **表示要件**
 
 中央寄せの縦積み。最小高 `60vh` / 最大幅 `600px`。色とフォントはデザイントークン
-（`--color-main` / `--color-sub` / `--font-sans` / `--font-mono` / `--color-accent` / `--color-accent-hover`）を参照する。
-ボタンの文字色 `#FFFFFF` だけは直値（→ [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) のトークン例外）。
+（`--color-main` / `--color-sub` / `--font-sans` / `--font-mono` / `--color-accent` / `--color-accent-hover` / `--color-accent-contrast`）を参照する。
 
 | 要素 | 要件 |
 | :--- | :--- |
@@ -571,7 +758,7 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 | 要素 | 要件 |
 | :--- | :--- |
 | 幅 | 本文と同じ `max-w-3xl`(768px) に揃え、中央寄せにする。サイドバーが無いぶんコンテナ幅いっぱいに広げない |
-| カード | 破線1px（`border-dashed` / ボーダー色）+ カード角丸 `10px` + 白背景。中央寄せの縦積み |
+| カード | 破線1px（`border-dashed` / ボーダー色）+ カード角丸 `10px` + サーフェス色背景。中央寄せの縦積み |
 | 見出し | `text-xl` / `700` / メイン色。`error` は `Unable to Load Article`、`not-found` は `Article Not Found` |
 | パス表示 | `not-found` のみ。等幅フォント / `text-xs` / サブテキスト色 / 淡いサーフェス（`bg-surface-subtle`）の小角丸チップ |
 | 説明文 | `text-sm` / サブテキスト色 / `max-w-sm` |
@@ -611,7 +798,7 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 | :--- | :--- | :--- |
 | `useTocActive(links, offset)` | `app/composables/useTocActive.ts` | 現在読んでいる見出しのIDを追跡する。ビューポート上端から `offset` px を最後に通過した見出しを採用。**ページ最下部では最後の見出しを強制的にアクティブ**にする。既定 `offset` は `140`（`Toc` は `100`、`TocMobile` は `140` を渡す） |
 | `useScrollDirection(threshold)` | `app/composables/useScrollDirection.ts` | スクロール方向（`'up'` / `'down'`）を追跡する。`threshold`（既定 `8px`）未満の移動は無視してちらつきを防ぐ。iOSのラバーバンドで負値になるため `scrollY` を0でクランプする。**プログラムスクロール中は方向によらず `'down'` を返す** |
-| `useScrollTo()` | `app/composables/useScrollTo.ts` | `scrollTo(id)` は指定IDへ `scrollIntoView({ behavior: 'smooth' })` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める）。`beginProgrammaticScroll()` は**スクロールせずジャンプ中フラグだけを立てる**入口で、ブラウザ標準のフラグメント遷移（脚注）をこの仕組みに乗せるために使う |
+| `useScrollTo()` | `app/composables/useScrollTo.ts` | `scrollTo(id)` は指定IDへ `scrollIntoView({ behavior: 'smooth' })` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める）。`beginProgrammaticScroll()` は**スクロールせずジャンプ中フラグだけを立てる**入口で、ブラウザ標準のフラグメント遷移（脚注）をこの仕組みに乗せるために使う。`scrollToTop()` はページ先頭へスムーズスクロールし、`history.replaceState` で**ハッシュを取り除いたURLに戻す**（履歴を増やさないため、戻る操作は記事の1つ前へ抜ける） |
 | `isProgrammaticScroll` | `app/composables/useScrollTo.ts` | ページ内ジャンプが進行中かを表す共有 `ref`。スクロールイベントが `150ms` 止まったら終了とみなす（`scrollend` は Safari の対応が新しいためデバウンスで代用）。`useScrollDirection` と `TocMobile` が参照する |
 | `useArticleTags()` | `app/composables/useArticleTags.ts` | 公開記事のフロントマターからタグを集計し、`{ name, slug, count }` を**記事数の降順（同数なら名前順）**で返す |
 | `usePageSeo(input)` | `app/composables/usePageSeo.ts` | title / description と OGP・Twitter Card のメタタグをまとめて出力する。title は `<ページ名> \| Tech Blog`（省略時はサイト名のみ）、description は空ならサイト共通の説明文にフォールバックする。`og:image` は記事の `image`、無ければ `/ogp.png`。`og:image` と `og:url` は `runtimeConfig.public.siteUrl` を基準に絶対URL化する。`type: 'article'` のときだけ `article:published_time` / `article:tag` を出す（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |

@@ -38,7 +38,7 @@ const { data: recentArticles } = useLazyAsyncData(
 <template>
   <div class="mx-auto max-w-3xl py-8">
     <div
-      class="flex flex-col items-center gap-3 rounded-[10px] border border-dashed border-border bg-white px-6 py-10 text-center"
+      class="flex flex-col items-center gap-3 rounded-[10px] border border-dashed border-border bg-surface px-6 py-10 text-center"
       :role="variant === 'error' ? 'status' : undefined"
       :aria-busy="variant === 'error' ? String(Boolean(pending)) : undefined"
     >
@@ -53,7 +53,7 @@ const { data: recentArticles } = useLazyAsyncData(
       <button
         v-if="variant === 'error'"
         type="button"
-        class="mt-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-accent"
+        class="mt-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-contrast transition-colors duration-200 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-accent"
         :disabled="pending"
         @click="emit('retry')"
       >

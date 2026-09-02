@@ -67,7 +67,7 @@ const handleError = () => clearError({ redirect: '/' })
 
 .back-button {
   background-color: var(--color-accent);
-  color: #FFFFFF;
+  color: var(--color-accent-contrast);
   border: none;
   padding: 0.8rem 1.5rem;
   font-size: 1rem;
