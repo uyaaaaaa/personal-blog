@@ -42,10 +42,12 @@ a:hover {
   padding: 0 1rem;
 }
 
-/* NuxtLoadingIndicatorはtransitionをインラインstyleで当てるため、!importantでしか打ち消せない */
+/* NuxtLoadingIndicatorのようにインラインstyleでtransitionを当てるものを打ち消すため !important */
 @media (prefers-reduced-motion: reduce) {
-  .nuxt-loading-indicator {
-    transition: none !important;
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 </style>

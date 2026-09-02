@@ -71,7 +71,7 @@ usePageSeo({
   tags: () => page.value?.tags,
 })
 
-const { scrollTo, beginProgrammaticScroll } = useScrollTo()
+const { scrollTo } = useScrollTo()
 const articleRef = ref<HTMLElement | null>(null)
 
 const setupHeaderClickListeners = () => {

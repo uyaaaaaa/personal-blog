@@ -23,7 +23,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', updateOpacity)
 })
 
-const { scrollToTop } = useScrollTo()
+const { scrollToTop, clearHash } = useScrollTo()
 </script>
 
 <template>
@@ -33,7 +33,7 @@ const { scrollToTop } = useScrollTo()
     aria-label="Back to top"
     :style="{ opacity }"
     class="fixed bottom-6 right-6 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface/90 text-sub shadow-sm backdrop-blur transition-colors duration-200 hover:border-accent hover:text-accent group"
-    @click="scrollToTop()"
+    @click="scrollToTop(); clearHash()"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
