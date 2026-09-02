@@ -26,10 +26,6 @@ const targetAttr = computed(() => {
   return isExternal.value ? '_blank' : undefined
 })
 
-const relAttr = computed(() => {
-  return isExternal.value ? 'noopener noreferrer' : undefined
-})
-
 defineOptions({
   name: 'ProseA'
 })
@@ -46,7 +42,6 @@ defineOptions({
     v-else
     :href="href"
     :target="targetAttr"
-    :rel="relAttr"
   >
     <slot />
   </NuxtLink>

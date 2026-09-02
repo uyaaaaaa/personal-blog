@@ -468,7 +468,10 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 **要件**
 
 - `href` が `http://` / `https://` / `//` で始まる場合を**外部リンク**と判定する。
-- 外部リンクには `target="_blank"` と `rel="noopener noreferrer"` を自動付与する。
+- 外部リンクには `target="_blank"` を自動付与する。
+- 外部リンクの `rel` はこのコンポーネントでは付けない。Nuxt Content が本文中の `<a>` に付ける属性が
+  フォールスルー属性としてルート要素を上書きするため、ここで指定しても捨てられる。
+  値は `nuxt.config.ts` の `rehype-external-links` の `rel`（`nofollow noopener noreferrer`）が単一情報源。
 - 内部リンクは `NuxtLink` によるクライアントサイド遷移にする。
 - `#` で始まる**同一ドキュメント内のハッシュリンクだけは素の `<a>`** で描画し、`NuxtLink` を通さない。
   ルーターの `pushState` ではブラウザの `:target` が更新されず、脚注のジャンプ先を強調できないため（→ [脚注](#脚注)）。

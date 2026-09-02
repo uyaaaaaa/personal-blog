@@ -43,6 +43,13 @@ export default defineNuxtConfig({
             options: {},
           },
         },
+        rehypePlugins: {
+          'rehype-external-links': {
+            options: {
+              rel: ['nofollow', 'noopener', 'noreferrer'],
+            },
+          },
+        },
       },
     },
   },
