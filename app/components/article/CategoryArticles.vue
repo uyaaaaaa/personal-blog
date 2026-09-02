@@ -2,6 +2,9 @@
 import ArticleList from '~/components/ArticleList.vue'
 import Pagination from '~/components/common/Pagination.vue'
 import BackButton from '~/components/common/BackButton.vue'
+import { usePagination } from '~/composables/usePagination'
+import { usePageSeo } from '~/composables/usePageSeo'
+import { isCategory, CATEGORY_LABELS } from '~/utils/category'
 
 const route = useRoute()
 const category = String(route.params.category)

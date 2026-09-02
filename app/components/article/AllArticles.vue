@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import ArticleList from '~/components/ArticleList.vue'
 import Pagination from '~/components/common/Pagination.vue'
+import { usePagination } from '~/composables/usePagination'
+import { usePageSeo } from '~/composables/usePageSeo'
 
 const { data: articles } = await useAsyncData('article-list', () =>
   queryCollection('article')

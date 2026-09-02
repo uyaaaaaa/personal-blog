@@ -2,6 +2,9 @@
 import ArticleList from '~/components/ArticleList.vue'
 import Pagination from '~/components/common/Pagination.vue'
 import BackButton from '~/components/common/BackButton.vue'
+import { usePagination } from '~/composables/usePagination'
+import { usePageSeo } from '~/composables/usePageSeo'
+import { tagToSlug } from '~/utils/tag'
 
 const route = useRoute()
 const slug = computed(() => String(route.params.tag))
