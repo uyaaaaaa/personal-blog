@@ -65,6 +65,7 @@ export default defineNuxtConfig({
           exclude: [
             '/article/*',
             '/tags/*',
+            '/category/*',
             '/__nuxt_content/*',
             '/',
             '/_payload.json',

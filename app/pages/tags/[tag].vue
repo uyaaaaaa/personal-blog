@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import ArticleList from '~/components/ArticleList.vue'
+import Pagination from '~/components/common/Pagination.vue'
+import BackButton from '~/components/common/BackButton.vue'
 
 const route = useRoute()
 const slug = computed(() => String(route.params.tag))
@@ -26,6 +28,8 @@ if (filteredArticles.value.length === 0) {
   throw createError({ statusCode: 404, statusMessage: 'Tag not found', fatal: true })
 }
 
+const { page, totalPages, pagedItems } = usePagination(filteredArticles)
+
 usePageSeo({
   title: () => `#${tagName.value}`,
   description: () => `${tagName.value} タグが付いた記事の一覧。`,
@@ -41,10 +45,10 @@ usePageSeo({
       <p class="text-sub">{{ filteredArticles.length }} article{{ filteredArticles.length === 1 ? '' : 's' }} tagged with "{{ tagName }}".</p>
     </header>
 
-    <ArticleList :articles="filteredArticles" />
+    <ArticleList :articles="pagedItems" />
 
-    <NuxtLink to="/tags" class="inline-block text-accent font-semibold">
-      &larr; All tags
-    </NuxtLink>
+    <Pagination :page="page" :total-pages="totalPages" />
+
+    <BackButton to="/tags" label="All tags" />
   </div>
 </template>
