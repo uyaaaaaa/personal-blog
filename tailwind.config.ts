@@ -3,10 +3,12 @@ import plugin from 'tailwindcss/plugin'
 import typography from '@tailwindcss/typography'
 import { fontFamily, toCssVariables, toDarkCssVariables, toTailwindColors } from './theme/tokens'
 
-const cssVariables = plugin(({ addBase }) => {
+const baseStyles = plugin(({ addBase }) => {
   addBase({
     ':root': toCssVariables(),
     '.dark': toDarkCssVariables(),
+    // ダブルタップズームとタップ遅延を無効にする。ピンチズームは残る
+    body: { touchAction: 'manipulation' },
   })
 })
 
@@ -54,6 +56,6 @@ export default <Config>{
   },
   plugins: [
     typography,
-    cssVariables,
+    baseStyles,
   ],
 }
