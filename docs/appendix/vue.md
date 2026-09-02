@@ -4,10 +4,6 @@
 > このファイルは腐ることを前提に隔離した場所です。バージョン・ツール設定・エコシステムの現況を扱います。
 > 規約本体（[../rules/](../rules/)）には日付を書きません。本体まで賞味期限があるように読まれるためです。
 
-Vue / Nuxt を採用するプロジェクトでは、このファイルを残し `react.md` を削除してください。
-
----
-
 ## 既定のレンダリング戦略（`R-1`）
 
 ```
@@ -50,15 +46,58 @@ export default defineNuxtConfig({
 
 ## 境界の lint 設定（`A-1` / `A-5`）
 
-`react.md` と同じ構成です。`extensions` に `.vue` を含めること。
+`eslint-plugin-boundaries` と `eslint-plugin-import` の `extensions` に `.vue` を含めること。
+パターンの `src/` は、このリポジトリでは `app/` に読み替えます。
 
 ```js
-'import/no-cycle': ['error', { maxDepth: 3, ignoreExternal: true }],
+// eslint.config.js
+// プラグインのバージョン差があるため、導入時に実挙動で検証すること
+settings: {
+  'boundaries/elements': [
+    { type: 'app',     pattern: 'src/app/**' },
+    { type: 'feature', pattern: 'src/features/*', capture: ['name'] },
+    { type: 'shared',  pattern: 'src/shared/*',   capture: ['name'] },
+  ],
+},
+rules: {
+  // A-5: 依存方向
+  'boundaries/element-types': ['error', {
+    default: 'disallow',
+    rules: [
+      { from: ['app'],     allow: ['feature', 'shared'] },
+      { from: ['feature'], allow: ['shared', ['feature', { name: '${from.name}' }]] },
+      { from: ['shared'],  allow: [['shared', { name: '${from.name}' }]] },
+    ],
+    message: '依存方向違反: shared → features → app の一方向のみ。docs/rules/boundaries.md#a-5',
+  }],
+  // A-1: 公開面はディレクトリ構造
+  'boundaries/entry-point': ['error', {
+    default: 'disallow',
+    rules: [
+      { target: ['feature'], allow: '{ui,api}/**' },
+      { target: ['shared'],  allow: '**' },
+    ],
+    message: 'features/<name>/{ui,api} 以外への import は禁止。docs/rules/boundaries.md#a-1',
+  }],
+  // A-2: barrel 禁止
+  'no-restricted-syntax': ['error', {
+    selector: 'ExportAllDeclaration',
+    message: 'export * は禁止。docs/rules/boundaries.md#a-2',
+  }],
+  // A-4: 循環禁止（速度が問題なら lint から外し CI の madge のみにする）
+  'import/no-cycle': ['error', { maxDepth: 3, ignoreExternal: true }],
+}
 ```
+
+CI 側（`A-4` / `A-13`）：
 
 ```sh
 madge --circular --extensions ts,vue src
+depcruise src --config --ignore-known   # ベースライン運用
 ```
+
+`entry-point` が同一 element 内部の import をどう扱うかはバージョンによって異なります。
+導入時に、`features/<name>/model` からの相対 import が通ることを実際に確認してください。
 
 **注意**：auto-import を有効にしたまま `madge` / `dependency-cruiser` を回すと、
 **依存グラフが実態より疎に見えます。**「循環なし」の結果が、循環がないことを意味しません。

@@ -17,7 +17,7 @@ React または Vue で構築する長期プロダクトのための、フレー
 | 第一分割 | `features/<name>/` | `app/` 配下の `components` / `composables` / `utils`（型別フラット） |
 | 強制手段 | `eslint-plugin-boundaries` `eslint-plugin-compat` / Stylelint / CI | Lint 未導入。確認は `npm run build` と目視 |
 | 逸脱の記録 | [adr/](./adr/) に1件ずつ | テンプレートのみ |
-| 暗黙解決 | 制限する（`A-11` 〜 `A-13`） | Nuxt の auto-import が有効 |
+| 暗黙解決 | 制限する（`A-11` 〜 `A-13`） | Nuxt の auto-import は有効のまま。自作モジュールの明示 import はファイル単位で寄せ始めた段階で、設定（`imports.autoImport` / `components`）は未変更 |
 
 寄せる順序は [rules/README.md](./rules/README.md) の「導入順序」に従います。
 Nuxt では auto-import の制限（`A-11` 〜 `A-13`）が依存ルール強制の前提条件になるため、着手はそこからです。
