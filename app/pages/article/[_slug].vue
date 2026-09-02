@@ -5,6 +5,8 @@ import ScrollToTopButton from '~/components/common/ScrollToTopButton.vue'
 import Toc from '~/components/article/Toc.vue'
 import TocMobile from '~/components/article/TocMobile.vue'
 import ArticleFallback from '~/components/article/ArticleFallback.vue'
+import { useScrollTo } from '~/composables/useScrollTo'
+import { beginProgrammaticScroll } from '~/composables/useProgrammaticScroll'
 
 const route = useRoute()
 

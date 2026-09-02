@@ -1,3 +1,5 @@
+import { useScrollTo } from './useScrollTo'
+
 export const ARTICLES_PER_PAGE = 10
 
 export const usePagination = <T>(items: Ref<T[]>, perPage = ARTICLES_PER_PAGE) => {

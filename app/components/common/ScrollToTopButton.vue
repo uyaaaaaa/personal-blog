@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useScrollTo } from '~/composables/useScrollTo'
 
 const FADE_DISTANCE = 240
 

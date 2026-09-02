@@ -72,6 +72,10 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { useScrollTo } from '~/composables/useScrollTo'
+import { isProgrammaticScroll } from '~/composables/useProgrammaticScroll'
+import { useScrollDirection } from '~/composables/useScrollDirection'
+import { useTocActive } from '~/composables/useTocActive'
 
 const props = defineProps<{
   links: any[]
