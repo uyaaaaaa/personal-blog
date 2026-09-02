@@ -1,6 +1,6 @@
 <template>
   <div class="menu-column">
-    <NuxtLink v-if="to" :to="to" class="menu-column-head">{{ label }}</NuxtLink>
+    <NuxtLink v-if="to" :to="to" class="menu-column-head" prefetch-on="interaction">{{ label }}</NuxtLink>
     <span v-else class="menu-column-head">{{ label }}</span>
 
     <slot />
