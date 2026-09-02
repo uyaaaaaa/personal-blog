@@ -131,8 +131,8 @@ const menuItems = [
 const TOP_TAGS_LIMIT = 10
 const LATEST_ARTICLES_LIMIT = 5
 
-const isLatestOpen = ref(true)
-const isTagsOpen = ref(true)
+const isLatestOpen = ref(false)
+const isTagsOpen = ref(false)
 
 const { data: tags } = useArticleTags()
 const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
@@ -299,7 +299,7 @@ const { data: latestArticles } = useAsyncData('drawer-latest-articles', () =>
 
 .drawer-row.router-link-exact-active {
   background-color: var(--color-surface-subtle);
-  color: var(--color-accent);
+  font-weight: 600;
 }
 
 .drawer-icon {
@@ -309,9 +309,6 @@ const { data: latestArticles } = useAsyncData('drawer-latest-articles', () =>
   color: var(--color-sub);
 }
 
-.drawer-row.router-link-exact-active .drawer-icon {
-  color: var(--color-accent);
-}
 
 .drawer-row-label {
   flex: 1;
@@ -381,7 +378,7 @@ const { data: latestArticles } = useAsyncData('drawer-latest-articles', () =>
 
 .drawer-subrow.router-link-exact-active {
   background-color: var(--color-surface-subtle);
-  color: var(--color-accent);
+  font-weight: 600;
 }
 
 .drawer-subrow-title {
