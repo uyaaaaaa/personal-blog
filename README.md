@@ -88,8 +88,12 @@ category: blog
 | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) | デザインの大方針。コンセプト、デザイントークン、レイアウト原則、UX要件。 |
 | [docs/COMPONENT_SPEC.md](./docs/COMPONENT_SPEC.md) | コンポーネント定義。各コンポーネントの props、表示要件、インタラクション。 |
 | [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) | アイコン定義。`u/` モノグラムの仕様と、favicon 一式・OGP 画像の生成手順。 |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | フロントエンド設計原則。**このリポジトリには未適用**で、これから寄せていく先。 |
+| [docs/rules/](./docs/rules/) | 上記から導かれる個別の規約。同じく**未適用**で、強制する lint も未導入。 |
 
 UI を変更した際は、該当するドキュメントも併せて更新してください。
+
+`docs/ARCHITECTURE.md` と `docs/rules/` は現状を説明したものではなく、これから寄せていく先です。適用状況は各ドキュメントの冒頭に書いています。
 
 ## タスク管理
 
