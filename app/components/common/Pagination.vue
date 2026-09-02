@@ -2,6 +2,7 @@
 const props = defineProps<{
   page: number
   totalPages: number
+  basePath: string
 }>()
 
 const WINDOW_RADIUS = 1
@@ -19,14 +20,14 @@ const items = computed<(number | 'gap')[]>(() => {
   })
 })
 
-const queryFor = (target: number) => (target === 1 ? {} : { page: String(target) })
+const linkFor = (target: number) => (target === 1 ? props.basePath : `${props.basePath}/page/${target}`)
 </script>
 
 <template>
   <nav v-if="totalPages > 1" class="flex items-center justify-center gap-2" aria-label="Pagination">
     <NuxtLink
       v-if="page > 1"
-      :to="{ query: queryFor(page - 1) }"
+      :to="linkFor(page - 1)"
       class="page-item"
       aria-label="Previous page"
     >
@@ -44,7 +45,7 @@ const queryFor = (target: number) => (target === 1 ? {} : { page: String(target)
       <span v-if="item === 'gap'" class="px-1 text-sub font-mono text-sm">…</span>
       <NuxtLink
         v-else-if="item !== page"
-        :to="{ query: queryFor(item) }"
+        :to="linkFor(item)"
         class="page-item"
       >
         {{ item }}
@@ -54,7 +55,7 @@ const queryFor = (target: number) => (target === 1 ? {} : { page: String(target)
 
     <NuxtLink
       v-if="page < totalPages"
-      :to="{ query: queryFor(page + 1) }"
+      :to="linkFor(page + 1)"
       class="page-item"
       aria-label="Next page"
     >

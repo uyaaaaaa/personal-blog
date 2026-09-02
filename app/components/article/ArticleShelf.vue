@@ -3,7 +3,6 @@
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-2xl font-bold font-mono text-main">
         <NuxtLink :to="viewAllPath" class="hover:text-accent transition-colors duration-200">{{ title }}</NuxtLink>
-        <span class="ml-2 text-sm font-normal text-sub">{{ total }}</span>
       </h2>
       <NuxtLink v-if="hasMore" :to="viewAllPath" class="flex items-center mr-2 text-accent font-bold hover:translate-x-2 transition-transform duration-200 text-sm">
         View All
