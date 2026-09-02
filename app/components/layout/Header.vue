@@ -21,8 +21,8 @@
         </button>
       </div>
 
-      <div class="flex items-center gap-3 md:gap-5">
-        <ThemeToggle />
+      <div class="flex items-stretch self-stretch gap-3 md:gap-5">
+        <ThemeToggle class="self-center" />
         <Navigation
           :is-open="isMenuOpen"
           @toggle="toggleMenu"
@@ -74,6 +74,7 @@ const closeMenu = () => {
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  height: 100%;
 }
 
 .logo {

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="flex items-stretch">
     <div
       ref="exploreRef"
       class="explore hidden md:flex"
@@ -18,18 +18,15 @@
         @click="isPanelOpen = !isPanelOpen"
       >
         Explore
-        <svg class="explore-chevron" :class="{ 'is-open': isPanelOpen }" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
       </button>
 
       <HeaderMenuPanel id="header-menu-panel" :is-open="isPanelOpen">
         <HeaderMenuColumn label="Latest" to="/article">
           <ul class="menu-list">
-            <li v-for="article in latestArticles" :key="article.path">
+            <li v-for="article in latestItems" :key="article.path">
               <NuxtLink :to="article.path" class="menu-article">
                 <span class="menu-article-title">{{ article.title }}</span>
-                <time class="menu-article-date" :datetime="article.date">{{ formatDate(article.date) }}</time>
+                <time class="menu-article-date" :datetime="article.date">{{ article.dateLabel }}</time>
               </NuxtLink>
             </li>
           </ul>
@@ -48,7 +45,7 @@
       </HeaderMenuPanel>
     </div>
 
-    <div class="md:hidden">
+    <div class="md:hidden flex items-center">
       <button
         class="mobile-menu-btn"
         @click="emit('toggle')"
@@ -104,10 +101,10 @@
 
             <div id="drawer-group-latest" class="drawer-collapse" :class="{ 'is-open': isLatestOpen }">
               <ul class="drawer-sublist">
-                <li v-for="article in latestArticles" :key="article.path">
+                <li v-for="article in latestItems" :key="article.path">
                   <NuxtLink :to="article.path" class="drawer-subrow" @click="emit('close')">
                     <span class="drawer-subrow-title">{{ article.title }}</span>
-                    <time class="drawer-subrow-meta" :datetime="article.date">{{ formatDate(article.date) }}</time>
+                    <time class="drawer-subrow-meta" :datetime="article.date">{{ article.dateLabel }}</time>
                   </NuxtLink>
                 </li>
               </ul>
@@ -180,6 +177,15 @@ const { data: latestArticles } = useAsyncData('header-latest-articles', () =>
     .all(),
 )
 
+const now = ref<number | null>(null)
+
+const latestItems = computed(() =>
+  (latestArticles.value ?? []).map((article) => ({
+    ...article,
+    dateLabel: now.value === null ? formatDate(article.date) : formatRelativeDate(article.date, now.value),
+  })),
+)
+
 const isPanelOpen = ref(false)
 const exploreRef = ref<HTMLElement | null>(null)
 const triggerRef = ref<HTMLButtonElement | null>(null)
@@ -217,7 +223,10 @@ const onDocumentClick = (event: MouseEvent) => {
 const route = useRoute()
 watch(() => route.fullPath, closePanel)
 
-onMounted(() => document.addEventListener('click', onDocumentClick))
+onMounted(() => {
+  now.value = Date.now()
+  document.addEventListener('click', onDocumentClick)
+})
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', onDocumentClick)
@@ -228,13 +237,13 @@ onBeforeUnmount(() => {
 <style scoped>
 /* 表示・非表示の切り替えはTailwindの md: に統一しているため、displayはここで指定しない */
 .explore {
-  align-items: center;
+  align-items: stretch;
 }
 
 .explore-trigger {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.375rem;
   padding: 0;
   border: none;
   background: none;
@@ -251,13 +260,20 @@ onBeforeUnmount(() => {
   color: var(--color-accent);
 }
 
-.explore-chevron {
-  flex: none;
-  transition: transform 0.2s ease-in-out;
+.explore-trigger::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background-color: var(--color-accent);
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.explore-chevron.is-open {
-  transform: rotate(180deg);
+.explore-trigger[aria-expanded="true"]::after {
+  opacity: 1;
 }
 
 .menu-list {

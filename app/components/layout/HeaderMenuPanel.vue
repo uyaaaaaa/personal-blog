@@ -19,10 +19,9 @@ defineProps<{
 <style scoped>
 .menu-panel-layer {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 1px);
   left: 0;
   right: 0;
-  padding-top: 12px;
   pointer-events: none;
 }
 
@@ -38,7 +37,8 @@ defineProps<{
   padding: 1.5rem;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
@@ -48,14 +48,6 @@ defineProps<{
   transition: opacity 0.16s ease-out, transform 0.16s ease-out, visibility 0.16s;
 }
 
-.menu-panel::before {
-  content: "";
-  position: absolute;
-  top: -12px;
-  left: 0;
-  right: 0;
-  height: 12px;
-}
 
 .is-open .menu-panel {
   opacity: 1;
