@@ -1,5 +1,5 @@
 <template>
-  <section v-if="article" class="relative group cursor-pointer" @click="navigateTo(article.path)">
+  <section v-if="article" class="relative group cursor-pointer touch-manipulation" @click="navigateTo(article.path)">
     <div class="grid grid-cols-1 lg:grid-cols-2 items-center bg-surface border border-border rounded-[10px] overflow-hidden hover:shadow-md transition-all duration-300">
       <div class="relative h-40 lg:h-full lg:min-h-[230px] w-full overflow-hidden bg-surface-muted">
         <img
