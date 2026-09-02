@@ -38,8 +38,16 @@ export const useScrollTo = () => {
     history.pushState(null, '', `#${id}`)
   }
 
+  const scrollToTop = () => {
+    trackProgrammaticScroll()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    history.replaceState(null, '', location.pathname + location.search)
+  }
+
   return {
     scrollTo,
+    scrollToTop,
     beginProgrammaticScroll: trackProgrammaticScroll
   }
 }

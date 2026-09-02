@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Sidebar from '~/components/common/Sidebar.vue'
 import BackButton from '~/components/common/BackButton.vue'
+import ScrollToTopButton from '~/components/common/ScrollToTopButton.vue'
 import Toc from '~/components/article/Toc.vue'
 import TocMobile from '~/components/article/TocMobile.vue'
 import ArticleFallback from '~/components/article/ArticleFallback.vue'
@@ -163,6 +164,8 @@ watch(() => page.value, async () => {
         <Toc :links="tocLinks" />
       </template>
     </Sidebar>
+
+    <ScrollToTopButton />
   </div>
   
   <ArticleFallback
