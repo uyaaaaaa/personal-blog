@@ -112,7 +112,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | **トリガー** | `Explore` のみ（`0.95rem` / `500`）。**シェブロンは付けない。** 高さはヘッダーいっぱい（`63px`）まで伸ばし、ホバー中と展開中（`aria-expanded="true"`）はアクセント色になる。`aria-haspopup` / `aria-controls` を持つ。 |
 | **パネルとの紐付き** | 吹き出しの三角ではなく、**タブと、そのタブが開いているシート**として表現する。展開中はトリガーの真下（`bottom: -1px` / 高さ `2px`）にアクセント色のラインが出て、**ヘッダーの1pxボーダーがトリガーの幅の分だけアクセント色に変わったように見える**。そのラインの直下にパネルが密着する。 |
 | **カラム** | `Latest`（`/article` へリンク）と `Tags`（`/tags` へリンク）の2つ。それぞれ [HeaderMenuColumn](#headermenucolumn)。 |
-| **Latest** | 公開記事を新しい順に **5件**（`LATEST_ARTICLES_LIMIT = 5`）。**1行固定**で、タイトル（`0.875rem` / 溢れたら省略）を左、**相対日付**（等幅 `0.75rem` / サブテキスト色）を右に置く。 |
+| **Latest** | 公開記事を新しい順に **5件**（`LATEST_ARTICLES_LIMIT = 5`）。**1行固定**で、タイトル（`0.875rem` / 溢れたら省略）を左、日付（等幅 `0.75rem` / サブテキスト色 / 表記は `formatRelativeDate`）を右に置く。日付の枠は **`6rem` の固定幅で右揃え**にする。可変幅にすると日付の文字数でタイトルの幅が変わり、**省略記号の位置が行ごとにずれる**ため。 |
 | **Tags** | 記事数の多い順に**上位10件**（`TOP_TAGS_LIMIT = 10`）を **2列 × 5行**（`grid-auto-flow: column`）で。左列が1〜5位、右列が6〜10位。 |
 | **行のホバー** | 背景が淡いサーフェス色になる。**文字色は変えない**（ドロワーの行と揃える）。 |
 | **アクティブ状態** | 付けない。開いている間だけ存在する一時的なパネルのため。 |
@@ -159,7 +159,7 @@ Explore               （セクションラベル）
 | **子リスト** | 左端に1pxのガイド線を引き、親行のラベル位置に合わせてインデントする。 |
 | **アクティブ状態** | 現在のページに対応する行（`router-link-exact-active`）は、背景を淡いサーフェス色にして文字を `600` にする。**アクセント色は使わない**（他の行と文字色を揃え、色ではなく面と太さで示す）。ホバーも同じ背景色。 |
 
-1. **Latest** — 公開記事を新しい順に**5件**（`LATEST_ARTICLES_LIMIT = 5`）。各行はタイトル（`0.875rem` / 2行でクランプ）の下に**相対日付**（等幅フォント / `0.7rem` / サブテキスト色）。
+1. **Latest** — 公開記事を新しい順に**5件**（`LATEST_ARTICLES_LIMIT = 5`）。各行はタイトル（`0.875rem` / 2行でクランプ）の下に日付（等幅フォント / `0.7rem` / サブテキスト色 / 表記は `formatRelativeDate`）。
 2. **Tags** — 記事数の多い順に**上位10件**（`TOP_TAGS_LIMIT = 10`）。各行はタグ名（等幅フォント）を左、記事数を右に置く。枠線付きのバッジにはしない。
 3. リンクをタップしたら必ずドロワーを閉じる。
 
@@ -777,7 +777,7 @@ Nuxt Content が本文中の `<table>` に使用するコンポーネント。�
 | `useArticleTags()` | `app/composables/useArticleTags.ts` | 公開記事のフロントマターからタグを集計し、`{ name, slug, count }` を**記事数の降順（同数なら名前順）**で返す |
 | `usePageSeo(input)` | `app/composables/usePageSeo.ts` | title / description と OGP・Twitter Card のメタタグをまとめて出力する。title は `<ページ名> \| Tech Blog`（省略時はサイト名のみ）、description は空ならサイト共通の説明文にフォールバックする。`og:image` は記事の `image`、無ければ `/ogp.png`。`og:image` と `og:url` は `runtimeConfig.public.siteUrl` を基準に絶対URL化する。`type: 'article'` のときだけ `article:published_time` / `article:tag` を出す（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
 | `formatDate(date)` | `app/utils/date.ts` | 日付を `YYYY.MM.DD` 形式に整形する（`ja-JP` ロケール / ゼロ埋め / ドット区切り）。空値は空文字を返す |
-| `formatRelativeDate(date, now)` | `app/utils/date.ts` | 日付を「今日 / 昨日 / N日前 / N週間前 / Nヶ月前 / N年前」に整形する。日単位で比較するため、時刻ではなく**その日の0時同士**を突き合わせる。基準時刻を引数で受け取るのは、**静的生成でビルド時刻が焼き付くのを避ける**ため（呼び出し側が `onMounted` で `Date.now()` を渡し、それまでは `formatDate` の絶対日付を出す。パネルもドロワーも初期状態は閉じているので、切り替わりは画面に出ない） |
+| `formatRelativeDate(date, now)` | `app/utils/date.ts` | 記事の日付を **GitHub の表記に合わせて**整形する。直近30日（`RELATIVE_DATE_MAX_DAYS`）は相対表記、それより古いものは月日の絶対表記に切り替える。日単位で比較するため、時刻ではなく**その日の0時同士**を突き合わせる。`now` を引数で受け取るのは、**静的生成でビルド時刻が焼き付くのを避ける**ため（呼び出し側が `onMounted` で `Date.now()` を渡す。`null` の間は年つきの絶対表記を返す。パネルもドロワーも初期状態は閉じているので、切り替わりは画面に出ない）<br><br>`today` / `1d ago`〜`6d ago` / `1w ago`〜`4w ago` / `Feb 18`（同じ年）/ `Feb 18, 2025`（別の年）|
 | `tagToSlug(tag)` | `app/utils/tag.ts` | タグ名をURLセーフなスラグに変換する。小文字化し、英数字以外の連続を `-` に置換、前後の `-` を除去（例: `@nuxt/content` → `nuxt-content`） |
 
 **ページ内リンクの着地位置**

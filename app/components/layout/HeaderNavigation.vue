@@ -182,7 +182,7 @@ const now = ref<number | null>(null)
 const latestItems = computed(() =>
   (latestArticles.value ?? []).map((article) => ({
     ...article,
-    dateLabel: now.value === null ? formatDate(article.date) : formatRelativeDate(article.date, now.value),
+    dateLabel: formatRelativeDate(article.date, now.value),
   })),
 )
 
@@ -322,6 +322,8 @@ onBeforeUnmount(() => {
 
 .menu-article-date {
   flex: none;
+  width: 6rem;
+  text-align: right;
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--color-sub);
