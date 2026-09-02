@@ -1,5 +1,5 @@
 import { ref, onMounted, onUnmounted } from 'vue'
-import { isProgrammaticScroll } from './useScrollTo'
+import { isProgrammaticScroll } from './useProgrammaticScroll'
 
 // threshold: 方向を更新する最小スクロール量（px）。微小なスクロールによるちらつきを防ぐ
 export const useScrollDirection = (threshold = 8) => {

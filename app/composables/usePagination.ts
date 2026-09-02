@@ -1,7 +1,10 @@
+import { useScrollTo } from './useScrollTo'
+
 export const ARTICLES_PER_PAGE = 10
 
 export const usePagination = <T>(items: Ref<T[]>, perPage = ARTICLES_PER_PAGE) => {
   const route = useRoute()
+  const { scrollToTop } = useScrollTo()
   const page = ref(1)
 
   const totalPages = computed(() => Math.max(1, Math.ceil(items.value.length / perPage)))
@@ -15,11 +18,6 @@ export const usePagination = <T>(items: Ref<T[]>, perPage = ARTICLES_PER_PAGE) =
     page.value = Number.isInteger(requested) && requested >= 1
       ? Math.min(requested, totalPages.value)
       : 1
-  }
-
-  const scrollToTop = () => {
-    const reducesMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    window.scrollTo({ top: 0, behavior: reducesMotion ? 'auto' : 'smooth' })
   }
 
   onMounted(syncFromQuery)

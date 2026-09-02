@@ -5,6 +5,8 @@ import ScrollToTopButton from '~/components/common/ScrollToTopButton.vue'
 import Toc from '~/components/article/Toc.vue'
 import TocMobile from '~/components/article/TocMobile.vue'
 import ArticleFallback from '~/components/article/ArticleFallback.vue'
+import { useScrollTo } from '~/composables/useScrollTo'
+import { beginProgrammaticScroll } from '~/composables/useProgrammaticScroll'
 
 const route = useRoute()
 
@@ -71,7 +73,7 @@ usePageSeo({
   tags: () => page.value?.tags,
 })
 
-const { scrollTo, beginProgrammaticScroll } = useScrollTo()
+const { scrollTo } = useScrollTo()
 const articleRef = ref<HTMLElement | null>(null)
 
 const setupHeaderClickListeners = () => {
