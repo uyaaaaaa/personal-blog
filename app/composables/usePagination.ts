@@ -1,13 +1,17 @@
 export const ARTICLES_PER_PAGE = 9
 
+const PAGE_PARAM_PATTERN = /^[1-9]\d*$/
+
 export const usePagination = <T>(items: Ref<T[]>, perPage = ARTICLES_PER_PAGE) => {
   const route = useRoute()
 
   const totalPages = computed(() => Math.max(1, Math.ceil(items.value.length / perPage)))
 
   const page = computed(() => {
-    const requested = Number(route.params.page)
-    return Number.isInteger(requested) && requested >= 1 ? requested : 1
+    const requested = route.params.page
+    return typeof requested === 'string' && PAGE_PARAM_PATTERN.test(requested)
+      ? Number(requested)
+      : 1
   })
 
   if (route.params.page !== undefined && (page.value < 2 || page.value > totalPages.value)) {
