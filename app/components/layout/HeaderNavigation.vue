@@ -1,16 +1,51 @@
 <template>
   <div>
-    <div class="header-right hidden md:flex">
-      <nav class="nav">
-        <NuxtLink
-          v-for="item in menuItems"
-          :key="item.path"
-          :to="item.path"
-          class="nav-item"
-        >
-          {{ item.label }}
-        </NuxtLink>
-      </nav>
+    <div
+      ref="exploreRef"
+      class="explore hidden md:flex"
+      @mouseenter="openPanel"
+      @mouseleave="scheduleClosePanel"
+      @focusout="onPanelFocusout"
+      @keydown.escape="dismissPanel"
+    >
+      <button
+        ref="triggerRef"
+        type="button"
+        class="explore-trigger"
+        aria-haspopup="true"
+        aria-controls="header-menu-panel"
+        :aria-expanded="isPanelOpen"
+        @click="isPanelOpen = !isPanelOpen"
+      >
+        Explore
+        <svg class="explore-chevron" :class="{ 'is-open': isPanelOpen }" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      <HeaderMenuPanel id="header-menu-panel" :is-open="isPanelOpen">
+        <HeaderMenuColumn label="Latest" to="/article">
+          <ul class="menu-list">
+            <li v-for="article in latestArticles" :key="article.path">
+              <NuxtLink :to="article.path" class="menu-article">
+                <span class="menu-article-title">{{ article.title }}</span>
+                <time class="menu-article-date" :datetime="article.date">{{ formatDate(article.date) }}</time>
+              </NuxtLink>
+            </li>
+          </ul>
+        </HeaderMenuColumn>
+
+        <HeaderMenuColumn label="Tags" to="/tags">
+          <ul class="menu-list menu-list-split">
+            <li v-for="tag in topTags" :key="tag.slug">
+              <NuxtLink :to="`/tags/${tag.slug}`" class="menu-tag">
+                <span class="menu-tag-name">{{ tag.name }}</span>
+                <span class="menu-tag-count">{{ tag.count }}</span>
+              </NuxtLink>
+            </li>
+          </ul>
+        </HeaderMenuColumn>
+      </HeaderMenuPanel>
     </div>
 
     <div class="md:hidden">
@@ -48,7 +83,7 @@
               <span class="drawer-row-label">Home</span>
             </NuxtLink>
 
-            <p class="drawer-section-label">Browse</p>
+            <p class="drawer-section-label">Explore</p>
 
             <button
               type="button"
@@ -114,6 +149,9 @@
 </template>
 
 <script setup lang="ts">
+import HeaderMenuPanel from '@/components/layout/HeaderMenuPanel.vue'
+import HeaderMenuColumn from '@/components/layout/HeaderMenuColumn.vue'
+
 defineProps<{
   isOpen: boolean
 }>()
@@ -123,11 +161,7 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-const menuItems = [
-  { label: 'Articles', path: '/article' },
-  { label: 'Tags', path: '/tags' },
-]
-
+const PANEL_CLOSE_DELAY_MS = 150
 const TOP_TAGS_LIMIT = 10
 const LATEST_ARTICLES_LIMIT = 5
 
@@ -137,7 +171,7 @@ const isTagsOpen = ref(false)
 const { data: tags } = useArticleTags()
 const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 
-const { data: latestArticles } = useAsyncData('drawer-latest-articles', () =>
+const { data: latestArticles } = useAsyncData('header-latest-articles', () =>
   queryCollection('article')
     .where('published', '=', true)
     .order('date', 'DESC')
@@ -145,30 +179,154 @@ const { data: latestArticles } = useAsyncData('drawer-latest-articles', () =>
     .select('path', 'title', 'date')
     .all(),
 )
+
+const isPanelOpen = ref(false)
+const exploreRef = ref<HTMLElement | null>(null)
+const triggerRef = ref<HTMLButtonElement | null>(null)
+let panelCloseTimer: ReturnType<typeof setTimeout> | undefined
+
+const closePanel = () => {
+  clearTimeout(panelCloseTimer)
+  isPanelOpen.value = false
+}
+
+const openPanel = () => {
+  clearTimeout(panelCloseTimer)
+  isPanelOpen.value = true
+}
+
+const scheduleClosePanel = () => {
+  clearTimeout(panelCloseTimer)
+  panelCloseTimer = setTimeout(closePanel, PANEL_CLOSE_DELAY_MS)
+}
+
+const dismissPanel = () => {
+  if (!isPanelOpen.value) return
+  closePanel()
+  triggerRef.value?.focus()
+}
+
+const onPanelFocusout = (event: FocusEvent) => {
+  if (!exploreRef.value?.contains(event.relatedTarget as Node | null)) closePanel()
+}
+
+const onDocumentClick = (event: MouseEvent) => {
+  if (!exploreRef.value?.contains(event.target as Node)) closePanel()
+}
+
+const route = useRoute()
+watch(() => route.fullPath, closePanel)
+
+onMounted(() => document.addEventListener('click', onDocumentClick))
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocumentClick)
+  clearTimeout(panelCloseTimer)
+})
 </script>
 
 <style scoped>
 /* 表示・非表示の切り替えはTailwindの md: に統一しているため、displayはここで指定しない */
-.header-right {
+.explore {
   align-items: center;
-  gap: 2rem;
 }
 
-.nav {
+.explore-trigger {
   display: flex;
-  gap: 1.5rem;
-}
-
-.nav-item {
-  font-weight: 500;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
   font-size: 0.95rem;
+  font-weight: 500;
   color: var(--color-main);
-  text-decoration: none;
+  cursor: pointer;
   transition: color 0.2s;
 }
 
-.nav-item:hover {
+.explore-trigger:hover,
+.explore-trigger[aria-expanded="true"] {
   color: var(--color-accent);
+}
+
+.explore-chevron {
+  flex: none;
+  transition: transform 0.2s ease-in-out;
+}
+
+.explore-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu-list-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(5, auto);
+  grid-auto-flow: column;
+  gap: 0 1rem;
+}
+
+.menu-article,
+.menu-tag {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.375rem;
+  color: var(--color-main);
+  transition: background-color 0.15s;
+}
+
+.menu-article:hover,
+.menu-tag:hover {
+  background-color: var(--color-surface-subtle);
+}
+
+.menu-tag {
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.menu-article-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-article-date {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-tag-name {
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-tag-count {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-sub);
+  font-variant-numeric: tabular-nums;
 }
 
 .mobile-menu-btn {

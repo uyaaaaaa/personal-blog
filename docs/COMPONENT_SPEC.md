@@ -15,7 +15,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 ## 目次
 
 - [1. レイアウト](#1-レイアウト)
-  - [Header](#header) / [ThemeToggle](#themetoggle) / [HeaderNavigation](#headernavigation) / [Footer](#footer)
+  - [Header](#header) / [ThemeToggle](#themetoggle) / [HeaderNavigation](#headernavigation) / [HeaderMenuPanel](#headermenupanel) / [HeaderMenuColumn](#headermenucolumn) / [Footer](#footer)
 - [2. 記事表示](#2-記事表示)
   - [Hero](#hero) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
@@ -101,15 +101,29 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | `@toggle` | — | ハンバーガーボタン押下 |
 | `@close` | — | オーバーレイ・リンク押下による閉じる要求 |
 
-**メニュー項目**
-
-`Articles` (`/article`) / `Tags` (`/tags`)。**デスクトップのみ**で使う。モバイルドロワーはこの2つへの直接リンクを持たず、後述の階層ナビゲーションに置き換えている。
+一覧ページへ送るリンクは並べず、**行き先そのものを開いて見せる**。デスクトップは `Explore` のドロップダウン、モバイルはドロワーの折りたたみで、同じ `Latest` / `Tags` を見せる。表示の切り替えは Tailwind のブレークポイントで行う（デスクトップ: `hidden md:flex` / モバイル: `md:hidden`）。ヘッダー検索ボックスと同じ `md` 境界に揃える。
 
 **デスクトップ（`md` = 768px以上）**
 
-- 右寄せに横並び。`font-weight: 500` / `0.95rem` / 項目間 `1.5rem`。
-- ホバーでアクセントカラーに変化する。
-- 表示の切り替えは Tailwind のブレークポイントで行う（デスクトップ: `hidden md:flex` / モバイル: `md:hidden`）。ヘッダー検索ボックスと同じ `md` 境界に揃える。
+ヘッダーに出るのは `Explore` **1項目のみ**。中身は [HeaderMenuPanel](#headermenupanel) に差し込む。
+
+| 項目 | 要件 |
+| :--- | :--- |
+| **トリガー** | `Explore` + 下向きシェブロン（14px）。`0.95rem` / `500`。ホバー中と展開中（`aria-expanded="true"`）はアクセント色になり、シェブロンが `180°` 回転する。`aria-haspopup` / `aria-controls` を持つ。 |
+| **カラム** | `Latest`（`/article` へリンク）と `Tags`（`/tags` へリンク）の2つ。それぞれ [HeaderMenuColumn](#headermenucolumn)。 |
+| **Latest** | 公開記事を新しい順に **5件**（`LATEST_ARTICLES_LIMIT = 5`）。**1行固定**で、タイトル（`0.875rem` / 溢れたら省略）を左、日付（等幅 `0.75rem` / サブテキスト色 / `tabular-nums`）を右に置く。 |
+| **Tags** | 記事数の多い順に**上位10件**（`TOP_TAGS_LIMIT = 10`）を **2列 × 5行**（`grid-auto-flow: column`）で。左列が1〜5位、右列が6〜10位。 |
+| **行のホバー** | 背景が淡いサーフェス色になる。**文字色は変えない**（ドロワーの行と揃える）。 |
+| **アクティブ状態** | 付けない。開いている間だけ存在する一時的なパネルのため。 |
+
+**開閉**
+
+| 経路 | 挙動 |
+| :--- | :--- |
+| ポインタ | トリガーとパネルを含む `.explore` の `mouseenter` で開き、`mouseleave` から **150ms** 後に閉じる。パネルはトリガーの子孫なので、絶対配置でもこの判定に含まれる。 |
+| クリック | トリガーでトグル。`.explore` の外側のクリックで閉じる（ホバーできない環境向け）。 |
+| キーボード | Enter / Space でトグル。Tab でパネル内のリンクに入れる。フォーカスが `.explore` の外へ出たら閉じる。`Esc` で閉じてトリガーにフォーカスを戻す。 |
+| ページ遷移 | `route.fullPath` の変化で閉じる。 |
 
 **モバイル（`md` 未満 = 767px以下）**
 
@@ -128,7 +142,7 @@ Cloudflare ダッシュボードのサイドナビと同じ、`親行 + 折り�
 ```
                   ×   （ヘッダーと同じ64px / 閉じるボタン）
 🏠 Home
-Browse                （セクションラベル）
+Explore               （セクションラベル）
 🕐 Latest         ›   （折りたたみ / 初期状態は閉）
     │ 記事タイトル
     │ 2026.09.02
@@ -139,7 +153,7 @@ Browse                （セクションラベル）
 | 要素 | 要件 |
 | :--- | :--- |
 | **親行** | アイコン（18px / サブテキスト色）+ ラベル（`0.95rem` / `500`）の横並び。高さは `0.625rem` の上下パディング、角丸 `0.5rem`。リンク（`Home`）とトグルボタン（`Latest` / `Tags`）が同じ見た目を共有する。 |
-| **セクションラベル** | `Browse`。等幅フォント / `0.75rem` / 字間広め / サブテキスト色。区切りボーダーは引かない。 |
+| **セクションラベル** | `Explore`。デスクトップのトリガーと同じ語にする。等幅フォント / `0.75rem` / 字間広め / サブテキスト色。区切りボーダーは引かない。 |
 | **折りたたみ** | **初期状態はすべて閉**。右端のシェブロンが閉で `-90°`、開で `0°`（`200ms`）。開閉は `grid-template-rows: 0fr → 1fr` の遷移（`250ms`）で行い、閉じている間は `visibility: hidden` で子リンクをフォーカス対象から外す。`aria-expanded` / `aria-controls` を持たせる。 |
 | **子リスト** | 左端に1pxのガイド線を引き、親行のラベル位置に合わせてインデントする。 |
 | **アクティブ状態** | 現在のページに対応する行（`router-link-exact-active`）は、背景を淡いサーフェス色にして文字を `600` にする。**アクセント色は使わない**（他の行と文字色を揃え、色ではなく面と太さで示す）。ホバーも同じ背景色。 |
@@ -147,6 +161,55 @@ Browse                （セクションラベル）
 1. **Latest** — 公開記事を新しい順に**5件**（`LATEST_ARTICLES_LIMIT = 5`）。各行はタイトル（`0.875rem` / 2行でクランプ）の下に日付（等幅フォント / `0.7rem` / サブテキスト色）。
 2. **Tags** — 記事数の多い順に**上位10件**（`TOP_TAGS_LIMIT = 10`）。各行はタグ名（等幅フォント）を左、記事数を右に置く。枠線付きのバッジにはしない。
 3. リンクをタップしたら必ずドロワーを閉じる。
+
+---
+
+### HeaderMenuPanel
+
+`app/components/layout/HeaderMenuPanel.vue`
+
+デスクトップのドロップダウンの**器**。位置・枠・開閉の遷移・カラムの均等割りだけを持ち、中身が何かは知らない。
+
+**Props / Slots**
+
+| 名前 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `isOpen` | `boolean` | 開閉状態（`HeaderNavigation` が保持） |
+| default slot | — | カラム（`HeaderMenuColumn`）を並べる |
+
+`inheritAttrs: false` で、渡された属性（`id` など）はレイヤーではなくパネル本体に付ける。
+
+**表示要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| **位置の基準** | **ヘッダー要素**。ヘッダー直下に `position: absolute` / `top: 100%` のレイヤーを敷き、その中でサイト共通の `.container`（最大1200px / 左右 `1rem`）の右端に寄せる。トリガーの位置・個数・幅から独立するため、**ヘッダーに要素が増えてもパネルは動かない**。 |
+| **ヘッダーとの間隔** | レイヤーの `padding-top` で `12px`。同じ高さの `::before` をパネルに持たせ、ホバーが途切れないように橋渡しする。 |
+| **パネル** | 幅 `960px`（`max-width: 100%`）。内側 `1.5rem`、角丸 `10px`、1pxボーダー、`shadow-lg`。背景はサーフェス色。 |
+| **カラム分割** | `grid-auto-flow: column` + `grid-auto-columns: minmax(0, 1fr)` で、**カラム数を問わず均等割り**。カラム数を props や CSS 変数で渡す必要はない。 |
+| **遷移** | `opacity` と `translateY(-4px)` を `160ms`。閉じている間は `visibility: hidden`、レイヤーは `pointer-events: none` で、リンクをフォーカスもクリックもできないようにする。`prefers-reduced-motion: reduce` では遷移しない。 |
+
+---
+
+### HeaderMenuColumn
+
+`app/components/layout/HeaderMenuColumn.vue`
+
+`HeaderMenuPanel` に差し込むカラム1つ。見出しと中身のスロットだけを持ち、**行の見た目は差し込む側の責務**とする。
+
+**Props / Slots**
+
+| 名前 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `label` | `string` | カラム見出し（大文字に変換して表示） |
+| `to` | `string?` | 指定すると見出しが一覧ページへのリンクになり、末尾に `→` が付く |
+| default slot | — | カラムの中身 |
+
+**表示要件**
+
+- 見出しは等幅フォント / `0.75rem` / `500` / 字間 `0.1em` / 大文字 / サブテキスト色。`to` があればホバーでアクセント色になり、`→` が右に `3px` 動く。
+- 左右のパディングは `1.5rem`。ただし両端のカラムは外側のパディングを落とす。
+- 2つ目以降のカラムは左端に1pxのボーダーを引く（`.menu-column + .menu-column`）。カラム数が増えても同じ規則で区切られる。
 
 ---
 
