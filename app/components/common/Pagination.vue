@@ -30,9 +30,15 @@ const queryFor = (target: number) => (target === 1 ? {} : { page: String(target)
       class="page-item"
       aria-label="Previous page"
     >
-      &larr;
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
     </NuxtLink>
-    <span v-else class="page-item page-item-disabled" aria-hidden="true">&larr;</span>
+    <span v-else class="page-item page-item-disabled" aria-hidden="true">
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+    </span>
 
     <template v-for="(item, index) in items" :key="`${item}-${index}`">
       <span v-if="item === 'gap'" class="px-1 text-sub font-mono text-sm">…</span>
@@ -52,9 +58,15 @@ const queryFor = (target: number) => (target === 1 ? {} : { page: String(target)
       class="page-item"
       aria-label="Next page"
     >
-      &rarr;
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18l6-6-6-6" />
+      </svg>
     </NuxtLink>
-    <span v-else class="page-item page-item-disabled" aria-hidden="true">&rarr;</span>
+    <span v-else class="page-item page-item-disabled" aria-hidden="true">
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18l6-6-6-6" />
+      </svg>
+    </span>
   </nav>
 </template>
 
@@ -87,5 +99,10 @@ a.page-item:hover {
 
 .page-item-disabled {
   color: var(--color-sub);
+}
+
+.chevron {
+  width: 18px;
+  height: 18px;
 }
 </style>
