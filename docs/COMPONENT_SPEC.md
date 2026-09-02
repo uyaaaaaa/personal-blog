@@ -436,7 +436,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 
 `app/components/common/Pagination.vue`
 
-記事一覧を10件ずつに区切るページャ。`AllArticles.vue`・`TagArticles.vue`・`CategoryArticles.vue` で使う。
+記事一覧を9件ずつに区切るページャ。`AllArticles.vue`・`TagArticles.vue`・`CategoryArticles.vue` で使う。
 
 **Props**
 
@@ -810,7 +810,7 @@ Nuxt Content が本文中の `<table>` に使用するコンポーネント。�
 | `useScrollTo()` | `app/composables/useScrollTo.ts` | JSからのスクロールをまとめる。`scrollTo(id)` は指定IDへ `scrollIntoView` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める）。`scrollToTop()` はページ先頭へスクロールする。`clearHash()` は `history.replaceState` で**ハッシュを取り除いたURLに戻す**（履歴を増やさないため、戻る操作は記事の1つ前へ抜ける）。スクロールと履歴操作を別の関数に分けているのは、ハッシュを消したいのが `ScrollToTopButton` だけのため。**`prefers-reduced-motion: reduce` の判定はここに閉じている**（JSが `behavior` を明示するとCSSからは止められないため、判定できる唯一の場所） |
 | `isProgrammaticScroll` / `beginProgrammaticScroll()` | `app/composables/useProgrammaticScroll.ts` | 「いま起きているスクロールをプログラムが起こしたか」を表す共有 `ref` と、それを立てる関数。スクロールイベントが `150ms` 止まったら終了とみなす（`scrollend` は Safari の対応が新しいためデバウンスで代用）。**生産側**は `useScrollTo` の各関数と、ブラウザ標準のフラグメント遷移（脚注）を乗せるために直接呼ぶ `[_slug].vue`。**消費側**は `useScrollDirection` と `TocMobile`。「スクロールさせること」とは別の関心事なので `useScrollTo` から切り出している |
 | `useArticleTags()` | `app/composables/useArticleTags.ts` | 公開記事のフロントマターからタグを集計し、`{ name, slug, count }` を**記事数の降順（同数なら名前順）**で返す |
-| `usePagination(items, perPage)` | `app/composables/usePagination.ts` | 一覧を1ページ `ARTICLES_PER_PAGE`（既定 `10`）件に区切る。現在ページは `route.params.page` からの `computed`（無ければ1）で、状態を別に持たない。範囲外のページ番号と `/page/1` は404にする。`basePath` はページ番号を除いた一覧のパスで、`Pagination` のリンク組み立てに渡す |
+| `usePagination(items, perPage)` | `app/composables/usePagination.ts` | 一覧を1ページ `ARTICLES_PER_PAGE`（既定 `9`）件に区切る。現在ページは `route.params.page` からの `computed`（無ければ1）で、状態を別に持たない。範囲外のページ番号と `/page/1` は404にする。`basePath` はページ番号を除いた一覧のパスで、`Pagination` のリンク組み立てに渡す |
 | `usePageSeo(input)` | `app/composables/usePageSeo.ts` | title / description と OGP・Twitter Card のメタタグをまとめて出力する。title は `<ページ名> \| Tech Blog`（省略時はサイト名のみ）、description は空ならサイト共通の説明文にフォールバックする。`og:image` は記事の `image`、無ければ `/ogp.png`。`og:image` と `og:url` は `runtimeConfig.public.siteUrl` を基準に絶対URL化する。`type: 'article'` のときだけ `article:published_time` / `article:tag` を出す（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
 | `formatDate(date)` | `app/utils/date.ts` | 日付を `YYYY.MM.DD` 形式に整形する（`ja-JP` ロケール / ゼロ埋め / ドット区切り）。空値は空文字を返す |
 | `tagToSlug(tag)` | `app/utils/tag.ts` | タグ名をURLセーフなスラグに変換する。小文字化し、英数字以外の連続を `-` に置換、前後の `-` を除去（例: `@nuxt/content` → `nuxt-content`） |
