@@ -1,30 +1,30 @@
-import { useScrollTo } from './useScrollTo'
+export const ARTICLES_PER_PAGE = 9
 
-export const ARTICLES_PER_PAGE = 10
+const PAGE_PARAM_PATTERN = /^[1-9]\d*$/
 
 export const usePagination = <T>(items: Ref<T[]>, perPage = ARTICLES_PER_PAGE) => {
   const route = useRoute()
-  const { scrollToTop } = useScrollTo()
-  const page = ref(1)
 
   const totalPages = computed(() => Math.max(1, Math.ceil(items.value.length / perPage)))
+
+  const page = computed(() => {
+    const requested = route.params.page
+    return typeof requested === 'string' && PAGE_PARAM_PATTERN.test(requested)
+      ? Number(requested)
+      : 1
+  })
+
+  if (route.params.page !== undefined && (page.value < 2 || page.value > totalPages.value)) {
+    throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+  }
 
   const pagedItems = computed(() =>
     items.value.slice((page.value - 1) * perPage, page.value * perPage),
   )
 
-  const syncFromQuery = () => {
-    const requested = Number(route.query.page)
-    page.value = Number.isInteger(requested) && requested >= 1
-      ? Math.min(requested, totalPages.value)
-      : 1
-  }
+  const basePath = computed(() =>
+    route.path.replace(/\/$/, '').replace(/\/page\/\d+$/, ''),
+  )
 
-  onMounted(syncFromQuery)
-  watch(() => route.query.page, () => {
-    syncFromQuery()
-    scrollToTop()
-  })
-
-  return { page, totalPages, pagedItems }
+  return { page, totalPages, pagedItems, basePath }
 }
