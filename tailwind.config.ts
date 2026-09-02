@@ -7,8 +7,8 @@ const baseStyles = plugin(({ addBase }) => {
   addBase({
     ':root': toCssVariables(),
     '.dark': toDarkCssVariables(),
-    // iOS Safariのダブルタップズームとタップ遅延を無効にする
-    'a, button, [role="button"], summary, label': { touchAction: 'manipulation' },
+    // ダブルタップズームとタップ遅延を無効にする。ピンチズームは残る
+    body: { touchAction: 'manipulation' },
   })
 })
 
