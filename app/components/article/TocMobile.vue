@@ -71,11 +71,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useScrollTo } from '~/composables/useScrollTo'
 import { isProgrammaticScroll } from '~/composables/useProgrammaticScroll'
 import { useScrollDirection } from '~/composables/useScrollDirection'
 import { useTocActive } from '~/composables/useTocActive'
+import { useIsDesktop } from '~/composables/useIsDesktop'
+import { useScrollSubscription } from '~/composables/useScrollSubscription'
 
 const props = defineProps<{
   links: any[]
@@ -84,7 +86,8 @@ const props = defineProps<{
 const isOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 
-const { activeId } = useTocActive(computed(() => props.links), 140)
+const { isMobile } = useIsDesktop()
+const { activeId } = useTocActive(computed(() => props.links), 140, isMobile)
 
 watch(isOpen, async (open) => {
   if (!open || !activeId.value) return
@@ -122,16 +125,7 @@ const updateSticky = () => {
   isSticky.value = el.getBoundingClientRect().top - translateY <= STICKY_TOP + 1
 }
 
-onMounted(() => {
-  updateSticky()
-  window.addEventListener('scroll', updateSticky, { passive: true })
-  window.addEventListener('resize', updateSticky, { passive: true })
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', updateSticky)
-  window.removeEventListener('resize', updateSticky)
-})
+useScrollSubscription(updateSticky, isMobile)
 
 const { scrollTo } = useScrollTo()
 

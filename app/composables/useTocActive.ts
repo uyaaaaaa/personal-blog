@@ -1,4 +1,5 @@
-import { ref, computed, onMounted, onUnmounted, type Ref } from 'vue'
+import { ref, computed, type Ref } from 'vue'
+import { useScrollSubscription } from './useScrollSubscription'
 
 interface TocLink {
   id: string
@@ -6,7 +7,7 @@ interface TocLink {
   children?: TocLink[]
 }
 
-export const useTocActive = (links: Ref<TocLink[]>, offset = 140) => {
+export const useTocActive = (links: Ref<TocLink[]>, offset: number, enabled: Ref<boolean>) => {
   const activeId = ref('')
 
   const ids = computed(() => {
@@ -40,16 +41,7 @@ export const useTocActive = (links: Ref<TocLink[]>, offset = 140) => {
     activeId.value = current
   }
 
-  onMounted(() => {
-    update()
-    window.addEventListener('scroll', update, { passive: true })
-    window.addEventListener('resize', update, { passive: true })
-  })
-
-  onUnmounted(() => {
-    window.removeEventListener('scroll', update)
-    window.removeEventListener('resize', update)
-  })
+  useScrollSubscription(update, enabled)
 
   return {
     activeId

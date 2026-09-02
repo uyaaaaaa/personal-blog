@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { useScrollTo } from '~/composables/useScrollTo'
+import { useIsDesktop } from '~/composables/useIsDesktop'
+import { useScrollSubscription } from '~/composables/useScrollSubscription'
 
 const FADE_DISTANCE = 240
 
@@ -13,16 +15,9 @@ const updateOpacity = () => {
   opacity.value = Math.min(Math.max(progress, 0), 1)
 }
 
-onMounted(() => {
-  updateOpacity()
-  window.addEventListener('scroll', updateOpacity, { passive: true })
-  window.addEventListener('resize', updateOpacity, { passive: true })
-})
+const { isMobile } = useIsDesktop()
 
-onUnmounted(() => {
-  window.removeEventListener('scroll', updateOpacity)
-  window.removeEventListener('resize', updateOpacity)
-})
+useScrollSubscription(updateOpacity, isMobile)
 
 const { scrollToTop, clearHash } = useScrollTo()
 </script>

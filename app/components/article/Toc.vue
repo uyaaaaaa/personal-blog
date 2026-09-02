@@ -42,7 +42,8 @@ const props = defineProps<{
 const { scrollTo } = useScrollTo()
 
 const navRef = ref<HTMLElement | null>(null)
-const { activeId } = useTocActive(computed(() => props.links), 100)
+const { isDesktop } = useIsDesktop()
+const { activeId } = useTocActive(computed(() => props.links), 100, isDesktop)
 
 watch(activeId, async (id) => {
   if (!id) return
