@@ -17,7 +17,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - [1. レイアウト](#1-レイアウト)
   - [Header](#header) / [ThemeToggle](#themetoggle) / [HeaderNavigation](#headernavigation) / [Footer](#footer)
 - [2. 記事表示](#2-記事表示)
-  - [Hero](#hero) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
+  - [Hero](#hero) / [ArticleShelf](#articleshelf) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
   - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea) / [ProseTable](#prosetable)
 - [4. エラー](#4-エラー)
@@ -185,6 +185,41 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 ---
 
+### ArticleShelf
+
+`app/components/article/ArticleShelf.vue`
+
+TOPページで、1カテゴリ分の記事を横並びに見せる棚。見出し・件数・`View All` 導線と、カードの列で構成する。
+
+**Props**
+
+| 名前 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `title` | `string` | 棚の見出し（カテゴリの表示名） |
+| `articles` | `Array<{ path, title, date, emoji?, tags? }>` | 並べる記事。上限の適用は呼び出し側 |
+| `total` | `number` | そのカテゴリの公開記事の総数。見出し横に添える |
+| `viewAllPath` | `string` | `View All` の遷移先 |
+
+**表示要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| 見出し | `h2` / 等幅 / 太字 / `1.5rem`。右に総数（サブテキスト色 / `0.875rem`） |
+| `View All` | 見出しの右端。アクセント色・太字。ホバーで矢印が `translate-x-2` |
+| **〜1023px** | 横スクロールの列。カード幅 `264px` 固定、ギャップ `1rem`。左右 `-1rem` のネガティブマージンで画面端まで抜き、内側に `1rem` のパディングを戻す |
+| **1024px〜** | 4カラムのグリッド（ギャップ `1.5rem`）に切り替え、横スクロールを解除。5件目以降は `lg:hidden` で落とす |
+
+**スクロールの挙動（〜1023px）**
+
+- `scroll-snap-type: x mandatory` + カードの `snap-start` でカード単位にスナップする。
+- スナップ位置は**パディングボックス基準**で決まるため、`scroll-padding-left` を左パディングと同じ `1rem` に合わせる。これが無いと、初期表示でコンテナのパディングが無視され、先頭カードだけが画面端に張り付いて見出しと揃わない。
+
+**取得件数との関係**
+
+呼び出し側は常に6件を渡し、1024px以上では5・6件目をCSSで落とす。ビューポート幅で取得件数を変えると静的生成できないため、DOMには2枚多く残る。
+
+---
+
 ### ArticleList
 
 `app/components/ArticleList.vue`
@@ -204,7 +239,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 **使用箇所**
 
-記事一覧のグリッドは本コンポーネントに集約しています。`index.vue`・`article/index.vue`・`tags/[tag].vue` はいずれも `articles` を渡すだけで、`ArticleCard` へのマッピングは本コンポーネントが行います。
+記事一覧のグリッドは本コンポーネントに集約しています。`article/index.vue`・`tags/[tag].vue`・`category/[category].vue` はいずれも `articles` を渡すだけで、`ArticleCard` へのマッピングは本コンポーネントが行います。TOPページはグリッドではなく `ArticleShelf` を使います。
 
 ---
 

@@ -1,42 +1,51 @@
 <template>
   <div class="space-y-16">
-    <Hero 
-      v-if="heroArticle" 
-      :article="heroArticle" 
+    <Hero
+      v-if="heroArticle"
+      :article="heroArticle"
     />
 
-    <section>
-      <div class="flex items-center justify-between mb-8">
-        <h2 class="text-2xl font-bold font-mono text-main">Articles</h2>
-        <NuxtLink to="/article" class="flex items-center mr-2 text-accent font-bold hover:translate-x-2 transition-transform duration-200 text-sm">
-          View All
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
-        </NuxtLink>
-      </div>
-      
-      <ArticleList :articles="listArticles" />
-    </section>
+    <ArticleShelf
+      v-for="shelf in shelves"
+      :key="shelf.category"
+      :title="shelf.title"
+      :articles="shelf.articles"
+      :total="shelf.total"
+      :view-all-path="`/category/${shelf.category}`"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-const { data: articles } = await useAsyncData('home-articles', () => 
+import ArticleShelf from '~/components/article/ArticleShelf.vue'
+
+const SHELF_LIMIT = 6
+
+const { data: articles } = await useAsyncData('home-articles', () =>
   queryCollection('article')
     .where('published', '=', true)
     .order('date', 'DESC')
-    .limit(10)
-    .all()
+    .select('path', 'title', 'description', 'date', 'emoji', 'image', 'tags', 'category')
+    .all(),
 )
 
-const heroArticle = computed(() => {
-  return articles.value && articles.value.length > 0 ? articles.value[0] : null
-})
+const heroArticle = computed(() => articles.value?.[0] ?? null)
 
-const listArticles = computed(() => {
-  return articles.value && articles.value.length > 1 ? articles.value.slice(1) : []
-})
+const shelves = computed(() =>
+  CATEGORIES
+    .map((category) => {
+      const inCategory = (articles.value ?? []).filter(article => article.category === category)
+      return {
+        category,
+        title: CATEGORY_LABELS[category],
+        total: inCategory.length,
+        articles: inCategory
+          .filter(article => article.path !== heroArticle.value?.path)
+          .slice(0, SHELF_LIMIT),
+      }
+    })
+    .filter(shelf => shelf.articles.length > 0),
+)
 
 usePageSeo()
 </script>
