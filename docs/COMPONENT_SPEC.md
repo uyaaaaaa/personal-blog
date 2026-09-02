@@ -188,7 +188,7 @@ Explore               （セクションラベル）
 | **ヘッダーとの間隔** | **空けない。** ヘッダーの下端ボーダーからそのまま下がる。ホバーの経路が途切れないので、隙間を埋める仕掛けも要らない。 |
 | **パネル** | 幅 `960px`（`max-width: 100%`）。内側 `1.5rem`、1pxボーダー、`shadow-lg`、背景はサーフェス色。**上端はボーダーを持たず角丸も付けない**（ヘッダーのボーダーを共有し、線が二重にならないようにする）。下端のみ角丸 `10px`。 |
 | **カラム分割** | `grid-auto-flow: column` + `grid-auto-columns: minmax(0, 1fr)` で、**カラム数を問わず均等割り**。カラム数を props や CSS 変数で渡す必要はない。 |
-| **遷移** | `opacity` と `translateY(-4px)` を `160ms`。閉じている間は `visibility: hidden`、レイヤーは `pointer-events: none` で、リンクをフォーカスもクリックもできないようにする。`prefers-reduced-motion: reduce` では遷移しない。 |
+| **遷移** | `opacity` と `translateY(-4px)` を `160ms`。閉じている間は `visibility: hidden`、レイヤーは `pointer-events: none` で、リンクをフォーカスもクリックもできないようにする。 |
 
 ---
 
@@ -547,7 +547,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 
 静的生成されるHTMLは常に1ページ目のため、`?page=2` に直接着地したときはハイドレーション後に2ページ目へ切り替わります。ハイドレーションのミスマッチを避けるため、`usePagination` はクエリの反映を `onMounted` まで遅らせています（初回のクライアント描画をSSRの結果と一致させるため）。この方式では2ページ目以降がプリレンダされないので、検索エンジンからは1ページ目しか見えません。
 
-ページ切り替え時は `useScrollTo().scrollToTop()` で先頭までスクロールします（`prefers-reduced-motion` の考慮もそちらが持ちます）。ハッシュは触りません。
+ページ切り替え時は `useScrollTo().scrollToTop()` で先頭までスクロールします。ハッシュは触りません。
 
 ---
 
@@ -881,7 +881,7 @@ Nuxt Content が本文中の `<table>` に使用するコンポーネント。�
 | :--- | :--- | :--- |
 | `useTocActive(links, offset)` | `app/composables/useTocActive.ts` | 現在読んでいる見出しのIDを追跡する。ビューポート上端から `offset` px を最後に通過した見出しを採用。**ページ最下部では最後の見出しを強制的にアクティブ**にする。既定 `offset` は `140`（`Toc` は `100`、`TocMobile` は `140` を渡す） |
 | `useScrollDirection(threshold)` | `app/composables/useScrollDirection.ts` | スクロール方向（`'up'` / `'down'`）を追跡する。`threshold`（既定 `8px`）未満の移動は無視してちらつきを防ぐ。iOSのラバーバンドで負値になるため `scrollY` を0でクランプする。**プログラムスクロール中は方向によらず `'down'` を返す** |
-| `useScrollTo()` | `app/composables/useScrollTo.ts` | JSからのスクロールをまとめる。`scrollTo(id)` は指定IDへ `scrollIntoView` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める）。`scrollToTop()` はページ先頭へスクロールする。`clearHash()` は `history.replaceState` で**ハッシュを取り除いたURLに戻す**（履歴を増やさないため、戻る操作は記事の1つ前へ抜ける）。スクロールと履歴操作を別の関数に分けているのは、ハッシュを消したいのが `ScrollToTopButton` だけで、ページャは消してはいけないため。**`prefers-reduced-motion: reduce` の判定はここに閉じている**（JSが `behavior` を明示するとCSSからは止められないため、判定できる唯一の場所） |
+| `useScrollTo()` | `app/composables/useScrollTo.ts` | JSからのスクロールをまとめる。`scrollTo(id)` は指定IDへ `scrollIntoView` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める）。`scrollToTop()` はページ先頭へスクロールする。`clearHash()` は `history.replaceState` で**ハッシュを取り除いたURLに戻す**（履歴を増やさないため、戻る操作は記事の1つ前へ抜ける）。スクロールと履歴操作を別の関数に分けているのは、ハッシュを消したいのが `ScrollToTopButton` だけで、ページャは消してはいけないため。**`behavior: 'smooth'` は常に指定する**（`prefers-reduced-motion` は参照しない → [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) の 2-D） |
 | `isProgrammaticScroll` / `beginProgrammaticScroll()` | `app/composables/useProgrammaticScroll.ts` | 「いま起きているスクロールをプログラムが起こしたか」を表す共有 `ref` と、それを立てる関数。スクロールイベントが `150ms` 止まったら終了とみなす（`scrollend` は Safari の対応が新しいためデバウンスで代用）。**生産側**は `useScrollTo` の各関数と、ブラウザ標準のフラグメント遷移（脚注）を乗せるために直接呼ぶ `[_slug].vue`。**消費側**は `useScrollDirection` と `TocMobile`。「スクロールさせること」とは別の関心事なので `useScrollTo` から切り出している |
 | `useArticleTags()` | `app/composables/useArticleTags.ts` | 公開記事のフロントマターからタグを集計し、`{ name, slug, count }` を**記事数の降順（同数なら名前順）**で返す |
 | `usePageSeo(input)` | `app/composables/usePageSeo.ts` | title / description と OGP・Twitter Card のメタタグをまとめて出力する。title は `<ページ名> \| Tech Blog`（省略時はサイト名のみ）、description は空ならサイト共通の説明文にフォールバックする。`og:image` は記事の `image`、無ければ `/ogp.png`。`og:image` と `og:url` は `runtimeConfig.public.siteUrl` を基準に絶対URL化する。`type: 'article'` のときだけ `article:published_time` / `article:tag` を出す（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |

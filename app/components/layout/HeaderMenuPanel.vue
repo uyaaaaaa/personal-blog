@@ -55,10 +55,4 @@ defineProps<{
   transform: translateY(0);
   pointer-events: auto;
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .menu-panel {
-    transition: none;
-  }
-}
 </style>
