@@ -15,7 +15,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 ## 目次
 
 - [1. レイアウト](#1-レイアウト)
-  - [Header](#header) / [ThemeToggle](#themetoggle) / [HeaderNavigation](#headernavigation) / [Footer](#footer)
+  - [Header](#header) / [ThemeToggle](#themetoggle) / [HeaderNavigation](#headernavigation) / [HeaderMenuPanel](#headermenupanel) / [HeaderMenuColumn](#headermenucolumn) / [Footer](#footer)
 - [2. 記事表示](#2-記事表示)
   - [Hero](#hero) / [ArticleShelf](#articleshelf) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton) / [Pagination](#pagination) / [ScrollToTopButton](#scrolltotopbutton)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
@@ -48,9 +48,9 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 | 要素 | 要件 |
 | :--- | :--- |
-| **ロゴ** | 左寄せ。`u/` モノグラムのインラインSVG（26px / 角丸タイル版）と `Tech Blog` のテキストを `0.5rem` の間隔で横並びにする。テキストは等幅フォント / `700` / `1.25rem` / 字間 `-0.5px`。クリックで `/` へ遷移し、モバイルメニューが開いていれば閉じる。`z-index: 102` でドロワーより前面に置く。マークの仕様は [ICON_GUIDELINE.md](./ICON_GUIDELINE.md) を参照。 |
+| **ロゴ** | 左寄せ。`u/` モノグラムのインラインSVG（26px / 角丸タイル版）と `Tech Blog` のテキストを `0.5rem` の間隔で横並びにする。テキストは等幅フォント / `700` / `1.25rem` / 字間 `-0.5px`。クリックで `/` へ遷移し、モバイルメニューが開いていれば閉じる。マークの仕様は [ICON_GUIDELINE.md](./ICON_GUIDELINE.md) を参照。 |
 | **検索ボックス** | 中央。`md` 以上でのみ表示（`hidden md:flex`）。最大幅 `28rem`。虫眼鏡アイコン + `Search...` を左、`Cmd+K` バッジを右に配置。ホバーで枠線とアイコンがアクセント色になる。**現状はUIのみで検索機能は未実装**（[#13](https://github.com/uyaaaaaa/personal-blog/issues/13) / [#15](https://github.com/uyaaaaaa/personal-blog/issues/15)）。 |
-| **テーマトグル** | 右寄せ。ナビゲーションの左に横並び（間隔はモバイル `0.75rem` / `md` 以上 `1.25rem`）。`ThemeToggle` に委譲する。 |
+| **テーマトグル** | 右寄せ。ナビゲーションの左に横並び（間隔はモバイル `0.75rem` / `md` 以上 `1.25rem`）。`ThemeToggle` に委譲する。右端のグループは `Explore` がヘッダーの高さいっぱいに伸びられるよう `self-stretch` / `items-stretch` にするため、トグル自身は `self-center` で中央に戻す。 |
 | **ナビゲーション** | 右寄せ。`HeaderNavigation` に委譲する。 |
 
 **状態**
@@ -101,33 +101,116 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | `@toggle` | — | ハンバーガーボタン押下 |
 | `@close` | — | オーバーレイ・リンク押下による閉じる要求 |
 
-**メニュー項目**
-
-`Articles` (`/article`) / `Tags` (`/tags`)。
+一覧ページへ送るリンクは並べず、**行き先そのものを開いて見せる**。デスクトップは `Explore` のドロップダウン、モバイルはドロワーの折りたたみで、同じ `Latest` / `Tags` を見せる。表示の切り替えは Tailwind のブレークポイントで行う（デスクトップ: `hidden md:flex` / モバイル: `md:hidden`）。ヘッダー検索ボックスと同じ `md` 境界に揃える。
 
 **デスクトップ（`md` = 768px以上）**
 
-- 右寄せに横並び。`font-weight: 500` / `0.95rem` / 項目間 `1.5rem`。
-- ホバーでアクセントカラーに変化する。
-- 表示の切り替えは Tailwind のブレークポイントで行う（デスクトップ: `hidden md:flex` / モバイル: `md:hidden`）。ヘッダー検索ボックスと同じ `md` 境界に揃える。
+ヘッダーに出るのは `Explore` **1項目のみ**。中身は [HeaderMenuPanel](#headermenupanel) に差し込む。
+
+| 項目 | 要件 |
+| :--- | :--- |
+| **トリガー** | `Explore` のみ（`0.95rem` / `500`）。**シェブロンは付けない。** 高さはヘッダーいっぱい（`63px`）まで伸ばし、ホバー中と展開中（`aria-expanded="true"`）はアクセント色になる。`aria-haspopup` / `aria-controls` を持つ。 |
+| **パネルとの紐付き** | 吹き出しの三角ではなく、**タブと、そのタブが開いているシート**として表現する。展開中はトリガーの真下（`bottom: -1px` / 高さ `2px`）にアクセント色のラインが出て、**ヘッダーの1pxボーダーがトリガーの幅の分だけアクセント色に変わったように見える**。そのラインの直下にパネルが密着する。 |
+| **カラム** | `Latest`（`/article` へリンク）と `Tags`（`/tags` へリンク）の2つ。それぞれ [HeaderMenuColumn](#headermenucolumn)。 |
+| **Latest** | 公開記事を新しい順に **5件**（`LATEST_ARTICLES_LIMIT = 5`）。**1行固定**で、タイトル（`0.875rem` / 溢れたら省略）を左、日付（等幅 `0.75rem` / サブテキスト色 / 表記は `formatRelativeDate`）を右に置く。日付の枠は **`6rem` の固定幅で右揃え**にする。可変幅にすると日付の文字数でタイトルの幅が変わり、**省略記号の位置が行ごとにずれる**ため。 |
+| **Tags** | 記事数の多い順に**上位10件**（`TOP_TAGS_LIMIT = 10`）を **2列 × 5行**（`grid-auto-flow: column`）で。左列が1〜5位、右列が6〜10位。 |
+| **行のホバー** | 背景が淡いサーフェス色になる。**文字色は変えない**（ドロワーの行と揃える）。 |
+| **アクティブ状態** | 付けない。開いている間だけ存在する一時的なパネルのため。 |
+
+**開閉**
+
+| 経路 | 挙動 |
+| :--- | :--- |
+| ポインタ | トリガーとパネルを含む `.explore` の `mouseenter` で開き、`mouseleave` から **150ms** 後に閉じる。パネルはトリガーの子孫なので、絶対配置でもこの判定に含まれる。 |
+| クリック | トリガーでトグル。`.explore` の外側のクリックで閉じる（ホバーできない環境向け）。 |
+| キーボード | Enter / Space でトグル。Tab でパネル内のリンクに入れる。フォーカスが `.explore` の外へ出たら閉じる。`Esc` で閉じてトリガーにフォーカスを戻す。 |
+| ページ遷移 | `route.fullPath` の変化で閉じる。 |
 
 **モバイル（`md` 未満 = 767px以下）**
 
 | 項目 | 要件 |
 | :--- | :--- |
-| **ハンバーガーボタン** | 3本線（`20 × 15px` / 線幅2px）。開くと上下の線が回転して×印になり、中央の線が消える（`300ms`）。`z-index: 102`。 |
-| **オーバーレイ** | ヘッダー直下（`top: 64px`）から画面下端まで。`var(--color-overlay)`。タップで閉じる。`opacity` と `visibility` を `300ms` で遷移させる。`overflow: hidden` で画面外に退避したドロワーを切り取る（**外すとページ全体が横スクロールする**）。 |
-| **ドロワー** | **右端からスライドイン**（`translateX(100%)` → `0`）。幅 `80%` / 最大 `320px`。背景はサーフェス色、左端に1pxボーダー。内容が多い場合は縦スクロールする。 |
+| **ハンバーガーボタン** | 3本線（`20 × 15px` / 線幅2px）。開く操作のみを担い、閉じるのはドロワー側の×ボタンとオーバーレイのタップで行う（開いている間はドロワーに覆われて見えないため、×印に変形するアニメーションは持たない）。 |
+| **オーバーレイ** | **画面全体**（`top: 0` / `100dvh`）。`z-index: 110` でヘッダー（`100`）の上に被せる。ハンバーガーメニューは「ヘッダーごと覆い被さる」ものとして扱い、ヘッダーもスクリムで暗くする。`var(--color-overlay)`。タップで閉じる。`opacity` と `visibility` を `300ms` で遷移させる。`overflow: hidden` で画面外に退避したドロワーを切り取る（**外すとページ全体が横スクロールする**）。 |
+| **ドロワー** | **右端からスライドイン**（`translateX(100%)` → `0`）。幅 `80%` / 最大 `320px`。画面上端から下端まで。背景はサーフェス色、左端に1pxボーダー。内容が多い場合は縦スクロールする。 |
+| **ドロワーの見出し行** | 高さ `64px`（ヘッダーと同じ）。下端の1pxボーダーがヘッダーのボーダーと1本に繋がる。スクロールしても上端に残る（`position: sticky`）。右端に×の閉じるボタン（`36×36px` / アイコン `20px`）を置き、**アイコンの右端をハンバーガーボタンと同じ位置**（画面右端から `1rem`）に揃える。 |
 
 **ドロワーの中身**
 
-1. **ナビゲーションリンク** — `1.25rem` / `700` の縦並び。下端に区切りボーダー。
-2. **Tags セクション** — 見出し `Tags`（`0.8rem` / 大文字 / 字間広め / サブテキスト色）。
-   - 記事数の多い順に**上位10件**を表示（`TOP_TAGS_LIMIT = 10`）。
-   - 各行はタグ名（等幅フォント）を左、記事数バッジ（枠線付きのピル）を右に配置。
-   - ホバーで文字がアクセント色、背景が淡いサーフェス色になる。
-   - 末尾に `View all tags →` を置き `/tags` へ誘導する。
+一覧ページへ送る「入口のリンク」を並べるのではなく、**行き先そのものを階層で開いて見せる**構成を取る。
+Cloudflare ダッシュボードのサイドナビと同じ、`親行 + 折りたたみ + 子リスト` の形。
+
+```
+                  ×   （ヘッダーと同じ64px / 閉じるボタン）
+🏠 Home
+Explore               （セクションラベル）
+🕐 Latest         ›   （折りたたみ / 初期状態は閉）
+    │ 記事タイトル
+    │ 2026.09.02
+🏷 Tags           ›   （折りたたみ / 初期状態は閉）
+    │ nuxt.js        3
+```
+
+| 要素 | 要件 |
+| :--- | :--- |
+| **親行** | アイコン（18px / サブテキスト色）+ ラベル（`0.95rem` / `500`）の横並び。高さは `0.625rem` の上下パディング、角丸 `0.5rem`。リンク（`Home`）とトグルボタン（`Latest` / `Tags`）が同じ見た目を共有する。 |
+| **セクションラベル** | `Explore`。デスクトップのトリガーと同じ語にする。等幅フォント / `0.75rem` / 字間広め / サブテキスト色。区切りボーダーは引かない。 |
+| **折りたたみ** | **初期状態はすべて閉**。右端のシェブロンが閉で `-90°`、開で `0°`（`200ms`）。開閉は `grid-template-rows: 0fr → 1fr` の遷移（`250ms`）で行い、閉じている間は `visibility: hidden` で子リンクをフォーカス対象から外す。`aria-expanded` / `aria-controls` を持たせる。 |
+| **子リスト** | 左端に1pxのガイド線を引き、親行のラベル位置に合わせてインデントする。 |
+| **アクティブ状態** | 現在のページに対応する行（`router-link-exact-active`）は、背景を淡いサーフェス色にして文字を `600` にする。**アクセント色は使わない**（他の行と文字色を揃え、色ではなく面と太さで示す）。ホバーも同じ背景色。 |
+
+1. **Latest** — 公開記事を新しい順に**5件**（`LATEST_ARTICLES_LIMIT = 5`）。各行はタイトル（`0.875rem` / 2行でクランプ）の下に日付（等幅フォント / `0.7rem` / サブテキスト色 / 表記は `formatRelativeDate`）。
+2. **Tags** — 記事数の多い順に**上位10件**（`TOP_TAGS_LIMIT = 10`）。各行はタグ名（等幅フォント）を左、記事数を右に置く。枠線付きのバッジにはしない。
 3. リンクをタップしたら必ずドロワーを閉じる。
+
+---
+
+### HeaderMenuPanel
+
+`app/components/layout/HeaderMenuPanel.vue`
+
+デスクトップのドロップダウンの**器**。位置・枠・開閉の遷移・カラムの均等割りだけを持ち、中身が何かは知らない。
+
+**Props / Slots**
+
+| 名前 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `isOpen` | `boolean` | 開閉状態（`HeaderNavigation` が保持） |
+| default slot | — | カラム（`HeaderMenuColumn`）を並べる |
+
+`inheritAttrs: false` で、渡された属性（`id` など）はレイヤーではなくパネル本体に付ける。
+
+**表示要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| **位置の基準** | **ヘッダー要素**。ヘッダー直下に `position: absolute` / `top: calc(100% + 1px)`（100%はパディングボックス基準のため、1pxボーダー分を足してヘッダーの外側下端に合わせる）のレイヤーを敷き、その中でサイト共通の `.container`（最大1200px / 左右 `1rem`）の右端に寄せる。トリガーの位置・個数・幅から独立するため、**ヘッダーに要素が増えてもパネルは動かない**。 |
+| **ヘッダーとの間隔** | **空けない。** ヘッダーの下端ボーダーからそのまま下がる。ホバーの経路が途切れないので、隙間を埋める仕掛けも要らない。 |
+| **パネル** | 幅 `960px`（`max-width: 100%`）。内側 `1.5rem`、1pxボーダー、`shadow-lg`、背景はサーフェス色。**上端はボーダーを持たず角丸も付けない**（ヘッダーのボーダーを共有し、線が二重にならないようにする）。下端のみ角丸 `10px`。 |
+| **カラム分割** | `grid-auto-flow: column` + `grid-auto-columns: minmax(0, 1fr)` で、**カラム数を問わず均等割り**。カラム数を props や CSS 変数で渡す必要はない。 |
+| **遷移** | `opacity` と `translateY(-4px)` を `160ms`。閉じている間は `visibility: hidden`、レイヤーは `pointer-events: none` で、リンクをフォーカスもクリックもできないようにする。`prefers-reduced-motion: reduce` では遷移しない。 |
+
+---
+
+### HeaderMenuColumn
+
+`app/components/layout/HeaderMenuColumn.vue`
+
+`HeaderMenuPanel` に差し込むカラム1つ。見出しと中身のスロットだけを持ち、**行の見た目は差し込む側の責務**とする。
+
+**Props / Slots**
+
+| 名前 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `label` | `string` | カラム見出し（大文字に変換して表示） |
+| `to` | `string?` | 指定すると見出しが一覧ページへのリンクになる |
+| default slot | — | カラムの中身 |
+
+**表示要件**
+
+- 見出しは等幅フォント / `0.75rem` / `500` / 字間 `0.1em` / 大文字 / サブテキスト色。`to` があればホバーでアクセント色になる。**矢印などの装飾は付けない。**
+- 左右のパディングは `1.5rem`。ただし両端のカラムは外側のパディングを落とす。
+- 2つ目以降のカラムは左端に1pxのボーダーを引く（`.menu-column + .menu-column`）。カラム数が増えても同じ規則で区切られる。
 
 ---
 
@@ -803,6 +886,7 @@ Nuxt Content が本文中の `<table>` に使用するコンポーネント。�
 | `useArticleTags()` | `app/composables/useArticleTags.ts` | 公開記事のフロントマターからタグを集計し、`{ name, slug, count }` を**記事数の降順（同数なら名前順）**で返す |
 | `usePageSeo(input)` | `app/composables/usePageSeo.ts` | title / description と OGP・Twitter Card のメタタグをまとめて出力する。title は `<ページ名> \| Tech Blog`（省略時はサイト名のみ）、description は空ならサイト共通の説明文にフォールバックする。`og:image` は記事の `image`、無ければ `/ogp.png`。`og:image` と `og:url` は `runtimeConfig.public.siteUrl` を基準に絶対URL化する。`type: 'article'` のときだけ `article:published_time` / `article:tag` を出す（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
 | `formatDate(date)` | `app/utils/date.ts` | 日付を `YYYY.MM.DD` 形式に整形する（`ja-JP` ロケール / ゼロ埋め / ドット区切り）。空値は空文字を返す |
+| `formatRelativeDate(date, now)` | `app/utils/date.ts` | 記事の日付を **GitHub の表記に合わせて**整形する。直近30日（`RELATIVE_DATE_MAX_DAYS`）は相対表記、それより古いものは月日の絶対表記に切り替える。日単位で比較するため、時刻ではなく**その日の0時同士**を突き合わせる。`now` を引数で受け取るのは、**静的生成でビルド時刻が焼き付くのを避ける**ため（呼び出し側が `onMounted` で `Date.now()` を渡す。`null` の間は年つきの絶対表記を返す。パネルもドロワーも初期状態は閉じているので、切り替わりは画面に出ない）<br><br>`today` / `1d ago`〜`6d ago` / `1w ago`〜`4w ago` / `Feb 18`（同じ年）/ `Feb 18, 2025`（別の年）|
 | `tagToSlug(tag)` | `app/utils/tag.ts` | タグ名をURLセーフなスラグに変換する。小文字化し、英数字以外の連続を `-` に置換、前後の `-` を除去（例: `@nuxt/content` → `nuxt-content`） |
 
 **ページ内リンクの着地位置**
