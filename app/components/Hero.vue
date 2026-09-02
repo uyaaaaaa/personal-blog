@@ -31,21 +31,21 @@
         </p>
 
         <div class="mt-1">
-          <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-subtle px-3.5 py-1.5 font-mono text-xs font-bold tracking-wider text-sub transition-colors duration-200 group-hover:border-sub group-hover:bg-surface-muted group-hover:text-main">
-            Read Article
+          <span class="inline-flex items-center gap-2 font-mono text-xs tracking-wider text-sub transition-colors duration-200 group-hover:text-main">
+            more
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
-              viewBox="0 0 24 24"
+              class="h-2 w-5 transition-transform duration-200 group-hover:translate-x-1"
+              viewBox="0 0 20 8"
               fill="none"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="1"
               stroke-linecap="round"
               stroke-linejoin="round"
               aria-hidden="true"
             >
-              <path d="M5 12h14" />
-              <path d="M12 5l7 7-7 7" />
+              <path d="M0 4h19" />
+              <path d="M15.5 1L19 4l-3.5 3" />
             </svg>
           </span>
         </div>
