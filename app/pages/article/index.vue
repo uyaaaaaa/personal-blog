@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import ArticleList from '~/components/ArticleList.vue'
+import Pagination from '~/components/common/Pagination.vue'
 
 const { data: articles } = await useAsyncData('article-list', () =>
   queryCollection('article').where('published', '=', true).order('date', 'DESC').all(),
 )
+
+const { page, totalPages, pagedItems } = usePagination(computed(() => articles.value ?? []))
 
 usePageSeo({
   title: 'Articles',
@@ -18,6 +21,8 @@ usePageSeo({
       <p class="text-sub">All tech articles and book reviews.</p>
     </header>
 
-    <ArticleList :articles="articles ?? []" />
+    <ArticleList :articles="pagedItems" />
+
+    <Pagination :page="page" :total-pages="totalPages" />
   </div>
 </template>

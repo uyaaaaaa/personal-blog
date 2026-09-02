@@ -17,7 +17,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - [1. レイアウト](#1-レイアウト)
   - [Header](#header) / [ThemeToggle](#themetoggle) / [HeaderNavigation](#headernavigation) / [Footer](#footer)
 - [2. 記事表示](#2-記事表示)
-  - [Hero](#hero) / [ArticleShelf](#articleshelf) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton)
+  - [Hero](#hero) / [ArticleShelf](#articleshelf) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton) / [Pagination](#pagination)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
   - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea) / [ProseTable](#prosetable)
 - [4. エラー](#4-エラー)
@@ -204,8 +204,8 @@ TOPページで、1カテゴリ分の記事を横並びに見せる棚。見出�
 
 | 項目 | 要件 |
 | :--- | :--- |
-| 見出し | `h2` / 等幅 / 太字 / `1.5rem`。右に総数（サブテキスト色 / `0.875rem`） |
-| `View All` | 見出しの右端。アクセント色・太字。ホバーで矢印が `translate-x-2` |
+| 見出し | `h2` / 等幅 / 太字 / `1.5rem`。右に総数（サブテキスト色 / `0.875rem`）。見出し自体が `viewAllPath` へのリンクで、ホバーでアクセント色になる |
+| `View All` | 見出しの右端。アクセント色・太字。ホバーで矢印が `translate-x-2`。**棚に出ていない記事が無いとき（`total <= articles.length`）は出さない** |
 | **〜1023px** | 横スクロールの列。カード幅 `264px` 固定、ギャップ `1rem`。左右 `-1rem` のネガティブマージンで画面端まで抜き、内側に `1rem` のパディングを戻す |
 | **1024px〜** | 4カラムのグリッド（ギャップ `1.5rem`）に切り替え、横スクロールを解除。5件目以降は `lg:hidden` で落とす |
 
@@ -217,6 +217,10 @@ TOPページで、1カテゴリ分の記事を横並びに見せる棚。見出�
 **取得件数との関係**
 
 呼び出し側は常に6件を渡し、1024px以上では5・6件目をCSSで落とす。ビューポート幅で取得件数を変えると静的生成できないため、DOMには2枚多く残る。
+
+**カテゴリページへの導線**
+
+`View All` は棚に収まりきらない記事があるときだけ出すため、全件が棚に出ているカテゴリでは消える。導線が無くならないよう、見出し自体を同じ `viewAllPath` へのリンクにしている。
 
 ---
 
@@ -421,6 +425,45 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 
 左矢印アイコン（18px）+ ラベル（`0.875rem` / サブテキスト色）。
 ホバーで文字がアクセント色になり、**矢印が左に `-translate-x-1` 移動**する（`200ms`）。
+
+**使用箇所**
+
+戻り導線は本コンポーネントに統一しています。記事詳細（本文の上下）、`ArticleFallback`、`tags/[tag]`（`All tags`）、`category/[category]`（`Back to top`）。
+
+---
+
+### Pagination
+
+`app/components/common/Pagination.vue`
+
+記事一覧を10件ずつに区切るページャ。`article/index.vue`・`tags/[tag].vue`・`category/[category].vue` で使う。
+
+**Props**
+
+| 名前 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `page` | `number` | 現在のページ（1始まり） |
+| `totalPages` | `number` | 総ページ数 |
+
+**表示要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| 表示条件 | `totalPages` が1のときは何も出さない |
+| 並び | 中央寄せ、要素間 `0.5rem`。`←` / ページ番号 / `→` |
+| ボタン | 最小幅 `2.25rem` / 高さ `2.25rem` / 1pxボーダー / 小角丸 / サーフェス色背景 / 等幅 / `0.875rem` |
+| 現在のページ | ボーダーと文字がアクセント色。`aria-current="page"` を付け、リンクにしない |
+| 端のページ | 進めない側の矢印はリンクにせず、サブテキスト色にする |
+| ホバー | リンクのみボーダーと文字がアクセント色（`200ms`） |
+| 省略 | ページが多いときは先頭・末尾・現在の前後1ページだけを残し、間を `…` で畳む |
+
+**ページの持ち方**
+
+ページ番号はパスではなくクエリ（`?page=2`）で持ちます。1ページ目のリンクはクエリを外します。
+
+静的生成されるHTMLは常に1ページ目のため、`?page=2` に直接着地したときはハイドレーション後に2ページ目へ切り替わります。ハイドレーションのミスマッチを避けるため、`usePagination` はクエリの反映を `onMounted` まで遅らせています（初回のクライアント描画をSSRの結果と一致させるため）。この方式では2ページ目以降がプリレンダされないので、検索エンジンからは1ページ目しか見えません。
+
+ページ切り替え時は先頭までスクロールします。`prefers-reduced-motion: reduce` のときはスムーススクロールを使いません。
 
 ---
 

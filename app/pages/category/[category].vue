@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import ArticleList from '~/components/ArticleList.vue'
+import Pagination from '~/components/common/Pagination.vue'
+import BackButton from '~/components/common/BackButton.vue'
 
 const route = useRoute()
 const category = String(route.params.category)
@@ -22,6 +24,8 @@ if ((articles.value ?? []).length === 0) {
   throw createError({ statusCode: 404, statusMessage: 'Category not found', fatal: true })
 }
 
+const { page, totalPages, pagedItems } = usePagination(computed(() => articles.value ?? []))
+
 usePageSeo({
   title: label,
   description: `${label} カテゴリの記事一覧。`,
@@ -35,10 +39,10 @@ usePageSeo({
       <p class="text-sub">{{ articles?.length }} article{{ articles?.length === 1 ? '' : 's' }} in {{ label }}.</p>
     </header>
 
-    <ArticleList :articles="articles ?? []" />
+    <ArticleList :articles="pagedItems" />
 
-    <NuxtLink to="/" class="inline-block text-accent font-semibold">
-      &larr; Back to top
-    </NuxtLink>
+    <Pagination :page="page" :total-pages="totalPages" />
+
+    <BackButton to="/" label="Back to top" />
   </div>
 </template>
