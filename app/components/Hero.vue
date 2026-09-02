@@ -30,11 +30,24 @@
           {{ article.description }}
         </p>
 
-        <div class="flex items-center text-accent font-bold text-sm group-hover:translate-x-2 transition-transform duration-200">
-          Read Article
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
+        <div class="mt-1">
+          <span class="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-subtle px-3.5 py-1.5 font-mono text-xs font-bold tracking-wider text-sub transition-colors duration-200 group-hover:border-sub group-hover:bg-surface-muted group-hover:text-main">
+            Read Article
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14" />
+              <path d="M12 5l7 7-7 7" />
+            </svg>
+          </span>
         </div>
       </div>
     </div>
