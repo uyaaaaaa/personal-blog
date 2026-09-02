@@ -24,10 +24,10 @@ if ((articles.value ?? []).length === 0) {
   throw createError({ statusCode: 404, statusMessage: 'Category not found', fatal: true })
 }
 
-const { page, totalPages, pagedItems } = usePagination(computed(() => articles.value ?? []))
+const { page, totalPages, pagedItems, basePath } = usePagination(computed(() => articles.value ?? []))
 
 usePageSeo({
-  title: label,
+  title: () => (page.value > 1 ? `${label} (${page.value}/${totalPages.value})` : label),
   description: `${label} カテゴリの記事一覧。`,
 })
 </script>
@@ -41,7 +41,7 @@ usePageSeo({
 
     <ArticleList :articles="pagedItems" />
 
-    <Pagination :page="page" :total-pages="totalPages" />
+    <Pagination :page="page" :total-pages="totalPages" :base-path="basePath" />
 
     <BackButton to="/" label="Back to top" />
   </div>

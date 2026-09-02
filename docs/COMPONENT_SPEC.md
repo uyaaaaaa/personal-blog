@@ -189,7 +189,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 `app/components/article/ArticleShelf.vue`
 
-TOPページで、1カテゴリ分の記事を横並びに見せる棚。見出し・件数・`View All` 導線と、カードの列で構成する。
+TOPページで、1カテゴリ分の記事を横並びに見せる棚。見出し・`View All` 導線と、カードの列で構成する。
 
 **Props**
 
@@ -197,14 +197,14 @@ TOPページで、1カテゴリ分の記事を横並びに見せる棚。見出�
 | :--- | :--- | :--- |
 | `title` | `string` | 棚の見出し（カテゴリの表示名） |
 | `articles` | `Array<{ path, title, date, emoji?, tags? }>` | 並べる記事。上限の適用は呼び出し側 |
-| `total` | `number` | そのカテゴリの公開記事の総数。見出し横に添える |
+| `total` | `number` | そのカテゴリの公開記事の総数。`View All` を出すかどうかの判定にだけ使い、画面には出さない |
 | `viewAllPath` | `string` | `View All` の遷移先 |
 
 **表示要件**
 
 | 項目 | 要件 |
 | :--- | :--- |
-| 見出し | `h2` / 等幅 / 太字 / `1.5rem`。右に総数（サブテキスト色 / `0.875rem`）。見出し自体が `viewAllPath` へのリンクで、ホバーでアクセント色になる |
+| 見出し | `h2` / 等幅 / 太字 / `1.5rem`。見出し自体が `viewAllPath` へのリンクで、ホバーでアクセント色になる |
 | `View All` | 見出しの右端。アクセント色・太字。ホバーで矢印が `translate-x-2`。**棚に出ていない記事が無いとき（`total <= articles.length`）は出さない** |
 | **〜1023px** | 横スクロールの列。カード幅 `264px` 固定、ギャップ `1rem`。左右 `-1rem` のネガティブマージンで画面端まで抜き、内側に `1rem` のパディングを戻す |
 | **1024px〜** | 4カラムのグリッド（ギャップ `1.5rem`）に切り替え、横スクロールを解除。5件目以降は `lg:hidden` で落とす |
@@ -243,7 +243,7 @@ TOPページで、1カテゴリ分の記事を横並びに見せる棚。見出�
 
 **使用箇所**
 
-記事一覧のグリッドは本コンポーネントに集約しています。`article/index.vue`・`tags/[tag].vue`・`category/[category].vue` はいずれも `articles` を渡すだけで、`ArticleCard` へのマッピングは本コンポーネントが行います。TOPページはグリッドではなく `ArticleShelf` を使います。
+記事一覧のグリッドは本コンポーネントに集約しています。`AllArticles.vue`・`TagArticles.vue`・`CategoryArticles.vue` はいずれも `articles` を渡すだけで、`ArticleCard` へのマッピングは本コンポーネントが行います。TOPページはグリッドではなく `ArticleShelf` を使います。
 
 ---
 
@@ -436,7 +436,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 
 `app/components/common/Pagination.vue`
 
-記事一覧を10件ずつに区切るページャ。`article/index.vue`・`tags/[tag].vue`・`category/[category].vue` で使う。
+記事一覧を10件ずつに区切るページャ。`AllArticles.vue`・`TagArticles.vue`・`CategoryArticles.vue` で使う。
 
 **Props**
 
@@ -444,6 +444,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | :--- | :--- | :--- |
 | `page` | `number` | 現在のページ（1始まり） |
 | `totalPages` | `number` | 総ページ数 |
+| `basePath` | `string` | ページ番号を除いた一覧のパス（`/article` など）。リンクの組み立てに使う |
 
 **表示要件**
 
@@ -460,9 +461,19 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 
 **ページの持ち方**
 
-ページ番号はパスではなくクエリ（`?page=2`）で持ちます。1ページ目のリンクはクエリを外します。
+ページ番号はパスで持ちます（`/article/page/2`）。1ページ目は `/page/1` を持たず、`basePath` そのものへリンクします。
 
-静的生成されるHTMLは常に1ページ目のため、`?page=2` に直接着地したときはハイドレーション後に2ページ目へ切り替わります。ハイドレーションのミスマッチを避けるため、`usePagination` はクエリの反映を `onMounted` まで遅らせています（初回のクライアント描画をSSRの結果と一致させるため）。この方式では2ページ目以降がプリレンダされないので、検索エンジンからは1ページ目しか見えません。
+パスで持つことで2ページ目以降もプリレンダの対象になり、`crawlLinks` がページャのリンクを辿って生成します。これは表示だけの都合ではなく**到達性の問題**で、クエリ方式では2ページ目以降が静的生成されず、そこにしか載っていない記事へのリンクがどのHTMLにも現れませんでした（`tags` は任意項目なので、タグの無い記事は完全に孤立し得ます）。
+
+ページ番号はURLだけが持ち、`usePagination` は `route.params.page` から `computed` で導きます。SSRとクライアントの結果が一致するため、ハイドレーションの遅延も先頭へのスクロール処理も要りません（パスが変わるのでルーターが先頭へ戻します）。範囲外のページ番号と `/page/1` は404にします。
+
+1ページ目と2ページ目以降は同じ画面なので、実体を1つのコンポーネントに置き、ルートファイルはそれを描画するだけにしています。
+
+| 画面 | 実体 | ルートファイル |
+| :--- | :--- | :--- |
+| 全記事 | `app/components/article/AllArticles.vue` | `article/index.vue` / `article/page/[page].vue` |
+| タグ絞り込み | `app/components/article/TagArticles.vue` | `tags/[tag]/index.vue` / `tags/[tag]/page/[page].vue` |
+| カテゴリ絞り込み | `app/components/article/CategoryArticles.vue` | `category/[category]/index.vue` / `category/[category]/page/[page].vue` |
 
 ページ切り替え時は先頭までスクロールします。`prefers-reduced-motion: reduce` のときはスムーススクロールを使いません。
 
@@ -472,7 +483,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 
 `app/components/common/ScrollToTopButton.vue`
 
-記事詳細ページの「先頭に戻る」導線。画面右下に浮かべる円形ボタン。
+記事詳細ページの「先頭に戻る」導線。画面右下に浮かべる円形ボタン。`〜1023px` でのみ出す（`lg:hidden`）。`1024px〜` は右サイドバーに常時見えている目次が同じ役割を担うため、置かない。
 
 **Props**
 
@@ -801,6 +812,7 @@ Nuxt Content が本文中の `<table>` に使用するコンポーネント。�
 | `useScrollTo()` | `app/composables/useScrollTo.ts` | `scrollTo(id)` は指定IDへ `scrollIntoView({ behavior: 'smooth' })` でスクロールし、`history.pushState` で**ジャンプせずにURLハッシュを更新**する。**オフセットは受け取らない**（着地位置は `scroll-margin-top` が決める）。`beginProgrammaticScroll()` は**スクロールせずジャンプ中フラグだけを立てる**入口で、ブラウザ標準のフラグメント遷移（脚注）をこの仕組みに乗せるために使う。`scrollToTop()` はページ先頭へスムーズスクロールし、`history.replaceState` で**ハッシュを取り除いたURLに戻す**（履歴を増やさないため、戻る操作は記事の1つ前へ抜ける） |
 | `isProgrammaticScroll` | `app/composables/useScrollTo.ts` | ページ内ジャンプが進行中かを表す共有 `ref`。スクロールイベントが `150ms` 止まったら終了とみなす（`scrollend` は Safari の対応が新しいためデバウンスで代用）。`useScrollDirection` と `TocMobile` が参照する |
 | `useArticleTags()` | `app/composables/useArticleTags.ts` | 公開記事のフロントマターからタグを集計し、`{ name, slug, count }` を**記事数の降順（同数なら名前順）**で返す |
+| `usePagination(items, perPage)` | `app/composables/usePagination.ts` | 一覧を1ページ `ARTICLES_PER_PAGE`（既定 `10`）件に区切る。現在ページは `route.params.page` からの `computed`（無ければ1）で、状態を別に持たない。範囲外のページ番号と `/page/1` は404にする。`basePath` はページ番号を除いた一覧のパスで、`Pagination` のリンク組み立てに渡す |
 | `usePageSeo(input)` | `app/composables/usePageSeo.ts` | title / description と OGP・Twitter Card のメタタグをまとめて出力する。title は `<ページ名> \| Tech Blog`（省略時はサイト名のみ）、description は空ならサイト共通の説明文にフォールバックする。`og:image` は記事の `image`、無ければ `/ogp.png`。`og:image` と `og:url` は `runtimeConfig.public.siteUrl` を基準に絶対URL化する。`type: 'article'` のときだけ `article:published_time` / `article:tag` を出す（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
 | `formatDate(date)` | `app/utils/date.ts` | 日付を `YYYY.MM.DD` 形式に整形する（`ja-JP` ロケール / ゼロ埋め / ドット区切り）。空値は空文字を返す |
 | `tagToSlug(tag)` | `app/utils/tag.ts` | タグ名をURLセーフなスラグに変換する。小文字化し、英数字以外の連続を `-` に置換、前後の `-` を除去（例: `@nuxt/content` → `nuxt-content`） |

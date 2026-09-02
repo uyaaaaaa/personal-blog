@@ -28,10 +28,10 @@ if (filteredArticles.value.length === 0) {
   throw createError({ statusCode: 404, statusMessage: 'Tag not found', fatal: true })
 }
 
-const { page, totalPages, pagedItems } = usePagination(filteredArticles)
+const { page, totalPages, pagedItems, basePath } = usePagination(filteredArticles)
 
 usePageSeo({
-  title: () => `#${tagName.value}`,
+  title: () => (page.value > 1 ? `#${tagName.value} (${page.value}/${totalPages.value})` : `#${tagName.value}`),
   description: () => `${tagName.value} タグが付いた記事の一覧。`,
 })
 </script>
@@ -47,7 +47,7 @@ usePageSeo({
 
     <ArticleList :articles="pagedItems" />
 
-    <Pagination :page="page" :total-pages="totalPages" />
+    <Pagination :page="page" :total-pages="totalPages" :base-path="basePath" />
 
     <BackButton to="/tags" label="All tags" />
   </div>
