@@ -82,7 +82,7 @@ import { isProgrammaticScroll } from '~/composables/useProgrammaticScroll'
 import { useScrollDirection } from '~/composables/useScrollDirection'
 import { useTocActive } from '~/composables/useTocActive'
 import { useIsDesktop } from '~/composables/useIsDesktop'
-import { useScrollSubscription } from '~/composables/useScrollSubscription'
+import { useScrollFrame } from '~/composables/useScrollFrame'
 
 const props = defineProps<{
   links: any[]
@@ -110,7 +110,7 @@ watch(isOpen, async (open) => {
 })
 const isSticky = ref(false)
 
-const { direction } = useScrollDirection()
+const { direction } = useScrollDirection(8, isMobile)
 const isVisible = computed(() =>
   !isSticky.value || isOpen.value || (direction.value === 'up' && !isProgrammaticScroll.value),
 )
@@ -125,7 +125,7 @@ const updateSticky = () => {
   isSticky.value = el.getBoundingClientRect().top <= STICKY_TOP + 1
 }
 
-useScrollSubscription(updateSticky, isMobile)
+useScrollFrame(updateSticky, isMobile)
 
 const { scrollTo } = useScrollTo()
 

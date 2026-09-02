@@ -1,5 +1,5 @@
 import { ref, computed, type Ref } from 'vue'
-import { useScrollSubscription } from './useScrollSubscription'
+import { useScrollFrame } from './useScrollFrame'
 
 interface TocLink {
   id: string
@@ -41,7 +41,7 @@ export const useTocActive = (links: Ref<TocLink[]>, offset: number, enabled: Ref
     activeId.value = current
   }
 
-  useScrollSubscription(update, enabled)
+  useScrollFrame(update, enabled)
 
   return {
     activeId

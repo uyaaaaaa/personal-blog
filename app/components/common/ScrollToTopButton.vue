@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useScrollTo } from '~/composables/useScrollTo'
 import { useIsDesktop } from '~/composables/useIsDesktop'
-import { useScrollSubscription } from '~/composables/useScrollSubscription'
+import { useScrollFrame } from '~/composables/useScrollFrame'
 
 const FADE_DISTANCE = 240
 
@@ -17,7 +17,7 @@ const updateOpacity = () => {
 
 const { isMobile } = useIsDesktop()
 
-useScrollSubscription(updateOpacity, isMobile)
+useScrollFrame(updateOpacity, isMobile)
 
 const { scrollToTop, clearHash } = useScrollTo()
 </script>
