@@ -14,7 +14,7 @@
 
 **実装が正**です。実装を変更した際は該当するドキュメントも併せて更新してください。
 
-- 最終更新: 2026-09-01
+- 最終更新: 2026-09-02
 - 対象: Nuxt 4 / Nuxt Content 3 / Tailwind CSS 3 (+ @tailwindcss/typography)
 
 ---
@@ -84,7 +84,7 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 | **アクセント（ホバー）** | `#7C3AED` | `#C4B5FD` | `bg-accent-hover` | `--color-accent-hover` | アクセント色で塗りつぶした面のホバー時（ライトは暗く、ダークは明るくずらす）。エラーページの `Back to Top` ボタン。 |
 | **アクセント上の文字** | `#FFFFFF` | `#121212` | `text-accent-contrast` | `--color-accent-contrast` | アクセント色で塗りつぶした面の文字色。エラーページの `Back to Top` ボタン。ダークの `accent` 上では白がコントラスト比 2.7:1 と不足するため暗色にする（`#121212` で 6.9:1）。 |
 | **ボーダー** | `#E5E5E5` | `#2E2E2E` | `border-border` | `--color-border` | カード枠線、セクション区切り、ヘッダー下線。 |
-| **淡いサーフェス** | `#F5F5F5` | `#1E1E1E` | `bg-surface-subtle` | `--color-surface-subtle` | インラインコード、コードブロック、ヘッダーの検索ボックス、ドロワーのタグホバーの背景色。 |
+| **淡いサーフェス** | `#F5F5F5` | `#1E1E1E` | `bg-surface-subtle` | `--color-surface-subtle` | インラインコード、コードブロック、ヘッダーの検索ボックス、モバイルドロワーの行のホバー・アクティブ背景色。 |
 | **サブサーフェス** | `#F3F4F6` | `#262626` | `bg-surface-muted` | `--color-surface-muted` | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー、目次のガイド線。 |
 | **ヘッダー背景** | `rgba(255, 255, 255, 0.9)` | `rgba(18, 18, 18, 0.85)` | — | `--color-header-bg` | sticky ヘッダーの半透明背景（`backdrop-filter: blur` と併用）。 |
 | **オーバーレイ** | `rgba(0, 0, 0, 0.5)` | `rgba(0, 0, 0, 0.5)` | — | `--color-overlay` | モバイルドロワーのオーバーレイ。 |

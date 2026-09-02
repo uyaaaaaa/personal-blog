@@ -31,36 +31,73 @@
         @click="emit('close')"
       >
         <aside class="mobile-drawer" @click.stop>
-          <nav class="mobile-nav">
-            <NuxtLink
-              v-for="item in menuItems"
-              :key="item.path"
-              :to="item.path"
-              class="mobile-nav-item"
-              @click="emit('close')"
-            >
-              {{ item.label }}
+          <nav class="drawer-nav">
+            <NuxtLink to="/" class="drawer-row" @click="emit('close')">
+              <svg class="drawer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 10.5 12 3l9 7.5" />
+                <path d="M5.5 9.5V20h13V9.5" />
+              </svg>
+              <span class="drawer-row-label">Home</span>
             </NuxtLink>
-          </nav>
 
-          <div class="drawer-section">
-            <h2 class="drawer-section-title">Tags</h2>
-            <ul class="drawer-tag-list">
-              <li v-for="tag in topTags" :key="tag.slug">
-                <NuxtLink
-                  :to="`/tags/${tag.slug}`"
-                  class="drawer-tag-item"
-                  @click="emit('close')"
-                >
-                  <span class="drawer-tag-name">{{ tag.name }}</span>
-                  <span class="drawer-tag-count">{{ tag.count }}</span>
-                </NuxtLink>
-              </li>
-            </ul>
-            <NuxtLink to="/tags" class="drawer-view-all" @click="emit('close')">
-              View all tags &rarr;
-            </NuxtLink>
-          </div>
+            <p class="drawer-section-label">Browse</p>
+
+            <button
+              type="button"
+              class="drawer-row"
+              :aria-expanded="isRecentOpen"
+              aria-controls="drawer-group-recent"
+              @click="isRecentOpen = !isRecentOpen"
+            >
+              <svg class="drawer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3.5 2" />
+              </svg>
+              <span class="drawer-row-label">Recents</span>
+              <svg class="drawer-chevron" :class="{ 'is-open': isRecentOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            <div id="drawer-group-recent" class="drawer-collapse" :class="{ 'is-open': isRecentOpen }">
+              <ul class="drawer-sublist">
+                <li v-for="article in recentArticles" :key="article.path">
+                  <NuxtLink :to="article.path" class="drawer-subrow" @click="emit('close')">
+                    <span class="drawer-subrow-title">{{ article.title }}</span>
+                    <time class="drawer-subrow-meta" :datetime="article.date">{{ formatDate(article.date) }}</time>
+                  </NuxtLink>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              type="button"
+              class="drawer-row"
+              :aria-expanded="isTagsOpen"
+              aria-controls="drawer-group-tags"
+              @click="isTagsOpen = !isTagsOpen"
+            >
+              <svg class="drawer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 3h8l10 10-8 8L3 11V3Z" />
+                <circle cx="7.5" cy="7.5" r="1.5" />
+              </svg>
+              <span class="drawer-row-label">Tags</span>
+              <svg class="drawer-chevron" :class="{ 'is-open': isTagsOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            <div id="drawer-group-tags" class="drawer-collapse" :class="{ 'is-open': isTagsOpen }">
+              <ul class="drawer-sublist">
+                <li v-for="tag in topTags" :key="tag.slug">
+                  <NuxtLink :to="`/tags/${tag.slug}`" class="drawer-subrow drawer-subrow-tag" @click="emit('close')">
+                    <span class="drawer-subrow-name">{{ tag.name }}</span>
+                    <span class="drawer-subrow-count">{{ tag.count }}</span>
+                  </NuxtLink>
+                </li>
+              </ul>
+            </div>
+          </nav>
         </aside>
       </div>
     </div>
@@ -84,8 +121,22 @@ const menuItems = [
 ]
 
 const TOP_TAGS_LIMIT = 10
+const RECENT_ARTICLES_LIMIT = 5
+
+const isRecentOpen = ref(true)
+const isTagsOpen = ref(true)
+
 const { data: tags } = useArticleTags()
 const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
+
+const { data: recentArticles } = useAsyncData('drawer-recent-articles', () =>
+  queryCollection('article')
+    .where('published', '=', true)
+    .order('date', 'DESC')
+    .limit(RECENT_ARTICLES_LIMIT)
+    .select('path', 'title', 'date')
+    .all(),
+)
 </script>
 
 <style scoped>
@@ -174,8 +225,9 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
   height: 100%;
   background-color: var(--color-surface);
   border-left: 1px solid var(--color-border);
-  padding: 1.5rem 1.25rem 2rem;
+  padding: 0.75rem 0.75rem 2rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
   transform: translateX(100%);
   transition: transform 0.3s ease-in-out;
 }
@@ -184,75 +236,157 @@ const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
   transform: translateX(0);
 }
 
-.mobile-nav {
+.drawer-nav {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--color-border);
 }
 
-.mobile-nav-item {
-  font-size: 1.25rem;
-  font-weight: 700;
+.drawer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
   color: var(--color-main);
   text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
 }
 
-.drawer-section {
-  padding-top: 1.5rem;
-}
-
-.drawer-section-title {
-  margin: 0 0 0.75rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-sub);
-}
-
-.drawer-tag-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.drawer-tag-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0.25rem;
-  border-radius: 0.375rem;
-  font-size: 0.95rem;
-  color: var(--color-main);
-}
-
-.drawer-tag-item:hover {
-  color: var(--color-accent);
+.drawer-row:hover {
   background-color: var(--color-surface-subtle);
 }
 
-.drawer-tag-name {
-  font-family: var(--font-mono);
-}
-
-.drawer-tag-count {
-  font-size: 0.75rem;
-  font-family: var(--font-mono);
-  color: var(--color-sub);
-  border: 1px solid var(--color-border);
-  border-radius: 9999px;
-  padding: 0.05rem 0.5rem;
-}
-
-.drawer-view-all {
-  display: inline-block;
-  margin-top: 1rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+.drawer-row.router-link-exact-active {
+  background-color: var(--color-surface-subtle);
   color: var(--color-accent);
+}
+
+.drawer-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--color-sub);
+}
+
+.drawer-row.router-link-exact-active .drawer-icon {
+  color: var(--color-accent);
+}
+
+.drawer-row-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.drawer-chevron {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--color-sub);
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease-in-out;
+}
+
+.drawer-chevron.is-open {
+  transform: rotate(0deg);
+}
+
+.drawer-section-label {
+  margin: 1.25rem 0 0.375rem;
+  padding: 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--color-sub);
+}
+
+.drawer-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease-in-out;
+}
+
+.drawer-collapse.is-open {
+  grid-template-rows: 1fr;
+}
+
+.drawer-sublist {
+  list-style: none;
+  min-height: 0;
+  margin: 0 0 0 1.5rem;
+  padding: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--color-border);
+  visibility: hidden;
+  transition: visibility 0.25s ease-in-out;
+}
+
+.drawer-collapse.is-open .drawer-sublist {
+  visibility: visible;
+}
+
+.drawer-subrow {
+  display: block;
+  padding: 0.5rem 0.625rem;
+  margin-left: 0.25rem;
+  border-radius: 0.375rem;
+  color: var(--color-main);
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.drawer-subrow:hover {
+  background-color: var(--color-surface-subtle);
+}
+
+.drawer-subrow.router-link-exact-active {
+  background-color: var(--color-surface-subtle);
+  color: var(--color-accent);
+}
+
+.drawer-subrow-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.drawer-subrow-meta {
+  display: block;
+  margin-top: 0.125rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-sub);
+}
+
+.drawer-subrow-tag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.drawer-subrow-name {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drawer-subrow-count {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-sub);
 }
 </style>
