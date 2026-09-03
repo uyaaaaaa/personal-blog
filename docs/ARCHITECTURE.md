@@ -1,122 +1,103 @@
-# フロントエンド設計原則
+# アーキテクチャ
 
-React または Vue で構築する長期プロダクトのための、フレームワーク非依存の設計原則です。
-このドキュメントは、**コードベースがなぜこの形をしているか**を説明します。守るべき個々の取り決めは
-[rules/](./rules/) にあります。
+このリポジトリの**現状の構造**を説明します。守るべき個々の取り決めは `.claude/rules/` にあり、Claude Code のセッションで自動的に読み込まれます。
+人が読むための根拠は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) と [DECISIONS.md](./DECISIONS.md) にあります。コンポーネントの値や構造は実装が正で、写した文書を持ちません。
+
+以前ここにあったフレームワーク非依存の設計原則と規約は、このリポジトリの規模（1人・静的サイト）には合わないため退避しました。
+復元方法は [#105](https://github.com/uyaaaaaa/personal-blog/issues/105) を参照してください。
 
 ---
 
-## このリポジトリでの適用状況
+## 何を守るか
 
-**ほぼ未適用です。** 適用済みなのは `A-11` 〜 `A-13`（暗黙解決の制限）だけで、
-このドキュメントと [rules/](./rules/) の大半は、このリポジトリが現在どうなっているかではなく、
-これから寄せていく先を書いたものです。現状の実装が未適用の項目と違っていても、それは違反ではありません。
-適用済みの項目以外を、実装や指摘の根拠には使わないでください。
+**変更が数ファイルのコードと、DECISIONS.md の数項目で閉じること。**
 
-| | 規約の前提 | 現状 |
+個人ブログなので、feature 分割や層の増設で得られるものより、ファイル数が増えるコストのほうが大きいです（検討した案と戻す条件は [DECISIONS.md](./DECISIONS.md#ディレクトリは型別のフラット構成を維持する)）。
+型別のフラットな構成（`components` / `composables` / `utils`）を維持し、代わりに次の3点で秩序を保ちます。
+
+1. 依存は一方向にしか流れない（下記）
+2. 自作モジュール間の依存は必ず `import` 文に現れる（lint が依存を見られる状態を保つ）
+3. 実装から読み取れない理由は DECISIONS.md に書く（コードにコメントを書かず、実装を写した文書も持たない）
+
+---
+
+## 構造
+
+```
+content/article/*.md        記事。フロントマターのスキーマは content.config.ts
+remark/obsidian-callout.mjs  Markdown 拡張（Obsidian 互換 callout）
+app/mdc.config.ts            Shiki の transformer（diff の行に印を付ける）
+theme/tokens.ts              色・フォントの単一情報源
+tailwind.config.ts           tokens から CSS 変数と Tailwind theme を生成
+app/
+  app.vue                    ローディングバー、theme-color
+  error.vue                  全画面エラーの振り分け
+  layouts/default.vue        Header / main / Footer とグローバル CSS
+  pages/                     ルーティング。ルートファイルは実体コンポーネントを描画するだけ
+  components/
+    layout/                  Header、Explore ドロップダウン、ドロワー、ThemeToggle、Footer
+    article/                 一覧の実体（AllArticles 等）、棚、カード、目次、ArticleFallback
+    content/                 Nuxt Content が本文中で使う Callout / ProseA / ProsePre / ProseTable
+    common/                  Sidebar、BackButton、Pagination、ScrollToTopButton
+    error/                   ErrorView と NotFound / Server
+    Hero.vue ArticleList.vue ルート直下（歴史的経緯。移動は未定）
+  composables/               reactive / lifecycle を使う共有ロジック。スクロール購読は useScrollFrame に集約
+  utils/                     純粋関数（日付、タグ、カテゴリ）
+public/                      favicon、OGP 画像、manifest
+```
+
+## 依存方向
+
+```
+pages ─→ components ─→ composables ─→ utils
+  │           │             │
+  └───────────┴─────────────┴──→ theme/tokens.ts（app.vue のみ直接参照）
+content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components/content/
+```
+
+- 右から左への import は作らない。`utils` は何も import しない。`composables` はコンポーネントを import しない。
+- `components/` の間では、`article/` の一覧実体が `common/` と `ArticleList` を使う。`layout/` は他の領域を使わない。
+- `composables/` 同士の依存は `useScrollTo` → `useProgrammaticScroll`、`useScrollDirection` → `useProgrammaticScroll` / `useScrollFrame`、`useTocActive` → `useScrollFrame` だけ。
+
+## データの流れ
+
+- `queryCollection('article')` を呼ぶのはページと、ページの実体である一覧コンポーネントだけ。部品は props で受け取る。
+- 静的生成（`nuxt generate`）でビルド時に全ページを作る。ビルド時刻が焼き付く値（相対日付）はクライアントで `onMounted` 後に計算する。
+- URL が持つ状態（ページ番号・タグ・カテゴリ）は `route.params` から `computed` で導く。別の state を持たない。
+- テーマは `@nuxtjs/color-mode` が `<html>` のクラスで持ち、CSS 変数の再定義で切り替わる。
+
+## スタイルの流れ
+
+```
+theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text-main 等のクラス と var(--color-*)
+```
+
+コンポーネントは Tailwind のクラスを基本にし、状態遷移やアニメーションが複雑なものだけ scoped CSS を持つ。
+記事本文は `@tailwindcss/typography` の `prose` を土台に `tailwind.config.ts` の `typography` 拡張で差分を当てるが、コードブロックだけは `ProsePre.vue` が見た目を持つ（→ [DECISIONS.md](./DECISIONS.md#コードブロックの表示を-proseprevue-に集約する)）。
+
+---
+
+## 強制手段の現状
+
+| 何を | 手段 | 状態 |
 | :--- | :--- | :--- |
-| 第一分割 | `features/<name>/` | `app/` 配下の `components` / `composables` / `utils`（型別フラット） |
-| 強制手段 | `eslint-plugin-boundaries` `eslint-plugin-compat` / Stylelint / CI | `A-12` のみ `npm run lint` / `npm run build` で強制。他は未導入で、確認は目視。CI 自体が無い |
-| 逸脱の記録 | [adr/](./adr/) に1件ずつ | テンプレートのみ |
-| 暗黙解決 | 制限する（`A-11` 〜 `A-13`） | **適用済み。** 自作モジュールは明示 import |
+| 型と SFC の整合 | `npm run build` | あり |
+| フロントマターのスキーマ | `content.config.ts` の zod | あり |
+| 自作 composable / util の明示 import | `nuxt.config.ts` の `imports: { scan: false }`。書き忘れは prerender の `ReferenceError` で `npm run build` が落ちる | あり |
+| 自作コンポーネントの明示 import | `components: false` + `eslint.config.mjs` の `vue/no-undef-components`（`npm run lint`）。未 import はビルドでは落ちず、そのコンポーネントが消えた HTML が出るため lint が要る | あり |
+| コメント・スタイル・置き場・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
+| 循環依存、依存方向、`~/` 以外のエイリアス、任意値、`navigator.userAgent`、`unload` | ESLint / Stylelint | **未導入**。次に入れる |
 
-寄せる順序は [rules/README.md](./rules/README.md) の「導入順序」に従います。
-Nuxt では auto-import の制限（`A-11` 〜 `A-13`）が依存ルール強制の前提条件になるため、そこから着手しました。
-次は循環禁止（`A-4`）です。
+CI は無く、lint も build もローカルで実行したときだけ落ちる。
 
----
+lint を入れる順序は費用対効果順で、循環禁止 → 依存方向 → import の書き分け → Tailwind の任意値 → プラットフォーム系の禁止3点。
+いずれも既知の違反をベースラインに固定し、新規違反だけを落とす形で入れる。ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。
+lint で落とせるようになったルールは `.claude/rules/` から消す（二重管理にしない）。
 
-## 守るもの
+## 既知のずれ
 
-**変更コストが、コードベースの大きさに比例して増えないこと。**
+lint 導入時にまとめて直す。
 
-守るのはこれ一つです。他はすべて手段です。
-
-3年後、書いた人が誰も残っていない状態で、初めて触る画面に機能を1つ足す。
-このとき読む必要があるファイル数が、コードベース全体の大きさに依存しない――その状態を保つことが目的です。
-
-規模が2倍になったとき、1機能あたりの実装時間が2倍になるなら、その設計は失敗しています。
-機能が増えて遅くなるのは避けられませんが、**線形に増えるか、それ以上で増えるか**は設計で決まります。
-
----
-
-## そのために捨てるもの
-
-| 捨てるもの | 具体的に | 引き換えに得るもの |
-| :--- | :--- | :--- |
-| 書く速さ | 最初の1画面は確実に遅い | 2画面目以降で回収する |
-| 重複の少なさ | 似たコードが3箇所にあってよい | 早すぎる共通化の巻き戻しを避ける |
-| 表現の自由度 | その場で最適な書き方を禁じることがある | 読み手がn人いる前提では、書き方の分散のほうが害が大きい |
-| 新機能の採用速度 | 実験段階の機能は本番に入れない | 仕様変更で撤退するコストを払わない |
-
-これらは副作用ではなく、意図的な取引です。
-「遠回りだ」「冗長だ」という指摘は正しく、**承知のうえで選んでいます。**
-
-短期のプロトタイプ、使い捨てのキャンペーンページ、1人が書いて1人が保守するツールには、この取引は割に合いません。
-この原則は「人が入れ替わりながら数年動き続ける製品」だけを対象にしています。
-
----
-
-## なぜその取引で守れるのか
-
-フロントエンドは、独立に変化する3つのものが最後に出会う場所です。
-
-| | 変更を決める人 | 速度 |
-| :--- | :--- | :--- |
-| ① ドメイン／サーバ契約 | バックエンド | 中 |
-| ② インタラクション／視覚 | デザイン・PdM | 速 |
-| ③ 配信プラットフォーム | ブラウザベンダ | 遅・制御不能 |
-
-3つとも決定権がフロントエンドの外にあり、速度も決定者も違います。
-同じ場所に2つ以上を同居させると、**片方の都合でもう片方が壊れます。**
-
-変更コストが規模に比例して増える現象は、ほぼこの同居から起きます。
-デザイン変更のたびにサーバ改修が要る、API のフィールド名変更で画面が壊れる、
-ブラウザの仕様変更で業務ロジックを書き直す――どれも本来無関係なはずの2つが同じ場所にあることの結果です。
-
-規約の大半は「①と②を同じ場所に置かない」の言い換えです。
-
-### 3つの分離が、それぞれ何になるか
-
-| 分離したいもの | コード上の現れ方 | 参照 |
-| :--- | :--- | :--- |
-| ①同士・②同士が混ざらないこと | モジュール境界と依存方向 | [rules/boundaries.md](./rules/boundaries.md) |
-| ①がどこまで入ってくるか | 状態の所有と、サーバ由来データの扱い | [rules/state.md](./rules/state.md) |
-| ②がどこまで入ってくるか | コンポーネントの責務とスタイル | [rules/components.md](./rules/components.md) |
-| ③に依存する部分 | Webプラットフォームとレンダリング戦略 | [rules/platform.md](./rules/platform.md) / [rules/rendering.md](./rules/rendering.md) |
-
----
-
-## 規約に書いていないことの決め方
-
-規約は有限で、実装は無限です。書いていない状況のほうが多く来ます。
-
-そのときは、**その判断で①②③のどれとどれが同じ場所に来るか**を見ます。
-2つ以上が同居するなら、どちらかの変更権を放棄する決定をしていることになるので、
-それを意識的に選んだのか、気づかずにそうなったのかを確かめます。
-
-意識的に選ぶなら [adr/](./adr/) に記録します。記録がない同居は、後から必ず事故として現れます。
-
----
-
-## ルールが2種類あること
-
-| | 破ったとき | 覆せるか |
-| :--- | :--- | :--- |
-| 設計由来のルール | 今は動く。効いてくるのは半年後 | ADR で覆せる |
-| プラットフォームの事実 | 今壊れる | 覆せない |
-
-前者はこの原則から導かれるもので、原則が変われば変わります。
-後者はブラウザ・ESM・アクセシビリティの制約で、どんな設計を採っても同じです。
-どちらも `rules/` に置いていますが、性質が違うことは意識してください。
-
----
-
-## ドキュメントの構成
-
-| ドキュメント | 目的 | 読み方 |
-| :--- | :--- | :--- |
-| 本ファイル | 説明 | 参加時に1回、通しで |
-| [rules/](./rules/) | 参照 | lint メッセージやレビューから飛んでくる |
-| [appendix/](./appendix/) | フレームワーク固有の実装 | 該当フレームワークの分だけ。**腐ることを前提に隔離した場所** |
-| [adr/](./adr/) | 規約からの逸脱の記録 | 逸脱するとき、および過去の逸脱を調べるとき |
+- `useArticleTags.ts` だけ `../utils/tag` と相対パスで utils を参照している（他は `~/`）。
+- `ref` `computed` を `'vue'` から明示 import しているファイルが10ある（プリセットの auto-import に任せる方針と不一致）。
+- `Hero.vue` と `ArticleList.vue` が `components/` 直下にある。
