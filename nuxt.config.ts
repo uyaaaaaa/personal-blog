@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error 型定義のないローカルESMモジュール
 import remarkObsidianCallout from './remark/obsidian-callout.mjs'
+import { CATEGORIES } from './app/utils/category'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -56,7 +57,9 @@ export default defineNuxtConfig({
     preset: 'cloudflare-pages',
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/404.html']
+      // カテゴリページへの内部リンクはTOPの棚だけなので、crawlLinksに任せると
+      // 棚の出し方を変えた瞬間に生成対象から外れる
+      routes: ['/', '/404.html', ...CATEGORIES.map(category => `/category/${category}`)]
     },
     cloudflare: {
       pages: {

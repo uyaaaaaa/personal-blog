@@ -47,7 +47,7 @@ const shelves = computed(() =>
           .slice(0, SHELF_LIMIT),
       }
     })
-    .filter(shelf => shelf.articles.length > 0),
+    .filter(shelf => shelf.total > 0),
 )
 
 usePageSeo()
