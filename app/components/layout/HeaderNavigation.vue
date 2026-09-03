@@ -24,7 +24,7 @@
         <HeaderMenuColumn label="Latest" to="/article">
           <ul class="menu-list">
             <li v-for="article in latestItems" :key="article.path">
-              <NuxtLink :to="article.path" class="menu-article">
+              <NuxtLink :to="article.path" class="menu-article" prefetch-on="interaction">
                 <span class="menu-article-title">{{ article.title }}</span>
                 <time class="menu-article-date" :datetime="article.date">{{ article.dateLabel }}</time>
               </NuxtLink>
@@ -35,7 +35,7 @@
         <HeaderMenuColumn label="Tags" to="/tags">
           <ul class="menu-list menu-list-split">
             <li v-for="tag in topTags" :key="tag.slug">
-              <NuxtLink :to="`/tags/${tag.slug}`" class="menu-tag">
+              <NuxtLink :to="`/tags/${tag.slug}`" class="menu-tag" prefetch-on="interaction">
                 <span class="menu-tag-name">{{ tag.name }}</span>
                 <span class="menu-tag-count">{{ tag.count }}</span>
               </NuxtLink>
@@ -102,7 +102,7 @@
             <div id="drawer-group-latest" class="drawer-collapse" :class="{ 'is-open': isLatestOpen }">
               <ul class="drawer-sublist">
                 <li v-for="article in latestItems" :key="article.path">
-                  <NuxtLink :to="article.path" class="drawer-subrow" @click="emit('close')">
+                  <NuxtLink :to="article.path" class="drawer-subrow" prefetch-on="interaction" @click="emit('close')">
                     <span class="drawer-subrow-title">{{ article.title }}</span>
                     <time class="drawer-subrow-meta" :datetime="article.date">{{ article.dateLabel }}</time>
                   </NuxtLink>
@@ -130,7 +130,7 @@
             <div id="drawer-group-tags" class="drawer-collapse" :class="{ 'is-open': isTagsOpen }">
               <ul class="drawer-sublist">
                 <li v-for="tag in topTags" :key="tag.slug">
-                  <NuxtLink :to="`/tags/${tag.slug}`" class="drawer-subrow drawer-subrow-tag" @click="emit('close')">
+                  <NuxtLink :to="`/tags/${tag.slug}`" class="drawer-subrow drawer-subrow-tag" prefetch-on="interaction" @click="emit('close')">
                     <span class="drawer-subrow-name">{{ tag.name }}</span>
                     <span class="drawer-subrow-count">{{ tag.count }}</span>
                   </NuxtLink>
@@ -586,9 +586,7 @@ onBeforeUnmount(() => {
 .drawer-subrow-name {
   font-family: var(--font-mono);
   font-size: 0.875rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .drawer-subrow-count {

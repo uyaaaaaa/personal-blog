@@ -1,22 +1,19 @@
 import { beginProgrammaticScroll } from './useProgrammaticScroll'
 
-const scrollBehavior = (): ScrollBehavior =>
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
-
 export const useScrollTo = () => {
   const scrollTo = (id: string) => {
     const element = document.getElementById(id)
     if (!element) return
 
     beginProgrammaticScroll()
-    element.scrollIntoView({ behavior: scrollBehavior() })
+    element.scrollIntoView({ behavior: 'smooth' })
 
     history.pushState(null, '', `#${id}`)
   }
 
   const scrollToTop = () => {
     beginProgrammaticScroll()
-    window.scrollTo({ top: 0, behavior: scrollBehavior() })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const clearHash = () => {
