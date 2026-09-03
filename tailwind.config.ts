@@ -37,6 +37,35 @@ export default <Config>{
               color: 'var(--color-code-text)',
               border: '1px solid var(--color-border)',
             },
+            // 行の背景を左右のpaddingとスクロール領域の端まで届かせるため、preのpaddingを行側に移す
+            'pre.language-diff': {
+              paddingLeft: '0',
+              paddingRight: '0',
+            },
+            'pre.language-diff code': {
+              display: 'block',
+              width: 'max-content',
+              minWidth: '100%',
+            },
+            'pre.language-diff .line': {
+              paddingLeft: '1.1428571em',
+              paddingRight: '1.1428571em',
+            },
+            // @nuxt/contentの `html .shiki span { background: var(--shiki-default-bg) }` に値を渡す。
+            // background-colorを直接指定してもこのルールに特異度で負ける
+            'pre.language-diff .line.diff-add': {
+              '--shiki-default-bg': 'var(--color-diff-add-bg)',
+              '--shiki-dark-bg': 'var(--color-diff-add-bg)',
+            },
+            'pre.language-diff .line.diff-remove': {
+              '--shiki-default-bg': 'var(--color-diff-remove-bg)',
+              '--shiki-dark-bg': 'var(--color-diff-remove-bg)',
+            },
+            // 行から継承するとトークンのspanが半透明の背景を二重に塗る
+            'pre.language-diff .line > span': {
+              '--shiki-default-bg': 'transparent',
+              '--shiki-dark-bg': 'transparent',
+            },
             code: {
               backgroundColor: 'var(--color-surface-subtle)',
               border: '1px solid var(--color-border)',

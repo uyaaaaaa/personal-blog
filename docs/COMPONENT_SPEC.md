@@ -604,7 +604,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | 要素 | 要件 |
 | :--- | :--- |
 | **見出し (H2, H3)** | `prose` の既定に準拠。本文中の `h2`〜`h6` は**クリックで該当位置へスクロール**する。カーソルは `pointer`。 |
-| **コードブロック** | Nuxt Content のシンタックスハイライトを使用（テーマはライト **`github-light`** / ダーク **`github-dark`** のデュアル指定で、`.dark` クラスに追従）。背景 `var(--color-surface-subtle)` / 文字色 `var(--color-code-text)` / 1pxボーダー。モバイルでは横スクロール。**行番号は表示しない**。`diff` は追加行・削除行を**文字色のみ**で示し、行の背景は塗らない（テーマ由来の色をそのまま使う）。 |
+| **コードブロック** | Nuxt Content のシンタックスハイライトを使用（テーマはライト **`github-light`** / ダーク **`github-dark`** のデュアル指定で、`.dark` クラスに追従）。背景 `var(--color-surface-subtle)` / 文字色 `var(--color-code-text)` / 1pxボーダー。モバイルでは横スクロール。**行番号は表示しない**。`diff` は追加行・削除行の**行背景を塗る**（→ [diff コードブロック](#diff-コードブロック)）。 |
 | **インラインコード** | Obsidian風。淡いサーフェス色 + 1pxボーダー + 小角丸。パディング 上下 `0.125rem` / 左右 `0.375rem`。`font-weight: 400`、文字色は周囲から継承。**バッククォート（`code::before` / `code::after`）は非表示**にする。 |
 | **リンク** | アクセントカラーで表示し、ホバーでアンダーラインを付与。見出しは Nuxt Content が `<a>` で包むため対象外とし、見出しの色を継承したままホバーでのみアクセントカラーに変化する。`overflow-wrap: break-word` で**URLをそのまま書いたリンクを折り返す**（`<https://...>` の自動リンクはリンクテキスト自体が長いため、折り返さないとSP幅でページ全体が横スクロールする）。 |
 | **引用 (Blockquote)** | `prose` の既定に準拠。 |
@@ -629,6 +629,62 @@ Shiki のハイライトは**ビルド時に完結**し、文法もテーマも�
 
 **言語欄はファイル名やラベルの置き場ではない。** ` ```/etc/hosts ` のように書くと `class="language-/etc/hosts"` という不正なクラスが DOM に出るうえ、ハイライトも効かない。
 ファイル名は本文側に書き、言語欄には言語だけを書く。
+
+---
+
+### diff コードブロック
+
+`app/mdc.config.ts` / `tailwind.config.ts` / `theme/tokens.ts`
+
+` ```diff ` のコードブロックは、追加行・削除行の**行全体に背景を敷く**。文字色は Shiki の `diff` 文法とテーマ由来（追加は緑、削除は赤）。
+色と、設計原則「面を塗って区切らない」の例外である理由は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) が持つ。
+
+| 要件 | 内容 |
+| :--- | :--- |
+| **対象行** | 行頭が `+` の行に `.diff-add`、`-` の行に `.diff-remove` が付く。文脈行（先頭が空白）は塗らない |
+| **塗る範囲** | 行の左右いっぱい。`pre` の左右パディング分と、**横スクロールで隠れている部分まで**届かせる |
+| **行内の構文色** | **付かない。** Shiki の `diff` 文法は行を1色に塗るため、`const` も文字列も同じ緑・赤になる |
+
+**実装が3ファイルに分かれている理由**
+
+1. **`app/mdc.config.ts`** — Shiki の `diff` 文法は追加/削除の目印を hast に残さず、行を1色に塗るだけで終わる。
+   そのため transformer で行頭の記号を見て `.diff-add` / `.diff-remove` を付ける。
+   トークンに付く `s83E4` のようなクラスは**色から導出されたハッシュで不安定**なため、CSS から掴んではいけない。
+2. **`theme/tokens.ts`** — 行背景の色。ライトは不透明、ダークは半透明（下地の `--color-surface-subtle` に馴染ませるため）。
+3. **`tailwind.config.ts`** — 行背景と、塗る範囲を作るためのレイアウト。
+
+**行背景に `background-color` を直接指定しても効かない**
+
+@nuxt/content はデュアルテーマ用に次の CSS を出力する。
+
+```css
+html .shiki span      { background: var(--shiki-default-bg); ... }
+html.dark .shiki span { background: var(--shiki-dark-bg); ... }
+```
+
+`--shiki-*-bg` は未定義なので *invalid at computed-value time* で背景が透明に潰れる。
+特異度は `html.dark .shiki span` が (0,2,2) なのに対し、`@tailwindcss/typography` は `typography` 拡張に書いた
+セレクタを `:where()` で包むため (0,1,0) にしかならず、**必ず負ける**。
+
+そこで背景色を直接書かず、**この変数に値を渡す**。特異度の勝負を避けられ、テーマ切り替えも既存の仕組みに乗る。
+
+```ts
+'pre.language-diff .line.diff-add': {
+  '--shiki-default-bg': 'var(--color-diff-add-bg)',
+  '--shiki-dark-bg': 'var(--color-diff-add-bg)',
+},
+// 行から継承するとトークンのspanが半透明の背景を二重に塗る
+'pre.language-diff .line > span': {
+  '--shiki-default-bg': 'transparent',
+  '--shiki-dark-bg': 'transparent',
+},
+```
+
+**塗りを端まで届かせる**
+
+`span.line` は既定では `pre` の content 幅までしか広がらないため、素直に背景を敷くと**左右のパディング分が塗り残る**。
+`pre` の左右パディングを 0 にして行側へ移し、`code` を `width: max-content` / `min-width: 100%` にして
+行をスクロール幅まで伸ばす。これらは `pre.language-diff` に限定し、他の言語のコードブロックには適用しない。
 
 ---
 

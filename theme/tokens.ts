@@ -13,6 +13,8 @@ export const colors = {
   overlay: 'rgba(0, 0, 0, 0.5)',
   scrollbar: '#D1D5DB',
   'code-text': '#24292E',
+  'diff-add-bg': '#E6FFEC',
+  'diff-remove-bg': '#FFEBE9',
 } as const
 
 export const darkColors: Record<keyof typeof colors, string> = {
@@ -31,6 +33,8 @@ export const darkColors: Record<keyof typeof colors, string> = {
   scrollbar: '#3A3A3A',
   // github-darkの前景色
   'code-text': '#E6EDF3',
+  'diff-add-bg': 'rgba(46, 160, 67, 0.15)',
+  'diff-remove-bg': 'rgba(248, 81, 73, 0.15)',
 }
 
 export const fontFamily = {
