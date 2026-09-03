@@ -26,7 +26,7 @@ ESLint は自作コンポーネントの明示 import を強制する `vue/no-un
 | `style.md` | トークン経由の色指定、ブレークポイント、モーション、着地位置 |
 | `imports.md` | 自作モジュールの明示 import と依存方向 |
 | `structure.md` | composable / utils の判定、データ取得の場所、URL 状態 |
-| `docs.md` | UI を変えたら spec を直す義務と、理由の置き場 |
+| `docs.md` | 理由の置き場（DECISIONS.md）と、ドキュメントを実装に追従させる義務 |
 
 手順は `.claude/skills/` にあります。UI の追加・変更は `ui-change`、記事の執筆・レビューは `article`。
 
@@ -37,6 +37,6 @@ ESLint は自作コンポーネントの明示 import を強制する `vue/no-un
 | ドキュメント | 内容 |
 | :--- | :--- |
 | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) | デザインの大方針。コンセプト、デザイントークン、レイアウト原則、UX要件、既知の課題。 |
-| [docs/spec/](./docs/spec/README.md) | コンポーネント定義。画面・機能ごとに1ファイルで、props、表示要件、インタラクション、実装から読み取れない理由。 |
+| [docs/DECISIONS.md](./docs/DECISIONS.md) | 判断の記録。画面・機能ごとに、実装を読んでも分からない「なぜ」だけ。値や構造は実装が正。 |
 | [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) | アイコン定義。`u/` モノグラムの仕様と、favicon 一式・OGP 画像の生成手順。 |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 現状の構造、依存方向、データとスタイルの流れ、強制手段の状態。 |

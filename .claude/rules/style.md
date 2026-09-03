@@ -16,4 +16,4 @@ paths:
 - **ブレークポイントは Tailwind の `md:`（768px）と `lg:`（1024px）だけ。** scoped CSS に独自の境界値を書かない。表示・非表示の切り替えも `hidden md:flex` のようにクラスで行う。
 - **`prefers-reduced-motion` を参照しない。** `@media` も `matchMedia` も置かない（意図的な判断。DESIGN_GUIDELINE 2-D）。トランジションは `200ms`（色・影）/ `300ms`（変形・開閉）/ `500ms`（画像）。
 - **ページ内リンクの着地位置は `app/pages/article/[_slug].vue` の `scroll-margin-top` が決める。** JS 側でオフセットを足さない。
-- **`!important` を書かない。** 第三者由来のインラインスタイルを打ち消す場合だけ許し、理由を spec に書く。
+- **`!important` を書かない。** 第三者由来のインラインスタイルを打ち消す場合だけ許し、理由を `docs/DECISIONS.md` に書く。

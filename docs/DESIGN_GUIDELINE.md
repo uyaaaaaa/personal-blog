@@ -3,13 +3,13 @@
 当ブログのデザイン**大方針**を定めるドキュメントです。
 コンセプト、デザイントークン、レイアウト原則、UX要件といった「サイト全体に横断的に効くルール」を扱います。
 
-個々のコンポーネントの詳細な表示要件・インタラクション仕様は **[spec/](./spec/README.md)** に、
-アイコン・favicon の仕様は **[ICON_GUIDELINE.md](./ICON_GUIDELINE.md)** に分離しています。
+実装から読み取れない個々の判断の理由は **[DECISIONS.md](./DECISIONS.md)** に、
+アイコン・favicon の仕様は **[ICON_GUIDELINE.md](./ICON_GUIDELINE.md)** に分離しています。個々のコンポーネントの値や構造は実装が正で、文書には書きません。
 
 | ドキュメント | 扱う範囲 |
 | :--- | :--- |
 | **DESIGN_GUIDELINE.md**（本書） | 大方針。コンセプト、デザイントークン、レイアウト原則、UX要件、既知の課題。 |
-| **[spec/](./spec/README.md)** | コンポーネント定義。画面・機能ごとに1ファイルで、props、表示要件、状態とインタラクション、実装から読み取れない理由。 |
+| **[DECISIONS.md](./DECISIONS.md)** | 判断の記録。画面・機能ごとに、実装を読んでも分からない「なぜ」だけ。 |
 | **[ICON_GUIDELINE.md](./ICON_GUIDELINE.md)** | アイコン定義。`u/` モノグラムの仕様、favicon 一式のファイル構成と生成手順。 |
 
 **実装が正**です。実装を変更した際は該当するドキュメントも併せて更新してください。
@@ -90,7 +90,7 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 | **スクロールバー** | `#D1D5DB` | `#3A3A3A` | — | `--color-scrollbar` | 目次のスクロールバー。 |
 | **コード文字色** | `#24292E` | `#E6EDF3` | — | `--color-code-text` | コードブロックの文字色（Shiki のテーマ `github-light` / `github-dark` の前景色に合わせる）。 |
 
-Callout は例外的に独自パレットを持ちます。Obsidian デフォルトテーマの色相をベースに、タイトル文字が両テーマでコントラスト比 4.5:1 以上になるようテーマ別に明度を調整した値です（→ [spec/content.md](./spec/content.md#callout)）。
+Callout は例外的に独自パレットを持ちます。Obsidian デフォルトテーマの色相をベースに、タイトル文字が両テーマでコントラスト比 4.5:1 以上になるようテーマ別に明度を調整した値です（→ [DECISIONS.md](./DECISIONS.md#callout)）。
 記事本文（prose）のタイポグラフィ色も Tailwind typography プラグインの `prose-slate`（ダークは `dark:prose-invert`）由来でパレットの外側です。
 
 ### C. タイポグラフィ
@@ -154,7 +154,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 `lg:` で消してもコンポーネントはマウントされたままなので、放っておくと画面に出ていない側もスクロールのたびに計算し続けます。実測（Chromium / 390×844 / CPU 6倍スロットル / 23見出しの記事）では、SPで非表示のデスクトップ用目次が、SP側の目次と同じだけの処理を裏で回していました。
 
-境界値の判定は `useIsDesktop`（`app/composables/useIsDesktop.ts`）が `matchMedia` で1本だけ持ち、`useScrollFrame` の `enabled` に渡します（→ [spec/shared.md](./spec/shared.md)）。**表示の出し分けそのものは Tailwind の `lg:` のままです**。JS 側は購読を止めるだけで、`v-if` には置き換えません（SSR の HTML が変わり、デスクトップでサイドバーが後から現れるため）。
+境界値の判定は `useIsDesktop`（`app/composables/useIsDesktop.ts`）が `matchMedia` で1本だけ持ち、`useScrollFrame` の `enabled` に渡します（→ [DECISIONS.md](./DECISIONS.md#usescrollframe)）。**表示の出し分けそのものは Tailwind の `lg:` のままです**。JS 側は購読を止めるだけで、`v-if` には置き換えません（SSR の HTML が変わり、デスクトップでサイドバーが後から現れるため）。
 
 ---
 
@@ -232,7 +232,7 @@ TOPページだけはグリッドではなく、カテゴリ単位の棚（`Arti
 - **記法は Obsidian 互換を優先する。** 執筆環境（Obsidian）でそのまま書ける記法を採用する（Callout など）。
 - **コードの可読性を最優先する。** ハイライトは Shiki のデュアルテーマ（`github-light` / `github-dark`）でサイトのテーマに追従させ、背景とボーダーでコード領域を明示する。
 
-具体的なスタイル値、対応言語、Callout の仕様は [spec/content.md](./spec/content.md) を参照してください。
+対応言語は `nuxt.config.ts` の `highlight.langs`、Callout の仕様は `app/components/content/Callout.vue` と `remark/obsidian-callout.mjs` が正です。判断の理由は [DECISIONS.md](./DECISIONS.md#markdown-スタイル) にあります。
 
 ---
 
@@ -245,17 +245,17 @@ TOPページだけはグリッドではなく、カテゴリ単位の棚（`Arti
 | **公開制御** | `published: true` の記事のみを全ページで取得する。 | 実装済 |
 | **旧URL互換** | `/blog/**` `/book/**` は `/article/**` へ301リダイレクト。 | 実装済 |
 | **タグ機能** | 全タグの一覧ページと、タグによる絞り込みを提供する。 | 実装済 |
-| **ページネーション** | 記事一覧は1ページ9件で区切り、ページ番号はパス（`/article/page/2`）で持つ。パスにする理由と404の条件は spec（→ [spec/article-list.md](./spec/article-list.md#pagination)）。 | 実装済 |
+| **ページネーション** | 記事一覧は1ページ9件で区切り、ページ番号はパス（`/article/page/2`）で持つ。パスにする理由と404の条件は [DECISIONS.md](./DECISIONS.md#pagination)。 | 実装済 |
 | **カテゴリ機能** | `category` はサイト設計として固定する値のため、`content.config.ts` で `z.enum` に列挙し、その値をそのままURLセグメント（`/category/blog`）に使う。タグと違い slug 化を挟まないので、表示名を記事から逆引きする必要がない。表示名は `CATEGORY_LABELS` が持つ。 | 実装済 |
 | **スクロール追従** | 見出し位置に応じて目次のアクティブ項目をハイライトする。 | 実装済 |
 | **スムーズスクロール** | 見出し・目次のクリックでスムーズに移動し、URLハッシュを更新する。着地位置は見出しと脚注の `scroll-margin-top` で一元管理し、URLハッシュの直接オープンにも同じ余白を効かせる。 | 実装済 |
-| **先頭に戻る** | 記事詳細の `〜1023px` でのみ、読み進めたら右下にボタンを浮かべる。`1024px〜` はサイドバーの目次が同じ役割を担うため出さない（→ [spec/article-detail.md](./spec/article-detail.md#scrolltotopbutton)）。 | 実装済 |
-| **脚注** | 本文の参照と記事末尾の脚注を相互にジャンプできる。どちらの向きも固定ヘッダーやモバイル目次バーに潜り込ませず、ジャンプ先を `:target` で強調する（→ [spec/content.md](./spec/content.md#脚注)）。 | 実装済 |
+| **先頭に戻る** | 記事詳細の `〜1023px` でのみ、読み進めたら右下にボタンを浮かべる。`1024px〜` はサイドバーの目次が同じ役割を担うため出さない（→ [DECISIONS.md](./DECISIONS.md#scrolltotopbutton)）。 | 実装済 |
+| **脚注** | 本文の参照と記事末尾の脚注を相互にジャンプできる。どちらの向きも固定ヘッダーやモバイル目次バーに潜り込ませず、ジャンプ先を `:target` で強調する（→ [DECISIONS.md](./DECISIONS.md#脚注)）。 | 実装済 |
 | **UI文言** | ナビゲーション、ボタン、エラーなどUI側の文言は**英語**を基本とする（記事本文は日本語）。既存の例外は目次の「目次」。 | 実装済 |
 | **アイコン** | favicon / PWA / iOS 向けアイコンを一式提供する（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。 | 実装済 |
 | **OGP** | SNS シェア用の OGP / Twitter Card メタタグを全ページに出力する。共通画像は `public/ogp.png`、記事はフロントマターの `image` で差し替え可（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。記事を表示できないページは `og:type` を `website` にし、`article` を名乗らせない。 | 実装済 |
 | **ローディング表示** | ルート遷移中は画面上端にアクセント色2pxのバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない。`throttle: 200ms` により、プリレンダ済みページのように即座に終わる遷移ではバーを出さない。なおバーはルート遷移にしか反応しないため、ページ内の再取得（再試行など）は各コンポーネントが自前で進行を示す。 | 実装済 |
-| **記事取得の状態分離** | 記事詳細では「取得失敗」と「記事なし」を区別して表示し、HTTPステータスも実態に合わせる（取得失敗=500 / 記事なし=404 / 未確定は何も出さない）。（→ [spec/error.md](./spec/error.md#articlefallback)） | 実装済 |
+| **記事取得の状態分離** | 記事詳細では「取得失敗」と「記事なし」を区別して表示し、HTTPステータスも実態に合わせる（取得失敗=500 / 記事なし=404 / 未確定は何も出さない）。（→ [DECISIONS.md](./DECISIONS.md#articlefallback)） | 実装済 |
 | **検索** | `Cmd/Ctrl + K` で検索モーダルを起動する。 | **未実装** |
 | **ダークモード** | ヘッダーのトグル（`ThemeToggle`）でライト / ダークを切り替える。初期値は `prefers-color-scheme` に従い、明示的な選択は localStorage に永続化（FOUC 防止込みで `@nuxtjs/color-mode` が担う）。シンタックスハイライト（Shiki デュアルテーマ）と `theme-color` メタもテーマに追従する。 | 実装済 |
 
