@@ -125,15 +125,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 サイトのモーションは OS の「視差効果を減らす（Reduce Motion）」設定に関わらず、常に同じように動きます。
 `@media (prefers-reduced-motion: reduce)` も `matchMedia` による判定も、コンポーネント・グローバルCSS・composable のいずれにも置きません。
-
-これは**意図的にユーザーの申告を無視する選択**です。前庭障害への配慮という本来の趣旨には反するため、
-将来この判断を戻す場合は次の3箇所に手を入れることになります（以前はここに実装がありました）。
-
-| 対象 | 置き場 |
-| :--- | :--- |
-| CSSのトランジション・アニメーション | `app/layouts/default.vue` のグローバルな `*` セレクタ。`NuxtLoadingIndicator` のようにインラインstyleで当ててくるものを打ち消すため `!important` が要る |
-| JSから起こすスクロール | `app/composables/useScrollTo.ts`。JSが `behavior: 'smooth'` を明示するとCSSの `scroll-behavior` では止められないため、判定できる唯一の場所 |
-| Exploreパネルの開閉 | `app/components/layout/HeaderMenuPanel.vue` |
+これは意図的な選択で、検討した案と戻す条件は [DECISIONS.md](./DECISIONS.md#prefers-reduced-motion-を参照しない) にあります。
 
 `html` に `scroll-behavior: smooth` は**置きません**。Nuxt 既定の `scrollBehavior` は遷移時のスクロール位置を `behavior` 抜きで返すため、置くとページ遷移とブラウザバックの位置復元までアニメーションします。避けるには `app/router.options.ts` で `scrollBehavior` を丸ごと置き換えるしかなく、ハッシュ着地に `scroll-margin-top` を効かせている既定の処理まで自前で抱えることになります。
 
