@@ -34,7 +34,7 @@ export const darkColors: Record<keyof typeof colors, string> = {
   scrollbar: '#3A3A3A',
   // github-darkの前景色
   'code-text': '#E6EDF3',
-  // github-darkがdiffのトークンに持つ背景色（#144620 / #86181D）は帯が強すぎるため、GitHubのdiff表示の行背景に合わせる
+  // GitHubのdiff表示の行背景（github-darkのトークン背景は帯が強すぎる）
   'diff-add-bg': 'rgba(46, 160, 67, 0.15)',
   'diff-remove-bg': 'rgba(248, 81, 73, 0.15)',
 }
