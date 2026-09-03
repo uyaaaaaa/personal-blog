@@ -5,15 +5,13 @@ paths:
 
 # import と依存のルール
 
-**自作モジュール間の依存は必ず `import` 文に現れる**ようにする。依存グラフに現れない依存があると、次に入れる循環検出・依存方向の lint が無言で無効になる（[docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)）。
-`nuxt.config.ts` の `imports: { scan: false }` と `components: false` で自作モジュールの auto-import は止めてあり、書き忘れは composable / util なら `npm run build`、コンポーネントなら `npm run lint`（`vue/no-undef-components`）で落ちる。
+**自作モジュール間の依存は、必ず `import` 文に現れるようにする。** 依存グラフが実態と一致していないと、循環検出や依存方向の lint が無言で無効になる。
 
-- **自作の components / composables / utils は明示 import する。** パスは `~/components/...` のように `~/` で書く。同じディレクトリ内だけ `./`。`@/` と `../` は使わない。並びはコンポーネント → composable → util。
-- **例外は `app/components/content/`。** `@nuxt/content` が独自に登録し、markdown 側が名前で解決するため、`Callout` `ProseA` `ProseTable` は import できない（`components: false` の影響も受けない）。
-- **Nuxt / Vue の組み込み（`ref` `computed` `watch` `useRoute` `useAsyncData` `queryCollection` `createError` `useHead` など）はプリセットの auto-import に任せ、書かない。** `imports.autoImport: false` にはしない（組み込みまで止まり `useColorMode` が解決できず 500 になる）。
-- **`theme/tokens.ts` は `~~/theme/tokens` で参照する**（`app/` の外にあるため）。
-- **barrel file（再エクスポートだけの `index.ts`）を作らない。**
-- **循環依存を作らない。** 型だけの依存は `import type` にする。
-- **置き場**: 表示だけの部品は `app/components/<領域>/`（`layout` `article` `content` `common` `error`）、reactive / lifecycle を使う共有ロジックは `app/composables/`、純粋関数は `app/utils/`。
+- **自作の components / composables / utils は明示 import する。** 自作モジュールの auto-import は止めてある。
+- **フレームワークの組み込み API は書かない。** プリセットの auto-import に任せる。止めるのは自作モジュールの走査だけで、組み込みまで止めない。
+- **例外は、フレームワークが名前で解決する領域。** markdown から名前で参照されるコンポーネントは import できない。
+- **パスは `~/` で書き、相対パスは同じディレクトリの中だけにする。** `app/` の外は `~~/`。`@/` と `../` は使わない。並びはコンポーネント → composable → util。
+- **barrel file（再エクスポートだけのファイル）を作らない。**
+- **循環依存を作らない。** 型だけの依存は `import type` にして実行時依存を消す。
 
-置き場の判定は [structure.md](./structure.md)。
+設定と強制手段の現状は [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)、そう決めた理由は [docs/DECISIONS.md](../../docs/DECISIONS.md)。置き場の判定は [structure.md](./structure.md)。
