@@ -8,7 +8,8 @@
     "generate": "nuxt generate",
     "lint": "eslint . && depcruise app --config --ignore-known",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && git config core.hooksPath .githooks || exit 0"
   },
   "dependencies": {
     "@nuxt/content": "^3.9.0",

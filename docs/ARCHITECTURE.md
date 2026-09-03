@@ -91,7 +91,7 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 `npm run lint` は ESLint と dependency-cruiser を続けて回す。ファイル1つで判定できる違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に置く。
 dependency-cruiser が `~/` `~~/` を解決するための paths は `tsconfig.depcruise.json` にある。ルートの `tsconfig.json` は生成物（`.nuxt/`）への references だけで paths を持たないため、生成物に依存しない専用の tsconfig を持つ。
 
-CI は無く、lint も build もローカルで実行したときだけ落ちる。
+lint は `npm install` が有効にする pre-commit フック（`.githooks/pre-commit`）が commit のたびに回す。CI は無く、build はローカルで実行したときだけ落ちる。
 
 lint を入れる順序は費用対効果順で、import の書き分け → Tailwind の任意値 → プラットフォーム系の禁止3点。
 いずれも既知の違反をベースラインに固定し、新規違反だけを落とす形で入れる。ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。
