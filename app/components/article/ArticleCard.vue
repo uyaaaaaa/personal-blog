@@ -24,6 +24,8 @@
 </template>
 
 <script setup lang="ts">
+import { formatDate } from '~/utils/date'
+
 interface Props {
   title: string
   path: string

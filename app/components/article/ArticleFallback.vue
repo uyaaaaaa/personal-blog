@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BackButton from '~/components/common/BackButton.vue'
+import { formatDate } from '~/utils/date'
 
 interface Props {
   variant: 'error' | 'not-found'

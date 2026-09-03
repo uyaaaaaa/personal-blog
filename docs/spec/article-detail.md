@@ -2,7 +2,7 @@
 
 記事ページ（`app/pages/article/[_slug].vue`）を構成する部品と、目次・脚注・先頭に戻るが共有するスクロールの仕組み。本文（Markdown）の描画は [content.md](./content.md) を参照。
 
-スクロール系の composable（`useTocActive` `useScrollDirection` `useScrollTo` `useProgrammaticScroll`）の仕様は [shared.md](./shared.md) にある。
+スクロール系の composable（`useScrollFrame` `useIsDesktop` `useTocActive` `useScrollDirection` `useScrollTo` `useProgrammaticScroll`）の仕様は [shared.md](./shared.md) にある。
 
 ---
 
@@ -93,7 +93,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | :--- | :--- |
 | 開閉 | バーのタップでトグル。シェブロンが180度回転（`200ms`） |
 | **記事を押し下げない** | ドロップダウンは `absolute` のオーバーレイとし、本文レイアウトを変化させない |
-| スクロール連動 | sticky 状態のとき、**下スクロールで隠れ（`-translate-y-[120px]` + `opacity-0`）、上スクロールで再表示**。開いている間は隠れない |
+| スクロール連動 | sticky 状態のとき、**下スクロールで隠れ（内側の要素に `-translate-y-[120px]` + `opacity-0`）、上スクロールで再表示**。開いている間は隠れない |
 | ジャンプ中の挙動 | ページ内ジャンプ中は、**方向によらずバーを隠す**。上方向へジャンプした際にバーが現れて着地した見出しや脚注に被るのを防ぐ。`isVisible` が `isProgrammaticScroll` を直接見るため、目次・見出しのスクロール（`useScrollTo`）と脚注のフラグメント遷移（`beginProgrammaticScroll`）の両方で効く |
 | 開いた時の位置合わせ | 開いた時点でアクティブな見出しが**領域の中央付近に来るよう内部スクロール**する |
 | スクロール貫通の抑止 | `overscroll-contain` で、目次内のスクロールが端に達しても背後のページを動かさない |
@@ -103,7 +103,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 
 **sticky 判定の注意**
 
-隠れるアニメーション中は `translateY` がかかるため、`DOMMatrixReadOnly` で変換量を打ち消してから位置を判定する。
+`sticky` を持つ外側の要素と、隠れるときに `translateY` がかかる内側の要素を**分ける**。sticky 判定は外側の位置で行うため、隠れるアニメーション中も判定がぶれない（同じ要素に両方を持たせると、変換量を `getComputedStyle` で読み戻して打ち消す必要が出る）。`pointer-events` だけは外側に置く（内側を退避させても外側の当たり判定が残るため）。
 
 ---
 

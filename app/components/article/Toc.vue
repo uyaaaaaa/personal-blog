@@ -34,6 +34,9 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
+import { useScrollTo } from '~/composables/useScrollTo'
+import { useTocActive } from '~/composables/useTocActive'
+import { useIsDesktop } from '~/composables/useIsDesktop'
 
 const props = defineProps<{
   links: any[]
@@ -42,7 +45,8 @@ const props = defineProps<{
 const { scrollTo } = useScrollTo()
 
 const navRef = ref<HTMLElement | null>(null)
-const { activeId } = useTocActive(computed(() => props.links), 100)
+const { isDesktop } = useIsDesktop()
+const { activeId } = useTocActive(computed(() => props.links), 100, isDesktop)
 
 watch(activeId, async (id) => {
   if (!id) return

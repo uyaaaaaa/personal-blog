@@ -7,6 +7,8 @@ import TocMobile from '~/components/article/TocMobile.vue'
 import ArticleFallback from '~/components/article/ArticleFallback.vue'
 import { useScrollTo } from '~/composables/useScrollTo'
 import { beginProgrammaticScroll } from '~/composables/useProgrammaticScroll'
+import { usePageSeo } from '~/composables/usePageSeo'
+import { formatDate } from '~/utils/date'
 
 const route = useRoute()
 

@@ -35,10 +35,10 @@ spec の「なぜ」を読んでから触る。一見不要に見える指定に
 ## 4. 確認する
 
 ```sh
-npm run build
+npm run lint && npm run build
 ```
 
-テストと lint は未導入。build が通ることと、`npm run dev` での目視で確認する。
+lint はコンポーネントの import 忘れだけを見る。composable / util の import 忘れは build（prerender）で落ちる。テストは未導入で、`npm run dev` での目視が最後の確認になる。
 目視は SP 幅（375px）と PC 幅（1280px）の両方、ライトとダークの両方で行う。
 横スクロールが出ていないか、着地位置がヘッダーに潜り込んでいないかを見る。
 

@@ -40,7 +40,7 @@ app/
     common/                  Sidebar、BackButton、Pagination、ScrollToTopButton
     error/                   ErrorView と NotFound / Server
     Hero.vue ArticleList.vue ルート直下（歴史的経緯。移動は未定）
-  composables/               reactive / lifecycle を使う共有ロジック
+  composables/               reactive / lifecycle を使う共有ロジック。スクロール購読は useScrollFrame に集約
   utils/                     純粋関数（日付、タグ、カテゴリ）
 public/                      favicon、OGP 画像、manifest
 ```
@@ -56,7 +56,7 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 
 - 右から左への import は作らない。`utils` は何も import しない。`composables` はコンポーネントを import しない。
 - `components/` の間では、`article/` の一覧実体が `common/` と `ArticleList` を使う。`layout/` は他の領域を使わない。
-- `composables/` 同士の依存は `useScrollTo` → `useProgrammaticScroll` と `useScrollDirection` → `useProgrammaticScroll` の2本だけ。
+- `composables/` 同士の依存は `useScrollTo` → `useProgrammaticScroll`、`useScrollDirection` → `useProgrammaticScroll` / `useScrollFrame`、`useTocActive` → `useScrollFrame` だけ。
 
 ## データの流れ
 
@@ -81,17 +81,21 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 | :--- | :--- | :--- |
 | 型と SFC の整合 | `npm run build` | あり |
 | フロントマターのスキーマ | `content.config.ts` の zod | あり |
-| コメント・スタイル・import・置き場・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
+| 自作 composable / util の明示 import | `nuxt.config.ts` の `imports: { scan: false }`。書き忘れは prerender の `ReferenceError` で `npm run build` が落ちる | あり |
+| 自作コンポーネントの明示 import | `components: false` + `eslint.config.mjs` の `vue/no-undef-components`（`npm run lint`）。未 import はビルドでは落ちず、そのコンポーネントが消えた HTML が出るため lint が要る | あり |
+| コメント・スタイル・置き場・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
 | 循環依存、依存方向、`~/` 以外のエイリアス、任意値、`navigator.userAgent`、`unload` | ESLint / Stylelint | **未導入**。次に入れる |
 
-lint を入れる順序は費用対効果順で、循環禁止 → 依存方向 → import の書き分け → Tailwind の任意値 → プラットフォーム系（`P` 系）の禁止3点。
-いずれも既知の違反をベースラインに固定し、新規違反だけを落とす形で入れる。
+CI は無く、lint も build もローカルで実行したときだけ落ちる。
+
+lint を入れる順序は費用対効果順で、循環禁止 → 依存方向 → import の書き分け → Tailwind の任意値 → プラットフォーム系の禁止3点。
+いずれも既知の違反をベースラインに固定し、新規違反だけを落とす形で入れる。ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。
 lint で落とせるようになったルールは `.claude/rules/` から消す（二重管理にしない）。
 
 ## 既知のずれ
 
 lint 導入時にまとめて直す。
 
-- import のエイリアスが `~/` `@/` `../` で混在している（`Header.vue` `HeaderNavigation.vue` `layouts/default.vue` `error.vue`）。
-- `ref` `computed` を `'vue'` から明示 import しているファイルが8つある（コンポーネント5、composable 3。auto-import に任せる方針と不一致）。
+- `useArticleTags.ts` だけ `../utils/tag` と相対パスで utils を参照している（他は `~/`）。
+- `ref` `computed` を `'vue'` から明示 import しているファイルが10ある（プリセットの auto-import に任せる方針と不一致）。
 - `Hero.vue` と `ArticleList.vue` が `components/` 直下にある。

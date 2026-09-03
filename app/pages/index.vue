@@ -17,7 +17,10 @@
 </template>
 
 <script setup lang="ts">
+import Hero from '~/components/Hero.vue'
 import ArticleShelf from '~/components/article/ArticleShelf.vue'
+import { usePageSeo } from '~/composables/usePageSeo'
+import { CATEGORIES, CATEGORY_LABELS } from '~/utils/category'
 
 const SHELF_LIMIT = 6
 

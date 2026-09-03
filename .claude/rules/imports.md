@@ -5,11 +5,12 @@ paths:
 
 # import と依存のルール
 
-Nuxt の auto-import は有効のまま使う。ただし**自作モジュール間の依存は必ず `import` 文に現れる**ようにする。
-依存グラフに現れない依存があると、次に入れる循環検出・依存方向の lint が無言で無効になる（[docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)）。
+**自作モジュール間の依存は必ず `import` 文に現れる**ようにする。依存グラフに現れない依存があると、次に入れる循環検出・依存方向の lint が無言で無効になる（[docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)）。
+`nuxt.config.ts` の `imports: { scan: false }` と `components: false` で自作モジュールの auto-import は止めてあり、書き忘れは composable / util なら `npm run build`、コンポーネントなら `npm run lint`（`vue/no-undef-components`）で落ちる。
 
-- **自作の components / composables / utils は明示 import する。** パスは `~/components/...` のように `~/` で書く。同じディレクトリ内だけ `./`。`@/` と `../` は使わない。
-- **Nuxt / Vue の組み込み（`ref` `computed` `watch` `useRoute` `useAsyncData` `queryCollection` `createError` `useHead` など）は auto-import に任せ、書かない。**
+- **自作の components / composables / utils は明示 import する。** パスは `~/components/...` のように `~/` で書く。同じディレクトリ内だけ `./`。`@/` と `../` は使わない。並びはコンポーネント → composable → util。
+- **例外は `app/components/content/`。** `@nuxt/content` が独自に登録し、markdown 側が名前で解決するため、`Callout` `ProseA` `ProseTable` は import できない（`components: false` の影響も受けない）。
+- **Nuxt / Vue の組み込み（`ref` `computed` `watch` `useRoute` `useAsyncData` `queryCollection` `createError` `useHead` など）はプリセットの auto-import に任せ、書かない。** `imports.autoImport: false` にはしない（組み込みまで止まり `useColorMode` が解決できず 500 になる）。
 - **`theme/tokens.ts` は `~~/theme/tokens` で参照する**（`app/` の外にあるため）。
 - **barrel file（再エクスポートだけの `index.ts`）を作らない。**
 - **循環依存を作らない。** 型だけの依存は `import type` にする。

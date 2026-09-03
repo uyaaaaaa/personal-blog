@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useArticleTags } from '~/composables/useArticleTags'
+import { usePageSeo } from '~/composables/usePageSeo'
+
 const { data: tags } = useArticleTags()
 
 usePageSeo({

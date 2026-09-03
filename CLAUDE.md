@@ -10,9 +10,11 @@ npm run dev       # 開発サーバー
 npm run build     # 本番ビルド
 npm run generate  # 静的生成
 npm run preview   # ビルド結果のプレビュー
+npm run lint      # ESLint
 ```
 
-テストランナーと Lint は未導入です。変更の確認は `npm run build` が通ることと、開発サーバーでの目視で行います。
+テストランナーは未導入です。変更の確認は `npm run lint` と `npm run build` が通ることと、開発サーバーでの目視で行います。
+ESLint は自作コンポーネントの明示 import を強制する `vue/no-undef-components` だけを有効にしています。CI はありません。
 
 ## ルールとスキル
 
