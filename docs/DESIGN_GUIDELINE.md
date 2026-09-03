@@ -3,18 +3,17 @@
 当ブログのデザイン**大方針**を定めるドキュメントです。
 コンセプト、デザイントークン、レイアウト原則、UX要件といった「サイト全体に横断的に効くルール」を扱います。
 
-個々のコンポーネントの詳細な表示要件・インタラクション仕様は **[COMPONENT_SPEC.md](./COMPONENT_SPEC.md)** に、
-アイコン・favicon の仕様は **[ICON_GUIDELINE.md](./ICON_GUIDELINE.md)** に分離しています。
+実装から読み取れない個々の判断の理由は **[DECISIONS.md](./DECISIONS.md)** に、
+アイコン・favicon の仕様は **[ICON_GUIDELINE.md](./ICON_GUIDELINE.md)** に分離しています。個々のコンポーネントの値や構造は実装が正で、文書には書きません。
 
 | ドキュメント | 扱う範囲 |
 | :--- | :--- |
 | **DESIGN_GUIDELINE.md**（本書） | 大方針。コンセプト、デザイントークン、レイアウト原則、UX要件、既知の課題。 |
-| **[COMPONENT_SPEC.md](./COMPONENT_SPEC.md)** | コンポーネント定義。各コンポーネントの props、表示要件、状態とインタラクション。 |
+| **[DECISIONS.md](./DECISIONS.md)** | 判断の記録。画面・機能ごとに、実装を読んでも分からない「なぜ」だけ。 |
 | **[ICON_GUIDELINE.md](./ICON_GUIDELINE.md)** | アイコン定義。`u/` モノグラムの仕様、favicon 一式のファイル構成と生成手順。 |
 
 **実装が正**です。実装を変更した際は該当するドキュメントも併せて更新してください。
 
-- 最終更新: 2026-09-02
 - 対象: Nuxt 4 / Nuxt Content 3 / Tailwind CSS 3 (+ @tailwindcss/typography)
 
 ---
@@ -91,7 +90,7 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 | **スクロールバー** | `#D1D5DB` | `#3A3A3A` | — | `--color-scrollbar` | 目次のスクロールバー。 |
 | **コード文字色** | `#24292E` | `#E6EDF3` | — | `--color-code-text` | コードブロックの文字色（Shiki のテーマ `github-light` / `github-dark` の前景色に合わせる）。 |
 
-Callout は例外的に独自パレットを持ちます。Obsidian デフォルトテーマの色相をベースに、タイトル文字が両テーマでコントラスト比 4.5:1 以上になるようテーマ別に明度を調整した値です（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。
+Callout は例外的に独自パレットを持ちます。Obsidian デフォルトテーマの色相をベースに、タイトル文字が両テーマでコントラスト比 4.5:1 以上になるようテーマ別に明度を調整した値です（→ [DECISIONS.md](./DECISIONS.md#callout)）。
 記事本文（prose）のタイポグラフィ色も Tailwind typography プラグインの `prose-slate`（ダークは `dark:prose-invert`）由来でパレットの外側です。
 
 ### C. タイポグラフィ
@@ -126,15 +125,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 サイトのモーションは OS の「視差効果を減らす（Reduce Motion）」設定に関わらず、常に同じように動きます。
 `@media (prefers-reduced-motion: reduce)` も `matchMedia` による判定も、コンポーネント・グローバルCSS・composable のいずれにも置きません。
-
-これは**意図的にユーザーの申告を無視する選択**です。前庭障害への配慮という本来の趣旨には反するため、
-将来この判断を戻す場合は次の3箇所に手を入れることになります（以前はここに実装がありました）。
-
-| 対象 | 置き場 |
-| :--- | :--- |
-| CSSのトランジション・アニメーション | `app/layouts/default.vue` のグローバルな `*` セレクタ。`NuxtLoadingIndicator` のようにインラインstyleで当ててくるものを打ち消すため `!important` が要る |
-| JSから起こすスクロール | `app/composables/useScrollTo.ts`。JSが `behavior: 'smooth'` を明示するとCSSの `scroll-behavior` では止められないため、判定できる唯一の場所 |
-| Exploreパネルの開閉 | `app/components/layout/HeaderMenuPanel.vue` |
+これは意図的な選択で、検討した案と戻す条件は [DECISIONS.md](./DECISIONS.md#prefers-reduced-motion-を参照しない) にあります。
 
 `html` に `scroll-behavior: smooth` は**置きません**。Nuxt 既定の `scrollBehavior` は遷移時のスクロール位置を `behavior` 抜きで返すため、置くとページ遷移とブラウザバックの位置復元までアニメーションします。避けるには `app/router.options.ts` で `scrollBehavior` を丸ごと置き換えるしかなく、ハッシュ着地に `scroll-margin-top` を効かせている既定の処理まで自前で抱えることになります。
 
@@ -155,56 +146,44 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 `lg:` で消してもコンポーネントはマウントされたままなので、放っておくと画面に出ていない側もスクロールのたびに計算し続けます。実測（Chromium / 390×844 / CPU 6倍スロットル / 23見出しの記事）では、SPで非表示のデスクトップ用目次が、SP側の目次と同じだけの処理を裏で回していました。
 
-境界値の判定は `useIsDesktop`（`app/composables/useIsDesktop.ts`）が `matchMedia` で1本だけ持ち、`useScrollFrame` の `enabled` に渡します（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md) の 5章）。**表示の出し分けそのものは Tailwind の `lg:` のままです**。JS 側は購読を止めるだけで、`v-if` には置き換えません（SSR の HTML が変わり、デスクトップでサイドバーが後から現れるため）。
+境界値の判定は `useIsDesktop`（`app/composables/useIsDesktop.ts`）が `matchMedia` で1本だけ持ち、`useScrollFrame` の `enabled` に渡します（→ [DECISIONS.md](./DECISIONS.md#usescrollframe)）。**表示の出し分けそのものは Tailwind の `lg:` のままです**。JS 側は購読を止めるだけで、`v-if` には置き換えません（SSR の HTML が変わり、デスクトップでサイドバーが後から現れるため）。
 
 ---
 
 ## 3. レイアウトの原則
 
+値（幅・高さ・余白・角丸）は 2-D と 2-E が持ちます。ここには**どう組むか**だけを書きます。
+
 ### A. 全ページ共通
 
-`app/layouts/default.vue` が全ページの土台です。
+`app/layouts/default.vue` が全ページの土台です。sticky なヘッダー、`.container` で幅を絞った `main`、フッターを縦に積みます。
 
-```
-┌─────────────────────────────┐
-│ Header (sticky, 64px)       │
-├─────────────────────────────┤
-│ main .container             │
-│   max-width: 1200px         │
-│   padding: 2rem 1rem 4rem   │
-├─────────────────────────────┤
-│ Footer                      │
-└─────────────────────────────┘
-```
-
-- `min-height: 100vh` の縦フレックスで、コンテンツが短くてもフッターを最下部に配置する。
-- ヘッダーは半透明 + `backdrop-filter: blur(10px)` で、スクロール時に背後のコンテンツを透かす。
+- 縦フレックスと最小高さで、コンテンツが短くてもフッターを最下部に置く。
+- ヘッダーは半透明 + `backdrop-filter` で、スクロール時に背後のコンテンツを透かす。
 
 ### B. ページ構成
 
 | ルート | 構成 |
 | :--- | :--- |
 | `/` | Hero（最新1件） + カテゴリごとの棚（`ArticleShelf`）を縦に積む |
-| `/article` | ページヘッダー + 記事グリッド（9件ごとのページャ） |
-| `/article/page/[page]` | `/article` の2ページ目以降。範囲外のページ番号は404。 |
-| `/article/[slug]` | 2カラム（本文 + 右サイドバー）。SPは1カラム。 |
+| `/article` | ページヘッダー + 記事グリッド + ページャ |
+| `/article/[slug]` | 2カラム（本文 + 右サイドバー）。SPは1カラム |
 | `/tags` | ページヘッダー + 全タグのチップ一覧 |
-| `/tags/[tag]` | ページヘッダー + 絞り込んだ記事グリッド（9件ごとのページャ）。0件は404。 |
-| `/tags/[tag]/page/[page]` | `/tags/[tag]` の2ページ目以降。範囲外のページ番号は404。 |
-| `/category/[category]` | ページヘッダー + 絞り込んだ記事グリッド（9件ごとのページャ）。未知のカテゴリと0件は404。全カテゴリの一覧ページは持たない（TOPがその役割を担う）。 |
-| `/category/[category]/page/[page]` | `/category/[category]` の2ページ目以降。範囲外のページ番号は404。 |
+| `/tags/[tag]` | ページヘッダー + 絞り込んだ記事グリッド + ページャ。0件は404 |
+| `/category/[category]` | 同上。未知のカテゴリと0件は404。全カテゴリの一覧ページは持たない（TOPがその役割を担う） |
 
-**ページヘッダーの共通形式**: `h1`（`text-3xl` / 太字）+ 説明文（サブテキスト色）+ 下端に1pxボーダー（`pb-8`）。
+一覧の2ページ目以降は `.../page/[page]` に置き、範囲外のページ番号は404にします（→ [DECISIONS.md](./DECISIONS.md#ページ番号をクエリではなくパスで持つ)）。
+
+**ページヘッダーの共通形式**: `h1` + 説明文（サブテキスト色）+ 下端に1pxボーダー。
 
 ### C. 記事一覧グリッド
 
 TOP以外の一覧表示は、全ページで同じグリッドを使います。
 
-- `1カラム` (〜767px) → `2カラム` (768px〜) → `3カラム` (1024px〜)
-- ギャップ: `1rem` (SP) / `1.5rem` (md以上)
+- SPは1カラム。`md` で2カラム、`lg` で3カラムに増やす。
 - 並び順は原則 `date` の降順。表示対象は `published: true` の記事のみ。
-- 1ページ9件で区切り、下端に `Pagination` を置く。1ページに収まるときはページャを出さない。
-- ページ番号はパスで持つ（`/article/page/2`）。1ページ目は `/page/1` を持たず、素のパスが正とする。
+- 一定件数で区切って下端に `Pagination` を置き、1ページに収まるときは出さない。
+- ページ番号はパスで持つ（→ [DECISIONS.md](./DECISIONS.md#ページ番号をクエリではなくパスで持つ)）。
 - 一覧ページの下端には戻り導線（`BackButton`）を置く。
 
 ### D. TOPのカテゴリ棚
@@ -212,18 +191,17 @@ TOP以外の一覧表示は、全ページで同じグリッドを使います�
 TOPページだけはグリッドではなく、カテゴリ単位の棚（`ArticleShelf`）を縦に積みます。
 
 - 棚は `category` ごとに1つ。順序と表示名は `app/utils/category.ts` の `CATEGORY_LABELS` の定義順に従う。
-- 各棚の上限は6件。あふれた分は見出し横の `View All` から `/category/[category]` へ送る。
-- `View All` は棚に出ていない記事があるときだけ出す。全件が棚に収まっているカテゴリでは出さない。
-- 棚の見出し自体も `/category/[category]` へのリンクにする。`View All` が消えてもカテゴリページが孤立しないようにするため。
-- `〜1023px` は横スクロール（カード幅 `264px` 固定・カード単位にスナップ）、`1024px〜` は4カラムのグリッドに切り替える。
+- 各棚には上限件数までを出し、あふれた分は見出し横の `View All` から `/category/[category]` へ送る。
+- `View All` は棚に出ていない記事があるときだけ出し、棚の見出し自体も同じ行き先へのリンクにする。
+- `lg` 未満は横スクロール（カード単位にスナップ）、`lg` 以上はグリッドに切り替える。
 - Heroに出した記事は棚から除外する。同じカードが1画面に2回出ることを避けるため。
 - 記事が0件のカテゴリの棚は出さない。
 
 ### E. 記事詳細の2カラム
 
-- PC版 (lg以上) はメインカラム（`max-w-3xl`）と右サイドバー（`300px`）の2カラム。カラム間 `gap-12`。
-- サイドバーは `sticky top-24` で追従する。
-- SP版は1カラムになり、目次は記事タイトル直下の sticky バーに切り替わる。
+- `lg` 以上はメインカラムと右サイドバーの2カラム。
+- サイドバーは sticky で追従する。
+- SPは1カラムになり、目次は記事タイトル直下の sticky バーに切り替わる。
 
 ---
 
@@ -231,34 +209,35 @@ TOPページだけはグリッドではなく、カテゴリ単位の棚（`Arti
 
 - **タイポグラフィのベースに任せる。** 見出し・引用・リストなどは既定の体裁を活かし、必要な差分だけを整える。
 - **記法は Obsidian 互換を優先する。** 執筆環境（Obsidian）でそのまま書ける記法を採用する（Callout など）。
-- **コードの可読性を最優先する。** ハイライトはライトテーマで統一し、背景とボーダーでコード領域を明示する。
+- **コードの可読性を最優先する。** ハイライトは Shiki のデュアルテーマ（`github-light` / `github-dark`）でサイトのテーマに追従させ、背景とボーダーでコード領域を明示する。
 
-具体的なスタイル値、対応言語、Callout の仕様は [COMPONENT_SPEC.md](./COMPONENT_SPEC.md) を参照してください。
+対応言語は `nuxt.config.ts` の `highlight.langs`、Callout の仕様は `app/components/content/Callout.vue` と `remark/obsidian-callout.mjs` が正です。判断の理由は [DECISIONS.md](./DECISIONS.md#markdown-スタイル) にあります。
 
 ---
 
 ## 5. 機能性とUX要件
 
-| 項目 | 要件 | 状態 |
-| :--- | :--- | :--- |
-| **パフォーマンス** | 表示速度を最優先（Core Web Vitals の高水準達成）。Webフォントを使わず、`inlineStyles` を有効化。 | 実装済 |
-| **静的生成** | Cloudflare Pages 向けにプリレンダリング（`nitro.preset: cloudflare-pages`）。プリレンダ済みのパスは `_routes.json` の `exclude` で Worker を通さない。`exclude` は Cloudflare の上限が100件のため、記事・タグ・カテゴリは `/article/*` `/tags/*` `/category/*` のワイルドカードで畳む（個別列挙のままだと記事追加で上限に達し、全記事が Worker 送りになって SSR が失敗する）。存在しないパスは静的な `404.html` が 404 で返る。 | 実装済 |
-| **公開制御** | `published: true` の記事のみを全ページで取得する。 | 実装済 |
-| **旧URL互換** | `/blog/**` `/book/**` は `/article/**` へ301リダイレクト。 | 実装済 |
-| **タグ機能** | 全タグの一覧ページと、タグによる絞り込みを提供する。 | 実装済 |
-| **ページネーション** | 記事一覧は1ページ9件で区切り、ページ番号はパス（`/article/page/2`）で持つ。2ページ目以降もプリレンダされ、リンクを辿るだけで全記事に到達できる。1ページ目は `/page/1` を持たない（正規URLは素のパス）。 | 実装済 |
-| **カテゴリ機能** | `category` はサイト設計として固定する値のため、`content.config.ts` で `z.enum` に列挙し、その値をそのままURLセグメント（`/category/blog`）に使う。タグと違い slug 化を挟まないので、表示名を記事から逆引きする必要がない。表示名は `CATEGORY_LABELS` が持つ。 | 実装済 |
-| **スクロール追従** | 見出し位置に応じて目次のアクティブ項目をハイライトする。 | 実装済 |
-| **スムーズスクロール** | 見出し・目次のクリックでスムーズに移動し、URLハッシュを更新する。着地位置は見出しと脚注の `scroll-margin-top` で一元管理し、URLハッシュの直接オープンにも同じ余白を効かせる。 | 実装済 |
-| **先頭に戻る** | 記事詳細の `〜1023px` でのみ、`1画面分` と `ページ全体の1/3` の大きい方を超えて読み進めたら、右下に上向きシェブロンのボタンを浮かべる。`1024px〜` は右サイドバーの目次が同じ役割を担うため出さない。濃さはスクロール量に連動させ、少しずつ現れて少しずつ消える。押すとページ先頭へスムーズスクロールし、URLのハッシュを取り除く（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md) の `ScrollToTopButton`）。 | 実装済 |
-| **脚注** | 本文の参照と記事末尾の脚注を相互にジャンプできる。どちらの向きも固定ヘッダーやモバイル目次バーに潜り込ませず、ジャンプ先を `:target` で強調する（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。 | 実装済 |
-| **UI文言** | ナビゲーション、ボタン、エラーなどUI側の文言は**英語**を基本とする（記事本文は日本語）。既存の例外は目次の「目次」。 | 実装済 |
-| **アイコン** | favicon / PWA / iOS 向けアイコンを一式提供する（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。 | 実装済 |
-| **OGP** | SNS シェア用の OGP / Twitter Card メタタグを全ページに出力する。共通画像は `public/ogp.png`、記事はフロントマターの `image` で差し替え可（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。記事を表示できないページは `og:type` を `website` にし、`article` を名乗らせない。 | 実装済 |
-| **ローディング表示** | ルート遷移中は画面上端にアクセント色2pxのバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない。`throttle: 200ms` により、プリレンダ済みページのように即座に終わる遷移ではバーを出さない。なおバーはルート遷移にしか反応しないため、ページ内の再取得（再試行など）は各コンポーネントが自前で進行を示す。 | 実装済 |
-| **記事取得の状態分離** | 記事詳細では「取得失敗」と「記事なし」を区別して表示し、HTTPステータスも実態に合わせる（取得失敗=500 / 記事なし=404 / 未確定は何も出さない）。（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md) の `ArticleFallback`） | 実装済 |
-| **検索** | `Cmd/Ctrl + K` で検索モーダルを起動する。 | **未実装** |
-| **ダークモード** | ヘッダーのトグル（`ThemeToggle`）でライト / ダークを切り替える。初期値は `prefers-color-scheme` に従い、明示的な選択は localStorage に永続化（FOUC 防止込みで `@nuxtjs/color-mode` が担う）。シンタックスハイライト（Shiki デュアルテーマ）と `theme-color` メタもテーマに追従する。 | 実装済 |
+サイト全体で満たす要件です。すべて実装済みで、未実装のものは 6 にあります。
+
+| 項目 | 要件 |
+| :--- | :--- |
+| **パフォーマンス** | 表示速度を最優先する。Webフォントを読み込まず、`inlineStyles` を有効にする |
+| **静的生成** | Cloudflare Pages 向けにプリレンダリングし、プリレンダ済みのパスは Worker を通さない（→ [DECISIONS.md](./DECISIONS.md#プリレンダ済みパスの除外をワイルドカードで畳む)）。存在しないパスは静的な `404.html` が 404 で返す |
+| **公開制御** | `published: true` の記事のみを全ページで取得する |
+| **旧URL互換** | `/blog/**` `/book/**` は `/article/**` へ301リダイレクトする |
+| **タグ機能** | 全タグの一覧ページと、タグによる絞り込みを提供する |
+| **ページネーション** | 記事一覧を一定件数で区切り、ページ番号はパスで持つ（→ [DECISIONS.md](./DECISIONS.md#ページ番号をクエリではなくパスで持つ)） |
+| **カテゴリ機能** | `content.config.ts` の `z.enum` を正とし、その値をそのままURLセグメントに使う（→ [DECISIONS.md](./DECISIONS.md#カテゴリは-zenum-で固定し値をそのまま-url-セグメントにする)） |
+| **スクロール追従** | 見出し位置に応じて目次のアクティブ項目をハイライトする |
+| **スムーズスクロール** | 見出し・目次のクリックでスムーズに移動し、URLハッシュを更新する。着地位置は `scroll-margin-top` で一元管理し、URLハッシュの直接オープンにも同じ余白を効かせる（→ [DECISIONS.md](./DECISIONS.md#ページ内リンクの着地位置)） |
+| **先頭に戻る** | 記事詳細の SP 幅でのみ、読み進めたら右下にボタンを浮かべる（→ [DECISIONS.md](./DECISIONS.md#scrolltotopbutton)） |
+| **脚注** | 本文の参照と記事末尾の脚注を相互にジャンプできる。固定ヘッダーやモバイル目次バーに潜り込ませず、ジャンプ先を `:target` で強調する（→ [DECISIONS.md](./DECISIONS.md#脚注)） |
+| **UI文言** | ナビゲーション、ボタン、エラーなどUI側の文言は**英語**を基本とする（記事本文は日本語）。既存の例外は目次の「目次」 |
+| **アイコン** | favicon / PWA / iOS 向けアイコンを一式提供する（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
+| **OGP** | SNS シェア用の OGP / Twitter Card メタタグを全ページに出力する。共通画像は `public/ogp.png`、記事はフロントマターの `image` で差し替え可（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。記事を表示できないページは `og:type` を `website` にし、`article` を名乗らせない |
+| **ローディング表示** | ルート遷移中は画面上端にアクセント色のバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない（→ [DECISIONS.md](./DECISIONS.md#ローディングバー)） |
+| **記事取得の状態分離** | 記事詳細では「取得失敗」と「記事なし」を区別して表示し、HTTPステータスも実態に合わせる（→ [DECISIONS.md](./DECISIONS.md#記事詳細は取得が確定するまで何も出さず失敗と記事なしを区別する)） |
+| **ダークモード** | ヘッダーのトグル（`ThemeToggle`）でライト / ダークを切り替える。初期値は `prefers-color-scheme` に従い、明示的な選択は永続化する（FOUC 防止込みで `@nuxtjs/color-mode` が担う）。シンタックスハイライトと `theme-color` メタもテーマに追従する |
 
 ---
 
