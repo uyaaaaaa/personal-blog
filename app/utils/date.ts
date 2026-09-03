@@ -3,7 +3,8 @@ export const formatDate = (date: string | Date | undefined | null): string => {
   return new Date(date).toLocaleDateString('ja-JP', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit'
+    day: '2-digit',
+    timeZone: 'UTC'
   }).replace(/\//g, '.')
 }
 
@@ -11,14 +12,18 @@ const DAY_MS = 24 * 60 * 60 * 1000
 const DAYS_IN_WEEK = 7
 const RELATIVE_DATE_MAX_DAYS = 30
 
-const startOfDay = (value: Date): number =>
-  new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime()
+const startOfUtcDay = (value: Date): number =>
+  Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate())
+
+const startOfLocalDay = (value: Date): number =>
+  Date.UTC(value.getFullYear(), value.getMonth(), value.getDate())
 
 const formatShortDate = (target: Date, now: Date | null): string =>
   target.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    ...(now && target.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' }),
+    timeZone: 'UTC',
+    ...(now && target.getUTCFullYear() === now.getFullYear() ? {} : { year: 'numeric' }),
   })
 
 export const formatRelativeDate = (date: string | Date | undefined | null, now: number | null): string => {
@@ -29,7 +34,7 @@ export const formatRelativeDate = (date: string | Date | undefined | null, now: 
   if (now === null) return formatShortDate(target, null)
 
   const today = new Date(now)
-  const days = Math.round((startOfDay(today) - startOfDay(target)) / DAY_MS)
+  const days = Math.round((startOfLocalDay(today) - startOfUtcDay(target)) / DAY_MS)
 
   if (days >= RELATIVE_DATE_MAX_DAYS) return formatShortDate(target, today)
   if (days <= 0) return 'today'
