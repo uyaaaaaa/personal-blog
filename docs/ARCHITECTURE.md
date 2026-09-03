@@ -83,14 +83,25 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 | フロントマターのスキーマ | `content.config.ts` の zod | あり |
 | 自作 composable / util の明示 import | `nuxt.config.ts` の `imports: { scan: false }`。書き忘れは prerender の `ReferenceError` で `npm run build` が落ちる | あり |
 | 自作コンポーネントの明示 import | `components: false` + `eslint.config.mjs` の `vue/no-undef-components`（`npm run lint`）。未 import はビルドでは落ちず、そのコンポーネントが消えた HTML が出るため lint が要る | あり |
+| 循環依存 | `.dependency-cruiser.cjs` の `no-circular`（`npm run lint`）。`import type` だけの循環は実行時依存が無いので許す | あり |
+| 依存方向（上の図） | `.dependency-cruiser.cjs` の `*-no-upward` と `theme-only-from-app-vue`（`npm run lint`） | あり |
 | コメント・スタイル・置き場・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
-| 循環依存、依存方向、`~/` 以外のエイリアス、任意値、`navigator.userAgent`、`unload` | ESLint / Stylelint | **未導入**。次に入れる |
+| `~/` 以外のエイリアス、任意値、`navigator.userAgent`、`unload` | ESLint / Stylelint | **未導入**。次に入れる |
+
+`npm run lint` は ESLint と dependency-cruiser を続けて回す。ファイル1つで判定できる違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に置く。
+dependency-cruiser が `~/` `~~/` を解決するための paths は `tsconfig.depcruise.json` にある。ルートの `tsconfig.json` は生成物（`.nuxt/`）への references だけで paths を持たないため、生成物に依存しない専用の tsconfig を持つ。
 
 CI は無く、lint も build もローカルで実行したときだけ落ちる。
 
-lint を入れる順序は費用対効果順で、循環禁止 → 依存方向 → import の書き分け → Tailwind の任意値 → プラットフォーム系の禁止3点。
+lint を入れる順序は費用対効果順で、import の書き分け → Tailwind の任意値 → プラットフォーム系の禁止3点。
 いずれも既知の違反をベースラインに固定し、新規違反だけを落とす形で入れる。ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。
 lint で落とせるようになったルールは `.claude/rules/` から消す（二重管理にしない）。
+
+dependency-cruiser のベースラインは `.dependency-cruiser-known-violations.json`（今は空）。新規の違反は直し、ベースラインには足さない。ベースラインにある違反を直したら次のコマンドで作り直す（減らす方向にだけ使う）。
+
+```sh
+npx depcruise app --config --output-type baseline > .dependency-cruiser-known-violations.json
+```
 
 ## 既知のずれ
 

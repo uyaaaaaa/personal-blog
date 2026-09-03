@@ -38,7 +38,7 @@ description: このブログの UI（コンポーネント・ページ・スタ�
 npm run lint && npm run build
 ```
 
-lint はコンポーネントの import 忘れだけを見る。composable / util の import 忘れは build（prerender）で落ちる。テストは未導入で、`npm run dev` での目視が最後の確認になる。
+lint はコンポーネントの import 忘れと、循環・依存方向を見る。composable / util の import 忘れは build（prerender）で落ちる。テストは未導入で、`npm run dev` での目視が最後の確認になる。
 目視は SP 幅（375px）と PC 幅（1280px）の両方、ライトとダークの両方で行う。
 横スクロールが出ていないか、着地位置がヘッダーに潜り込んでいないかを見る。
 

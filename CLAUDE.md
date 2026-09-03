@@ -14,7 +14,7 @@ npm run lint      # ESLint
 ```
 
 テストランナーは未導入です。変更の確認は `npm run lint` と `npm run build` が通ることと、開発サーバーでの目視で行います。
-ESLint は自作コンポーネントの明示 import を強制する `vue/no-undef-components` だけを有効にしています。CI はありません。
+`npm run lint` は ESLint（自作コンポーネントの明示 import を強制する `vue/no-undef-components` だけ）と dependency-cruiser（循環と依存方向）を続けて回します。CI はありません。
 
 ## ルールとスキル
 
