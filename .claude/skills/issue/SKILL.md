@@ -1,6 +1,6 @@
 ---
 name: issue
-description: このリポジトリの GitHub issue を1本、着手から PR の緑確認まで進める。「#108 対応して」「issue #110 直して」のように issue 番号で来る依頼で使う。issue の原因を実装で裏取りし、対応案を変えるときだけ確認を取り、Closes 付きの PR に確認結果まで書いて Cloudflare Pages のチェックが緑になるまで見る。
+description: "このリポジトリの GitHub issue を1本、着手から PR の緑確認まで進める。「#108 対応して」「issue #110 を直して」のように issue 番号で来る依頼で使う。issue の原因を実装で裏取りし、対応案を変えるときだけ確認を取り、Closes 付きの PR に実測結果まで書く。issue 番号の無い症状だけの依頼は ui-change、記事の依頼は article に行くので、このスキルは使わない。"
 ---
 
 # issue 対応の手順
