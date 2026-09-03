@@ -289,6 +289,13 @@ GFM の脚注記法をそのまま使い、remark-gfm の出力（`[data-footnot
 - **diff の行の印は Shiki の transformer（`app/mdc.config.ts`）で付ける。** `diff` 文法は追加行・削除行を1色に塗るだけで hast に目印を残さない。トークンに付く `s83E4` のようなクラスは色から導出されたハッシュで不安定なため、CSS から掴まない。
 - **`github-light` / `github-dark` が diff のトークンに持つ背景色を打ち消す。** そのままだと行背景の上に文字幅の塗りが重なる。Nuxt Content はこの色を `html pre.shiki code .sXXXX { --shiki-default-bg: … }`（特異度 0,2,3）で出すため、`pre.shiki :deep(code .line > span)`（0,3,3）で `--shiki-default-bg` / `--shiki-dark-bg` を `transparent` に戻す。
 - **行背景は `--shiki-*-bg` 変数への値渡しではなく `background-color` で直接指定する。** scoped CSS の `:deep()` セレクタは `html.dark .shiki span`（0,2,2）より特異度が高いので直接書ける。`typography` 拡張（`:where()` で 0,1,0）に書くと効かない。
+- **行頭の `+` / `-` は transformer で別の span に切り出す。** `diff` 文法は記号を `punctuation.definition.inserted.diff` として別スコープにしているが、GitHub テーマが行本体と同じ色を当てるため Shiki が同色トークンを1つに畳み、1行1 span で出てくる。CSS だけでは記号を掴めない。
+- **変化した語は、同じハンクの `-` 行と `+` 行を組にして語単位の差分（jsdiff の `diffWords`）から求める。** 組は「i 番目同士」ではなく**似ている順**に取る。GitHub 式の i 番目同士だと、削除2行のあとに追加4行が続き対応する行がずれている diff（本ブログの実例）で1組も当たらない。共通部分が 50% 未満（`PAIR_SIMILARITY_MIN`）の組は行全体が書き換わったとみなして強調しない。閾値を切ると行のほぼ全部が強調される。
+- **語の強調は、トークンの span を範囲の境界で切り分けてクラスを足す形にし、入れ子にしない。** 入れ子にすると `.line > span` の背景打ち消しが外側の span にしか効かず、テーマがトークンに持つ背景が語の背景の上に出る。
+- **切り分けた断片が空白だけになるときは直前の断片に繋げる。** 空白だけのテキストを持つ span は Nuxt Content の圧縮で落ち、前後の語が繋がって表示される（`+` だけの行の改行が消える、`foo bar` → `baz qux` の空白が消える）。
+- **transformer を変えたら `.data/` を消してから生成する。** Nuxt Content は解析結果を `.data/content/contents.sqlite` に記事の内容をキーとして持ち、`app/mdc.config.ts` の変更では無効にならない。消さないと古い hast のまま出力される。
+- **unified diff のファイル名行（`--- a/x` / `+++ b/x`）は語の組から外す。** 互いに似ているため組になり、`a` / `b` だけが変化した語として強調されてしまう。
+- **`+` / `-` と変化した語の文字色を本文色にする理由は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md#b-配色color-palette) が持つ。** 特異度は `html.dark .shiki span`（0,2,2）より高い `pre.shiki :deep(code .diff-marker)`（0,3,2）で当てる。
 - **ラベルはファイル名に限定しない。** `置換前` のような見出しも同じ記法で書けるようにし、アイコンや言語名は付けない。
 
 ### ProseTable

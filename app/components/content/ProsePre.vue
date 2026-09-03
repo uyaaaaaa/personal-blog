@@ -74,4 +74,23 @@ pre.shiki :deep(code .line > span) {
   --shiki-default-bg: transparent;
   --shiki-dark-bg: transparent;
 }
+
+/* マーカーと変化した語の文字色はテーマの赤・緑ではなく本文色。
+   `html.dark .shiki span`（特異度 0,2,2）に勝つセレクタで当てる */
+pre.shiki :deep(code .diff-marker),
+pre.shiki :deep(code .diff-word) {
+  color: var(--color-code-text);
+}
+
+pre.shiki :deep(code .diff-word) {
+  border-radius: 0.125rem;
+}
+
+pre.shiki :deep(code .diff-add .diff-word) {
+  background-color: var(--color-diff-add-word-bg);
+}
+
+pre.shiki :deep(code .diff-remove .diff-word) {
+  background-color: var(--color-diff-remove-word-bg);
+}
 </style>
