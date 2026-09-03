@@ -101,7 +101,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | `@toggle` | — | ハンバーガーボタン押下 |
 | `@close` | — | オーバーレイ・リンク押下による閉じる要求 |
 
-一覧ページへ送るリンクは並べず、**行き先そのものを開いて見せる**。デスクトップは `Explore` のドロップダウン、モバイルはドロワーの折りたたみで、同じ `Latest` / `Tags` を見せる。表示の切り替えは Tailwind のブレークポイントで行う（デスクトップ: `hidden md:flex` / モバイル: `md:hidden`）。ヘッダー検索ボックスと同じ `md` 境界に揃える。
+一覧ページへ送るリンクは並べず、**行き先そのものを開いて見せる**。デスクトップは `Explore` のドロップダウン、モバイルはドロワーの折りたたみで、同じ `Categories` / `Latest` / `Tags` を見せる。表示の切り替えは Tailwind のブレークポイントで行う（デスクトップ: `hidden md:flex` / モバイル: `md:hidden`）。ヘッダー検索ボックスと同じ `md` 境界に揃える。
 
 **先読み（prefetch）** — メニューが持つ記事・タグ・一覧へのリンクには、すべて `prefetch-on="interaction"` を付ける。`NuxtLink` の既定（`prefetchOn: { visibility: true }`）のままだと、リンクが IntersectionObserver に映った時点でプリレンダ済みの `_payload.json` を取りに行く。記事の payload は本文の AST を丸ごと含んで1件あたり10〜30KBあるため、**パネルやドロワーの折りたたみを開いた瞬間に15件分がまとめて落ちてくる**。デスクトップのパネルは `visibility: hidden` で隠しているだけでレイアウト上は「見えている」扱いになるので、既定のままでは**操作していなくても全ページのロード時に**発生する。ホバー / フォーカスまで遅らせれば、実際に踏むリンク1本だけで済む。
 
@@ -115,7 +115,8 @@ props、表示要件、状態とインタラクションを、実装単位で記
 | :--- | :--- |
 | **トリガー** | `Explore` のみ（`0.95rem` / `500`）。**シェブロンは付けない。** 高さはヘッダーいっぱい（`63px`）まで伸ばし、ホバー中と展開中（`aria-expanded="true"`）はアクセント色になる。`aria-haspopup` / `aria-controls` を持つ。 |
 | **パネルとの紐付き** | 吹き出しの三角ではなく、**タブと、そのタブが開いているシート**として表現する。展開中はトリガーの真下（`bottom: -1px` / 高さ `2px`）にアクセント色のラインが出て、**ヘッダーの1pxボーダーがトリガーの幅の分だけアクセント色に変わったように見える**。そのラインの直下にパネルが密着する。 |
-| **カラム** | `Latest`（`/article` へリンク）と `Tags`（`/tags` へリンク）の2つ。それぞれ [HeaderMenuColumn](#headermenucolumn)。 |
+| **カラム** | `Categories` / `Latest`（`/article` へリンク）/ `Tags`（`/tags` へリンク）の3つ。それぞれ [HeaderMenuColumn](#headermenucolumn)。`Categories` の見出しは**リンクにしない**（全カテゴリの一覧ページを持たないため → [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) の 3-B）。 |
+| **Categories** | 公開記事が1本以上あるカテゴリを `CATEGORY_LABELS` の**定義順**に並べる。各行は表示名（等幅）を左、記事数を右に置き、`Tags` の行と同じ体裁にする。**項目数が少なくても内容幅に収める**（→ [HeaderMenuPanel](#headermenupanel) のカラム分割）。 |
 | **Latest** | 公開記事を新しい順に **5件**（`LATEST_ARTICLES_LIMIT = 5`）。**1行固定**で、タイトル（`0.875rem` / 溢れたら省略）を左、日付（等幅 `0.75rem` / サブテキスト色 / 表記は `formatRelativeDate`）を右に置く。日付の枠は **`6rem` の固定幅で右揃え**にする。可変幅にすると日付の文字数でタイトルの幅が変わり、**省略記号の位置が行ごとにずれる**ため。 |
 | **Tags** | 記事数の多い順に**上位10件**（`TOP_TAGS_LIMIT = 10`）を **2列 × 5行**（`grid-auto-flow: column`）で。左列が1〜5位、右列が6〜10位。 |
 | **行のホバー** | 背景が淡いサーフェス色になる。**文字色は変えない**（ドロワーの行と揃える）。 |
@@ -148,6 +149,8 @@ Cloudflare ダッシュボードのサイドナビと同じ、`親行 + 折り�
                   ×   （ヘッダーと同じ64px / 閉じるボタン）
 🏠 Home
 Explore               （セクションラベル）
+🗂 Categories     ›   （折りたたみ / 初期状態は閉）
+    │ Blog           18
 🕐 Latest         ›   （折りたたみ / 初期状態は閉）
     │ 記事タイトル
     │ 2026.09.02
@@ -157,15 +160,16 @@ Explore               （セクションラベル）
 
 | 要素 | 要件 |
 | :--- | :--- |
-| **親行** | アイコン（18px / サブテキスト色）+ ラベル（`0.95rem` / `500`）の横並び。高さは `0.625rem` の上下パディング、角丸 `0.5rem`。リンク（`Home`）とトグルボタン（`Latest` / `Tags`）が同じ見た目を共有する。 |
+| **親行** | アイコン（18px / サブテキスト色）+ ラベル（`0.95rem` / `500`）の横並び。高さは `0.625rem` の上下パディング、角丸 `0.5rem`。リンク（`Home`）とトグルボタン（`Categories` / `Latest` / `Tags`）が同じ見た目を共有する。 |
 | **セクションラベル** | `Explore`。デスクトップのトリガーと同じ語にする。等幅フォント / `0.75rem` / 字間広め / サブテキスト色。区切りボーダーは引かない。 |
 | **折りたたみ** | **初期状態はすべて閉**。右端のシェブロンが閉で `-90°`、開で `0°`（`200ms`）。開閉は `grid-template-rows: 0fr → 1fr` の遷移（`250ms`）で行い、閉じている間は `visibility: hidden` で子リンクをフォーカス対象から外す。`aria-expanded` / `aria-controls` を持たせる。 |
 | **子リスト** | 左端に1pxのガイド線を引き、親行のラベル位置に合わせてインデントする。 |
 | **アクティブ状態** | 現在のページに対応する行（`router-link-exact-active`）は、背景を淡いサーフェス色にして文字を `600` にする。**アクセント色は使わない**（他の行と文字色を揃え、色ではなく面と太さで示す）。ホバーも同じ背景色。 |
 
-1. **Latest** — 公開記事を新しい順に**5件**（`LATEST_ARTICLES_LIMIT = 5`）。各行はタイトル（`0.875rem` / 2行でクランプ）の下に日付（等幅フォント / `0.7rem` / サブテキスト色 / 表記は `formatRelativeDate`）。
-2. **Tags** — 記事数の多い順に**上位10件**（`TOP_TAGS_LIMIT = 10`）。各行はタグ名（等幅フォント）を左、記事数を右に置く。枠線付きのバッジにはしない。タグ名は**省略記号で切らず、収まらなければ折り返す**（`overflow: hidden` + `text-overflow: ellipsis` を持つ flex アイテムは、折りたたみが `0fr` の間に幅0で確定してしまうと iOS Safari では開いても再計算されず、文字がまるごと消える）。
-3. リンクをタップしたら必ずドロワーを閉じる。
+1. **Categories** — 公開記事が1本以上あるカテゴリを `CATEGORY_LABELS` の**定義順**に。各行は表示名を左、記事数を右に置く（`Tags` の行と同じ体裁）。
+2. **Latest** — 公開記事を新しい順に**5件**（`LATEST_ARTICLES_LIMIT = 5`）。各行はタイトル（`0.875rem` / 2行でクランプ）の下に日付（等幅フォント / `0.7rem` / サブテキスト色 / 表記は `formatRelativeDate`）。
+3. **Tags** — 記事数の多い順に**上位10件**（`TOP_TAGS_LIMIT = 10`）。各行はタグ名（等幅フォント）を左、記事数を右に置く。枠線付きのバッジにはしない。タグ名は**省略記号で切らず、収まらなければ折り返す**（`overflow: hidden` + `text-overflow: ellipsis` を持つ flex アイテムは、折りたたみが `0fr` の間に幅0で確定してしまうと iOS Safari では開いても再計算されず、文字がまるごと消える）。
+4. リンクをタップしたら必ずドロワーを閉じる。
 
 ---
 
@@ -191,7 +195,7 @@ Explore               （セクションラベル）
 | **位置の基準** | **ヘッダー要素**。ヘッダー直下に `position: absolute` / `top: calc(100% + 1px)`（100%はパディングボックス基準のため、1pxボーダー分を足してヘッダーの外側下端に合わせる）のレイヤーを敷き、その中でサイト共通の `.container`（最大1200px / 左右 `1rem`）の右端に寄せる。トリガーの位置・個数・幅から独立するため、**ヘッダーに要素が増えてもパネルは動かない**。 |
 | **ヘッダーとの間隔** | **空けない。** ヘッダーの下端ボーダーからそのまま下がる。ホバーの経路が途切れないので、隙間を埋める仕掛けも要らない。 |
 | **パネル** | 幅 `960px`（`max-width: 100%`）。内側 `1.5rem`、1pxボーダー、`shadow-lg`、背景はサーフェス色。**上端はボーダーを持たず角丸も付けない**（ヘッダーのボーダーを共有し、線が二重にならないようにする）。下端のみ角丸 `10px`。 |
-| **カラム分割** | `grid-auto-flow: column` + `grid-auto-columns: minmax(0, 1fr)` で、**カラム数を問わず均等割り**。カラム数を props や CSS 変数で渡す必要はない。 |
+| **カラム分割** | `grid-auto-flow: column` + `grid-auto-columns: minmax(0, 1fr)` で、**2つ目以降のカラムを均等割り**。カラム数を props や CSS 変数で渡す必要はない。<br><br>先頭のカラムだけは `grid-template-columns: minmax(0, max-content)` で**内容幅**にする。項目数の少ないカラム（`Categories` は2件）を均等割りに含めると、パネル幅 `960px` の1/3を消費して `Latest` のタイトル幅が `280px` → `128px` まで潰れ、記事タイトルがほとんど読めなくなるため。**項目数の少ないカラムを先頭に置く**運用が前提。 |
 | **遷移** | `opacity` と `translateY(-4px)` を `160ms`。閉じている間は `visibility: hidden`、レイヤーは `pointer-events: none` で、リンクをフォーカスもクリックもできないようにする。 |
 
 ---
@@ -243,7 +247,7 @@ Explore               （セクションラベル）
 
 | 名前 | 型 | 必須 | 説明 |
 | :--- | :--- | :--- | :--- |
-| `article` | `{ path, title, description, date, tags?, image?, emoji? }` | ✓ | 表示する記事 |
+| `article` | `{ path, title, description, date, category?, image?, emoji? }` | ✓ | 表示する記事 |
 
 **表示要件**
 
@@ -257,7 +261,9 @@ Explore               （セクションラベル）
 
 **コンテンツの構成（上から）**
 
-1. `PICKUP` ラベル（アクセント色 / 等幅 / 太字 / 字間広め）+ 先頭タグ1件（アクセント色の枠線チップ）+ 日付（サブテキスト色 / 等幅）
+1. `PICKUP` ラベル（アクセント色 / 等幅 / 太字 / 字間広め）+ **カテゴリチップ** + 日付（サブテキスト色 / 等幅）
+
+   カテゴリチップは `CATEGORY_LABELS` の表示名（`Blog` / `Books`）を、アクセント色 `10%` の塗り + ピル角丸 + 等幅 `0.75rem` で出す。記事ヘッダーのカテゴリチップと同じ体裁（→ [記事ヘッダー](#記事ヘッダー)）。**タグは出さない**（カテゴリの方が構造的な情報で、メタ行が4要素になるとSPで窮屈になるため）。**リンクにしない**（カード全体が1つのクリックターゲットのため → [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) の 3-D）。
 2. タイトル（`h2` / SP `1.25rem`・lg `1.875rem` / 太字）
 3. 説明文（サブテキスト色 / `0.875rem` / SP 2行・lg 3行でクランプ）
 4. `more` + 細い右矢印（等幅 / `0.75rem` / 字間広め / サブテキスト色）。テキストのみで、背景も枠線も持たない
@@ -899,6 +905,7 @@ Nuxt Content が本文中の `<table>` に使用するコンポーネント。�
 | `isProgrammaticScroll` / `beginProgrammaticScroll()` | `app/composables/useProgrammaticScroll.ts` | 「いま起きているスクロールをプログラムが起こしたか」を表す共有 `ref` と、それを立てる関数。スクロールイベントが `150ms` 止まったら終了とみなす（`scrollend` は Safari の対応が新しいためデバウンスで代用）。**生産側**は `useScrollTo` の各関数と、ブラウザ標準のフラグメント遷移（脚注）を乗せるために直接呼ぶ `[_slug].vue`。**消費側**は `useScrollDirection` と `TocMobile`。「スクロールさせること」とは別の関心事なので `useScrollTo` から切り出している |
 | `useIsDesktop()` | `app/composables/useIsDesktop.ts` | 画面幅がデスクトップ（`min-width: 1024px` = Tailwindの `lg`）かを表す共有 `ref` と、その否定の `isMobile` を返す。`matchMedia` の購読はモジュールスコープで1本だけ持つ。**表示の出し分けそのものは Tailwind の `lg:` が行う**。これは `lg:` で消えているコンポーネントに、スクロールの購読までは止めさせるためのもの |
 | `useScrollFrame(read, enabled)` | `app/composables/useScrollFrame.ts` | **スクロールに反応する読み取りをすべてここに集める。**`window` への `scroll` / `resize` の購読はアプリ全体で1本だけ持ち、イベントが来たら `requestAnimationFrame` を1つ予約して、1フレームにつき1回、登録された `read` を**続けて呼ぶ**。`enabled` が真になった時点で1度呼んでから登録し、偽になったら外す<br><br>`enabled` は `display: none` で見えていないコンポーネントに計算させないためのもので、**こちらは効果を実測している**（→ [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) の 2-E）。一方、1フレームに集約すること自体の性能上の効果は測れていない（Chromium は scroll を1フレーム1回までしか発火しないため、まとめる対象が無い）。購読を1本にして追加の消費者が増えても増えないようにするための構造上の選択と考えること<br><br>1つの rAF コールバックの中で全部の `read` を続けて呼ぶため、読み取りが終わるまで Vue の DOM 更新は流れない。**したがって `read` は他の `read` の書き込み結果に依存してはいけない**（`TocMobile` の sticky 判定が `translateY` のかからない外側の要素を見ているのは、この制約を満たすためでもある） |
+| `useArticleCategories()` | `app/composables/useArticleCategories.ts` | 公開記事のフロントマターからカテゴリを集計し、`{ slug, label, count }` を `CATEGORY_LABELS` の**定義順**で返す。**記事が0件のカテゴリは落とす**（`/category/[category]` が0件で404になるため、辿れないリンクを出さない） |
 | `useArticleTags()` | `app/composables/useArticleTags.ts` | 公開記事のフロントマターからタグを集計し、`{ name, slug, count }` を**記事数の降順（同数なら名前順）**で返す |
 | `usePagination(items, perPage)` | `app/composables/usePagination.ts` | 一覧を1ページ `ARTICLES_PER_PAGE`（既定 `9`）件に区切る。現在ページは `route.params.page` からの `computed`（無ければ1）で、状態を別に持たない。`2` のような正の整数の表記だけを受け付け、範囲外のページ番号・`/page/1`・`2.0` のような別表記は404にする（`basePath` が剥がせる形とページ番号として認める形を一致させるため）。`basePath` はページ番号を除いた一覧のパスで、`Pagination` のリンク組み立てに渡す |
 | `usePageSeo(input)` | `app/composables/usePageSeo.ts` | title / description と OGP・Twitter Card のメタタグをまとめて出力する。title は `<ページ名> \| Tech Blog`（省略時はサイト名のみ）、description は空ならサイト共通の説明文にフォールバックする。`og:image` は記事の `image`、無ければ `/ogp.png`。`og:image` と `og:url` は `runtimeConfig.public.siteUrl` を基準に絶対URL化する。`type: 'article'` のときだけ `article:published_time` / `article:tag` を出す（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
