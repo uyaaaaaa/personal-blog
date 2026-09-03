@@ -27,6 +27,8 @@ npm run preview   # ビルド結果のプレビュー
 
 Cloudflare Pages の Git 連携が有効なため、Pull Request を作ると自動でプレビューがデプロイされます。リポジトリ側にワークフローの設定は不要です。
 
+PR では GitHub Actions の `Lint` が `npm run lint` を回します。build は Actions では回しません。
+
 PR に `Cloudflare Pages` チェックが追加され、ビルド完了後に Cloudflare のボットが以下2種類の URL をコメントします。
 
 | 種類 | 形式 | 性質 |
