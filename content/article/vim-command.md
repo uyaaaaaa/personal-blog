@@ -93,7 +93,9 @@ visualモード選択中に`o`を押下すると、逆方向のカーソルを�
 
 #### 例1
 
-```置換前
+置換前。
+
+```txt
 apple apple banana orange
 apple banana banana orange
 apple banana lemon banana orange
@@ -102,7 +104,9 @@ apple banana orange orange orange
 
 上記の文字列に対して `:%s/\(\w\+\)\s+\1\s+//g`を実行すると、、、
 
-```置換後
+置換後。
+
+```txt
 banana orange
 apple orange
 apple banana lemon banana orange

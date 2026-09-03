@@ -39,7 +39,7 @@ export default defineNuxtConfig({
           },
           langs: [
             'js', 'ts', 'json', 'html', 'css', 'vue', 'shell', 'sh', 'bash', 'md', 'mdc', 'yaml',
-            'vim', 'lua', 'sql', 'php',
+            'vim', 'lua', 'sql', 'php', 'diff',
           ],
         },
         remarkPlugins: {

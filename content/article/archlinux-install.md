@@ -240,7 +240,7 @@ $ echo "myhostname" > /etc/hostname
 
 上記で設定したホスト名を`/etc/hosts`にも設定する。
 
-```/etc/hosts
+```txt
 127.0.0.1    localhost
 ::1    localhost
 127.0.1.1    myhostname.localdomain    myhostname
@@ -294,7 +294,7 @@ $ systemctl enable systemd-boot-update
 次は`/boot/loader/loader.conf` を開いて、ローダーの設定をする。
 自分は以下のように設定した。
 
-```/boot/loader/loader.conf
+```txt
 default arch.conf
 timeout 5
 console-mode max
@@ -303,7 +303,7 @@ editor no
 
 完了したら、`/boot/loader/entries/arch.conf` を作成し以下を追加。
 
-```/boot/loader/entries/arch.conf
+```txt
 title Arch Linux
 linux /vmlinuz-linux
 initrd /amd-ucode.img
@@ -318,7 +318,7 @@ $ echo $(blkid -s UUID -o value /dev/nvme0n1p3) >> /boot/loader/entries/arch.con
 
 末尾にUUIDのみが追加されているはずなので、以下のように整形する。
 
-```/boot/loader/entries/arch.conf
+```txt
 title   Arch Linux
 linux   /vmlinuz-linux
 initrd  /amd-ucode.img

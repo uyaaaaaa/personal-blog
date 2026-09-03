@@ -34,8 +34,9 @@ Shell（特にzsh）には、意外と知らない便利な機能がたくさん
 ## Push line(zshのみ)
 
 入力中のコマンドを一時的に退避させ、別のコマンド実行後に自動で入力させる（`<Ctrl-o>`）
+`~/.zshrc` に以下を追加する。
 
-```~/.zshrc
+```sh
 bindkey '^O' push-line
 ```
 

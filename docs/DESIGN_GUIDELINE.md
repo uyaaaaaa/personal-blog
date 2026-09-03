@@ -14,7 +14,7 @@
 
 **実装が正**です。実装を変更した際は該当するドキュメントも併せて更新してください。
 
-- 最終更新: 2026-09-02
+- 最終更新: 2026-09-03
 - 対象: Nuxt 4 / Nuxt Content 3 / Tailwind CSS 3 (+ @tailwindcss/typography)
 
 ---
@@ -90,6 +90,11 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 | **オーバーレイ** | `rgba(0, 0, 0, 0.5)` | `rgba(0, 0, 0, 0.5)` | — | `--color-overlay` | モバイルドロワーのオーバーレイ。 |
 | **スクロールバー** | `#D1D5DB` | `#3A3A3A` | — | `--color-scrollbar` | 目次のスクロールバー。 |
 | **コード文字色** | `#24292E` | `#E6EDF3` | — | `--color-code-text` | コードブロックの文字色（Shiki のテーマ `github-light` / `github-dark` の前景色に合わせる）。 |
+
+コードブロック内のトークン色も Shiki のテーマ（`github-light` / `github-dark`）由来でパレットの外側です。
+`diff` の追加・削除行もこれに含まれ、テーマの色をそのまま使います（自前で上書きすると構文色の情報源が2つに割れるため）。
+コードブロック背景 `--color-surface-subtle` に対するコントラスト比は、ライトで削除 6.2:1 / 追加 4.2:1、ダークで削除 9.5:1 / 追加 11.1:1 です。
+**ライトの追加行（`#22863A`）だけが 4.5:1 をわずかに下回ります。** 記号（`+` / `-`）でも区別が付くため色のみに依存せず、現状は許容しています。
 
 Callout は例外的に独自パレットを持ちます。Obsidian デフォルトテーマの色相をベースに、タイトル文字が両テーマでコントラスト比 4.5:1 以上になるようテーマ別に明度を調整した値です（→ [COMPONENT_SPEC.md](./COMPONENT_SPEC.md)）。
 記事本文（prose）のタイポグラフィ色も Tailwind typography プラグインの `prose-slate`（ダークは `dark:prose-invert`）由来でパレットの外側です。
@@ -278,4 +283,3 @@ TOPページだけはグリッドではなく、カテゴリ単位の棚（`Arti
 | タイトルによる記事検索 | [#14](https://github.com/uyaaaaaa/personal-blog/issues/14) |
 | ショートカットキーでのフォーカス（`Cmd/Ctrl + K`） | [#15](https://github.com/uyaaaaaa/personal-blog/issues/15) |
 | 記事内への画像配置 | [#10](https://github.com/uyaaaaaa/personal-blog/issues/10) |
-| コードブロックのトグル | [#3](https://github.com/uyaaaaaa/personal-blog/issues/3) |

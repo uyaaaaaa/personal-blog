@@ -18,9 +18,10 @@ markdownでメモをする時、読みやすさのために「見出しごとの
 
 ## やったこと
 
-`treesitter`の設定をいじって折りたたみ(`fold`)ルールを変更する
+`treesitter`の設定をいじって折りたたみ(`fold`)ルールを変更する。
+`~/.config/nvim/after/ftplugin/markdown.lua` に以下を書いた。
 
-```~/.config/nvim/after/ftplugin/markdown.lua
+```lua
 vim.treesitter.query.set(
     "markdown",
     "folds",
