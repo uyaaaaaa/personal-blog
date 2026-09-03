@@ -4,6 +4,8 @@ import remarkObsidianCallout from './remark/obsidian-callout.mjs'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
+  imports: { scan: false },
+  components: false,
   app: {
     head: {
       link: [

@@ -34,6 +34,9 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
+import { useScrollTo } from '~/composables/useScrollTo'
+import { useTocActive } from '~/composables/useTocActive'
+import { useIsDesktop } from '~/composables/useIsDesktop'
 
 const props = defineProps<{
   links: any[]

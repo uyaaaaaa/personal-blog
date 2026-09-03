@@ -1,3 +1,5 @@
+import { tagToSlug } from '../utils/tag'
+
 export interface TagSummary {
   name: string
   slug: string

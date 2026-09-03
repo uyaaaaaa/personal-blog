@@ -1,6 +1,6 @@
 # 付録：Vue / Nuxt 実装
 
-> **最終確認日：2026-09-01**
+> **最終確認日：2026-09-02**
 > このファイルは腐ることを前提に隔離した場所です。バージョン・ツール設定・エコシステムの現況を扱います。
 > 規約本体（[../rules/](../rules/)）には日付を書きません。本体まで賞味期限があるように読まれるためです。
 
@@ -28,7 +28,7 @@ Nuxt の auto-import は既定で `app/components/`・`app/composables/`・`app/
 // nuxt.config.ts
 export default defineNuxtConfig({
   // A-11: 自作 composable / util の auto-import を止める
-  imports: { autoImport: false },
+  imports: { scan: false },
   // A-11: コンポーネントの自動登録を止める
   components: false,
 })
@@ -37,14 +37,30 @@ export default defineNuxtConfig({
 **許可されるもの**：`ref` `computed` `watch` `useRoute` 等のフレームワーク組み込み API と、
 `pages/` によるファイルベースルーティング。
 
+**`autoImport: false` ではなく `scan: false` を使うこと。** `autoImport: false` は
+フレームワーク組み込み API まで止めるため、上の「許可されるもの」と両立しません
+（Nuxt 4.2 / `@nuxt/content` 3.9 で確認。`useColorMode is not defined` で 500 になります）。
+`scan: false` は `app/composables/`・`app/utils/`・`shared/` の走査だけを止め、
+プリセット由来の `ref` / `useAsyncData` / `useColorMode` / `queryCollection` は解決されたままです。
+どちらでも `#imports` から手動 import はできますが、`A-11` が求めているのは前者だけの停止です。
+
 **Nuxt Layers を使う場合**：公式に「層で構成する場合は auto-import に頼らず明示的に import せよ、
 さもないと層のオーバーライド機能が壊れる」という警告があります。
 `A-11` 〜 `A-13` はこの警告と同じ方向を向いており、**両立します。**
 
 `unplugin-auto-import` / `unplugin-vue-components` を新規に導入しません（`A-13` の証明が必要）。
 
-`autoImport: false` にしたとき Nuxt 組み込み composable の解決がどこまで残るかはバージョン依存です。
-設定後に `ref` / `useRoute` 等が解決されることを確認してください。
+### `components: false` の2つの注意点
+
+**`app/components/content/` はこの設定の影響を受けません。** `@nuxt/content` が
+`components:dirs` フックで `nuxt.options.components` とは独立にこのディレクトリを登録するためです。
+markdown 側がコンポーネントを名前で解決する以上ここは明示 import できないので、
+`A-12` の適用対象外として扱います（`Callout` / `ProseA` / `ProseTable`）。
+
+**コンポーネントの未 import はビルドで落ちません。** Vue の警告が出るだけで prerender は成功し、
+そのコンポーネントが消えた HTML が生成されます。composable / util の未 import が実行時
+`ReferenceError` → prerender 失敗になるのとは非対称です。このため `A-12` のコンポーネント側は
+`vue/no-undef-components`（`eslint.config.mjs`）で強制します。
 
 ---
 
