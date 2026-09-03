@@ -32,10 +32,9 @@ export default <Config>{
           css: {
             'code::before': { content: 'none' },
             'code::after': { content: 'none' },
-            pre: {
-              backgroundColor: 'var(--color-surface-subtle)',
-              color: 'var(--color-code-text)',
-              border: '1px solid var(--color-border)',
+            figure: {
+              marginTop: '1.5em',
+              marginBottom: '1.5em',
             },
             code: {
               backgroundColor: 'var(--color-surface-subtle)',

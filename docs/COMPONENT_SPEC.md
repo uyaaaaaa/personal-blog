@@ -8,7 +8,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 
 **実装が正**です。コンポーネントを変更した際は本書も併せて更新してください。
 
-- 最終更新: 2026-09-02
+- 最終更新: 2026-09-03
 
 ---
 
@@ -19,7 +19,7 @@ props、表示要件、状態とインタラクションを、実装単位で記
 - [2. 記事表示](#2-記事表示)
   - [Hero](#hero) / [ArticleShelf](#articleshelf) / [ArticleList](#articlelist) / [ArticleCard](#articlecard) / [記事ヘッダー](#記事ヘッダー) / [Toc](#toc) / [TocMobile](#tocmobile) / [Sidebar](#sidebar) / [BackButton](#backbutton) / [Pagination](#pagination) / [ScrollToTopButton](#scrolltotopbutton)
 - [3. 記事本文（Markdown）](#3-記事本文markdown)
-  - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea) / [ProseTable](#prosetable)
+  - [Markdownスタイル](#markdownスタイル) / [Callout](#callout) / [脚注](#脚注) / [ProseA](#prosea) / [ProsePre](#prosepre) / [ProseTable](#prosetable)
 - [4. エラー](#4-エラー)
   - [ErrorView](#errorview) / [NotFound / Server](#notfound--server) / [ArticleFallback](#articlefallback)
 - [5. 共有ロジック](#5-共有ロジック)
@@ -604,7 +604,7 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 | 要素 | 要件 |
 | :--- | :--- |
 | **見出し (H2, H3)** | `prose` の既定に準拠。本文中の `h2`〜`h6` は**クリックで該当位置へスクロール**する。カーソルは `pointer`。 |
-| **コードブロック** | Nuxt Content のシンタックスハイライトを使用（テーマはライト **`github-light`** / ダーク **`github-dark`** のデュアル指定で、`.dark` クラスに追従）。背景 `var(--color-surface-subtle)` / 文字色 `var(--color-code-text)` / 1pxボーダー。モバイルでは横スクロール。**行番号は表示しない**。 |
+| **コードブロック** | `ProsePre` が描画する（→ [ProsePre](#prosepre)）。Nuxt Content のシンタックスハイライトを使用（テーマはライト **`github-light`** / ダーク **`github-dark`** のデュアル指定で、`.dark` クラスに追従）。背景 `var(--color-surface-subtle)` / 文字色 `var(--color-code-text)` / 1pxボーダー。モバイルでは横スクロール。**行番号は表示しない**。` ```lang [ラベル] ` と書くと上部にラベルバーが付き、` ```diff ` は追加行・削除行の行背景を塗る。 |
 | **インラインコード** | Obsidian風。淡いサーフェス色 + 1pxボーダー + 小角丸。パディング 上下 `0.125rem` / 左右 `0.375rem`。`font-weight: 400`、文字色は周囲から継承。**バッククォート（`code::before` / `code::after`）は非表示**にする。 |
 | **リンク** | アクセントカラーで表示し、ホバーでアンダーラインを付与。見出しは Nuxt Content が `<a>` で包むため対象外とし、見出しの色を継承したままホバーでのみアクセントカラーに変化する。`overflow-wrap: break-word` で**URLをそのまま書いたリンクを折り返す**（`<https://...>` の自動リンクはリンクテキスト自体が長いため、折り返さないとSP幅でページ全体が横スクロールする）。 |
 | **引用 (Blockquote)** | `prose` の既定に準拠。 |
@@ -612,9 +612,20 @@ SP版の目次。記事タイトル直下に置く sticky バー。`lg` 以上�
 
 **対応言語**
 
-`js` `ts` `json` `html` `css` `vue` `shell` `sh` `bash` `md` `mdc` `yaml` `vim` `lua` `sql` `php`
+`js` `ts` `json` `html` `css` `vue` `shell` `sh` `bash` `md` `mdc` `yaml` `vim` `lua` `sql` `php` `diff`
+
+これに加えて `txt` はプレーンテキストとして常に使える（Shiki が文法なしで扱う特殊言語のため、`langs` への記載は不要）。
 
 新しい言語を使う場合は `nuxt.config.ts` の `content.build.markdown.highlight.langs` に追加すること。**追加を忘れるとハイライトが効かない。**
+Shiki は文法を読めなくてもエラーにせず、`pre` に `shiki` クラスだけ付けて中身を**属性なしの span 1個**にする。
+ハイライト済みのブロックと HTML の形が似ているため、ビルドが通ったことでは気付けない。
+確認するならビルド後の HTML（`dist/article/<slug>/index.html`）で、`pre` の中の `span.line` の子 span に `class` が付いているかを見る。
+
+**言語名の表記は `langs` に書いた綴りに揃える。** `ts` / `yaml` と書き、`typescript` / `yml` のようなエイリアスは使わない。
+エイリアスは Shiki 側で解決されて動いてしまうため、`langs` の記載と食い違ったまま気付きにくい。
+
+**言語欄にファイル名を書かない。** ` ```/etc/hosts ` のように書くと `class="language-/etc/hosts"` という不正なクラスが DOM に出るうえ、ハイライトも効かない。
+ファイル名は ` ```txt [/etc/hosts] ` のようにラベルとして書く（→ [ProsePre](#prosepre)）。
 
 ---
 
@@ -744,6 +755,67 @@ Nuxt Content が本文中の `<a>` に使用するコンポーネント。
 - `#` で始まる**同一ドキュメント内のハッシュリンクだけは素の `<a>`** で描画し、`NuxtLink` を通さない。
   ルーターの `pushState` ではブラウザの `:target` が更新されず、脚注のジャンプ先を強調できないため（→ [脚注](#脚注)）。
 - `target` が明示的に渡された場合はそちらを優先する。
+
+---
+
+### ProsePre
+
+`app/components/content/ProsePre.vue` / `app/mdc.config.ts` / `theme/tokens.ts`
+
+Nuxt Content が本文中の `<pre>`（コードブロック）に使用するコンポーネント。
+既定の実装は `<pre>` を出すだけで、Markdown の ` ```lang [ラベル] ` 記法が `filename` prop に入っても描画しない。
+コードブロックの**見た目はすべてこのコンポーネントが持つ**。`tailwind.config.ts` の `typography` 拡張は `pre` に触らず、
+インラインコードと `figure` の上下マージンだけを扱う。
+
+**責務の分担**
+
+| 層 | 場所 | 持つもの |
+| :--- | :--- | :--- |
+| 記法 | Markdown | ` ```lang [ラベル] `。Nuxt Content（MDC）の標準記法で、`[...]` が `filename` prop になる |
+| ハイライタ設定 | `nuxt.config.ts` | テーマ（`github-light` / `github-dark`）と `langs` |
+| ビルド時の印付け | `app/mdc.config.ts` | Shiki の transformer。`diff` の行に `.diff-add` / `.diff-remove` を付ける |
+| 描画 | `ProsePre.vue` | 枠、ラベルバー、`pre`、行のスタイル（diff の行背景） |
+| 色 | `theme/tokens.ts` | `code-text` / `diff-add-bg` / `diff-remove-bg` |
+
+**Props**
+
+MDC の既定と同じ。`code` / `language` / `filename` / `highlights` / `meta` / `class`。
+すべて宣言しているのは、宣言し忘れた prop（特に `code`）がフォールスルー属性として DOM に出るのを防ぐため。
+`class`（`language-ts shiki shiki-themes github-light github-dark`）と残りの属性は `pre` に渡す。
+`shiki` クラスは Nuxt Content が出すデュアルテーマの CSS（`html .shiki span { color: var(--shiki-default) }` 等）の掛かり先なので、`pre` から外さないこと。
+
+**構造**
+
+```html
+<figure class="code-block">
+  <figcaption class="code-block-label">~/.zshrc</figcaption>   <!-- filename がある時だけ -->
+  <pre class="language-sh shiki ..."><code>…</code></pre>
+</figure>
+```
+
+`pre` の中に別要素を置けない（内容モデルが phrasing content）ため、枠を `figure` に持たせて `figcaption` を並べる。
+横スクロールは `pre` 単体で起きるので、**ラベルはスクロールせずに残る**。
+
+**表示要件**
+
+| 項目 | 要件 |
+| :--- | :--- |
+| 枠 | `figure` に 1px ボーダー（`--color-border`）、角丸 `0.375rem`、背景 `--color-surface-subtle`。`overflow: hidden` で行背景を角丸の内側に収める |
+| 上下マージン | `typography` 拡張の `figure` で `1.5em`。以前 `pre` が持っていた値（`1.7142857em × 0.875`）と同じ。`figure` の既定（`2em`）を上書きするのは、`.prose > :first-child` / `:last-child` の相殺と Callout 内の余白詰めが `:where()` の特異度で効くよう、typography 側の同じ位置で持たせるため。コンポーネントの scoped CSS に書くと特異度で勝ってしまい相殺が効かない |
+| `pre` | マージン 0、パディング上下 `0.75rem` / 左右 `1rem`（`--code-block-padding-x`）、背景は透明（枠が塗る）、文字色 `--color-code-text`。フォントサイズ・行間・横スクロールは `prose` の既定に従う |
+| ラベルバー | `figcaption`。等幅 `0.75rem` / サブテキスト色 / パディング上下 `0.375rem` 左右 `1rem`（コードの左端と揃う）/ 下辺に 1px ボーダー。**面は塗らない**（設計原則 1）。長いパスは `overflow-wrap: anywhere` で折り返し、省略しない |
+| ラベルの内容 | `filename` をそのまま表示する。ファイル名に限らず `置換前` のような**ラベル**でもよい。アイコンや言語名は付けない |
+| ラベルが無い時 | `figcaption` を出さない。見た目は従来の `pre` 単体と同じ（枠・余白・パディングの値を揃えてある） |
+| 行 | `span.line` は `display: block`。左右に `--code-block-padding-x` の負マージンとパディングを持ち、**行背景が `pre` のパディングとスクロール領域の端まで届く**ようにする。`code` を `width: max-content` / `min-width: 100%` にして、行の幅をスクロール幅に合わせる |
+| diff | `.line.diff-add` / `.line.diff-remove` に `--color-diff-add-bg` / `--color-diff-remove-bg` の行背景。文字色は Shiki のテーマ由来（追加が緑、削除が赤）で、行内に構文色は付かない（`diff` 文法は行を1色に塗る） |
+
+**diff の行背景に関する注意**
+
+- Shiki の `diff` 文法は追加行・削除行を1色に塗るだけで、hast に追加/削除の目印を残さない。`app/mdc.config.ts` の transformer が各行の先頭トークンの1文字目（`+` / `-`）を見て `.diff-add` / `.diff-remove` を付ける。
+  トークンに付く `s83E4` のようなクラスは**色から導出されたハッシュで不安定**なため、CSS から掴んではいけない。
+- `github-light` / `github-dark` は diff のトークン自体にも背景色（`markup.inserted` / `markup.deleted` の `background`）を持ち、そのままだと行背景の上に**文字幅の塗り**が重なる。
+  Nuxt Content はこの色を `html pre.shiki code .sXXXX { --shiki-default-bg: … }`（特異度 0,2,3）で出すため、`ProsePre` は `pre.shiki :deep(code .line > span)`（0,3,3）で `--shiki-default-bg` / `--shiki-dark-bg` を `transparent` に戻している。
+- 行背景を **`--shiki-*-bg` 変数ではなく `background-color` で直接指定できる**のは、scoped CSS の `:deep()` セレクタが `html.dark .shiki span`（0,2,2）より特異度が高いため。`typography` 拡張（`:where()` で包まれ 0,1,0）に書いても効かない。
 
 ---
 

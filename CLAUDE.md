@@ -31,6 +31,7 @@ ESLint は `A-12`（自作モジュールの明示 import）を強制する `vue
 - **ページ内リンクの着地位置は `app/pages/article/[_slug].vue` の `scroll-margin-top` で決まります。** JS 側（`useScrollTo`）でオフセットを足さないでください。
 - **記事のフロントマターのスキーマは `content.config.ts`** で定義しています。項目を増やすときはここから。
 - **Markdown の Obsidian 互換 callout** は `remark/obsidian-callout.mjs` と `app/components/content/Callout.vue` の組み合わせで実装しています。
+- **コードブロックの見た目は `app/components/content/ProsePre.vue` が持ちます。** `tailwind.config.ts` の `typography` 拡張で `pre` を触らないでください。`diff` の行に印を付ける Shiki の transformer は `app/mdc.config.ts` にあります。
 
 ## ドキュメント
 
