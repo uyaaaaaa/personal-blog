@@ -30,7 +30,7 @@ fish(シェルの一種)にも存在する機能。
 
 ドキュメントに記載されていた以下の例だと、
 
-```.vimrc
+```vim [.vimrc]
 :iab ms Microsoft
 :iab tihs this
 ```
