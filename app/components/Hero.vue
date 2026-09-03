@@ -16,8 +16,8 @@
       <div class="p-5 lg:p-10 flex flex-col gap-3 justify-center h-full">
         <div class="flex items-center gap-3">
           <span class="text-accent text-xs font-bold font-mono tracking-widest">PICKUP</span>
-          <span v-if="article.tags?.[0]" class="text-xs px-2 py-0.5 rounded border border-accent text-accent font-mono bg-surface">
-            {{ article.tags[0] }}
+          <span v-if="categoryLabel" class="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-mono">
+            {{ categoryLabel }}
           </span>
           <time class="text-sub text-sm font-mono" :datetime="article.date">{{ formattedDate }}</time>
         </div>
@@ -56,13 +56,14 @@
 
 <script setup lang="ts">
 import { formatDate } from '~/utils/date'
+import { CATEGORY_LABELS, isCategory } from '~/utils/category'
 
 interface Article {
   path: string
   title: string
   description: string
   date: string
-  tags?: string[]
+  category?: string
   image?: string
   emoji?: string
 }
@@ -73,5 +74,10 @@ const props = defineProps<{
 
 const formattedDate = computed(() => {
   return formatDate(props.article.date)
+})
+
+const categoryLabel = computed(() => {
+  const category = props.article.category
+  return category && isCategory(category) ? CATEGORY_LABELS[category] : null
 })
 </script>

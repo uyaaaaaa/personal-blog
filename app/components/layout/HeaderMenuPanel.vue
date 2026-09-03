@@ -41,6 +41,7 @@ defineProps<{
   border-radius: 0 0 10px 10px;
   display: grid;
   grid-auto-flow: column;
+  grid-template-columns: minmax(0, max-content);
   grid-auto-columns: minmax(0, 1fr);
   opacity: 0;
   visibility: hidden;
