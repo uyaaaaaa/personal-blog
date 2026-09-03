@@ -3,8 +3,8 @@
     <div
       ref="exploreRef"
       class="explore hidden md:flex"
-      @mouseenter="openPanel"
-      @mouseleave="scheduleClosePanel"
+      @pointerenter="openPanelOnHover"
+      @pointerleave="scheduleClosePanelOnHover"
       @focusout="onPanelFocusout"
       @keydown.escape="dismissPanel"
     >
@@ -248,6 +248,16 @@ const openPanel = () => {
 const scheduleClosePanel = () => {
   clearTimeout(panelCloseTimer)
   panelCloseTimer = setTimeout(closePanel, PANEL_CLOSE_DELAY_MS)
+}
+
+// タッチ操作はタップのたびに互換マウスイベント（mouseenter → click）を発火させるため、
+// ホバーでの開閉はマウスのポインタに限定してclickのトグルと衝突させない
+const openPanelOnHover = (event: PointerEvent) => {
+  if (event.pointerType === 'mouse') openPanel()
+}
+
+const scheduleClosePanelOnHover = (event: PointerEvent) => {
+  if (event.pointerType === 'mouse') scheduleClosePanel()
 }
 
 const dismissPanel = () => {

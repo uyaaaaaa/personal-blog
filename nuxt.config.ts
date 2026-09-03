@@ -57,8 +57,6 @@ export default defineNuxtConfig({
     preset: 'cloudflare-pages',
     prerender: {
       crawlLinks: true,
-      // カテゴリページへの内部リンクはTOPの棚だけなので、crawlLinksに任せると
-      // 棚の出し方を変えた瞬間に生成対象から外れる
       routes: ['/', '/404.html', ...CATEGORIES.map(category => `/category/${category}`)]
     },
     cloudflare: {
