@@ -1,3 +1,4 @@
 # Prettier での一括整形。git blame から外す。
 # 有効にする: git config blame.ignoreRevsFile .git-blame-ignore-revs
 b9cfdc5181df04c399e787bf1e621604afc8139e
+b3b9db0e8139d390713818260e39cce9bc52d2d3
