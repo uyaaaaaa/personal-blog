@@ -7,7 +7,7 @@
     "dev": "nuxt dev",
     "format": "prettier --write .",
     "generate": "nuxt generate",
-    "lint": "eslint . && depcruise app --config --ignore-known",
+    "lint": "prettier --check . && eslint . && depcruise app --config --ignore-known",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && git config core.hooksPath .githooks || exit 0"
