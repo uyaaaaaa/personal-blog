@@ -46,7 +46,7 @@ PR に `Cloudflare Pages` チェックが追加され、ビルド完了後に Cl
 | デプロイ単位 | `https://<デプロイID>.tech-blog-efb.pages.dev` | そのコミットに固定。後から push しても変わらない |
 | ブランチ単位 | `https://<ブランチ名>.tech-blog-efb.pages.dev` | 常にそのブランチの最新コミットを指す |
 
-ブランチ名の `/` は `-` に変換されます（例: `claude/issue-39-l2z4fz` → `claude-issue-39-l2z4fz.tech-blog-efb.pages.dev`）。
+ブランチ名の `/` は `-` に変換され、長い名前は 28 文字で切り詰められます（例: `claude/issue-39-l2z4fz` → `claude-issue-39-l2z4fz`、`claude/past-session-review-43ngoq` → `claude-past-session-review-4`）。ブランチ単位の URL を人に渡すときは、ボットのコメントに出た実際の URL を使ってください。
 
 プレビューは本番と同じ静的生成の出力を配信するため、記事のプリレンダリング結果やスタイルの最終確認に使えます。`main` にマージすると本番 <https://tech-blog-efb.pages.dev> に反映されます。
 
