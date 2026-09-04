@@ -129,6 +129,22 @@ props・表示要件・インタラクションを写した文書（旧 `COMPONE
 - **対価**: 「あの値はどこで決めたか」を文書で引けない。Git 履歴と実装を読む。
 - **戻す条件**: 構造に関わる判断が10を超えたら、この節を `docs/adr/` に1項目1ファイルで切り出す。仕様書を戻す条件は無い。
 
+### テストは実装の隣に置く
+
+`app/utils/date.ts` に対して `app/utils/date.test.ts` を並べる。
+
+- **検討した案**: `tests/` に実装のディレクトリ構成をミラーする。テストが `depcruise app` の走査範囲から外れるため、テストだけが依存方向のルールの外に出る。実装を消したときに取り残されたテストにも気づけない。隣に置けば同じディレクトリを見るだけでテストの有無が分かり、循環と依存方向の lint がテストにも等しく効く。
+- **対価**: ディレクトリの一覧に実装とテストが混ざる。`app/pages/` に置いたテストが Nuxt のページ走査に拾われないことは `npm run build` で確かめてある（ルートは増えず `dist/` の HTML は 60 のまま）。
+- **戻す条件**: テストがコンポーネントの数を大きく超えて一覧性が落ちたとき。`tests/` にミラーし、依存方向の lint の範囲を別に決め直す。
+
+### テストの土台は Nuxt を起こさない範囲に留める
+
+Vitest 3系を `vitest/config` の `defineConfig` で使う。`@nuxt/test-utils` の `defineVitestConfig` には差し替えない。
+
+- **検討した案**: (1) 最初から `defineVitestConfig` を使う。設定を読ませるだけで `@nuxt/content` が SQLite を開くため、CI の `npm ci --ignore-scripts` では `better-sqlite3` のネイティブが無く `npm test` が `Could not locate the bindings file` で落ちる。純粋関数だけを見るテストのために毎回 Nuxt を起動する対価も払う。(2) Vitest 4 + `@nuxt/test-utils` 4。Node 22 に同梱の npm 10 は、どちらかが入るだけで依存解決中に `TypeError: Cannot read properties of null (reading 'edgesOut')` で落ちる。npm 11 なら入るが、npm 11 が書いた lockfile を npm 10 の `npm ci` が `Missing: @oxc-parser/binding-* from lock file` で拒否するため、GitHub Actions と Cloudflare Pages の両方で npm を上げる必要がある。Cloudflare 側の npm はリポジトリから見えないので、デプロイを落とすリスクを負う。
+- **対価**: `@nuxt/test-utils` / `@vue/test-utils` / `happy-dom` はコンポーネントのテストを書くまで使われない devDependency になる。`@nuxt/test-utils` を先に入れてあるのは、その peer（`vitest: ^3.2.0`）が Vitest を3系に固定し、うっかり4系に上がるのを防ぐため。
+- **戻す条件**: コンポーネントのテストを書くときに `defineVitestConfig` へ差し替える（[#127](https://github.com/uyaaaaaa/personal-blog/issues/127)）。Vitest 4 に上げるのは、CI と Cloudflare の npm が11以降で揃ったとき。
+
 ---
 
 ## ヘッダーとナビゲーション
@@ -410,3 +426,4 @@ GFM の脚注記法をそのまま使い、remark-gfm の出力（`[data-footnot
 - **`now` を引数で受け取る。** 静的生成でビルド時刻が焼き付くのを避けるため、呼び出し側が `onMounted` で `Date.now()` を渡す。`null` の間は年つきの絶対表記を返す。パネルもドロワーも初期状態は閉じているので、切り替わりは画面に出ない。
 - **日単位で比較するため、時刻ではなくその日の0時同士を突き合わせる。**
 - **記事の日付は UTC 基準で読み出し、「今日」だけローカル基準で読む。** フロントマターの `date` は時刻を持たない暦日で、`new Date()` はこれを UTC の0時として解釈する。読み出しをローカル基準にすると、UTC より西のタイムゾーンで日付ラベルも相対表記も1日前にずれる。一方で相対表記の基準になる「今日」は閲覧者のローカル暦日が期待値なので、記事側と今日側で基準を非対称にする。どちらも UTC 0時のタイムスタンプに正規化するため、差分は DST の影響を受けない。
+- **テストが渡す「今日」は 12:00 UTC にする。** 基準日をローカル暦日で読むので、0時に近い時刻を基準にするとテストの結果が実行環境のタイムゾーンで変わる。UTC±12 の範囲ならどのタイムゾーンでも同じ暦日になる正午を基準にし、タイムゾーンの違いを確かめる分だけ `vi.stubEnv('TZ', ...)` で明示的に切り替える。`vitest.config.ts` で `pool: 'forks'` を明示しているのは、この書き換えを他のテストファイルに漏らさないため。既定の `threads` ではワーカーが `process.env` を共有する。
