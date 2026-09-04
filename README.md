@@ -19,9 +19,18 @@ npm run dev       # 開発サーバー
 npm run build     # 本番ビルド
 npm run generate  # 静的生成
 npm run preview   # ビルド結果のプレビュー
+npm run format    # Prettier で整形
+npm run lint      # Prettier(--check) + ESLint + dependency-cruiser
 ```
 
 `npm install` で pre-commit フック（`.githooks/`）が有効になり、commit のたびに `npm run lint` が走ります。
+整形で落ちたときは `npm run format` を実行してから commit し直してください。整形の対象はコードだけで、記事や設計ドキュメントの Markdown は含みません。
+
+Prettier 導入時の一括整形は独立した1コミットにしてあり、そのハッシュを `.git-blame-ignore-revs` に置いています。clone したら次を1回実行すると、`git blame` がそのコミットを飛ばします。
+
+```sh
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
 
 ## プレビュー環境
 

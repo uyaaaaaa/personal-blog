@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import TagArticles from '~/components/article/TagArticles.vue'
+	import TagArticles from '~/components/article/TagArticles.vue'
 </script>
 
 <template>
-  <TagArticles />
+	<TagArticles />
 </template>

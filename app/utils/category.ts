@@ -1,6 +1,6 @@
 export const CATEGORY_LABELS = {
-  blog: 'Blog',
-  book: 'Books',
+	blog: 'Blog',
+	book: 'Books',
 } as const
 
 export type Category = keyof typeof CATEGORY_LABELS

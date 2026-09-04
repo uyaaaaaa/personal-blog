@@ -89,12 +89,14 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 | 自作コンポーネントの明示 import | `components: false` + `eslint.config.mjs` の `vue/no-undef-components`（`npm run lint`）。未 import はビルドでは落ちず、そのコンポーネントが消えた HTML が出るため lint が要る | あり |
 | 循環依存 | `.dependency-cruiser.cjs` の `no-circular`（`npm run lint`）。`import type` だけの循環は実行時依存が無いので許す | あり |
 | 依存方向（上の図） | `.dependency-cruiser.cjs` の `*-no-upward` と `theme-only-from-app-vue`（`npm run lint`） | あり |
+| 整形（インデント、属性の折り返し、引用符、Tailwind のクラス順） | `.prettierrc` の Prettier + `prettier-plugin-tailwindcss`（`npm run lint` の `prettier --check`）。Markdown と `package-lock.json` は対象外 | あり |
 | 純粋関数の振る舞い | 実装の隣の `*.test.ts`（`npm test`。いまは `app/utils/` の3ファイルだけ） | あり |
 | コンポーネントと composable の振る舞い | — | **未導入**。[#121](https://github.com/uyaaaaaa/personal-blog/issues/121) |
 | コメント・スタイル・置き場・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
 | `~/` 以外のエイリアス、任意値、`navigator.userAgent`、`unload` | ESLint / Stylelint | **未導入**。次に入れる |
 
-`npm run lint` は ESLint と dependency-cruiser を続けて回す。ファイル1つで判定できる違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に置く。
+`npm run lint` は Prettier・ESLint・dependency-cruiser をこの順で続けて回す。整形は Prettier に、ファイル1つで判定できるそれ以外の違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に置く。
+`prettier --check` が落ちたら `npm run format` で直す。整形して commit し直させる（`--write` してステージする）方式は取らない。commit の内容が黙って変わるため。
 dependency-cruiser が `~/` `~~/` を解決するための paths は `tsconfig.depcruise.json` にある。ルートの `tsconfig.json` は生成物（`.nuxt/`）への references だけで paths を持たないため、生成物に依存しない専用の tsconfig を持つ。
 
 lint は2箇所で走る。`npm install` が有効にする pre-commit フック（`.githooks/pre-commit`）が commit のたびに回し、GitHub Actions（`.github/workflows/lint.yml`）が PR と `main` への push で回す。build は CI では回さず、Cloudflare Pages が PR ごとに行うビルドとその `Cloudflare Pages` チェックが担う。
@@ -102,13 +104,19 @@ lint は2箇所で走る。`npm install` が有効にする pre-commit フック
 `npm test` は Vitest を1回だけ走らせる（`vitest run`）。いまはローカルで打ったときだけ走り、pre-commit にも CI にも載っていない（載せるのは [#123](https://github.com/uyaaaaaa/personal-blog/issues/123)）。設定は `vitest/config` の `defineConfig` だけで書き、Nuxt の設定は読み込まない（→ [DECISIONS.md](./DECISIONS.md#テストの土台は-nuxt-を起こさない範囲に留める)）。
 
 lint を入れる順序は費用対効果順で、import の書き分け → Tailwind の任意値 → プラットフォーム系の禁止3点。
-いずれも既知の違反をベースラインに固定し、新規違反だけを落とす形で入れる。ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。
+いずれも既知の違反をベースラインに固定し、新規違反だけを落とす形で入れる。ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。整形は Prettier が持つので、ESLint には整形ルールを足さない（`eslint-config-prettier` は衝突が無いので入れていない）。
 lint で落とせるようになったルールは `.claude/rules/` から消す（二重管理にしない）。
 
 dependency-cruiser のベースラインは `.dependency-cruiser-known-violations.json`（今は空）。新規の違反は直し、ベースラインには足さない。ベースラインにある違反を直したら次のコマンドで作り直す（減らす方向にだけ使う）。
 
 ```sh
 npx depcruise app --config --output-type baseline > .dependency-cruiser-known-violations.json
+```
+
+Prettier を入れたときの一括整形は独立した1コミットにしてあり、そのハッシュを `.git-blame-ignore-revs` に置いている。次のコマンドで `git blame` から外れる。
+
+```sh
+git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
 
 ## 既知のずれ
