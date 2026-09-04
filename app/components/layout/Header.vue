@@ -22,7 +22,7 @@
       </div>
 
       <div class="flex items-stretch self-stretch gap-3 md:gap-5">
-        <ThemeToggle />
+        <ThemeToggle class="self-center" />
         <Navigation
           :is-open="isMenuOpen"
           @toggle="toggleMenu"

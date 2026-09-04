@@ -40,7 +40,7 @@
       role="menu"
       aria-label="Theme"
     >
-      <button type="button" class="theme-option" role="menuitemradio" :aria-checked="isSelected('light')" @click="select('light')">
+      <button type="button" class="theme-option" :class="{ 'is-selected': isSelected('light') }" role="menuitemradio" :aria-checked="isSelected('light')" @click="select('light')">
         <svg class="theme-option-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="4"></circle>
           <path d="M12 2v2"></path>
@@ -53,31 +53,22 @@
           <path d="m19.07 4.93-1.41 1.41"></path>
         </svg>
         <span class="theme-option-label">Light</span>
-        <svg v-if="isSelected('light')" class="theme-option-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
       </button>
 
-      <button type="button" class="theme-option" role="menuitemradio" :aria-checked="isSelected('dark')" @click="select('dark')">
+      <button type="button" class="theme-option" :class="{ 'is-selected': isSelected('dark') }" role="menuitemradio" :aria-checked="isSelected('dark')" @click="select('dark')">
         <svg class="theme-option-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
         </svg>
         <span class="theme-option-label">Dark</span>
-        <svg v-if="isSelected('dark')" class="theme-option-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
       </button>
 
-      <button type="button" class="theme-option" role="menuitemradio" :aria-checked="isSelected('system')" @click="select('system')">
+      <button type="button" class="theme-option" :class="{ 'is-selected': isSelected('system') }" role="menuitemradio" :aria-checked="isSelected('system')" @click="select('system')">
         <svg class="theme-option-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="2" y="4" width="20" height="13" rx="2"></rect>
           <path d="M9 21h6"></path>
           <path d="M12 17v4"></path>
         </svg>
         <span class="theme-option-label">System</span>
-        <svg v-if="isSelected('system')" class="theme-option-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
       </button>
     </div>
   </div>
@@ -144,14 +135,13 @@ onMounted(() => {
 
 .theme-panel {
   position: absolute;
-  top: calc(100% + 1px);
+  top: 100%;
   right: 0;
   width: 10rem;
   padding: 0.5rem;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-top: none;
-  border-radius: 0 0 10px 10px;
+  border-radius: 10px;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-4px);
@@ -185,6 +175,11 @@ onMounted(() => {
   background-color: var(--color-surface-subtle);
 }
 
+.theme-option.is-selected {
+  background-color: var(--color-surface-subtle);
+  font-weight: 600;
+}
+
 .theme-option-icon {
   flex: none;
   width: 16px;
@@ -195,12 +190,5 @@ onMounted(() => {
 .theme-option-label {
   flex: 1;
   min-width: 0;
-}
-
-.theme-option-check {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  color: var(--color-accent);
 }
 </style>
