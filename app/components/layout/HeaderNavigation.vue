@@ -15,7 +15,7 @@
 				aria-haspopup="true"
 				aria-controls="header-menu-panel"
 				:aria-expanded="isPanelOpen"
-				@click="isPanelOpen = !isPanelOpen"
+				@click="togglePanel"
 			>
 				Explore
 			</button>
@@ -367,6 +367,7 @@
 	import HeaderMenuColumn from '~/components/layout/HeaderMenuColumn.vue'
 	import { useArticleCategories } from '~/composables/useArticleCategories'
 	import { useArticleTags } from '~/composables/useArticleTags'
+	import { useHoverPanel } from '~/composables/useHoverPanel'
 	import { formatRelativeDate } from '~/utils/date'
 
 	defineProps<{
@@ -378,7 +379,6 @@
 		(e: 'close'): void
 	}>()
 
-	const PANEL_CLOSE_DELAY_MS = 150
 	const TOP_TAGS_LIMIT = 10
 	const LATEST_ARTICLES_LIMIT = 5
 
@@ -409,61 +409,23 @@
 		})),
 	)
 
-	const isPanelOpen = ref(false)
-	const exploreRef = ref<HTMLElement | null>(null)
-	const triggerRef = ref<HTMLButtonElement | null>(null)
-	let panelCloseTimer: ReturnType<typeof setTimeout> | undefined
-
-	const closePanel = () => {
-		clearTimeout(panelCloseTimer)
-		isPanelOpen.value = false
-	}
-
-	const openPanel = () => {
-		clearTimeout(panelCloseTimer)
-		isPanelOpen.value = true
-	}
-
-	const scheduleClosePanel = () => {
-		clearTimeout(panelCloseTimer)
-		panelCloseTimer = setTimeout(closePanel, PANEL_CLOSE_DELAY_MS)
-	}
-
-	// タッチ操作はタップのたびに互換マウスイベント（mouseenter → click）を発火させるため、
-	// ホバーでの開閉はマウスのポインタに限定してclickのトグルと衝突させない
-	const openPanelOnHover = (event: PointerEvent) => {
-		if (event.pointerType === 'mouse') openPanel()
-	}
-
-	const scheduleClosePanelOnHover = (event: PointerEvent) => {
-		if (event.pointerType === 'mouse') scheduleClosePanel()
-	}
-
-	const dismissPanel = () => {
-		if (!isPanelOpen.value) return
-		closePanel()
-		triggerRef.value?.focus()
-	}
-
-	const onPanelFocusout = (event: FocusEvent) => {
-		if (!exploreRef.value?.contains(event.relatedTarget as Node | null)) closePanel()
-	}
-
-	const onDocumentClick = (event: MouseEvent) => {
-		if (!exploreRef.value?.contains(event.target as Node)) closePanel()
-	}
+	const {
+		isOpen: isPanelOpen,
+		rootRef: exploreRef,
+		triggerRef,
+		close: closePanel,
+		toggle: togglePanel,
+		openOnHover: openPanelOnHover,
+		scheduleCloseOnHover: scheduleClosePanelOnHover,
+		dismiss: dismissPanel,
+		onFocusout: onPanelFocusout,
+	} = useHoverPanel()
 
 	const route = useRoute()
 	watch(() => route.fullPath, closePanel)
 
 	onMounted(() => {
 		now.value = Date.now()
-		document.addEventListener('click', onDocumentClick)
-	})
-
-	onBeforeUnmount(() => {
-		document.removeEventListener('click', onDocumentClick)
-		clearTimeout(panelCloseTimer)
 	})
 </script>
 
