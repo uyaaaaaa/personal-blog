@@ -1,56 +1,64 @@
 <script setup lang="ts">
-import ArticleList from '~/components/ArticleList.vue'
-import Pagination from '~/components/common/Pagination.vue'
-import BackButton from '~/components/common/BackButton.vue'
-import { usePagination } from '~/composables/usePagination'
-import { usePageSeo } from '~/composables/usePageSeo'
-import { isCategory, CATEGORY_LABELS } from '~/utils/category'
+	import ArticleList from '~/components/ArticleList.vue'
+	import Pagination from '~/components/common/Pagination.vue'
+	import BackButton from '~/components/common/BackButton.vue'
+	import { usePagination } from '~/composables/usePagination'
+	import { usePageSeo } from '~/composables/usePageSeo'
+	import { isCategory, CATEGORY_LABELS } from '~/utils/category'
 
-const route = useRoute()
-const category = String(route.params.category)
+	const route = useRoute()
+	const category = String(route.params.category)
 
-if (!isCategory(category)) {
-  throw createError({ statusCode: 404, statusMessage: 'Category not found', fatal: true })
-}
+	if (!isCategory(category)) {
+		throw createError({ statusCode: 404, statusMessage: 'Category not found', fatal: true })
+	}
 
-const label = CATEGORY_LABELS[category]
+	const label = CATEGORY_LABELS[category]
 
-const { data: articles } = await useAsyncData(`category-articles-${category}`, () =>
-  queryCollection('article')
-    .where('published', '=', true)
-    .where('category', '=', category)
-    .order('date', 'DESC')
-    .select('path', 'title', 'date', 'emoji', 'tags')
-    .all(),
-)
+	const { data: articles } = await useAsyncData(`category-articles-${category}`, () =>
+		queryCollection('article')
+			.where('published', '=', true)
+			.where('category', '=', category)
+			.order('date', 'DESC')
+			.select('path', 'title', 'date', 'emoji', 'tags')
+			.all(),
+	)
 
-if ((articles.value ?? []).length === 0) {
-  throw createError({ statusCode: 404, statusMessage: 'Category not found', fatal: true })
-}
+	if ((articles.value ?? []).length === 0) {
+		throw createError({ statusCode: 404, statusMessage: 'Category not found', fatal: true })
+	}
 
-const { page, totalPages, pagedItems, basePath } = usePagination(
-  computed(() => articles.value ?? []),
-)
+	const { page, totalPages, pagedItems, basePath } = usePagination(
+		computed(() => articles.value ?? []),
+	)
 
-usePageSeo({
-  title: () => (page.value > 1 ? `${label} (${page.value}/${totalPages.value})` : label),
-  description: `${label} カテゴリの記事一覧。`,
-})
+	usePageSeo({
+		title: () => (page.value > 1 ? `${label} (${page.value}/${totalPages.value})` : label),
+		description: `${label} カテゴリの記事一覧。`,
+	})
 </script>
 
 <template>
-  <div class="space-y-8">
-    <header class="border-b border-border pb-8">
-      <h1 class="mb-2 text-3xl font-bold text-main">{{ label }}</h1>
-      <p class="text-sub">
-        {{ articles?.length }} article{{ articles?.length === 1 ? '' : 's' }} in {{ label }}.
-      </p>
-    </header>
+	<div class="space-y-8">
+		<header class="border-b border-border pb-8">
+			<h1 class="mb-2 text-3xl font-bold text-main">{{ label }}</h1>
+			<p class="text-sub">
+				{{ articles?.length }} article{{ articles?.length === 1 ? '' : 's' }} in
+				{{ label }}.
+			</p>
+		</header>
 
-    <ArticleList :articles="pagedItems" />
+		<ArticleList :articles="pagedItems" />
 
-    <Pagination :page="page" :total-pages="totalPages" :base-path="basePath" />
+		<Pagination
+			:page="page"
+			:total-pages="totalPages"
+			:base-path="basePath"
+		/>
 
-    <BackButton to="/" label="Back to top" />
-  </div>
+		<BackButton
+			to="/"
+			label="Back to top"
+		/>
+	</div>
 </template>
