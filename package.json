@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
+    "format": "prettier --write .",
     "generate": "nuxt generate",
     "lint": "eslint . && depcruise app --config --ignore-known",
     "preview": "nuxt preview",
@@ -27,6 +28,8 @@
     "dependency-cruiser": "^18.2.0",
     "eslint": "^10.9.1",
     "eslint-plugin-vue": "^10.10.0",
+    "prettier": "^3.9.6",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "vue-eslint-parser": "^10.4.1"
   }
 }
