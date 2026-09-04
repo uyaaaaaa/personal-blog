@@ -16,4 +16,5 @@ paths:
 - **ブレークポイントは Tailwind の `md:` と `lg:` だけ。** scoped CSS に独自の境界値を書かない。表示・非表示の切り替えもクラスで行う。
 - **`prefers-reduced-motion` を参照しない。** 意図的な判断なので、`@media` も `matchMedia` も置かない。トランジションの長さはガイドラインの段階から選ぶ。
 - **ページ内リンクの着地位置は CSS で一元管理する。** JS 側でオフセットを足さない。
+- **コードブロックの見た目は `app/components/content/ProsePre.vue` が持つ。** `tailwind.config.ts` の `typography` 拡張で `pre` を触らない。
 - **`!important` を書かない。** 第三者由来のインラインスタイルを打ち消す場合だけ許し、理由を残す。

@@ -21,6 +21,17 @@
       </button>
 
       <HeaderMenuPanel id="header-menu-panel" :is-open="isPanelOpen">
+        <HeaderMenuColumn label="Categories">
+          <ul class="menu-list">
+            <li v-for="category in categories" :key="category.slug">
+              <NuxtLink :to="`/category/${category.slug}`" class="menu-category" prefetch-on="interaction">
+                <span class="menu-category-name">{{ category.label }}</span>
+                <span class="menu-category-count">{{ category.count }}</span>
+              </NuxtLink>
+            </li>
+          </ul>
+        </HeaderMenuColumn>
+
         <HeaderMenuColumn label="Latest" to="/article">
           <ul class="menu-list">
             <li v-for="article in latestItems" :key="article.path">
@@ -85,6 +96,33 @@
             <button
               type="button"
               class="drawer-row"
+              :aria-expanded="isCategoriesOpen"
+              aria-controls="drawer-group-categories"
+              @click="isCategoriesOpen = !isCategoriesOpen"
+            >
+              <svg class="drawer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
+              </svg>
+              <span class="drawer-row-label">Categories</span>
+              <svg class="drawer-chevron" :class="{ 'is-open': isCategoriesOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            <div id="drawer-group-categories" class="drawer-collapse" :class="{ 'is-open': isCategoriesOpen }">
+              <ul class="drawer-sublist">
+                <li v-for="category in categories" :key="category.slug">
+                  <NuxtLink :to="`/category/${category.slug}`" class="drawer-subrow drawer-subrow-split" prefetch-on="interaction" @click="emit('close')">
+                    <span class="drawer-subrow-name">{{ category.label }}</span>
+                    <span class="drawer-subrow-count">{{ category.count }}</span>
+                  </NuxtLink>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              type="button"
+              class="drawer-row"
               :aria-expanded="isLatestOpen"
               aria-controls="drawer-group-latest"
               @click="isLatestOpen = !isLatestOpen"
@@ -130,7 +168,7 @@
             <div id="drawer-group-tags" class="drawer-collapse" :class="{ 'is-open': isTagsOpen }">
               <ul class="drawer-sublist">
                 <li v-for="tag in topTags" :key="tag.slug">
-                  <NuxtLink :to="`/tags/${tag.slug}`" class="drawer-subrow drawer-subrow-tag" prefetch-on="interaction" @click="emit('close')">
+                  <NuxtLink :to="`/tags/${tag.slug}`" class="drawer-subrow drawer-subrow-split" prefetch-on="interaction" @click="emit('close')">
                     <span class="drawer-subrow-name">{{ tag.name }}</span>
                     <span class="drawer-subrow-count">{{ tag.count }}</span>
                   </NuxtLink>
@@ -148,6 +186,7 @@
 <script setup lang="ts">
 import HeaderMenuPanel from '~/components/layout/HeaderMenuPanel.vue'
 import HeaderMenuColumn from '~/components/layout/HeaderMenuColumn.vue'
+import { useArticleCategories } from '~/composables/useArticleCategories'
 import { useArticleTags } from '~/composables/useArticleTags'
 import { formatRelativeDate } from '~/utils/date'
 
@@ -164,8 +203,11 @@ const PANEL_CLOSE_DELAY_MS = 150
 const TOP_TAGS_LIMIT = 10
 const LATEST_ARTICLES_LIMIT = 5
 
+const isCategoriesOpen = ref(false)
 const isLatestOpen = ref(false)
 const isTagsOpen = ref(false)
+
+const { data: categories } = useArticleCategories()
 
 const { data: tags } = useArticleTags()
 const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
@@ -303,7 +345,8 @@ onBeforeUnmount(() => {
 }
 
 .menu-article,
-.menu-tag {
+.menu-tag,
+.menu-category {
   display: flex;
   align-items: baseline;
   gap: 1rem;
@@ -314,11 +357,13 @@ onBeforeUnmount(() => {
 }
 
 .menu-article:hover,
-.menu-tag:hover {
+.menu-tag:hover,
+.menu-category:hover {
   background-color: var(--color-surface-subtle);
 }
 
-.menu-tag {
+.menu-tag,
+.menu-category {
   justify-content: space-between;
   gap: 0.5rem;
 }
@@ -342,7 +387,8 @@ onBeforeUnmount(() => {
   font-variant-numeric: tabular-nums;
 }
 
-.menu-tag-name {
+.menu-tag-name,
+.menu-category-name {
   min-width: 0;
   font-family: var(--font-mono);
   font-size: 0.8125rem;
@@ -351,7 +397,8 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
 }
 
-.menu-tag-count {
+.menu-tag-count,
+.menu-category-count {
   flex: none;
   font-family: var(--font-mono);
   font-size: 0.75rem;
@@ -586,7 +633,7 @@ onBeforeUnmount(() => {
   color: var(--color-sub);
 }
 
-.drawer-subrow-tag {
+.drawer-subrow-split {
   display: flex;
   align-items: center;
   justify-content: space-between;

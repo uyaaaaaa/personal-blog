@@ -296,9 +296,22 @@ category: blog
 
 言語指定は `nuxt.config.ts` の `langs` にあるものだけ色がつく。
 
-`js` `ts` `json` `html` `css` `vue` `shell` `sh` `bash` `md` `mdc` `yaml` `vim` `lua` `sql` `php`
+`js` `ts` `json` `html` `css` `vue` `shell` `sh` `bash` `md` `mdc` `yaml` `vim` `lua` `sql` `php` `diff`
 
-これ以外を使いたいときは `nuxt.config.ts` に追加する。
+プレーンテキストは `txt`。これ以外を使いたいときは `nuxt.config.ts` に追加する。
+綴りは `langs` に書いてあるものに揃える（`typescript` や `yml` ではなく `ts` `yaml`）。
+
+**ファイル名は言語の後ろに `[...]` で書く。** コードブロックの上にラベルバーとして出る。言語欄にファイル名を書くとハイライトが効かない。
+
+````md
+```lua [~/.config/nvim/after/ftplugin/markdown.lua]
+vim.treesitter.query.set(...)
+```
+````
+
+ファイル名でなくてもよい（`[置換前]` のようなラベルも可）。
+
+**差分は `diff`。** 行頭 `+` / `-` の行に背景が付く。`-` 行のあとに `+` 行を並べると、対応する行の中で変化した語が濃く示される。行内の構文色は付かないので、構文を見せたいときは言語のブロックにする。
 
 ### Callout
 

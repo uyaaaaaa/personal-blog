@@ -26,6 +26,7 @@
 ```
 content/article/*.md        記事。フロントマターのスキーマは content.config.ts
 remark/obsidian-callout.mjs  Markdown 拡張（Obsidian 互換 callout）
+app/mdc.config.ts            Shiki の transformer（diff の行に印を付ける）
 theme/tokens.ts              色・フォントの単一情報源
 tailwind.config.ts           tokens から CSS 変数と Tailwind theme を生成
 app/
@@ -36,7 +37,7 @@ app/
   components/
     layout/                  Header、Explore ドロップダウン、ドロワー、ThemeToggle、Footer
     article/                 一覧の実体（AllArticles 等）、棚、カード、目次、ArticleFallback
-    content/                 Nuxt Content が本文中で使う Callout / ProseA / ProseTable
+    content/                 Nuxt Content が本文中で使う Callout / ProseA / ProsePre / ProseTable
     common/                  Sidebar、BackButton、Pagination、ScrollToTopButton
     error/                   ErrorView と NotFound / Server
     Hero.vue ArticleList.vue ルート直下（歴史的経緯。移動は未定）
@@ -72,6 +73,7 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 ```
 
 コンポーネントは Tailwind のクラスを基本にし、状態遷移やアニメーションが複雑なものだけ scoped CSS を持つ。
+記事本文は `@tailwindcss/typography` の `prose` を土台に `tailwind.config.ts` の `typography` 拡張で差分を当てるが、コードブロックだけは `ProsePre.vue` が見た目を持つ（→ [DECISIONS.md](./DECISIONS.md#コードブロックの表示を-proseprevue-に集約する)）。
 
 ---
 
