@@ -145,6 +145,14 @@ Vitest 3系を `vitest/config` の `defineConfig` で使う。`@nuxt/test-utils`
 - **対価**: `@nuxt/test-utils` / `@vue/test-utils` / `happy-dom` はコンポーネントのテストを書くまで使われない devDependency になる。`@nuxt/test-utils` を先に入れてあるのは、その peer（`vitest: ^3.2.0`）が Vitest を3系に固定し、うっかり4系に上がるのを防ぐため。
 - **戻す条件**: コンポーネントのテストを書くときに `defineVitestConfig` へ差し替える（[#127](https://github.com/uyaaaaaa/personal-blog/issues/127)）。Vitest 4 に上げるのは、CI と Cloudflare の npm が11以降で揃ったとき。
 
+### lint とテストを別のワークフローに分ける
+
+`.github/workflows/lint.yml`（`Lint`）と `.github/workflows/test.yml`（`Test`）を、同じトリガーで並列に走らせる。
+
+- **検討した案**: 1つのワークフローに `lint` と `test` の2ジョブを置く。`on` / `permissions` / `concurrency` を1箇所に書けて、push のたびに両方まとめてキャンセルできる。分けたのは、ワークフロー単位で名前・トリガー・実行履歴が独立し、テストだけを別のトリガー（パスフィルタや定期実行）に移すときにそのファイルだけで済むため。表示名も `Lint` が `npm test` を回す不一致にならない。
+- **対価**: `on` / `permissions` の記述が二重になる。`concurrency.group` を `lint-` / `test-` と別の接頭辞にする必要があり、揃えると push のたびに互いをキャンセルし合って片方しか完走しない。Actions のタブに項目が1つ増える。
+- **戻す条件**: 2つのトリガーが今後も同じまま変わらず、二重管理のほうが重くなったとき。ジョブ名（`lint` / `test`）を変えずに1ファイルへ戻せば、`main` のブランチ保護の必須チェックは付け替えずに済む（必須チェックはワークフロー名ではなくジョブ名で引かれる）。
+
 ---
 
 ## ヘッダーとナビゲーション
