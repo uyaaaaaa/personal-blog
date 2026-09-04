@@ -24,7 +24,11 @@
         <HeaderMenuColumn label="Categories">
           <ul class="menu-list">
             <li v-for="category in categories" :key="category.slug">
-              <NuxtLink :to="`/category/${category.slug}`" class="menu-category" prefetch-on="interaction">
+              <NuxtLink
+                :to="`/category/${category.slug}`"
+                class="menu-category"
+                prefetch-on="interaction"
+              >
                 <span class="menu-category-name">{{ category.label }}</span>
                 <span class="menu-category-count">{{ category.count }}</span>
               </NuxtLink>
@@ -37,7 +41,9 @@
             <li v-for="article in latestItems" :key="article.path">
               <NuxtLink :to="article.path" class="menu-article" prefetch-on="interaction">
                 <span class="menu-article-title">{{ article.title }}</span>
-                <time class="menu-article-date" :datetime="article.date">{{ article.dateLabel }}</time>
+                <time class="menu-article-date" :datetime="article.date">{{
+                  article.dateLabel
+                }}</time>
               </NuxtLink>
             </li>
           </ul>
@@ -56,26 +62,32 @@
       </HeaderMenuPanel>
     </div>
 
-    <div class="md:hidden flex items-center">
-      <button
-        class="mobile-menu-btn"
-        @click="emit('toggle')"
-        aria-label="Open menu"
-      >
+    <div class="flex items-center md:hidden">
+      <button class="mobile-menu-btn" @click="emit('toggle')" aria-label="Open menu">
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
       </button>
 
-      <div
-        class="mobile-menu-overlay"
-        :class="{ 'is-open': isOpen }"
-        @click="emit('close')"
-      >
+      <div class="mobile-menu-overlay" :class="{ 'is-open': isOpen }" @click="emit('close')">
         <aside class="mobile-drawer" @click.stop>
           <div class="drawer-header">
-            <button type="button" class="drawer-close" aria-label="Close menu" @click="emit('close')">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <button
+              type="button"
+              class="drawer-close"
+              aria-label="Close menu"
+              @click="emit('close')"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
                 <path d="M18 6 6 18" />
                 <path d="m6 6 12 12" />
               </svg>
@@ -84,7 +96,17 @@
 
           <nav class="drawer-nav">
             <NuxtLink to="/" class="drawer-row" @click="emit('close')">
-              <svg class="drawer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg
+                class="drawer-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
                 <path d="M3 10.5 12 3l9 7.5" />
                 <path d="M5.5 9.5V20h13V9.5" />
               </svg>
@@ -100,19 +122,51 @@
               aria-controls="drawer-group-categories"
               @click="isCategoriesOpen = !isCategoriesOpen"
             >
-              <svg class="drawer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
+              <svg
+                class="drawer-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"
+                />
               </svg>
               <span class="drawer-row-label">Categories</span>
-              <svg class="drawer-chevron" :class="{ 'is-open': isCategoriesOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg
+                class="drawer-chevron"
+                :class="{ 'is-open': isCategoriesOpen }"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
 
-            <div id="drawer-group-categories" class="drawer-collapse" :class="{ 'is-open': isCategoriesOpen }">
+            <div
+              id="drawer-group-categories"
+              class="drawer-collapse"
+              :class="{ 'is-open': isCategoriesOpen }"
+            >
               <ul class="drawer-sublist">
                 <li v-for="category in categories" :key="category.slug">
-                  <NuxtLink :to="`/category/${category.slug}`" class="drawer-subrow drawer-subrow-split" prefetch-on="interaction" @click="emit('close')">
+                  <NuxtLink
+                    :to="`/category/${category.slug}`"
+                    class="drawer-subrow drawer-subrow-split"
+                    prefetch-on="interaction"
+                    @click="emit('close')"
+                  >
                     <span class="drawer-subrow-name">{{ category.label }}</span>
                     <span class="drawer-subrow-count">{{ category.count }}</span>
                   </NuxtLink>
@@ -127,22 +181,54 @@
               aria-controls="drawer-group-latest"
               @click="isLatestOpen = !isLatestOpen"
             >
-              <svg class="drawer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg
+                class="drawer-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
                 <circle cx="12" cy="12" r="9" />
                 <path d="M12 7v5l3.5 2" />
               </svg>
               <span class="drawer-row-label">Latest</span>
-              <svg class="drawer-chevron" :class="{ 'is-open': isLatestOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg
+                class="drawer-chevron"
+                :class="{ 'is-open': isLatestOpen }"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
 
-            <div id="drawer-group-latest" class="drawer-collapse" :class="{ 'is-open': isLatestOpen }">
+            <div
+              id="drawer-group-latest"
+              class="drawer-collapse"
+              :class="{ 'is-open': isLatestOpen }"
+            >
               <ul class="drawer-sublist">
                 <li v-for="article in latestItems" :key="article.path">
-                  <NuxtLink :to="article.path" class="drawer-subrow" prefetch-on="interaction" @click="emit('close')">
+                  <NuxtLink
+                    :to="article.path"
+                    class="drawer-subrow"
+                    prefetch-on="interaction"
+                    @click="emit('close')"
+                  >
                     <span class="drawer-subrow-title">{{ article.title }}</span>
-                    <time class="drawer-subrow-meta" :datetime="article.date">{{ article.dateLabel }}</time>
+                    <time class="drawer-subrow-meta" :datetime="article.date">{{
+                      article.dateLabel
+                    }}</time>
                   </NuxtLink>
                 </li>
               </ul>
@@ -155,12 +241,33 @@
               aria-controls="drawer-group-tags"
               @click="isTagsOpen = !isTagsOpen"
             >
-              <svg class="drawer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg
+                class="drawer-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
                 <path d="M3 3h8l10 10-8 8L3 11V3Z" />
                 <circle cx="7.5" cy="7.5" r="1.5" />
               </svg>
               <span class="drawer-row-label">Tags</span>
-              <svg class="drawer-chevron" :class="{ 'is-open': isTagsOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg
+                class="drawer-chevron"
+                :class="{ 'is-open': isTagsOpen }"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
@@ -168,7 +275,12 @@
             <div id="drawer-group-tags" class="drawer-collapse" :class="{ 'is-open': isTagsOpen }">
               <ul class="drawer-sublist">
                 <li v-for="tag in topTags" :key="tag.slug">
-                  <NuxtLink :to="`/tags/${tag.slug}`" class="drawer-subrow drawer-subrow-split" prefetch-on="interaction" @click="emit('close')">
+                  <NuxtLink
+                    :to="`/tags/${tag.slug}`"
+                    class="drawer-subrow drawer-subrow-split"
+                    prefetch-on="interaction"
+                    @click="emit('close')"
+                  >
                     <span class="drawer-subrow-name">{{ tag.name }}</span>
                     <span class="drawer-subrow-count">{{ tag.count }}</span>
                   </NuxtLink>
@@ -179,7 +291,6 @@
         </aside>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -310,12 +421,12 @@ onBeforeUnmount(() => {
 }
 
 .explore-trigger:hover,
-.explore-trigger[aria-expanded="true"] {
+.explore-trigger[aria-expanded='true'] {
   color: var(--color-accent);
 }
 
 .explore-trigger::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   right: 0;
@@ -326,7 +437,7 @@ onBeforeUnmount(() => {
   transition: opacity 0.2s;
 }
 
-.explore-trigger[aria-expanded="true"]::after {
+.explore-trigger[aria-expanded='true']::after {
   opacity: 1;
 }
 
@@ -439,7 +550,9 @@ onBeforeUnmount(() => {
   opacity: 0;
   visibility: hidden;
   overflow: hidden;
-  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+  transition:
+    opacity 0.3s ease-in-out,
+    visibility 0.3s ease-in-out;
 }
 
 .mobile-menu-overlay.is-open {
@@ -525,7 +638,9 @@ onBeforeUnmount(() => {
   color: var(--color-main);
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .drawer-row:hover {
@@ -543,7 +658,6 @@ onBeforeUnmount(() => {
   height: 18px;
   color: var(--color-sub);
 }
-
 
 .drawer-row-label {
   flex: 1;
@@ -604,7 +718,9 @@ onBeforeUnmount(() => {
   border-radius: 0.375rem;
   color: var(--color-main);
   text-decoration: none;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .drawer-subrow:hover {

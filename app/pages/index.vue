@@ -1,9 +1,6 @@
 <template>
   <div class="space-y-16">
-    <Hero
-      v-if="heroArticle"
-      :article="heroArticle"
-    />
+    <Hero v-if="heroArticle" :article="heroArticle" />
 
     <ArticleShelf
       v-for="shelf in shelves"
@@ -35,19 +32,17 @@ const { data: articles } = await useAsyncData('home-articles', () =>
 const heroArticle = computed(() => articles.value?.[0] ?? null)
 
 const shelves = computed(() =>
-  CATEGORIES
-    .map((category) => {
-      const inCategory = (articles.value ?? []).filter(article => article.category === category)
-      return {
-        category,
-        title: CATEGORY_LABELS[category],
-        total: inCategory.length,
-        articles: inCategory
-          .filter(article => article.path !== heroArticle.value?.path)
-          .slice(0, SHELF_LIMIT),
-      }
-    })
-    .filter(shelf => shelf.articles.length > 0),
+  CATEGORIES.map((category) => {
+    const inCategory = (articles.value ?? []).filter((article) => article.category === category)
+    return {
+      category,
+      title: CATEGORY_LABELS[category],
+      total: inCategory.length,
+      articles: inCategory
+        .filter((article) => article.path !== heroArticle.value?.path)
+        .slice(0, SHELF_LIMIT),
+    }
+  }).filter((shelf) => shelf.articles.length > 0),
 )
 
 usePageSeo()

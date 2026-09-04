@@ -23,6 +23,6 @@ export const useScrollTo = () => {
   return {
     scrollTo,
     scrollToTop,
-    clearHash
+    clearHash,
   }
 }

@@ -27,11 +27,7 @@ const description = computed(() =>
 const { data: recentArticles } = useLazyAsyncData(
   'article-fallback-recent',
   () =>
-    queryCollection('article')
-      .where('published', '=', true)
-      .order('date', 'DESC')
-      .limit(3)
-      .all(),
+    queryCollection('article').where('published', '=', true).order('date', 'DESC').limit(3).all(),
   { immediate: props.variant === 'not-found', default: () => [] },
 )
 </script>
@@ -45,7 +41,10 @@ const { data: recentArticles } = useLazyAsyncData(
     >
       <h1 class="text-xl font-bold text-main">{{ heading }}</h1>
 
-      <p v-if="variant === 'not-found' && path" class="rounded bg-surface-subtle px-2 py-1 font-mono text-xs text-sub">
+      <p
+        v-if="variant === 'not-found' && path"
+        class="rounded bg-surface-subtle px-2 py-1 font-mono text-xs text-sub"
+      >
         {{ path }}
       </p>
 

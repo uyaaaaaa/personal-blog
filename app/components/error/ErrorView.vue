@@ -4,9 +4,7 @@
       <h1 class="error-code">{{ code }}</h1>
       <p class="error-message">{{ message }}</p>
       <p class="error-description">{{ description }}</p>
-      <button @click="handleError" class="back-button">
-        Back to Top
-      </button>
+      <button @click="handleError" class="back-button">Back to Top</button>
     </div>
   </div>
 </template>

@@ -1,11 +1,13 @@
 export const formatDate = (date: string | Date | undefined | null): string => {
   if (!date) return ''
-  return new Date(date).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: 'UTC'
-  }).replace(/\//g, '.')
+  return new Date(date)
+    .toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone: 'UTC',
+    })
+    .replace(/\//g, '.')
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -26,7 +28,10 @@ const formatShortDate = (target: Date, now: Date | null): string =>
     ...(now && target.getUTCFullYear() === now.getFullYear() ? {} : { year: 'numeric' }),
   })
 
-export const formatRelativeDate = (date: string | Date | undefined | null, now: number | null): string => {
+export const formatRelativeDate = (
+  date: string | Date | undefined | null,
+  now: number | null,
+): string => {
   if (!date) return ''
 
   const target = new Date(date)

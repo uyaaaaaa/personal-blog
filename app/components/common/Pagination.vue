@@ -20,34 +20,42 @@ const items = computed<(number | 'gap')[]>(() => {
   })
 })
 
-const linkFor = (target: number) => (target === 1 ? props.basePath : `${props.basePath}/page/${target}`)
+const linkFor = (target: number) =>
+  target === 1 ? props.basePath : `${props.basePath}/page/${target}`
 </script>
 
 <template>
   <nav v-if="totalPages > 1" class="flex items-center justify-center gap-2" aria-label="Pagination">
-    <NuxtLink
-      v-if="page > 1"
-      :to="linkFor(page - 1)"
-      class="page-item"
-      aria-label="Previous page"
-    >
-      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <NuxtLink v-if="page > 1" :to="linkFor(page - 1)" class="page-item" aria-label="Previous page">
+      <svg
+        class="chevron"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <path d="M15 18l-6-6 6-6" />
       </svg>
     </NuxtLink>
     <span v-else class="page-item page-item-disabled" aria-hidden="true">
-      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg
+        class="chevron"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <path d="M15 18l-6-6 6-6" />
       </svg>
     </span>
 
     <template v-for="(item, index) in items" :key="`${item}-${index}`">
-      <span v-if="item === 'gap'" class="px-1 text-sub font-mono text-sm">…</span>
-      <NuxtLink
-        v-else-if="item !== page"
-        :to="linkFor(item)"
-        class="page-item"
-      >
+      <span v-if="item === 'gap'" class="px-1 font-mono text-sm text-sub">…</span>
+      <NuxtLink v-else-if="item !== page" :to="linkFor(item)" class="page-item">
         {{ item }}
       </NuxtLink>
       <span v-else class="page-item page-item-current" aria-current="page">{{ item }}</span>
@@ -59,12 +67,28 @@ const linkFor = (target: number) => (target === 1 ? props.basePath : `${props.ba
       class="page-item"
       aria-label="Next page"
     >
-      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg
+        class="chevron"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <path d="M9 18l6-6-6-6" />
       </svg>
     </NuxtLink>
     <span v-else class="page-item page-item-disabled" aria-hidden="true">
-      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg
+        class="chevron"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <path d="M9 18l6-6-6-6" />
       </svg>
     </span>
@@ -85,7 +109,9 @@ const linkFor = (target: number) => (target === 1 ? props.basePath : `${props.ba
   color: var(--color-main);
   font-family: var(--font-mono);
   font-size: 0.875rem;
-  transition: border-color 0.2s ease, color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 a.page-item:hover {

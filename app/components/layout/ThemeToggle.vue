@@ -1,14 +1,38 @@
 <template>
   <button
     type="button"
-    class="flex items-center justify-center w-8 h-8 rounded-md text-sub hover:text-accent transition-colors"
+    class="flex h-8 w-8 items-center justify-center rounded-md text-sub transition-colors hover:text-accent"
     aria-label="Toggle theme"
     @click="toggle"
   >
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dark:hidden" aria-hidden="true">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="dark:hidden"
+      aria-hidden="true"
+    >
       <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
     </svg>
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden dark:block" aria-hidden="true">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="hidden dark:block"
+      aria-hidden="true"
+    >
       <circle cx="12" cy="12" r="4"></circle>
       <path d="M12 2v2"></path>
       <path d="M12 20v2"></path>

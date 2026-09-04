@@ -31,6 +31,6 @@ export const useScrollDirection = (threshold: number, enabled: Ref<boolean>) => 
   useScrollFrame(update, enabled)
 
   return {
-    direction
+    direction,
   }
 }

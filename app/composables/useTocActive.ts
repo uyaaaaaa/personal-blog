@@ -44,6 +44,6 @@ export const useTocActive = (links: Ref<TocLink[]>, offset: number, enabled: Ref
   useScrollFrame(update, enabled)
 
   return {
-    activeId
+    activeId,
   }
 }

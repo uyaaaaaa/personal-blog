@@ -19,8 +19,10 @@ export const useArticleCategories = () => {
       counts.set(article.category, (counts.get(article.category) ?? 0) + 1)
     }
 
-    return CATEGORIES
-      .map((slug): CategorySummary => ({ slug, label: CATEGORY_LABELS[slug], count: counts.get(slug) ?? 0 }))
-      .filter(category => category.count > 0)
+    return CATEGORIES.map((slug): CategorySummary => ({
+      slug,
+      label: CATEGORY_LABELS[slug],
+      count: counts.get(slug) ?? 0,
+    })).filter((category) => category.count > 0)
   })
 }

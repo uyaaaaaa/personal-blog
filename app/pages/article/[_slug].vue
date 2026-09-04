@@ -16,7 +16,12 @@ const route = useRoute()
 // プリレンダ済みペイロードのキーは末尾スラッシュなし。揃えないと記事があるのに無いと判定される
 const articlePath = computed(() => route.path.replace(/\/+$/, '') || '/')
 
-const { data: page, error, refresh, status } = await useAsyncData(articlePath.value, () =>
+const {
+  data: page,
+  error,
+  refresh,
+  status,
+} = await useAsyncData(articlePath.value, () =>
   queryCollection('article').path(articlePath.value).where('published', '=', true).first(),
 )
 
@@ -29,8 +34,7 @@ onMounted(async () => {
   if (!recovering.value) return
   try {
     await refresh()
-  }
-  finally {
+  } finally {
     recovering.value = false
   }
 })
@@ -40,8 +44,7 @@ const retry = async () => {
   retrying.value = true
   try {
     await refresh()
-  }
-  finally {
+  } finally {
     retrying.value = false
   }
 }
@@ -59,15 +62,17 @@ if (import.meta.server) {
 const FOOTNOTE_LABEL_ID = 'footnote-label'
 
 const tocLinks = computed(() =>
-  (page.value?.body?.toc?.links || []).filter((link: { id: string }) => link.id !== FOOTNOTE_LABEL_ID),
+  (page.value?.body?.toc?.links || []).filter(
+    (link: { id: string }) => link.id !== FOOTNOTE_LABEL_ID,
+  ),
 )
 
 usePageSeo({
   type: page.value ? 'article' : 'website',
   title: () => page.value?.title ?? (isNotFound.value ? 'Article Not Found' : undefined),
   description: () =>
-    page.value?.description
-    ?? (isNotFound.value
+    page.value?.description ??
+    (isNotFound.value
       ? 'The article you are looking for may have been removed, or the URL may be incorrect.'
       : undefined),
   image: () => page.value?.image,
@@ -80,12 +85,12 @@ const articleRef = ref<HTMLElement | null>(null)
 
 const setupHeaderClickListeners = () => {
   if (!articleRef.value) return
-  
+
   const headers = articleRef.value.querySelectorAll('h2, h3, h4, h5, h6')
   headers.forEach((header) => {
     const el = header as HTMLElement
     el.style.cursor = 'pointer'
-    
+
     el.onclick = (e) => {
       e.preventDefault()
       if (el.id) {
@@ -109,26 +114,31 @@ onMounted(() => {
   setupHeaderClickListeners()
 })
 
-watch(() => page.value, async () => {
-  await nextTick()
-  setupHeaderClickListeners()
-})
-
+watch(
+  () => page.value,
+  async () => {
+    await nextTick()
+    setupHeaderClickListeners()
+  },
+)
 </script>
 
 <template>
-  <div v-if="page" class="flex flex-col lg:flex-row gap-12">
-    <main class="flex-1 min-w-0 max-w-3xl">
+  <div v-if="page" class="flex flex-col gap-12 lg:flex-row">
+    <main class="min-w-0 max-w-3xl flex-1">
       <article class="space-y-8">
         <div class="mb-4">
           <BackButton :label="'Back to Articles'" />
         </div>
 
         <header class="space-y-4 border-b border-border pb-8">
-          <div class="flex flex-col gap-2.5 text-sm text-sub font-mono">
+          <div class="flex flex-col gap-2.5 font-mono text-sm text-sub">
             <div v-if="page.date || page.category" class="flex items-center gap-3">
               <span v-if="page.date">{{ formatDate(page.date) }}</span>
-              <div v-if="page.category" class="ml-auto px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs uppercase">
+              <div
+                v-if="page.category"
+                class="ml-auto rounded-full bg-accent/10 px-2 py-0.5 text-xs uppercase text-accent"
+              >
                 {{ page.category }}
               </div>
             </div>
@@ -136,12 +146,12 @@ watch(() => page.value, async () => {
               <span v-for="tag in page.tags" :key="tag" class="text-accent">#{{ tag }}</span>
             </div>
           </div>
-          
-          <h1 class="text-3xl md:text-4xl font-bold text-main leading-tight">
+
+          <h1 class="text-3xl font-bold leading-tight text-main md:text-4xl">
             {{ page.title }}
           </h1>
 
-          <p v-if="page.description" class="text-sub text-lg leading-relaxed">
+          <p v-if="page.description" class="text-lg leading-relaxed text-sub">
             {{ page.description }}
           </p>
         </header>
@@ -150,7 +160,7 @@ watch(() => page.value, async () => {
 
         <div
           ref="articleRef"
-          class="prose prose-slate dark:prose-invert max-w-none"
+          class="prose prose-slate max-w-none dark:prose-invert"
           @pointerdown="handleFootnoteJump"
           @click="handleFootnoteJump"
         >
@@ -159,7 +169,7 @@ watch(() => page.value, async () => {
       </article>
 
       <div class="mt-16">
-        <BackButton :label="'Back to Articles'"  />
+        <BackButton :label="'Back to Articles'" />
       </div>
     </main>
 
@@ -171,13 +181,8 @@ watch(() => page.value, async () => {
 
     <ScrollToTopButton />
   </div>
-  
-  <ArticleFallback
-    v-else-if="showError"
-    variant="error"
-    :pending="retrying"
-    @retry="retry()"
-  />
+
+  <ArticleFallback v-else-if="showError" variant="error" :pending="retrying" @retry="retry()" />
 
   <ArticleFallback v-else-if="isNotFound" variant="not-found" :path="articlePath" />
 </template>

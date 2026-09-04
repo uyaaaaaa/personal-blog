@@ -10,8 +10,8 @@ type PageSeoInput = {
 }
 
 const SITE_NAME = 'Tech Blog'
-const SITE_DESCRIPTION
-  = 'Functional Minimalism for Experts. Technical articles on software engineering, architecture, and design.'
+const SITE_DESCRIPTION =
+  'Functional Minimalism for Experts. Technical articles on software engineering, architecture, and design.'
 const DEFAULT_OGP_IMAGE = '/ogp.png'
 
 /**
@@ -52,7 +52,8 @@ export const usePageSeo = (input: PageSeoInput = {}) => {
     ogImageWidth: () => (customImage.value ? undefined : 1200),
     ogImageHeight: () => (customImage.value ? undefined : 630),
 
-    articlePublishedTime: () => (input.type === 'article' ? toValue(input.publishedTime) : undefined),
+    articlePublishedTime: () =>
+      input.type === 'article' ? toValue(input.publishedTime) : undefined,
     articleTag: () => (input.type === 'article' ? toValue(input.tags) : undefined),
 
     twitterCard: 'summary_large_image',

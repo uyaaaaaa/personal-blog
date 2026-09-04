@@ -19,7 +19,7 @@ export default <Config>{
     './app/pages/**/*.vue',
     './app/plugins/**/*.{js,ts}',
     './app/app.vue',
-    './app/error.vue'
+    './app/error.vue',
   ],
   // remark-gfmが脚注セクションの見出しに付ける。ソースに現れないためパージされる
   safelist: ['sr-only'],
@@ -51,10 +51,7 @@ export default <Config>{
         },
       },
       fontFamily,
-    }
+    },
   },
-  plugins: [
-    typography,
-    baseStyles,
-  ],
+  plugins: [typography, baseStyles],
 }

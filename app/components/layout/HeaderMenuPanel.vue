@@ -1,6 +1,6 @@
 <template>
   <div class="menu-panel-layer" :class="{ 'is-open': isOpen }">
-    <div class="container menu-panel-anchor">
+    <div class="menu-panel-anchor container">
       <div class="menu-panel shadow-lg" v-bind="$attrs">
         <slot />
       </div>
@@ -46,9 +46,11 @@ defineProps<{
   opacity: 0;
   visibility: hidden;
   transform: translateY(-4px);
-  transition: opacity 0.16s ease-out, transform 0.16s ease-out, visibility 0.16s;
+  transition:
+    opacity 0.16s ease-out,
+    transform 0.16s ease-out,
+    visibility 0.16s;
 }
-
 
 .is-open .menu-panel {
   opacity: 1;

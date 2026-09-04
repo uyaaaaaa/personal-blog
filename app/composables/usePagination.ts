@@ -22,9 +22,7 @@ export const usePagination = <T>(items: Ref<T[]>, perPage = ARTICLES_PER_PAGE) =
     items.value.slice((page.value - 1) * perPage, page.value * perPage),
   )
 
-  const basePath = computed(() =>
-    route.path.replace(/\/$/, '').replace(/\/page\/\d+$/, ''),
-  )
+  const basePath = computed(() => route.path.replace(/\/$/, '').replace(/\/page\/\d+$/, ''))
 
   return { page, totalPages, pagedItems, basePath }
 }

@@ -28,7 +28,9 @@ if ((articles.value ?? []).length === 0) {
   throw createError({ statusCode: 404, statusMessage: 'Category not found', fatal: true })
 }
 
-const { page, totalPages, pagedItems, basePath } = usePagination(computed(() => articles.value ?? []))
+const { page, totalPages, pagedItems, basePath } = usePagination(
+  computed(() => articles.value ?? []),
+)
 
 usePageSeo({
   title: () => (page.value > 1 ? `${label} (${page.value}/${totalPages.value})` : label),
@@ -39,8 +41,10 @@ usePageSeo({
 <template>
   <div class="space-y-8">
     <header class="border-b border-border pb-8">
-      <h1 class="text-3xl font-bold text-main mb-2">{{ label }}</h1>
-      <p class="text-sub">{{ articles?.length }} article{{ articles?.length === 1 ? '' : 's' }} in {{ label }}.</p>
+      <h1 class="mb-2 text-3xl font-bold text-main">{{ label }}</h1>
+      <p class="text-sub">
+        {{ articles?.length }} article{{ articles?.length === 1 ? '' : 's' }} in {{ label }}.
+      </p>
     </header>
 
     <ArticleList :articles="pagedItems" />

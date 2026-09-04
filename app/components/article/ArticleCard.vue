@@ -1,13 +1,16 @@
 <template>
-  <NuxtLink :to="path" class="article-card flex flex-col gap-3 bg-surface border border-border rounded-[10px] p-4 md:p-5 hover:shadow-sm transition-shadow duration-200">
-    <div class="flex justify-between items-center">
-      <div class="w-12 h-12 rounded-lg bg-surface-muted flex items-center justify-center">
+  <NuxtLink
+    :to="path"
+    class="article-card flex flex-col gap-3 rounded-[10px] border border-border bg-surface p-4 transition-shadow duration-200 hover:shadow-sm md:p-5"
+  >
+    <div class="flex items-center justify-between">
+      <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-muted">
         <span class="text-[28px] leading-none">{{ emoji }}</span>
       </div>
-      <time class="text-sub text-sm font-mono" :datetime="date">{{ formattedDate }}</time>
+      <time class="font-mono text-sm text-sub" :datetime="date">{{ formattedDate }}</time>
     </div>
 
-    <h3 class="text-base font-bold leading-snug text-main line-clamp-2 min-h-[2.6em]">
+    <h3 class="line-clamp-2 min-h-[2.6em] text-base font-bold leading-snug text-main">
       {{ title }}
     </h3>
 
@@ -15,7 +18,7 @@
       <span
         v-for="tag in tags"
         :key="tag"
-        class="tag text-xs px-2 py-0.5 rounded border border-accent text-accent font-mono bg-surface"
+        class="tag rounded border border-accent bg-surface px-2 py-0.5 font-mono text-xs text-accent"
       >
         {{ tag }}
       </span>
@@ -37,7 +40,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   date: '',
   emoji: '📝',
-  tags: () => []
+  tags: () => [],
 })
 
 const formattedDate = computed(() => {

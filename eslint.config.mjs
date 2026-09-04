@@ -19,9 +19,12 @@ export default [
     },
     rules: {
       // components: false 後もグローバル登録が残るのはNuxtの組み込みコンポーネントのみ
-      'vue/no-undef-components': ['error', {
-        ignorePatterns: ['Nuxt[A-Z]\\w*', 'ContentRenderer'],
-      }],
+      'vue/no-undef-components': [
+        'error',
+        {
+          ignorePatterns: ['Nuxt[A-Z]\\w*', 'ContentRenderer'],
+        },
+      ],
     },
   },
 ]

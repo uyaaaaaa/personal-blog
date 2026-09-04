@@ -22,11 +22,7 @@ export default defineNuxtConfig({
       siteUrl: 'https://tech-blog-efb.pages.dev',
     },
   },
-  modules: [
-    '@nuxt/content',
-    '@nuxtjs/tailwindcss',
-    '@nuxtjs/color-mode',
-  ],
+  modules: ['@nuxt/content', '@nuxtjs/tailwindcss', '@nuxtjs/color-mode'],
   colorMode: {
     classSuffix: '',
   },
@@ -39,8 +35,23 @@ export default defineNuxtConfig({
             dark: 'github-dark',
           },
           langs: [
-            'js', 'ts', 'json', 'html', 'css', 'vue', 'shell', 'sh', 'bash', 'md', 'mdc', 'yaml',
-            'vim', 'lua', 'sql', 'php', 'diff',
+            'js',
+            'ts',
+            'json',
+            'html',
+            'css',
+            'vue',
+            'shell',
+            'sh',
+            'bash',
+            'md',
+            'mdc',
+            'yaml',
+            'vim',
+            'lua',
+            'sql',
+            'php',
+            'diff',
           ],
         },
         remarkPlugins: {
@@ -57,7 +68,7 @@ export default defineNuxtConfig({
     preset: 'cloudflare-pages',
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/404.html', ...CATEGORIES.map(category => `/category/${category}`)]
+      routes: ['/', '/404.html', ...CATEGORIES.map((category) => `/category/${category}`)],
     },
     cloudflare: {
       pages: {
@@ -93,10 +104,10 @@ export default defineNuxtConfig({
     },
   },
   features: {
-    inlineStyles: true
+    inlineStyles: true,
   },
   routeRules: {
     '/blog/**': { redirect: { to: '/article/**', statusCode: 301 } },
     '/book/**': { redirect: { to: '/article/**', statusCode: 301 } },
-  }
+  },
 })

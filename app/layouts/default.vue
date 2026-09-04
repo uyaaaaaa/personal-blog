@@ -22,7 +22,9 @@ body {
   line-height: 1.6;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 

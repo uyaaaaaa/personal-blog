@@ -33,7 +33,7 @@ const backToTop = () => {
     type="button"
     aria-label="Back to top"
     :style="{ opacity }"
-    class="fixed bottom-6 right-6 z-30 flex lg:hidden h-11 w-11 items-center justify-center rounded-full border border-border bg-surface/90 text-sub shadow-sm backdrop-blur transition-colors duration-200 hover:border-accent hover:text-accent group"
+    class="group fixed bottom-6 right-6 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface/90 text-sub shadow-sm backdrop-blur transition-colors duration-200 hover:border-accent hover:text-accent lg:hidden"
     @click="backToTop"
   >
     <svg
@@ -46,7 +46,7 @@ const backToTop = () => {
       stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
-      class="group-hover:-translate-y-0.5 transition-transform duration-200"
+      class="transition-transform duration-200 group-hover:-translate-y-0.5"
     >
       <polyline points="18 15 12 9 6 15" />
     </svg>

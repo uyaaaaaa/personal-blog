@@ -1,6 +1,8 @@
 <template>
   <div class="menu-column">
-    <NuxtLink v-if="to" :to="to" class="menu-column-head" prefetch-on="interaction">{{ label }}</NuxtLink>
+    <NuxtLink v-if="to" :to="to" class="menu-column-head" prefetch-on="interaction">{{
+      label
+    }}</NuxtLink>
     <span v-else class="menu-column-head">{{ label }}</span>
 
     <slot />
@@ -47,5 +49,4 @@ defineProps<{
 .menu-column-head:hover {
   color: var(--color-accent);
 }
-
 </style>

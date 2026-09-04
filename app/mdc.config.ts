@@ -14,17 +14,21 @@ const PAIR_SIMILARITY_MIN = 0.5
 // unified diffのファイル名行（`--- a/x` / `+++ b/x`）
 const isFileHeader = (line: string) => /^(---|\+\+\+) /.test(line)
 
-type Mark = { from: number, to: number, className: string }
+type Mark = { from: number; to: number; className: string }
 
 const textOf = (node: ElementContent): string =>
-  node.type === 'text' ? node.value : node.type === 'element' ? node.children.map(textOf).join('') : ''
+  node.type === 'text'
+    ? node.value
+    : node.type === 'element'
+      ? node.children.map(textOf).join('')
+      : ''
 
 function similarity(a: string, b: string): number {
   const oldText = a.trim()
   const newText = b.trim()
   if (!oldText || !newText) return 0
   const common = diffWordsWithSpace(oldText, newText)
-    .filter(part => !part.added && !part.removed)
+    .filter((part) => !part.added && !part.removed)
     .reduce((length, part) => length + part.value.length, 0)
   return common / Math.max(oldText.length, newText.length)
 }
@@ -60,11 +64,13 @@ function changedWordMarks(oldText: string, newText: string): [Mark[], Mark[]] {
   for (const part of diffWordsWithSpace(oldText, newText)) {
     const isWord = Boolean(part.value.trim())
     if (!part.added) {
-      if (part.removed && isWord) removed.push({ from: o, to: o + part.value.length, className: 'diff-word' })
+      if (part.removed && isWord)
+        removed.push({ from: o, to: o + part.value.length, className: 'diff-word' })
       o += part.value.length
     }
     if (!part.removed) {
-      if (part.added && isWord) added.push({ from: n, to: n + part.value.length, className: 'diff-word' })
+      if (part.added && isWord)
+        added.push({ from: n, to: n + part.value.length, className: 'diff-word' })
       n += part.value.length
     }
   }
@@ -73,7 +79,7 @@ function changedWordMarks(oldText: string, newText: string): [Mark[], Mark[]] {
 
 // 行のトークンspanを範囲の境界で切り分け、範囲に収まる断片にクラスを足す
 function markLine(this: ShikiTransformerContext, line: Element, marks: Mark[]) {
-  const cuts = new Set(marks.flatMap(mark => [mark.from, mark.to]))
+  const cuts = new Set(marks.flatMap((mark) => [mark.from, mark.to]))
   const children: ElementContent[] = []
   let position = 0
 
@@ -85,20 +91,25 @@ function markLine(this: ShikiTransformerContext, line: Element, marks: Mark[]) {
       continue
     }
 
-    const boundaries = [...cuts].filter(cut => cut > position && cut < position + text.length).sort((x, y) => x - y)
+    const boundaries = [...cuts]
+      .filter((cut) => cut > position && cut < position + text.length)
+      .sort((x, y) => x - y)
     const pieces: Element[] = []
     let start = 0
-    for (const end of [...boundaries.map(cut => cut - position), text.length]) {
+    for (const end of [...boundaries.map((cut) => cut - position), text.length]) {
       if (end === start) continue
       const value = text.slice(start, end)
       const previous = pieces.at(-1)
       // 空白だけのspanはNuxt Contentの圧縮で落ちるため、直前の断片に繋げる
       if (previous && !value.trim()) {
-        (previous.children[0] as { value: string }).value += value
-      }
-      else {
-        const piece: Element = { ...child, properties: { ...child.properties }, children: [{ type: 'text', value }] }
-        const mark = marks.find(m => position + start >= m.from && position + end <= m.to)
+        ;(previous.children[0] as { value: string }).value += value
+      } else {
+        const piece: Element = {
+          ...child,
+          properties: { ...child.properties },
+          children: [{ type: 'text', value }],
+        }
+        const mark = marks.find((m) => position + start >= m.from && position + end <= m.to)
         if (mark) this.addClassToHast(piece, mark.className)
         pieces.push(piece)
       }
@@ -125,10 +136,15 @@ export default defineConfig({
           let hunk: number[] = []
 
           const closeHunk = () => {
-            const removed = hunk.filter(i => lines[i]!.startsWith('-') && !isFileHeader(lines[i]!))
-            const added = hunk.filter(i => lines[i]!.startsWith('+') && !isFileHeader(lines[i]!))
+            const removed = hunk.filter(
+              (i) => lines[i]!.startsWith('-') && !isFileHeader(lines[i]!),
+            )
+            const added = hunk.filter((i) => lines[i]!.startsWith('+') && !isFileHeader(lines[i]!))
             for (const [r, a] of pairLines(lines, removed, added)) {
-              const [removedMarks, addedMarks] = changedWordMarks(lines[r]!.slice(1), lines[a]!.slice(1))
+              const [removedMarks, addedMarks] = changedWordMarks(
+                lines[r]!.slice(1),
+                lines[a]!.slice(1),
+              )
               marks[r]!.push(...removedMarks)
               marks[a]!.push(...addedMarks)
             }
