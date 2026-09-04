@@ -1,5 +1,5 @@
 import { defineConfig } from '@nuxtjs/mdc/config'
-import { diffWords } from 'diff'
+import { diffWordsWithSpace } from 'diff'
 import type { ShikiTransformerContext } from 'shiki'
 import type { Element, ElementContent } from 'hast'
 
@@ -20,11 +20,13 @@ const textOf = (node: ElementContent): string =>
   node.type === 'text' ? node.value : node.type === 'element' ? node.children.map(textOf).join('') : ''
 
 function similarity(a: string, b: string): number {
-  if (!a.trim() || !b.trim()) return 0
-  const common = diffWords(a, b)
+  const oldText = a.trim()
+  const newText = b.trim()
+  if (!oldText || !newText) return 0
+  const common = diffWordsWithSpace(oldText, newText)
     .filter(part => !part.added && !part.removed)
     .reduce((length, part) => length + part.value.length, 0)
-  return common / Math.max(a.length, b.length)
+  return common / Math.max(oldText.length, newText.length)
 }
 
 // 同じハンクの `-` 行と `+` 行を、似ている順に1対1で組にする
@@ -55,13 +57,14 @@ function changedWordMarks(oldText: string, newText: string): [Mark[], Mark[]] {
   const added: Mark[] = []
   let o = 1
   let n = 1
-  for (const part of diffWords(oldText, newText)) {
+  for (const part of diffWordsWithSpace(oldText, newText)) {
+    const isWord = Boolean(part.value.trim())
     if (!part.added) {
-      if (part.removed) removed.push({ from: o, to: o + part.value.length, className: 'diff-word' })
+      if (part.removed && isWord) removed.push({ from: o, to: o + part.value.length, className: 'diff-word' })
       o += part.value.length
     }
     if (!part.removed) {
-      if (part.added) added.push({ from: n, to: n + part.value.length, className: 'diff-word' })
+      if (part.added && isWord) added.push({ from: n, to: n + part.value.length, className: 'diff-word' })
       n += part.value.length
     }
   }
