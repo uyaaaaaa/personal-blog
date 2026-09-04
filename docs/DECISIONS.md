@@ -129,6 +129,55 @@ props・表示要件・インタラクションを写した文書（旧 `COMPONE
 - **対価**: 「あの値はどこで決めたか」を文書で引けない。Git 履歴と実装を読む。
 - **戻す条件**: 構造に関わる判断が10を超えたら、この節を `docs/adr/` に1項目1ファイルで切り出す。仕様書を戻す条件は無い。
 
+### 整形は Prettier に任せ、ESLint には持たせない
+
+`.prettierrc` を整形の単一の設定にし、`npm run lint` の先頭で `prettier --check .` を回す。対象はコードだけで、Markdown と `package-lock.json` は `.prettierignore` で外す。
+
+- **検討した案**: (1) Biome。script は整形するが Vue の template を1行も触らない。このリポジトリの不揃いは属性の折り返しに偏っていて template 側にあるため、直したいところが直らない。(2) ESLint Stylistic。template も script も整形でき、新しいコマンドも要らない。ただし整形のルールを1本ずつ議論して足すことになり、「整形を議論しない」という導入の目的と噛み合わない。ARCHITECTURE.md の「ESLint はプリセットを取り込まずルールを1本ずつ足す」方針は、整形を ESLint の外に出すことで守る。(3) Prettier（採用）。
+- **対価**: 4つある。(a) `semi: false` はテンプレートのインラインハンドラの `;` も落とすため、`@click="a(); b()"` のような2文のハンドラは書けない（改行区切りの2文になり、Vue のテンプレートコンパイラが式として解釈できずビルドが落ちる）。関数に切り出して渡す。(b) 要素の中身が折り返されると、Vue の `whitespace: 'condense'` が改行とインデントを空白1つに畳むため、テキストの前後に空白が1つ増える。行頭・行末の空白は描画されないので表示は変わらないが、生成物のバイト列は変わる。`singleAttributePerLine` は属性が2つ以上あれば必ず折り返すので、この当たりが広い。(c) その `singleAttributePerLine` も、空白が意味を持つインライン要素（`<time>` `<span>` 等）では折り返せないため、`>{{ x }}</time` の後に `>` だけの行を置く形になる。空白を保つにはこの形しか取れない。(d) `useTabs` はインデント文字をタブにするだけで、見え方は閲覧側の設定で決まる。`tabWidth` は Prettier が `printWidth` を測るときの想定幅で、出力そのものには現れない。
+- **戻す条件**: Vue の template を Prettier と同等に整形できる別の formatter が出て、上の対価のどれかが消えたとき。個々の設定値を戻す条件は、その値を選んだ理由（下記）が失効したとき。
+
+#### 設定値を選んだ理由
+
+Prettier の既定から動かしたものだけを挙げる。既定のままのものに理由は無い。
+
+| 設定 | 値 | 理由 |
+| :--- | :--- | :--- |
+| `semi` / `singleQuote` | `false` / `true` | 導入時の既存の書き方に合わせた。script 937行にセミコロン終端は0行、ダブルクォートは1ファイルだけだった |
+| `printWidth` | `100` | 80 だと折り返しが増え、120 だと `ArticleCard.vue` の200文字超のクラス属性が結局はみ出して基準にならない |
+| `useTabs` / `tabWidth` | `true` / `4` | インデント幅を読み手が選べるようにする。`tabWidth` は `printWidth` を測るときの想定幅 |
+| `vueIndentScriptAndStyle` | `true` | `<template>` の中身が1段下がるのに `<script>` だけ下がらない非対称を無くす |
+| `singleAttributePerLine` | `true` | 導入の動機が「属性を1行に詰めた要素と、属性ごとに改行した要素の同居」だったので、`printWidth` に収まる場合も含めて機械的に揃える |
+
+#### package-lock.json を整形対象から外す理由
+
+生成物なので Prettier に持たせない。ただし**これで字下げが変わらなくなるわけではない**。
+
+npm は `package.json` から検出した字下げを `package-lock.json` にも使う。`package.json` が Prettier でタブになるため、`npm install` がロックファイル全体（17,381行）をタブで書き直す。`package.json` をスペースに戻して `npm install --package-lock-only` を打つとロックファイルもスペースに戻ることを確認した。
+
+書き直しは一度きりで、以後は npm が同じ字下げを保つ。避けるには `package.json` を整形対象から外すことになり、それは本末転倒なので受け入れる。
+
+#### Markdown を整形対象から外す理由
+
+Prettier は表のセルを**文字数**で揃える。このリポジトリのドキュメントは日本語なので、全角が混ざると等幅表示ではかえって桁がずれる。
+実測では Markdown の変更 312 行のうち 306 行が表の行だった。残りはフェンス内のフロントマター例の引用符で、記事側（`content/` は整形対象外）と食い違う方向に書き換わる。
+
+### テストは実装の隣に置く
+
+`app/utils/date.ts` に対して `app/utils/date.test.ts` を並べる。
+
+- **検討した案**: `tests/` に実装のディレクトリ構成をミラーする。テストが `depcruise app` の走査範囲から外れるため、テストだけが依存方向のルールの外に出る。実装を消したときに取り残されたテストにも気づけない。隣に置けば同じディレクトリを見るだけでテストの有無が分かり、循環と依存方向の lint がテストにも等しく効く。
+- **対価**: ディレクトリの一覧に実装とテストが混ざる。`app/pages/` に置いたテストが Nuxt のページ走査に拾われないことは `npm run build` で確かめてある（ルートは増えず `dist/` の HTML は 60 のまま）。
+- **戻す条件**: テストがコンポーネントの数を大きく超えて一覧性が落ちたとき。`tests/` にミラーし、依存方向の lint の範囲を別に決め直す。
+
+### テストの土台は Nuxt を起こさない範囲に留める
+
+Vitest 3系を `vitest/config` の `defineConfig` で使う。`@nuxt/test-utils` の `defineVitestConfig` には差し替えない。
+
+- **検討した案**: (1) 最初から `defineVitestConfig` を使う。設定を読ませるだけで `@nuxt/content` が SQLite を開くため、CI の `npm ci --ignore-scripts` では `better-sqlite3` のネイティブが無く `npm test` が `Could not locate the bindings file` で落ちる。純粋関数だけを見るテストのために毎回 Nuxt を起動する対価も払う。(2) Vitest 4 + `@nuxt/test-utils` 4。Node 22 に同梱の npm 10 は、どちらかが入るだけで依存解決中に `TypeError: Cannot read properties of null (reading 'edgesOut')` で落ちる。npm 11 なら入るが、npm 11 が書いた lockfile を npm 10 の `npm ci` が `Missing: @oxc-parser/binding-* from lock file` で拒否するため、GitHub Actions と Cloudflare Pages の両方で npm を上げる必要がある。Cloudflare 側の npm はリポジトリから見えないので、デプロイを落とすリスクを負う。
+- **対価**: `@nuxt/test-utils` / `@vue/test-utils` / `happy-dom` はコンポーネントのテストを書くまで使われない devDependency になる。`@nuxt/test-utils` を先に入れてあるのは、その peer（`vitest: ^3.2.0`）が Vitest を3系に固定し、うっかり4系に上がるのを防ぐため。
+- **戻す条件**: コンポーネントのテストを書くときに `defineVitestConfig` へ差し替える（[#127](https://github.com/uyaaaaaa/personal-blog/issues/127)）。Vitest 4 に上げるのは、CI と Cloudflare の npm が11以降で揃ったとき。
+
 ---
 
 ## ヘッダーとナビゲーション
@@ -421,3 +470,4 @@ GFM の脚注記法をそのまま使い、remark-gfm の出力（`[data-footnot
 - **`now` を引数で受け取る。** 静的生成でビルド時刻が焼き付くのを避けるため、呼び出し側が `onMounted` で `Date.now()` を渡す。`null` の間は年つきの絶対表記を返す。パネルもドロワーも初期状態は閉じているので、切り替わりは画面に出ない。
 - **日単位で比較するため、時刻ではなくその日の0時同士を突き合わせる。**
 - **記事の日付は UTC 基準で読み出し、「今日」だけローカル基準で読む。** フロントマターの `date` は時刻を持たない暦日で、`new Date()` はこれを UTC の0時として解釈する。読み出しをローカル基準にすると、UTC より西のタイムゾーンで日付ラベルも相対表記も1日前にずれる。一方で相対表記の基準になる「今日」は閲覧者のローカル暦日が期待値なので、記事側と今日側で基準を非対称にする。どちらも UTC 0時のタイムスタンプに正規化するため、差分は DST の影響を受けない。
+- **テストが渡す「今日」は 12:00 UTC にする。** 基準日をローカル暦日で読むので、0時に近い時刻を基準にするとテストの結果が実行環境のタイムゾーンで変わる。UTC±12 の範囲ならどのタイムゾーンでも同じ暦日になる正午を基準にし、タイムゾーンの違いを確かめる分だけ `vi.stubEnv('TZ', ...)` で明示的に切り替える。`vitest.config.ts` で `pool: 'forks'` を明示しているのは、この書き換えを他のテストファイルに漏らさないため。既定の `threads` ではワーカーが `process.env` を共有する。
