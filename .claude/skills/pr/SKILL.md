@@ -64,8 +64,10 @@ description: "このリポジトリで Pull Request を作る手順。「PR に�
 
 ## 5. 作成後
 
-- `Cloudflare Pages` チェックが緑になるまで見る（CI の設定はリポジトリに無い。Git 連携で自動）
+- チェックは3つ。`Lint` と `Test`（GitHub Actions）、`Cloudflare Pages`（Git 連携で自動）
+- 3つとも緑になるまで見る
 - 落ちたら、理由を PR に書いてから直す
+- 整形で落ちたときは `npm run format`
 - 報告にプレビュー URL を含める（`https://<ブランチ名>.tech-blog-efb.pages.dev`、`/` は `-` に変換）
 - 生成結果に関わる変更は、プレビューで本番と同じ出力を確認
 - コンフリクトは `main` をマージして解消。rebase と force push はしない
