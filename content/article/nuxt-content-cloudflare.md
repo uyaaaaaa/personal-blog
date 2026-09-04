@@ -40,8 +40,7 @@ category: blog
 
 具体的な変更としては、`nuxt.config.ts`に以下の`nitro`設定と`features`オプションを追加しました。
 
-```typescript
-// nuxt.config.ts
+```ts [nuxt.config.ts]
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   modules: [

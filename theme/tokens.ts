@@ -13,6 +13,12 @@ export const colors = {
   overlay: 'rgba(0, 0, 0, 0.5)',
   scrollbar: '#D1D5DB',
   'code-text': '#24292E',
+  // github-lightがdiffのトークンに持つ背景色
+  'diff-add-bg': '#F0FFF4',
+  'diff-remove-bg': '#FFEEF0',
+  // GitHubのdiff表示で変化した語に敷く背景色
+  'diff-add-word-bg': '#ABF2BC',
+  'diff-remove-word-bg': '#FFC1C2',
 } as const
 
 export const darkColors: Record<keyof typeof colors, string> = {
@@ -31,6 +37,11 @@ export const darkColors: Record<keyof typeof colors, string> = {
   scrollbar: '#3A3A3A',
   // github-darkの前景色
   'code-text': '#E6EDF3',
+  // GitHubのdiff表示の行背景（github-darkのトークン背景は帯が強すぎる）
+  'diff-add-bg': 'rgba(46, 160, 67, 0.15)',
+  'diff-remove-bg': 'rgba(248, 81, 73, 0.15)',
+  'diff-add-word-bg': 'rgba(46, 160, 67, 0.4)',
+  'diff-remove-word-bg': 'rgba(248, 81, 73, 0.4)',
 }
 
 export const fontFamily = {
