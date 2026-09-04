@@ -25,7 +25,7 @@ Github Actionsのworkflowを設定し、mainブランチにpushした時に自�
 
 ファイルはこれだけ↓
 
-```yml
+```yaml
 name: Replace Tabs
 
 on:

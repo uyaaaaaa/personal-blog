@@ -7,7 +7,7 @@ description: "このリポジトリの変更を実測で確かめる。lint / bu
 
 **このスキルの目的はひとつ。実測していないことを「確認した」と書かないこと。**
 
-テストランナーは無い。だから確認は自動では積み上がらず、毎回**自分でコマンドを打った結果**しか根拠にならない。
+テストがあるのは `app/utils/` の純粋関数だけで、UI と生成物は自動では積み上がらない。そこは毎回**自分でコマンドを打った結果**しか根拠にならない。
 コードを読んで通ると判断したもの、前回通ったから今回も通ると考えたもの、これらは**すべて未確認**として扱う。
 
 ## 原則
@@ -30,15 +30,17 @@ description: "このリポジトリの変更を実測で確かめる。lint / bu
 | # | コマンド | 何が分かる | 残すもの |
 | :--- | :--- | :--- | :--- |
 | 1 | `npm ci` | 測る土台が揃った | 完了したこと |
-| 2 | `npm run lint` | コンポーネントの import 漏れ | 終了コード。error 行があれば全文 |
-| 3 | `npm run build` | prerender が通るか。composable / util の import 漏れ | 終了コード、`find dist -name '*.html' \| wc -l` のページ数 |
-| 4 | `dist/` を読む | **生成された HTML の中身** | 該当要素の有無、バイト数 |
-| 5 | `npm run dev` で目視 | 見た目・操作 | 見た幅とテーマ、叩いた URL とステータス |
-| 6 | プレビュー URL | 本番と同じ出力 | チェックの結果と URL |
+| 2 | `npm test` | `app/utils/` の純粋関数の振る舞い | 終了コード、テストの件数。失敗があれば全文 |
+| 3 | `npm run lint` | コンポーネントの import 漏れ、循環、依存方向 | 終了コード。error 行があれば全文 |
+| 4 | `npm run build` | prerender が通るか。composable / util の import 漏れ | 終了コード、`find dist -name '*.html' \| wc -l` のページ数 |
+| 5 | `dist/` を読む | **生成された HTML の中身** | 該当要素の有無、バイト数 |
+| 6 | `npm run dev` で目視 | 見た目・操作 | 見た幅とテーマ、叩いた URL とステータス |
+| 7 | プレビュー URL | 本番と同じ出力 | チェックの結果と URL |
 
-**3 で止めてよいのは、生成物に影響しない変更だけ。** 出し分け・分岐・ルーティングを触ったら 4 まで行く。
+**4 で止めてよいのは、生成物に影響しない変更だけ。** 出し分け・分岐・ルーティングを触ったら 5 まで行く。
+**2 が通っても 5 の代わりにはならない。** テストが見ているのは純粋関数だけで、コンポーネントが HTML に出たかは見ていない。
 
-### 4 の要点: 生成物を読む
+### 5 の要点: 生成物を読む
 
 `build` が通ることと、正しい HTML が出ることは別。
 
@@ -53,7 +55,7 @@ grep -c 'View All' dist/index.html
 ls -l dist/index.html
 ```
 
-### 5 の要点: 目視の範囲
+### 6 の要点: 目視の範囲
 
 SP 375px / PC 1280px × ライト / ダークの4通り。横スクロールが出ていないか、着地位置がヘッダーに潜っていないかを見る。
 ルーティングを触ったら、該当パスと**存在しないパス**の両方を叩いてステータスを見る。
@@ -64,6 +66,7 @@ SP 375px / PC 1280px × ライト / ダークの4通り。横スクロールが�
 
 | 実測したこと | コマンド / 手段 | 結果 |
 | :--- | :--- | :--- |
+| テスト | `npm test` | 終了コード 0、20 件通過 |
 | lint | `npm run lint` | 終了コード 0 |
 | build | `npm run build` | 終了コード 0、`dist` に 60 ページ |
 | 生成物 | `dist/index.html` を検査 | 総数6件のとき `hidden lg:flex` |
@@ -88,11 +91,12 @@ SP 375px / PC 1280px × ライト / ダークの4通り。横スクロールが�
 以下を順に実行し、結果だけを貼り返してください。判断は不要です。
 
 1. npm ci
-2. npm run lint  → 終了コードと、error を含む行を全部
-3. npm run build → 終了コードと、find dist -name '*.html' | wc -l の数値
-4. app/pages/index.vue の SHELF_LIMIT を 5 にして npm run build
+2. npm test      → 終了コードと、Test Files / Tests の行
+3. npm run lint  → 終了コードと、error を含む行を全部
+4. npm run build → 終了コードと、find dist -name '*.html' | wc -l の数値
+5. app/pages/index.vue の SHELF_LIMIT を 5 にして npm run build
    → grep -c 'View All' dist/index.html の数値、ls -l dist/index.html の行
-5. 4 の変更を git checkout で戻し、git status --short が空であることを確認
+6. 5 の変更を git checkout で戻し、git status --short が空であることを確認
 ```
 
 **受け取ったら検収する。** 生の出力が無い報告、コマンドを言い換えた報告は採用しない。

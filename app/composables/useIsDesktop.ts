@@ -8,20 +8,20 @@ const isDesktop = ref(false)
 let query: MediaQueryList | undefined
 
 const start = () => {
-  if (query) return
+	if (query) return
 
-  query = window.matchMedia(DESKTOP_QUERY)
-  isDesktop.value = query.matches
-  query.addEventListener('change', (event) => {
-    isDesktop.value = event.matches
-  })
+	query = window.matchMedia(DESKTOP_QUERY)
+	isDesktop.value = query.matches
+	query.addEventListener('change', (event) => {
+		isDesktop.value = event.matches
+	})
 }
 
 export const useIsDesktop = () => {
-  onMounted(start)
+	onMounted(start)
 
-  return {
-    isDesktop,
-    isMobile: computed(() => !isDesktop.value),
-  }
+	return {
+		isDesktop,
+		isMobile: computed(() => !isDesktop.value),
+	}
 }
