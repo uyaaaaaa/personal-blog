@@ -76,14 +76,14 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 | 役割 | ライト | ダーク | Tailwind | CSS変数 | 用途 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **ページ背景** | `#F9F9F9` | `#121212` | `bg-bg` | `--color-bg` | `body` の背景色。 |
-| **サーフェス** | `#FFFFFF` | `#1A1A1A` | `bg-surface` | `--color-surface` | カード、モバイルドロワー、Exploreパネル、TOCドロップダウン、タグチップ、`Cmd+K` バッジの背景。 |
+| **サーフェス** | `#FFFFFF` | `#1A1A1A` | `bg-surface` | `--color-surface` | カード、モバイルドロワー、Exploreパネル、テーマパネル、TOCドロップダウン、タグチップ、`Cmd+K` バッジの背景。 |
 | **メイン（文字色）** | `#1A1A1A` | `#E8E8E8` | `text-main` | `--color-main` | 見出し・本文の文字色。ハンバーガーボタンの線。 |
-| **サブテキスト** | `#888888` | `#A0A0A0` | `text-sub` | `--color-sub` | 投稿日、キャプション、説明文、非アクティブなTOC項目。テーマトグルのアイコン。 |
-| **アクセント** | `#8B5CF6` | `#A78BFA` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目、ロゴのスラッシュ。**唯一の色要素**。 |
+| **サブテキスト** | `#888888` | `#A0A0A0` | `text-sub` | `--color-sub` | 投稿日、キャプション、説明文、非アクティブなTOC項目。テーマトグルのアイコンとテーマパネルの行のアイコン。 |
+| **アクセント** | `#8B5CF6` | `#A78BFA` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目、テーマパネルの選択中の印、ロゴのスラッシュ。**唯一の色要素**。 |
 | **アクセント（ホバー）** | `#7C3AED` | `#C4B5FD` | `bg-accent-hover` | `--color-accent-hover` | アクセント色で塗りつぶした面のホバー時（ライトは暗く、ダークは明るくずらす）。エラーページの `Back to Top` ボタン。 |
 | **アクセント上の文字** | `#FFFFFF` | `#121212` | `text-accent-contrast` | `--color-accent-contrast` | アクセント色で塗りつぶした面の文字色。エラーページの `Back to Top` ボタン。ダークの `accent` 上では白がコントラスト比 2.7:1 と不足するため暗色にする（`#121212` で 6.9:1）。 |
 | **ボーダー** | `#E5E5E5` | `#2E2E2E` | `border-border` | `--color-border` | カード枠線、セクション区切り、ヘッダー下線。 |
-| **淡いサーフェス** | `#F5F5F5` | `#1E1E1E` | `bg-surface-subtle` | `--color-surface-subtle` | インラインコード、コードブロック、ヘッダーの検索ボックス、モバイルドロワーの行のホバー・アクティブ背景色、Exploreパネルの行のホバー背景色。 |
+| **淡いサーフェス** | `#F5F5F5` | `#1E1E1E` | `bg-surface-subtle` | `--color-surface-subtle` | インラインコード、コードブロック、ヘッダーの検索ボックス、モバイルドロワーの行のホバー・アクティブ背景色、Exploreパネル・テーマパネルの行のホバー背景色。 |
 | **サブサーフェス** | `#F3F4F6` | `#262626` | `bg-surface-muted` | `--color-surface-muted` | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー、目次のガイド線。 |
 | **ヘッダー背景** | `rgba(255, 255, 255, 0.9)` | `rgba(18, 18, 18, 0.85)` | — | `--color-header-bg` | sticky ヘッダーの半透明背景（`backdrop-filter: blur` と併用）。 |
 | **オーバーレイ** | `rgba(0, 0, 0, 0.5)` | `rgba(0, 0, 0, 0.5)` | — | `--color-overlay` | モバイルドロワーのオーバーレイ。 |
@@ -269,7 +269,7 @@ TOPページだけはグリッドではなく、カテゴリ単位の棚（`Arti
 | **OGP** | SNS シェア用の OGP / Twitter Card メタタグを全ページに出力する。共通画像は `public/ogp.png`、記事はフロントマターの `image` で差し替え可（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。記事を表示できないページは `og:type` を `website` にし、`article` を名乗らせない |
 | **ローディング表示** | ルート遷移中は画面上端にアクセント色のバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない（→ [DECISIONS.md](./DECISIONS.md#ローディングバー)） |
 | **記事取得の状態分離** | 記事詳細では「取得失敗」と「記事なし」を区別して表示し、HTTPステータスも実態に合わせる（→ [DECISIONS.md](./DECISIONS.md#記事詳細は取得が確定するまで何も出さず失敗と記事なしを区別する)） |
-| **ダークモード** | ヘッダーのトグル（`ThemeToggle`）でライト / ダークを切り替える。初期値は `prefers-color-scheme` に従い、明示的な選択は永続化する（FOUC 防止込みで `@nuxtjs/color-mode` が担う）。シンタックスハイライトと `theme-color` メタもテーマに追従する |
+| **ダークモード** | ヘッダーの `ThemeToggle` を押すと開くパネルから Light / Dark / System を選ぶ。`System` は `prefers-color-scheme` に追従し、選択は永続化する（FOUC 防止込みで `@nuxtjs/color-mode` が担う）。シンタックスハイライトと `theme-color` メタもテーマに追従する |
 
 ---
 
