@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "このリポジトリで Pull Request を作る手順。「PR にして」「PR 作って」や、issue 対応・UI 変更を終えて出す段で使う。出す前の状態確認、タイトルと本文の型、作成後の緑確認まで。本文はソースコードレベルの情報を書かず、リストで列挙する。マージとレビュー追従は範囲外。"
+description: "Pull Request を作る手順。「PR にして」「PR 作って」という依頼で使う。"
 ---
 
 # PR の作り方
@@ -59,19 +59,14 @@ description: "このリポジトリで Pull Request を作る手順。「PR に�
 - 作成は GitHub MCP の PR 作成ツール（`gh` は使えない）
 - PR テンプレートはリポジトリに無い
 - base は `main`
-- コミットのフッターは `Co-Authored-By` と `Claude-Session`
-- PR 本文のフッターは `🤖 Generated with Claude Code` の行とセッション URL
+- コミットのフッターは `Co-Authored-By`
+- PR 本文のフッターは `🤖 Generated with Claude Code`
 
 ## 5. 作成後
 
-- チェックは3つ。`Lint` と `Test`（GitHub Actions）、`Cloudflare Pages`（Git 連携で自動）
-- 3つとも緑になるまで見る
-- 落ちたら、理由を PR に書いてから直す
-- 整形で落ちたときは `npm run format`
-- 報告にプレビュー URL を含める。**ボットのコメントに出た URL をそのまま使う**（ブランチ名は `/` が `-` になり、28 文字で切り詰められる）
-- 生成結果に関わる変更は、プレビューで本番と同じ出力を確認
+- CI が green になるまで見る
+- 落ちたら、理由を PR のコメントに残す。1行で言い切る。
 - コンフリクトは `main` をマージして解消。rebase と force push はしない
-- マージと issue クローズはしない
 - レビューコメントへの追従は、このスキルの範囲外
 
 ## PR にしない場合
