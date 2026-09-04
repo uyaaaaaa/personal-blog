@@ -6,9 +6,10 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "lint": "eslint .",
+    "lint": "eslint . && depcruise app --config --ignore-known",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && git config core.hooksPath .githooks || exit 0"
   },
   "dependencies": {
     "@nuxt/content": "^3.9.0",
@@ -23,6 +24,7 @@
     "@nuxtjs/tailwindcss": "^6.14.0",
     "@tailwindcss/typography": "^0.5.19",
     "@typescript-eslint/parser": "^8.69.0",
+    "dependency-cruiser": "^18.2.0",
     "eslint": "^10.9.1",
     "eslint-plugin-vue": "^10.10.0",
     "vue-eslint-parser": "^10.4.1"

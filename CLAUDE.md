@@ -10,11 +10,11 @@ npm run dev       # 開発サーバー
 npm run build     # 本番ビルド
 npm run generate  # 静的生成
 npm run preview   # ビルド結果のプレビュー
-npm run lint      # ESLint
+npm run lint      # ESLint + dependency-cruiser
 ```
 
 テストランナーは未導入です。変更の確認は `npm run lint` と `npm run build` が通ることと、開発サーバーでの目視で行います。
-ESLint は自作コンポーネントの明示 import を強制する `vue/no-undef-components` だけを有効にしています。CI はありません。
+`npm run lint` は ESLint（自作コンポーネントの明示 import を強制する `vue/no-undef-components` だけ）と dependency-cruiser（循環と依存方向）を続けて回します。`npm install` で有効になる pre-commit フックが commit のたびに同じ lint を回し、GitHub Actions が PR と `main` への push で回します。build は CI では回さず、Cloudflare Pages のチェックに任せています。
 
 ## ルールとスキル
 

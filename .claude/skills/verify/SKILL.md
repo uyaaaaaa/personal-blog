@@ -30,7 +30,7 @@ description: "このリポジトリの変更を実測で確かめる。lint / bu
 | # | コマンド | 何が分かる | 残すもの |
 | :--- | :--- | :--- | :--- |
 | 1 | `npm ci` | 測る土台が揃った | 完了したこと |
-| 2 | `npm run lint` | コンポーネントの import 漏れ | 終了コード。error 行があれば全文 |
+| 2 | `npm run lint` | コンポーネントの import 漏れ、循環、依存方向 | 終了コード。error 行があれば全文 |
 | 3 | `npm run build` | prerender が通るか。composable / util の import 漏れ | 終了コード、`find dist -name '*.html' \| wc -l` のページ数 |
 | 4 | `dist/` を読む | **生成された HTML の中身** | 該当要素の有無、バイト数 |
 | 5 | `npm run dev` で目視 | 見た目・操作 | 見た幅とテーマ、叩いた URL とステータス |

@@ -12,6 +12,5 @@ paths:
 - **例外は、フレームワークが名前で解決する領域。** markdown から名前で参照されるコンポーネントは import できない。
 - **パスは `~/` で書き、相対パスは同じディレクトリの中だけにする。** `app/` の外は `~~/`。`@/` と `../` は使わない。並びはコンポーネント → composable → util。
 - **barrel file（再エクスポートだけのファイル）を作らない。**
-- **循環依存を作らない。** 型だけの依存は `import type` にして実行時依存を消す。
 
-設定と強制手段の現状は [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)、そう決めた理由は [docs/DECISIONS.md](../../docs/DECISIONS.md)。置き場の判定は [structure.md](./structure.md)。
+循環と依存方向は lint が落とす。設定と強制手段の現状は [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)、そう決めた理由は [docs/DECISIONS.md](../../docs/DECISIONS.md)。置き場の判定は [structure.md](./structure.md)。
