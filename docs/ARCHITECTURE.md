@@ -29,6 +29,7 @@ remark/obsidian-callout.mjs  Markdown 拡張（Obsidian 互換 callout）
 app/mdc.config.ts            Shiki の transformer（diff の行に印を付ける）
 theme/tokens.ts              色・フォントの単一情報源
 tailwind.config.ts           tokens から CSS 変数と Tailwind theme を生成
+vitest.config.ts             Vitest。environment は node
 app/
   app.vue                    ローディングバー、theme-color
   error.vue                  全画面エラーの振り分け
@@ -43,6 +44,7 @@ app/
     Hero.vue ArticleList.vue ルート直下（歴史的経緯。移動は未定）
   composables/               reactive / lifecycle を使う共有ロジック。スクロール購読は useScrollFrame に集約
   utils/                     純粋関数（日付、タグ、カテゴリ）
+  **/*.test.ts               テストは実装の隣に置く（→ DECISIONS.md）
 public/                      favicon、OGP 画像、manifest
 ```
 
@@ -88,6 +90,8 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 | 循環依存 | `.dependency-cruiser.cjs` の `no-circular`（`npm run lint`）。`import type` だけの循環は実行時依存が無いので許す | あり |
 | 依存方向（上の図） | `.dependency-cruiser.cjs` の `*-no-upward` と `theme-only-from-app-vue`（`npm run lint`） | あり |
 | 整形（インデント、属性の折り返し、引用符、Tailwind のクラス順） | `.prettierrc` の Prettier + `prettier-plugin-tailwindcss`（`npm run lint` の `prettier --check`）。Markdown と `package-lock.json` は対象外 | あり |
+| 純粋関数の振る舞い | 実装の隣の `*.test.ts`（`npm test`。いまは `app/utils/` の3ファイルだけ） | あり |
+| コンポーネントと composable の振る舞い | — | **未導入**。[#121](https://github.com/uyaaaaaa/personal-blog/issues/121) |
 | コメント・スタイル・置き場・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
 | `~/` 以外のエイリアス、任意値、`navigator.userAgent`、`unload` | ESLint / Stylelint | **未導入**。次に入れる |
 
@@ -96,6 +100,8 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 dependency-cruiser が `~/` `~~/` を解決するための paths は `tsconfig.depcruise.json` にある。ルートの `tsconfig.json` は生成物（`.nuxt/`）への references だけで paths を持たないため、生成物に依存しない専用の tsconfig を持つ。
 
 lint は2箇所で走る。`npm install` が有効にする pre-commit フック（`.githooks/pre-commit`）が commit のたびに回し、GitHub Actions（`.github/workflows/lint.yml`）が PR と `main` への push で回す。build は CI では回さず、Cloudflare Pages が PR ごとに行うビルドとその `Cloudflare Pages` チェックが担う。
+
+`npm test` は Vitest を1回だけ走らせる（`vitest run`）。いまはローカルで打ったときだけ走り、pre-commit にも CI にも載っていない（載せるのは [#123](https://github.com/uyaaaaaa/personal-blog/issues/123)）。設定は `vitest/config` の `defineConfig` だけで書き、Nuxt の設定は読み込まない（→ [DECISIONS.md](./DECISIONS.md#テストの土台は-nuxt-を起こさない範囲に留める)）。
 
 lint を入れる順序は費用対効果順で、import の書き分け → Tailwind の任意値 → プラットフォーム系の禁止3点。
 いずれも既知の違反をベースラインに固定し、新規違反だけを落とす形で入れる。ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。整形は Prettier が持つので、ESLint には整形ルールを足さない（`eslint-config-prettier` は衝突が無いので入れていない）。

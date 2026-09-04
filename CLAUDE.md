@@ -12,10 +12,12 @@ npm run generate  # 静的生成
 npm run preview   # ビルド結果のプレビュー
 npm run format    # Prettier で整形
 npm run lint      # Prettier(--check) + ESLint + dependency-cruiser
+npm test          # テスト（Vitest）
 ```
 
-テストランナーは未導入です。変更の確認は `npm run lint` と `npm run build` が通ることと、開発サーバーでの目視で行います。
-`npm run lint` は Prettier（`--check`。整形の確認だけで書き換えない）と ESLint（自作コンポーネントの明示 import を強制する `vue/no-undef-components` だけ）と dependency-cruiser（循環と依存方向）を続けて回します。整形で落ちたら `npm run format` で直します。整形の対象はコードだけで、Markdown は含みません。`npm install` で有効になる pre-commit フックが commit のたびに同じ lint を回し、GitHub Actions が PR と `main` への push で回します。build は CI では回さず、Cloudflare Pages のチェックに任せています。
+テストがあるのは `app/utils/` の純粋関数だけです（実装の隣の `*.test.ts`）。UI と生成物は `npm run lint` と `npm run build` が通ることと、開発サーバーでの目視で確認します。
+`npm test` はローカルで打ったときだけ走ります（pre-commit にも CI にも載っていません）。
+`npm run lint` は Prettier（`--check`。整形の確認だけで書き換えない）と ESLint（自作コンポーネントの明示 import を強制する `vue/no-undef-components` だけ）と dependency-cruiser（循環と依存方向）を続けて回します。整形で落ちたら `npm run format` で直します。整形の対象はコードだけで、Markdown と `package-lock.json` は含みません。`npm install` で有効になる pre-commit フックが commit のたびに同じ lint を回し、GitHub Actions が PR と `main` への push で回します。build は CI では回さず、Cloudflare Pages のチェックに任せています。
 
 ## ルールとスキル
 
