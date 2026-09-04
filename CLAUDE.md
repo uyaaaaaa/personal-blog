@@ -28,7 +28,7 @@ ESLint は自作コンポーネントの明示 import を強制する `vue/no-un
 | `structure.md` | composable / utils の判定、データ取得の場所、URL 状態 |
 | `docs.md` | 理由の置き場（DECISIONS.md）と、ドキュメントを実装に追従させる義務 |
 
-手順は `.claude/skills/` にあります。UI の追加・変更は `ui-change`、記事の執筆・レビューは `article`。
+手順は `.claude/skills/` にあります。issue 1本の対応は `issue`、UI の追加・変更は `ui-change`、記事の執筆・レビューは `article`、変更の実測は `verify`。
 
 ## ドキュメント
 
