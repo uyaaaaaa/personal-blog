@@ -99,9 +99,11 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 `prettier --check` が落ちたら `npm run format` で直す。整形して commit し直させる（`--write` してステージする）方式は取らない。commit の内容が黙って変わるため。
 dependency-cruiser が `~/` `~~/` を解決するための paths は `tsconfig.depcruise.json` にある。ルートの `tsconfig.json` は生成物（`.nuxt/`）への references だけで paths を持たないため、生成物に依存しない専用の tsconfig を持つ。
 
-lint は2箇所で走る。`npm install` が有効にする pre-commit フック（`.githooks/pre-commit`）が commit のたびに回し、GitHub Actions（`.github/workflows/lint.yml`）が PR と `main` への push で回す。build は CI では回さず、Cloudflare Pages が PR ごとに行うビルドとその `Cloudflare Pages` チェックが担う。
+lint は2箇所で走る。`npm install` が有効にする pre-commit フック（`.githooks/pre-commit`）が commit のたびに回し、GitHub Actions の `Lint`（`.github/workflows/lint.yml`）が PR と `main` への push で回す。テストは別ワークフローの `Test`（`.github/workflows/test.yml`）が同じトリガーで並列に回し、pre-commit には載せない（commit のたびに待たされるのは lint だけにする）。build は CI では回さず、Cloudflare Pages が PR ごとに行うビルドとその `Cloudflare Pages` チェックが担う。
+2つのワークフローは `concurrency.group` を `lint-` / `test-` と別の接頭辞にする。同じグループ名にすると push のたびに互いをキャンセルし合い、片方しか完走しない。
 
-`npm test` は Vitest を1回だけ走らせる（`vitest run`）。いまはローカルで打ったときだけ走り、pre-commit にも CI にも載っていない（載せるのは [#123](https://github.com/uyaaaaaa/personal-blog/issues/123)）。設定は `vitest/config` の `defineConfig` だけで書き、Nuxt の設定は読み込まない（→ [DECISIONS.md](./DECISIONS.md#テストの土台は-nuxt-を起こさない範囲に留める)）。
+`npm test` は Vitest を1回だけ走らせる（`vitest run`）。設定は `vitest/config` の `defineConfig` だけで書き、Nuxt の設定は読み込まない（→ [DECISIONS.md](./DECISIONS.md#テストの土台は-nuxt-を起こさない範囲に留める)）。
+`Test` だけ `npm ci` を scripts ありで走らせる（`Lint` は `--ignore-scripts`）。`--ignore-scripts` では postinstall の `nuxt prepare` が走らず `.nuxt/tsconfig.app.json` が生成されないため、Vite がルートの `tsconfig.json` の references をたどれず `TSConfckParseError` で全テストが collect 前に落ちる。テスト自身は Nuxt を起こさないが、変換に使う tsconfig だけは生成物に依存している。
 
 lint を入れる順序は費用対効果順で、import の書き分け → Tailwind の任意値 → プラットフォーム系の禁止3点。
 いずれも既知の違反をベースラインに固定し、新規違反だけを落とす形で入れる。ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。整形は Prettier が持つので、ESLint には整形ルールを足さない（`eslint-config-prettier` は衝突が無いので入れていない）。

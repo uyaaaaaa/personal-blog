@@ -21,9 +21,10 @@ npm run generate  # 静的生成
 npm run preview   # ビルド結果のプレビュー
 npm run format    # Prettier で整形
 npm run lint      # Prettier(--check) + ESLint + dependency-cruiser
+npm test          # テスト（Vitest）
 ```
 
-`npm install` で pre-commit フック（`.githooks/`）が有効になり、commit のたびに `npm run lint` が走ります。
+`npm install` で pre-commit フック（`.githooks/`）が有効になり、commit のたびに `npm run lint` が走ります。テスト（`npm test`）はフックに載せていないため、ローカルでは手で打つか PR に任せます。
 整形で落ちたときは `npm run format` を実行してから commit し直してください。整形の対象はコードだけで、記事や設計ドキュメントの Markdown は含みません。
 
 Prettier 導入時の一括整形は独立した1コミットにしてあり、そのハッシュを `.git-blame-ignore-revs` に置いています。clone したら次を1回実行すると、`git blame` がそのコミットを飛ばします。
@@ -36,7 +37,7 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 Cloudflare Pages の Git 連携が有効なため、Pull Request を作ると自動でプレビューがデプロイされます。リポジトリ側にワークフローの設定は不要です。
 
-PR では GitHub Actions の `Lint` が `npm run lint` を回します。build は Actions では回しません。
+PR では GitHub Actions の `Lint`（`npm run lint`）と `Test`（`npm test`）が並列に走ります。build は Actions では回しません。
 
 PR に `Cloudflare Pages` チェックが追加され、ビルド完了後に Cloudflare のボットが以下2種類の URL をコメントします。
 
