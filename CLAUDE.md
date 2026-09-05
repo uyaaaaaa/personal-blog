@@ -31,6 +31,7 @@ lint / テスト / CI の内訳は [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md
 | PR を作る | `pr` |
 
 コーディングルールは `.claude/rules/`（`comment` / `style` / `imports` / `structure` / `docs`）にあり、対象ファイルを触るときに自動で読み込まれます。
+コミットメッセージの規約は `.claude/rules/commit.md` にあり、形式は commit-msg フックが落とします。
 
 ## ドキュメント
 
