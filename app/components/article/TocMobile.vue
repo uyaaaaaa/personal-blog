@@ -1,14 +1,14 @@
 <template>
 	<div
 		ref="containerRef"
-		class="sticky top-[74px] z-40 lg:hidden"
+		class="sticky top-below-header z-40 lg:hidden"
 		:class="{ 'pointer-events-none': !isVisible }"
 	>
 		<div
 			class="rounded-lg border border-border bg-surface-muted transition-all duration-300"
 			:class="{
 				'shadow-sm': isSticky,
-				'-translate-y-[120px] opacity-0': !isVisible,
+				'-translate-y-toc-hidden opacity-0': !isVisible,
 			}"
 		>
 			<button
@@ -36,7 +36,7 @@
 			<div
 				v-show="isOpen"
 				ref="dropdownRef"
-				class="absolute left-0 top-full -mt-[1px] max-h-[60vh] w-full overflow-y-auto overflow-x-hidden overscroll-contain rounded-b-lg border border-border bg-surface shadow-lg transition-all duration-200"
+				class="absolute left-0 top-full -mt-px max-h-toc-dropdown w-full overflow-y-auto overflow-x-hidden overscroll-contain rounded-b-lg border border-border bg-surface shadow-lg transition-all duration-200"
 			>
 				<nav class="px-4 py-2 pb-4">
 					<ul class="space-y-1">
@@ -47,7 +47,7 @@
 							<a
 								:href="`#${link.id}`"
 								@click.prevent="handleClick(link.id)"
-								class="-ml-[1px] block break-words border-l-2 py-1.5 pl-3 text-sm hover:border-accent hover:text-accent"
+								class="-ml-px block break-words border-l-2 py-1.5 pl-3 text-sm hover:border-accent hover:text-accent"
 								:class="
 									activeId === link.id
 										? 'border-accent font-medium text-accent'
@@ -67,7 +67,7 @@
 									<a
 										:href="`#${child.id}`"
 										@click.prevent="handleClick(child.id)"
-										class="-ml-[1px] block break-words border-l-2 py-1.5 pl-3 text-xs hover:border-accent hover:text-accent"
+										class="-ml-px block break-words border-l-2 py-1.5 pl-3 text-xs hover:border-accent hover:text-accent"
 										:class="
 											activeId === child.id
 												? 'border-accent font-medium text-accent'
@@ -85,7 +85,7 @@
 
 			<div
 				v-if="isOpen"
-				class="fixed inset-0 z-[-1] bg-black/20"
+				class="fixed inset-0 -z-10 bg-black/20"
 				@click="isOpen = false"
 			></div>
 		</div>

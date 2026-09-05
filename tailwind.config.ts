@@ -1,7 +1,13 @@
 import type { Config } from 'tailwindcss'
 import plugin from 'tailwindcss/plugin'
 import typography from '@tailwindcss/typography'
-import { fontFamily, toCssVariables, toDarkCssVariables, toTailwindColors } from './theme/tokens'
+import {
+	fontFamily,
+	sizes,
+	toCssVariables,
+	toDarkCssVariables,
+	toTailwindColors,
+} from './theme/tokens'
 
 const baseStyles = plugin(({ addBase }) => {
 	addBase({
@@ -51,6 +57,7 @@ export default <Config>{
 				},
 			},
 			fontFamily,
+			...sizes,
 		},
 	},
 	plugins: [typography, baseStyles],

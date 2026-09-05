@@ -24,7 +24,7 @@ npm run lint      # Prettier(--check) + ESLint + dependency-cruiser
 npm test          # テスト（Vitest）
 ```
 
-`npm install` で pre-commit フック（`.githooks/`）が有効になり、commit のたびに `npm run lint` が走ります。テスト（`npm test`）はフックに載せていないため、ローカルでは手で打つか PR に任せます。
+`npm install` で Git フック（`.githooks/`）が有効になり、commit のたびに `npm run lint` と、コミットメッセージの形式の検査（`.claude/rules/commit.md`）が走ります。テスト（`npm test`）はフックに載せていないため、ローカルでは手で打つか PR に任せます。
 整形で落ちたときは `npm run format` を実行してから commit し直してください。整形の対象はコードだけで、記事や設計ドキュメントの Markdown は含みません。
 
 Prettier 導入時の一括整形は独立した1コミットにしてあり、そのハッシュを `.git-blame-ignore-revs` に置いています。clone したら次を1回実行すると、`git blame` がそのコミットを飛ばします。
@@ -118,11 +118,11 @@ category: blog
 | ドキュメント | 内容 |
 | :--- | :--- |
 | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) | デザインの大方針。コンセプト、デザイントークン、レイアウト原則、UX要件。 |
-| [docs/DECISIONS.md](./docs/DECISIONS.md) | 判断の記録。画面・機能ごとに、実装を読んでも分からない「なぜ」だけ。値や構造は実装が正。 |
+| [docs/DECISIONS.md](./docs/DECISIONS.md) | ADR の索引。思想が反映され、簡単には変えられない判断だけを `docs/adr/` に置く。コンポーネント内の設計や個々の制約は書かず、実装が正。 |
 | [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) | アイコン定義。`u/` モノグラムの仕様と、favicon 一式・OGP 画像の生成手順。 |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 現状の構造、依存方向、データとスタイルの流れ、強制手段の状態。 |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 依存方向、データとスタイルの流れ、強制手段の状態。 |
 
-UI を変更した際は、該当するドキュメントも併せて更新してください。コーディングルールは `.claude/rules/`、作業手順は `.claude/skills/` にあります。
+ドキュメントは原則書かず、方針を変えたときだけ該当する文書を同じ変更で直します。コーディングルールは `.claude/rules/`、作業手順は `.claude/skills/` にあります。
 
 ## タスク管理
 

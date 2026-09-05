@@ -1,4 +1,4 @@
-import { CATEGORIES, CATEGORY_LABELS, type Category } from '../utils/category'
+import { CATEGORIES, CATEGORY_LABELS, type Category } from '~/utils/category'
 
 export interface CategorySummary {
 	slug: Category

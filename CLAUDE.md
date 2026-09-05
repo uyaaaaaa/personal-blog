@@ -1,7 +1,6 @@
 # CLAUDE.md
 
 Nuxt 4 + Nuxt Content 3 で構築した個人技術ブログ。Cloudflare Pages に静的生成でデプロイしています。
-プロジェクトの全体像・記事の書き方・プレビュー環境については [README.md](./README.md) を参照してください。
 
 ## コマンド
 
@@ -11,35 +10,35 @@ npm run build     # 本番ビルド
 npm run generate  # 静的生成
 npm run preview   # ビルド結果のプレビュー
 npm run format    # Prettier で整形
-npm run lint      # Prettier(--check) + ESLint + dependency-cruiser
-npm test          # テスト（Vitest）
+npm run lint      # 落ちたら npm run format
+npm test          # Vitest
 ```
 
-テストがあるのは `app/utils/` の純粋関数だけです（実装の隣の `*.test.ts`）。UI と生成物は `npm run lint` と `npm run build` が通ることと、開発サーバーでの目視で確認します。
-`npm test` は pre-commit には載せず、GitHub Actions の `Test` が PR と `main` への push で `Lint` と並列に回します。
-`npm run lint` は Prettier（`--check`。整形の確認だけで書き換えない）と ESLint（自作コンポーネントの明示 import を強制する `vue/no-undef-components` だけ）と dependency-cruiser（循環と依存方向）を続けて回します。整形で落ちたら `npm run format` で直します。整形の対象はコードだけで、Markdown と `package-lock.json` は含みません。`npm install` で有効になる pre-commit フックが commit のたびに同じ lint を回し、GitHub Actions が PR と `main` への push で回します。build は CI では回さず、Cloudflare Pages のチェックに任せています（ドキュメントだけの変更ではそのビルドも走りません → [README.md](./README.md#ビルドが走らないパス)）。
+UI と生成物は自動テストで守れないため、`npm run lint` と `npm run build` が通ることと、開発サーバーでの目視でしか確認できません。
 
-## ルールとスキル
+## 進め方
 
-コーディングルールは `.claude/rules/` にあり、対象ファイルを触るときに自動で読み込まれます。
+手順は `.claude/skills/` にあります。
 
-| ファイル | 範囲 |
+| 依頼 | スキル |
 | :--- | :--- |
-| `comment.md` | コメントを書かない方針と、書いてよい例外 |
-| `style.md` | トークン経由の色指定、ブレークポイント、モーション、着地位置 |
-| `imports.md` | 自作モジュールの明示 import と依存方向 |
-| `structure.md` | composable / utils の判定、データ取得の場所、URL 状態 |
-| `docs.md` | 理由の置き場（DECISIONS.md）と、ドキュメントを実装に追従させる義務 |
+| 課題感を issue にする依頼 | `create-issues` |
+| issue 番号のある依頼 | `assign` |
+| UI・スタイルの追加変更、表示の不具合 | `ui-change` |
+| 記事の執筆・レビュー | `article` |
+| 変更を実測で確かめる | `verify` |
+| PR を作る | `pr` |
+| コードの差分・PR をレビューする | `review` |
 
-手順は `.claude/skills/` にあります。issue 1本の対応は `issue`、UI の追加・変更は `ui-change`、記事の執筆・レビューは `article`、変更の実測は `verify`、PR の作成は `pr`。
+コーディングルールとコミットの規約は `.claude/rules/`（`comment` / `style` / `imports` / `structure` / `docs` / `commit`）にあります。
 
 ## ドキュメント
 
-**実装が正**です。UI や構造を変えたら、該当するドキュメントを同じ変更で更新してください。
+**実装が正**で、ドキュメントは原則書きません。残すのは方針レベルのものだけで、方針を変えたら同じ変更で直します。何を書き、何を書かないかは `.claude/rules/docs.md`。
 
-| ドキュメント | 内容 |
+| いつ | 読む先 |
 | :--- | :--- |
-| [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) | デザインの大方針。コンセプト、デザイントークン、レイアウト原則、UX要件、既知の課題。 |
-| [docs/DECISIONS.md](./docs/DECISIONS.md) | 判断の記録。画面・機能ごとに、実装を読んでも分からない「なぜ」だけ。値や構造は実装が正。 |
-| [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) | アイコン定義。`u/` モノグラムの仕様と、favicon 一式・OGP 画像の生成手順。 |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 現状の構造、依存方向、データとスタイルの流れ、強制手段の状態。 |
+| 方針を覆すとき / 方針レベルの判断を記録するとき | [docs/DECISIONS.md](./docs/DECISIONS.md)（ADR の索引） |
+| トークン・レイアウト原則・UX 要件に触れるとき | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) |
+| 構造・依存方向・検査の置き場を変えるとき | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
+| favicon / OGP を作り直すとき | [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) |
