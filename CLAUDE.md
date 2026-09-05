@@ -1,40 +1,18 @@
 # CLAUDE.md
 
-Nuxt 4 + Nuxt Content 3 で構築した個人技術ブログ。Cloudflare Pages に静的生成でデプロイしています。
+Nuxt 4 + Nuxt Content 3 の個人技術ブログ。Cloudflare Pages に静的生成でデプロイしている。
 
-## コマンド
+## 確認のしかた
 
-```sh
-npm run dev       # 開発サーバー
-npm run build     # 本番ビルド
-npm run generate  # 静的生成
-npm run preview   # ビルド結果のプレビュー
-npm run format    # Prettier で整形
-npm run lint      # 落ちたら npm run format
-npm test          # Vitest
-```
-
-UI と生成物は自動テストで守れないため、`npm run lint` と `npm run build` が通ることと、開発サーバーでの目視でしか確認できません。
+UI と生成物は自動テストが守らない。根拠になるのは、そのセッションで実際に打ったコマンドの出力と、開発サーバーでの目視だけ。読んで判断したものは未確認として扱う。手順は `verify` スキル。
 
 ## 進め方
 
-手順は `.claude/skills/` にあります。
-
-| 依頼 | スキル |
-| :--- | :--- |
-| 課題感を issue にする依頼 | `create-issues` |
-| issue 番号のある依頼 | `assign` |
-| UI・スタイルの追加変更、表示の不具合 | `ui-change` |
-| 記事の執筆・レビュー | `article` |
-| 変更を実測で確かめる | `verify` |
-| PR を作る | `pr` |
-| コードの差分・PR をレビューする | `review` |
-
-コーディングルールとコミットの規約は `.claude/rules/`（`comment` / `style` / `imports` / `structure` / `docs` / `commit`）にあります。
+依頼の型ごとの手順は `.claude/skills/` にあり、どの依頼で使うかは各スキルの description が持つ。
 
 ## ドキュメント
 
-**実装が正**で、ドキュメントは原則書きません。残すのは方針レベルのものだけで、方針を変えたら同じ変更で直します。何を書き、何を書かないかは `.claude/rules/docs.md`。
+**実装が正**で、ドキュメントは原則書かない。残すのは方針レベルのものだけで、方針を変えたら同じ変更で直す。基準は `.claude/rules/docs.md`。
 
 | いつ | 読む先 |
 | :--- | :--- |

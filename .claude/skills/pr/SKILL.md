@@ -15,8 +15,6 @@ description: "Pull Request を作る手順。「PR にして」「PR 作って�
 - `git status --short` が空
 - 実測用の一時的な細工が残っていないこと
 - 実測の結果が手元にあること
-- コミットメッセージが `.claude/rules/commit.md` に沿っていること
-- ドキュメントの更新は実装と同じコミットに含まれていること
 
 ## 2. タイトル
 
@@ -63,11 +61,8 @@ description: "Pull Request を作る手順。「PR にして」「PR 作って�
 
 ## 4. 出す
 
-- 作成は GitHub MCP の PR 作成ツール（`gh` は使えない）
-- PR テンプレートはリポジトリに無い
+- 作成は GitHub MCP の PR 作成ツール
 - base は `main`
-- コミットのフッターは `Co-Authored-By`
-- PR 本文のフッターは `🤖 Generated with Claude Code`
 
 ## 5. 作成後
 

@@ -61,17 +61,7 @@ description: "このリポジトリの GitHub issue を1本、着手から PR �
 
 ## 4. 出す
 
-**記録は実装と同じコミットに入れる。**
-
-原則として文書は書かない（基準は `.claude/rules/docs.md`）。直すのは方針に触れたときだけ。
-
-| 変えたもの | 直すドキュメント |
-| :--- | :--- |
-| 既存の方針を覆した / 思想が反映され簡単には変えられない判断をした | `docs/adr/` に1ファイル（検討した案 / 対価 / 戻す条件）＋ `docs/DECISIONS.md` に1行 |
-| トークン・レイアウト原則・UX要件 | `docs/DESIGN_GUIDELINE.md` |
-| 依存方向・lint の範囲 | `docs/ARCHITECTURE.md` |
-
-コミットメッセージは `.claude/rules/commit.md` に従う。
+原則として文書は書かない（基準は `.claude/rules/docs.md`）。方針に触れたときだけ、該当する文書を**実装と同じコミットで**直す。
 
 ### PR
 
