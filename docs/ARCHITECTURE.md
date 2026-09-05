@@ -43,7 +43,7 @@ app/
     error/                   ErrorView と NotFound / Server
     Hero.vue ArticleList.vue ルート直下（歴史的経緯。移動は未定）
   composables/               reactive / lifecycle を使う共有ロジック。スクロール購読は useScrollFrame に集約
-  utils/                     純粋関数（日付、タグ、カテゴリ）
+  utils/                     純粋関数（日付、タグ、カテゴリ、ページング）
   **/*.test.ts               テストは実装の隣に置く（→ adr/14）
 public/                      favicon、OGP 画像、manifest
 ```
@@ -90,7 +90,7 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 | 循環依存 | `.dependency-cruiser.cjs` の `no-circular`（`npm run lint`）。`import type` だけの循環は実行時依存が無いので許す | あり |
 | 依存方向（上の図） | `.dependency-cruiser.cjs` の `*-no-upward` と `theme-only-from-app-vue`（`npm run lint`） | あり |
 | 整形（インデント、属性の折り返し、引用符、Tailwind のクラス順） | `.prettierrc` の Prettier + `prettier-plugin-tailwindcss`（`npm run lint` の `prettier --check`）。Markdown と `package-lock.json` は対象外 | あり |
-| 純粋関数の振る舞い | 実装の隣の `*.test.ts`（`npm test`。いまは `app/utils/` の3ファイルだけ） | あり |
+| 純粋関数の振る舞い | 実装の隣の `*.test.ts`（`npm test`。いまは `app/utils/` の4ファイルだけ） | あり |
 | コンポーネントと composable の振る舞い | — | **未導入**。[#121](https://github.com/uyaaaaaa/personal-blog/issues/121) |
 | コメント・スタイル・置き場・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
 | `~/` 以外のエイリアス、任意値、`navigator.userAgent`、`unload` | ESLint / Stylelint | **未導入**。次に入れる |

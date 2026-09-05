@@ -1,4 +1,6 @@
 <script setup lang="ts">
+	import { pageLink, paginationItems } from '~/utils/pagination'
+
 	const props = defineProps<{
 		page: number
 		totalPages: number
@@ -7,23 +9,9 @@
 
 	const WINDOW_RADIUS = 1
 
-	const items = computed<(number | 'gap')[]>(() => {
-		const pages = new Set<number>([1, props.totalPages])
-		for (let i = props.page - WINDOW_RADIUS; i <= props.page + WINDOW_RADIUS; i++) {
-			if (i >= 1 && i <= props.totalPages) pages.add(i)
-		}
+	const items = computed(() => paginationItems(props.page, props.totalPages, WINDOW_RADIUS))
 
-		const sorted = [...pages].sort((a, b) => a - b)
-		return sorted.flatMap((value, index) => {
-			const previous = sorted[index - 1]
-			return previous !== undefined && value - previous > 1
-				? ['gap' as const, value]
-				: [value]
-		})
-	})
-
-	const linkFor = (target: number) =>
-		target === 1 ? props.basePath : `${props.basePath}/page/${target}`
+	const linkFor = (target: number) => pageLink(props.basePath, target)
 </script>
 
 <template>
