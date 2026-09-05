@@ -41,7 +41,7 @@
 				:date="article.date"
 				:emoji="article.emoji"
 				:tags="article.tags"
-				class="w-[264px] shrink-0 snap-start lg:w-auto"
+				class="w-shelf-card shrink-0 snap-start lg:w-auto"
 				:class="index >= PC_VISIBLE_COUNT ? 'lg:hidden' : ''"
 			/>
 		</div>
