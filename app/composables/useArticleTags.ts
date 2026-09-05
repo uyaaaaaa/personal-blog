@@ -1,4 +1,4 @@
-import { tagToSlug } from '../utils/tag'
+import { tagToSlug } from '~/utils/tag'
 
 export interface TagSummary {
 	name: string

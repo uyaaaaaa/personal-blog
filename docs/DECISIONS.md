@@ -29,6 +29,7 @@
 - [テストを2回目の使用とみなして抽出する](./adr/17-test-as-second-use.md)
 - [タグのスラッグの一意性を lint で守る](./adr/18-tag-slug-uniqueness-check.md)
 - [サイズにも名前を付けてトークンに置き、任意値を lint で落とす](./adr/19-size-tokens-and-no-arbitrary-values.md)
+- [パスの書き分けとプラットフォーム系の禁止を ESLint の標準ルールで落とす](./adr/20-eslint-core-rules-for-paths-and-platform-apis.md)
 
 ## 画面・機能ごとの制約
 
