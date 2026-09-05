@@ -14,4 +14,4 @@
 - [15 Nuxt を起こすのはコンポーネントのテストだけにする](./adr/15-nuxt-environment-per-file.md)
 - [17 テストを2回目の使用とみなして抽出する](./adr/17-test-as-second-use.md)
 - [19 サイズにも名前を付けてトークンに置く](./adr/19-size-tokens-and-no-arbitrary-values.md)
-- [20 ドキュメントは原則持たず、思想が反映され簡単に変えられない判断だけを ADR に残す](./adr/20-docs-only-for-hard-to-reverse-decisions.md)
+- [21 ドキュメントは原則持たず、思想が反映され簡単に変えられない判断だけを ADR に残す](./adr/21-docs-only-for-hard-to-reverse-decisions.md)

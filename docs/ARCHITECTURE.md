@@ -17,7 +17,7 @@
 
 1. 依存は一方向にしか流れない（下記）
 2. 自作モジュール間の依存は必ず `import` 文に現れる（lint が依存を見られる状態を保つ → [ADR 03](./adr/03-no-auto-import.md)）
-3. 文書で守らず、lint / build / テストで守る。機械的に縛れないものは `.claude/rules/` に置く（→ [ADR 20](./adr/20-docs-only-for-hard-to-reverse-decisions.md)）
+3. 文書で守らず、lint / build / テストで守る。機械的に縛れないものは `.claude/rules/` に置く（→ [ADR 21](./adr/21-docs-only-for-hard-to-reverse-decisions.md)）
 
 ---
 
@@ -61,7 +61,7 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 | props で決まるコンポーネントの描画 | 実装の隣の `*.test.ts` を `mountSuspended` で（`npm test`。→ [ADR 15](./adr/15-nuxt-environment-per-file.md)） | あり |
 | 上記以外のコンポーネントと composable の振る舞い | — | **未導入**。[#121](https://github.com/uyaaaaaa/personal-blog/issues/121) |
 | `<style>` の中のサイズ・色 | Stylelint | **未導入**。上の任意値のルールは `class` 属性しか見ない |
-| `~/` 以外のエイリアス、`navigator.userAgent`、`unload` | ESLint | **未導入**。[#146](https://github.com/uyaaaaaa/personal-blog/issues/146) |
+| `~/` 以外のパス、`navigator.userAgent`、`unload` | `eslint.config.mjs` の `no-restricted-imports` と `no-restricted-syntax`（`npm run lint`）。`app/` の `.ts` と `.vue` の両方を見る | あり |
 | コメント・スタイル・置き場・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
 
 `npm run lint` は Prettier・ESLint・dependency-cruiser・タグの検査をこの順で続けて回す。整形は Prettier に、ファイル1つで判定できるそれ以外の違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に、記事をまたいで突き合わせる違反（タグのスラッグ）は `scripts/` の検査に置く。
