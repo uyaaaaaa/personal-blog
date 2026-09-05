@@ -71,7 +71,7 @@ description: "Pull Request を作る手順。「PR にして」「PR 作って�
 
 ## 5. 作成後
 
-- CI が green になるまで見る
+- CI が green になるまで見る。ビルドが走らないパス（README）だけの変更では `Cloudflare Pages` チェックが付かない。付かないまま完了とする
 - 落ちたら、理由を PR のコメントに残す。1行で言い切る。
 - コンフリクトは `main` をマージして解消。rebase と force push はしない
 - レビューコメントへの追従は、このスキルの範囲外
