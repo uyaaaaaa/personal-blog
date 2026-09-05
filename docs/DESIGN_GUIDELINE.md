@@ -73,28 +73,16 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 
 ### B. 配色（Color Palette）
 
-| 役割 | ライト | ダーク | Tailwind | CSS変数 | 用途 |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **ページ背景** | `#F9F9F9` | `#121212` | `bg-bg` | `--color-bg` | `body` の背景色。 |
-| **サーフェス** | `#FFFFFF` | `#1A1A1A` | `bg-surface` | `--color-surface` | カード、モバイルドロワー、Exploreパネル、テーマパネル、TOCドロップダウン、タグチップ、`Cmd+K` バッジの背景。 |
-| **メイン（文字色）** | `#1A1A1A` | `#E8E8E8` | `text-main` | `--color-main` | 見出し・本文の文字色。ハンバーガーボタンの線。 |
-| **サブテキスト** | `#888888` | `#A0A0A0` | `text-sub` | `--color-sub` | 投稿日、キャプション、説明文、非アクティブなTOC項目。テーマトグルのアイコンとテーマパネルの行のアイコン。 |
-| **アクセント** | `#8B5CF6` | `#A78BFA` | `text-accent` / `border-accent` | `--color-accent` | リンク、タグ枠、ホバー、アクティブなTOC項目、ロゴのスラッシュ。**唯一の色要素**。 |
-| **アクセント（ホバー）** | `#7C3AED` | `#C4B5FD` | `bg-accent-hover` | `--color-accent-hover` | アクセント色で塗りつぶした面のホバー時（ライトは暗く、ダークは明るくずらす）。エラーページの `Back to Top` ボタン。 |
-| **アクセント上の文字** | `#FFFFFF` | `#121212` | `text-accent-contrast` | `--color-accent-contrast` | アクセント色で塗りつぶした面の文字色。エラーページの `Back to Top` ボタン。ダークの `accent` 上では白がコントラスト比 2.7:1 と不足するため暗色にする（`#121212` で 6.9:1）。 |
-| **ボーダー** | `#E5E5E5` | `#2E2E2E` | `border-border` | `--color-border` | カード枠線、セクション区切り、ヘッダー下線。 |
-| **淡いサーフェス** | `#F5F5F5` | `#1E1E1E` | `bg-surface-subtle` | `--color-surface-subtle` | インラインコード、コードブロック、ヘッダーの検索ボックス、モバイルドロワーの行のホバー・アクティブ背景色、Exploreパネル・テーマパネルの行のホバー背景色、テーマパネルの選択中の行の背景色。 |
-| **サブサーフェス** | `#F3F4F6` | `#262626` | `bg-surface-muted` | `--color-surface-muted` | 記事カードの絵文字タイル、Heroのサムネイル枠、モバイルTOCバー、目次のガイド線。 |
-| **ヘッダー背景** | `rgba(255, 255, 255, 0.9)` | `rgba(18, 18, 18, 0.85)` | — | `--color-header-bg` | sticky ヘッダーの半透明背景（`backdrop-filter: blur` と併用）。 |
-| **オーバーレイ** | `rgba(0, 0, 0, 0.5)` | `rgba(0, 0, 0, 0.5)` | — | `--color-overlay` | モバイルドロワーのオーバーレイ。 |
-| **スクロールバー** | `#D1D5DB` | `#3A3A3A` | — | `--color-scrollbar` | 目次のスクロールバー。 |
-| **コード文字色** | `#24292E` | `#E6EDF3` | — | `--color-code-text` | コードブロックの文字色（Shiki のテーマ `github-light` / `github-dark` の前景色に合わせる）。 |
-| **diff 追加行の背景** | `#F0FFF4` | `rgba(46, 160, 67, 0.15)` | — | `--color-diff-add-bg` | `diff` コードブロックの追加行の行背景。 |
-| **diff 削除行の背景** | `#FFEEF0` | `rgba(248, 81, 73, 0.15)` | — | `--color-diff-remove-bg` | `diff` コードブロックの削除行の行背景。 |
-| **diff 追加語の背景** | `#ABF2BC` | `rgba(46, 160, 67, 0.4)` | — | `--color-diff-add-word-bg` | 追加行の中で変化した語の背景。 |
-| **diff 削除語の背景** | `#FFC1C2` | `rgba(248, 81, 73, 0.4)` | — | `--color-diff-remove-word-bg` | 削除行の中で変化した語の背景。 |
+トークンのキーと値は `theme/tokens.ts` が正です。ここには実装から読み取れない意図だけを置きます。
 
-コードブロック内のトークン色は Shiki のテーマ（`github-light` / `github-dark`）由来でパレットの外側です。文字色は上書きせずテーマのまま使います（上書きすると構文色の情報源が2つに割れるため）。
+- **色は `accent` の1色だけ。** リンク、タグ枠、ホバー、アクティブなTOC項目、ロゴのスラッシュだけが色を持ち、それ以外は無彩色で組みます。
+- **`accent-hover` はライトを暗く、ダークを明るくずらします。** アクセント色で塗りつぶした面のホバー用です。
+- **`accent-contrast` はダークだけ暗色です。** ダークの `accent` の上では白がコントラスト比 2.7:1 と不足するため、`#121212` にして 6.9:1 を確保しています。
+- **`header-bg` だけ半透明です。** sticky ヘッダーで `backdrop-filter: blur` と併用するためで、他の面は不透明のままです。
+
+残りのトークン（`bg` `surface` `main` `sub` `border` など）は役割名がそのまま用途で、選んだ理由はありません。
+
+コードブロック内のトークン色は Shiki のテーマ（`github-light` / `github-dark`）由来でパレットの外側です。文字色は上書きせずテーマのまま使い、`code-text` もそのテーマの前景色に合わせます（上書きすると構文色の情報源が2つに割れるため）。
 
 `diff` の追加行・削除行だけは例外で、**行全体の背景を塗ります**。設計原則 1「面を塗って区切らない」に対する意図的な例外です。
 `+` / `-` と文字色だけでは変更された行の塊が追いづらく、差分は「どの行が変わったか」を面で追う情報だと判断しました。
@@ -122,17 +110,9 @@ Callout は例外的に独自パレットを持ちます。Obsidian デフォル
 
 ### C. タイポグラフィ
 
-| 項目 | 指定 | Tailwind | CSS変数 |
-| :--- | :--- | :--- | :--- |
-| **見出し / 本文** | `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` | `font-sans` | `--font-sans` |
-| **コード / 技術用語** | `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace` | `font-mono` | `--font-mono` |
-
-OSネイティブフォントを優先し、Webフォントは読み込まない（表示速度を最優先するため）。
-
-`font-mono` は技術的な記号性を出す目的で、コード以外にも以下へ適用します。
-ロゴ、日付、タグ名、`Articles` 等のセクション見出し、`PICKUP` ラベル、エラーコード。
-
-**行間**: `body` に `line-height: 1.6` を指定。
+- **OSネイティブフォントを優先し、Webフォントは読み込みません。** 表示速度を最優先するため。`sans` / `mono` のスタックは `theme/tokens.ts` が正です。
+- **`font-mono` はコード以外にも当てます。** 技術的な記号性を出す目的で、ロゴ、日付、タグ名、`Articles` 等のセクション見出し、`PICKUP` ラベル、エラーコードが対象です。
+- **行間は `body` の `line-height: 1.6` で一括して決めます。**
 
 ### D. 角丸・余白・エフェクト
 
