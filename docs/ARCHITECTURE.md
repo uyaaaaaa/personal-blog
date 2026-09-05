@@ -90,8 +90,9 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 | 循環依存 | `.dependency-cruiser.cjs` の `no-circular`（`npm run lint`）。`import type` だけの循環は実行時依存が無いので許す | あり |
 | 依存方向（上の図） | `.dependency-cruiser.cjs` の `*-no-upward` と `theme-only-from-app-vue`（`npm run lint`） | あり |
 | 整形（インデント、属性の折り返し、引用符、Tailwind のクラス順） | `.prettierrc` の Prettier + `prettier-plugin-tailwindcss`（`npm run lint` の `prettier --check`）。Markdown と `package-lock.json` は対象外 | あり |
-| 純粋関数の振る舞い | 実装の隣の `*.test.ts`（`npm test`。いまは `app/utils/` の4ファイルだけ） | あり |
-| コンポーネントと composable の振る舞い | — | **未導入**。[#121](https://github.com/uyaaaaaa/personal-blog/issues/121) |
+| 純粋関数の振る舞い | 実装の隣の `*.test.ts`（`npm test`。`app/utils/` の4ファイル） | あり |
+| props で決まるコンポーネントの描画 | 実装の隣の `*.test.ts` を `mountSuspended` で（`npm test`。`Pagination` `ArticleShelf` `ArticleCard` `Callout` `ArticleFallback` の5ファイル） | あり |
+| 上記以外のコンポーネントと composable の振る舞い | — | **未導入**。[#121](https://github.com/uyaaaaaa/personal-blog/issues/121) |
 | コメント・スタイル・置き場・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
 | `~/` 以外のエイリアス、任意値、`navigator.userAgent`、`unload` | ESLint / Stylelint | **未導入**。次に入れる |
 
@@ -102,8 +103,8 @@ dependency-cruiser が `~/` `~~/` を解決するための paths は `tsconfig.d
 lint は2箇所で走る。`npm install` が有効にする pre-commit フック（`.githooks/pre-commit`）が commit のたびに回し、GitHub Actions の `Lint`（`.github/workflows/lint.yml`）が PR と `main` への push で回す。テストは別ワークフローの `Test`（`.github/workflows/test.yml`）が同じトリガーで並列に回し、pre-commit には載せない（commit のたびに待たされるのは lint だけにする）。build は CI では回さず、Cloudflare Pages が PR ごとに行うビルドとその `Cloudflare Pages` チェックが担う。
 2つのワークフローは `concurrency.group` を `lint-` / `test-` と別の接頭辞にする。同じグループ名にすると push のたびに互いをキャンセルし合い、片方しか完走しない。
 
-`npm test` は Vitest を1回だけ走らせる（`vitest run`）。設定は `vitest/config` の `defineConfig` だけで書き、Nuxt の設定は読み込まない（→ [DECISIONS.md](./adr/15-test-setup-without-nuxt.md)）。
-`Test` だけ `npm ci` を scripts ありで走らせる（`Lint` は `--ignore-scripts`）。`--ignore-scripts` では postinstall の `nuxt prepare` が走らず `.nuxt/tsconfig.app.json` が生成されないため、Vite がルートの `tsconfig.json` の references をたどれず `TSConfckParseError` で全テストが collect 前に落ちる。テスト自身は Nuxt を起こさないが、変換に使う tsconfig だけは生成物に依存している。
+`npm test` は Vitest を1回だけ走らせる（`vitest run`）。設定は `@nuxt/test-utils` の `defineVitestConfig` で書くが、既定の環境は `node` のままで、Nuxt を起こすのは先頭に `// @vitest-environment nuxt` を書いたファイルだけ（→ [DECISIONS.md](./adr/15-nuxt-environment-per-file.md)）。`vitest.setup.ts` は、その環境で `@nuxtjs/color-mode` のクライアントプラグインが読む `window.__NUXT_COLOR_MODE__` を置く。
+`Test` だけ `npm ci` を scripts ありで走らせる（`Lint` は `--ignore-scripts`）。`defineVitestConfig` は設定を読む時点で Nuxt を起動し、`@nuxt/content` がそこで SQLite を開く。`--ignore-scripts` では `better-sqlite3` のネイティブがビルドされないため、`Could not locate the bindings file` で1件も走らない（起動まで進めても、postinstall の `nuxt prepare` が生成する `.nuxt/tsconfig.app.json` が無く `TSConfckParseError` になる）。
 
 lint を入れる順序は費用対効果順で、import の書き分け → Tailwind の任意値 → プラットフォーム系の禁止3点。
 いずれも既知の違反をベースラインに固定し、新規違反だけを落とす形で入れる。ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。整形は Prettier が持つので、ESLint には整形ルールを足さない（`eslint-config-prettier` は衝突が無いので入れていない）。
