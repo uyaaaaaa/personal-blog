@@ -39,7 +39,7 @@
 
 - **色・フォントを追加・変更するときは `theme/tokens.ts` だけを編集する。** コンポーネントにはトークン由来のクラスか CSS 変数で書き、直値を書かない。
 - **ダークテーマはトークンの再定義で成立させる。** `.dark` 配下で CSS 変数を再定義するだけで全体が切り替わる。`dark:` で色を分岐しない。
-- **サイズは Tailwind のスケールか `sizes` の名前で書く。** スケールに無い値は `sizes` に名前を足してから使う。任意値（`w-[264px]`）は lint が落とす（→ [ADR 19](./adr/19-size-tokens-and-no-arbitrary-values.md)）。
+- **サイズは Tailwind のスケールか `sizes` の名前で書く。** スケールに無い値は `sizes` に名前を足してから使う。任意値（`w-[264px]`）は lint が落とす（→ [ADR 09](./adr/09-size-tokens-and-no-arbitrary-values.md)）。
 
 パレットの外側で、直値を書いてよいもの。
 

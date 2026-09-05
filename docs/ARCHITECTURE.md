@@ -12,12 +12,12 @@
 
 **変更が数ファイルのコードで閉じること。**
 
-個人ブログなので、feature 分割や層の増設で得られるものより、ファイル数が増えるコストのほうが大きいです（→ [ADR 07](./adr/07-flat-directory-by-type.md)）。
+個人ブログなので、feature 分割や層の増設で得られるものより、ファイル数が増えるコストのほうが大きいです（→ [ADR 04](./adr/04-flat-directory-by-type.md)）。
 型別のフラットな構成（`components` / `composables` / `utils`）を維持し、代わりに次の3点で秩序を保ちます。
 
 1. 依存は一方向にしか流れない（下記）
 2. 自作モジュール間の依存は必ず `import` 文に現れる（lint が依存を見られる状態を保つ → [ADR 03](./adr/03-no-auto-import.md)）
-3. 文書で守らず、lint / build / テストで守る。機械的に縛れないものは `.claude/rules/` に置く（→ [ADR 21](./adr/21-docs-only-for-hard-to-reverse-decisions.md)）
+3. 文書で守らず、lint / build / テストで守る。機械的に縛れないものは `.claude/rules/` に置く（→ [ADR 10](./adr/10-docs-only-for-hard-to-reverse-decisions.md)）
 
 ---
 
@@ -55,10 +55,10 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 | 自作コンポーネントの明示 import | `components: false` + `eslint.config.mjs` の `vue/no-undef-components`（`npm run lint`）。未 import はビルドでは落ちず、そのコンポーネントが消えた HTML が出るため lint が要る | あり |
 | 循環依存 | `.dependency-cruiser.cjs` の `no-circular`（`npm run lint`）。`import type` だけの循環は許す | あり |
 | 依存方向（上の図） | `.dependency-cruiser.cjs` の `*-no-upward` と `theme-only-from-app-vue`（`npm run lint`） | あり |
-| 整形 | `.prettierrc` の Prettier + `prettier-plugin-tailwindcss`（`npm run lint` の `prettier --check`）。Markdown と `package-lock.json` は対象外（→ [ADR 13](./adr/13-prettier-owns-formatting.md)） | あり |
-| Tailwind の任意値（角括弧を含むクラス） | `eslint.config.mjs` の `vue/no-restricted-syntax`（`npm run lint`）。`class` と `:class` の中の文字列を見る（→ [ADR 19](./adr/19-size-tokens-and-no-arbitrary-values.md)） | あり |
+| 整形 | `.prettierrc` の Prettier + `prettier-plugin-tailwindcss`（`npm run lint` の `prettier --check`）。Markdown と `package-lock.json` は対象外（→ [ADR 05](./adr/05-prettier-owns-formatting.md)） | あり |
+| Tailwind の任意値（角括弧を含むクラス） | `eslint.config.mjs` の `vue/no-restricted-syntax`（`npm run lint`）。`class` と `:class` の中の文字列を見る（→ [ADR 09](./adr/09-size-tokens-and-no-arbitrary-values.md)） | あり |
 | 純粋関数の振る舞い | 実装の隣の `*.test.ts`（`npm test`） | あり |
-| props で決まるコンポーネントの描画 | 実装の隣の `*.test.ts` を `mountSuspended` で（`npm test`。→ [ADR 15](./adr/15-nuxt-environment-per-file.md)） | あり |
+| props で決まるコンポーネントの描画 | 実装の隣の `*.test.ts` を `mountSuspended` で（`npm test`。→ [ADR 07](./adr/07-nuxt-environment-per-file.md)） | あり |
 | 上記以外のコンポーネントと composable の振る舞い | — | **未導入**。[#121](https://github.com/uyaaaaaa/personal-blog/issues/121) |
 | `<style>` の中のサイズ・色 | Stylelint | **未導入**。上の任意値のルールは `class` 属性しか見ない |
 | `~/` 以外のパス、`navigator.userAgent`、`unload` | `eslint.config.mjs` の `no-restricted-imports` と `no-restricted-syntax`（`npm run lint`）。`app/` の `.ts` と `.vue` の両方を見る | あり |
