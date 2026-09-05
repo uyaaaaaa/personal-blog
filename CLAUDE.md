@@ -23,6 +23,7 @@ lint / テスト / CI の内訳は [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md
 
 | 依頼 | スキル |
 | :--- | :--- |
+| 課題感を issue にする依頼 | `create-issues` |
 | issue 番号のある依頼 | `assign` |
 | UI・スタイルの追加変更、表示の不具合 | `ui-change` |
 | 記事の執筆・レビュー | `article` |
