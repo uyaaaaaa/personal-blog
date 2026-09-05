@@ -29,6 +29,7 @@ lint / テスト / CI の内訳は [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md
 | 記事の執筆・レビュー | `article` |
 | 変更を実測で確かめる | `verify` |
 | PR を作る | `pr` |
+| コードの差分・PR をレビューする | `review` |
 
 コーディングルールは `.claude/rules/`（`comment` / `style` / `imports` / `structure` / `docs`）にあり、対象ファイルを触るときに自動で読み込まれます。
 
