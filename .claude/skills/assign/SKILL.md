@@ -71,7 +71,7 @@ description: "このリポジトリの GitHub issue を1本、着手から PR �
 | トークン・レイアウト原則・UX要件 | `docs/DESIGN_GUIDELINE.md` |
 | 依存方向・lint の範囲 | `docs/ARCHITECTURE.md` |
 
-コミットメッセージは日本語の言い切りで1行。何をどう変えたかを書く（例. `View Allの判定をその幅で実際に見えている件数に合わせる`）。
+コミットメッセージは `.claude/rules/commit.md` に従う。
 
 ### PR
 

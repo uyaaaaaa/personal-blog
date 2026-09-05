@@ -62,13 +62,14 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 | 上記以外のコンポーネントと composable の振る舞い | — | **未導入**。[#121](https://github.com/uyaaaaaa/personal-blog/issues/121) |
 | `<style>` の中のサイズ・色 | Stylelint | **未導入**。上の任意値のルールは `class` 属性しか見ない |
 | `~/` 以外のパス、`navigator.userAgent`、`unload` | `eslint.config.mjs` の `no-restricted-imports` と `no-restricted-syntax`（`npm run lint`）。`app/` の `.ts` と `.vue` の両方を見る | あり |
-| コメント・スタイル・置き場・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
+| コミットメッセージの形式（字数・日本語・句点・空行） | `.githooks/commit-msg` の `scripts/check-commit-msg.mjs` | あり。**CI では見ない**（フックを外すと素通しになる） |
+| コメント・スタイル・置き場・コミットの中身・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
 
 `npm run lint` は Prettier・ESLint・dependency-cruiser・タグの検査をこの順で続けて回す。整形は Prettier に、ファイル1つで判定できるそれ以外の違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に、記事をまたいで突き合わせる違反（タグのスラッグ）は `scripts/` の検査に置く。
 ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。整形ルールは足さない。
 lint で落とせるようになったルールは `.claude/rules/` から消す（二重管理にしない）。
 
-lint は pre-commit フック（`.githooks/pre-commit`）と GitHub Actions の `Lint` で走る。テストは別ワークフローの `Test` が同じトリガーで並列に回し、pre-commit には載せない（commit のたびに待たされるのは lint だけにする）。build は CI では回さず、Cloudflare Pages が PR ごとに行うビルドとその `Cloudflare Pages` チェックが担う。
+lint は pre-commit フック（`.githooks/pre-commit`）と GitHub Actions の `Lint` で走る。コミットメッセージの検査は commit-msg フック（`.githooks/commit-msg`）だけが持ち、`npm run lint` にも CI にも載せない（作業ツリーではなくメッセージを見るため）。テストは別ワークフローの `Test` が同じトリガーで並列に回し、pre-commit には載せない（commit のたびに待たされるのは lint だけにする）。build は CI では回さず、Cloudflare Pages が PR ごとに行うビルドとその `Cloudflare Pages` チェックが担う。
 
 dependency-cruiser のベースラインは `.dependency-cruiser-known-violations.json`（今は空）。新規の違反は直し、ベースラインには足さない。ベースラインにある違反を直したら次のコマンドで作り直す（減らす方向にだけ使う）。
 
