@@ -10,12 +10,11 @@ npm run build     # 本番ビルド
 npm run generate  # 静的生成
 npm run preview   # ビルド結果のプレビュー
 npm run format    # Prettier で整形
-npm run lint      # Prettier(--check) + ESLint + dependency-cruiser + タグの検査。落ちたら npm run format
-npm test          # Vitest。テストがあるのは app/utils/ の純粋関数だけ
+npm run lint      # 落ちたら npm run format
+npm test          # Vitest
 ```
 
 UI と生成物は自動テストで守れないため、`npm run lint` と `npm run build` が通ることと、開発サーバーでの目視でしか確認できません。
-lint / テスト / CI の内訳は [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md#強制手段の現状)。
 
 ## 進め方
 
@@ -30,8 +29,7 @@ lint / テスト / CI の内訳は [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md
 | 変更を実測で確かめる | `verify` |
 | PR を作る | `pr` |
 
-コーディングルールは `.claude/rules/`（`comment` / `style` / `imports` / `structure` / `docs`）にあり、対象ファイルを触るときに自動で読み込まれます。
-コミットメッセージの規約は `.claude/rules/commit.md` にあり、形式は commit-msg フックが落とします。
+コーディングルールとコミットの規約は `.claude/rules/`（`comment` / `style` / `imports` / `structure` / `docs` / `commit`）にあります。
 
 ## ドキュメント
 
@@ -41,5 +39,5 @@ lint / テスト / CI の内訳は [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md
 | :--- | :--- |
 | 方針を覆すとき / 方針レベルの判断を記録するとき | [docs/DECISIONS.md](./docs/DECISIONS.md)（ADR の索引） |
 | トークン・レイアウト原則・UX 要件に触れるとき | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) |
-| 構造・依存方向・lint の範囲を変えるとき | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
+| 構造・依存方向・検査の置き場を変えるとき | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
 | favicon / OGP を作り直すとき | [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) |

@@ -1,6 +1,6 @@
 # アーキテクチャ
 
-このリポジトリの**現状の構造と強制手段**を説明します。守るべき個々の取り決めは `.claude/rules/` にあり、Claude Code のセッションで自動的に読み込まれます。
+このリポジトリの**現状の構造**と、検査をどこに置くかを説明します。守るべき個々の取り決めは `.claude/rules/` にあります。
 判断の理由は [DECISIONS.md](./DECISIONS.md)（ADR の索引）、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) にあります。コンポーネントの値や構造は実装が正で、写した文書を持ちません。
 
 以前ここにあったフレームワーク非依存の設計原則と規約は、このリポジトリの規模（1人・静的サイト）には合わないため退避しました。
@@ -44,34 +44,15 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 
 ---
 
-## 強制手段の現状
+## 検査の置き場
 
-| 何を | 手段 | 状態 |
-| :--- | :--- | :--- |
-| 型と SFC の整合 | `npm run build` | あり |
-| フロントマターのスキーマ | `content.config.ts` の zod | **無し**。`@nuxt/content` は schema をドキュメントの検証に使わず、DB の列と型の生成にだけ使う |
-| タグのスラッグの一意性 | `scripts/check-tags.mjs`（`npm run lint`） | あり |
-| 自作 composable / util の明示 import | `nuxt.config.ts` の `imports: { scan: false }`。書き忘れは prerender の `ReferenceError` で `npm run build` が落ちる | あり |
-| 自作コンポーネントの明示 import | `components: false` + `eslint.config.mjs` の `vue/no-undef-components`（`npm run lint`）。未 import はビルドでは落ちず、そのコンポーネントが消えた HTML が出るため lint が要る | あり |
-| 循環依存 | `.dependency-cruiser.cjs` の `no-circular`（`npm run lint`）。`import type` だけの循環は許す | あり |
-| 依存方向（上の図） | `.dependency-cruiser.cjs` の `*-no-upward` と `theme-only-from-app-vue`（`npm run lint`） | あり |
-| 整形 | `.prettierrc` の Prettier + `prettier-plugin-tailwindcss`（`npm run lint` の `prettier --check`）。Markdown と `package-lock.json` は対象外（→ [ADR 05](./adr/05-prettier-owns-formatting.md)） | あり |
-| Tailwind の任意値（角括弧を含むクラス） | `eslint.config.mjs` の `vue/no-restricted-syntax`（`npm run lint`）。`class` と `:class` の中の文字列を見る（→ [ADR 09](./adr/09-size-tokens-and-no-arbitrary-values.md)） | あり |
-| 純粋関数の振る舞い | 実装の隣の `*.test.ts`（`npm test`） | あり |
-| props で決まるコンポーネントの描画 | 実装の隣の `*.test.ts` を `mountSuspended` で（`npm test`。→ [ADR 07](./adr/07-nuxt-environment-per-file.md)） | あり |
-| 上記以外のコンポーネントと composable の振る舞い | — | **未導入**。[#121](https://github.com/uyaaaaaa/personal-blog/issues/121) |
-| `<style>` の中のサイズ・色 | Stylelint | **未導入**。上の任意値のルールは `class` 属性しか見ない |
-| `~/` 以外のパス、`navigator.userAgent`、`unload` | `eslint.config.mjs` の `no-restricted-imports` と `no-restricted-syntax`（`npm run lint`）。`app/` の `.ts` と `.vue` の両方を見る | あり |
-| コミットメッセージの形式（字数・日本語・句点・空行） | `.githooks/commit-msg` の `scripts/check-commit-msg.mjs` | あり。**CI では見ない**（フックを外すと素通しになる） |
-| コメント・スタイル・置き場・コミットの中身・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
-
-`npm run lint` は Prettier・ESLint・dependency-cruiser・タグの検査をこの順で続けて回す。整形は Prettier に、ファイル1つで判定できるそれ以外の違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に、記事をまたいで突き合わせる違反（タグのスラッグ）は `scripts/` の検査に置く。
+検査を足すときの置き場は、判定に何が要るかで決める。整形は Prettier に、ファイル1つで判定できるそれ以外の違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に、記事をまたいで突き合わせる違反（タグのスラッグ）は `scripts/` の検査に置く。
 ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。整形ルールは足さない。
 lint で落とせるようになったルールは `.claude/rules/` から消す（二重管理にしない）。
 
-lint は pre-commit フック（`.githooks/pre-commit`）と GitHub Actions の `Lint` で走る。コミットメッセージの検査は commit-msg フック（`.githooks/commit-msg`）だけが持ち、`npm run lint` にも CI にも載せない（作業ツリーではなくメッセージを見るため）。テストは別ワークフローの `Test` が同じトリガーで並列に回し、pre-commit には載せない（commit のたびに待たされるのは lint だけにする）。build は CI では回さず、Cloudflare Pages が PR ごとに行うビルドとその `Cloudflare Pages` チェックが担う。
+commit のたびに回すのは lint だけにする。待たされるものを増やさないため、テストと build は PR で受ける。
 
-dependency-cruiser のベースラインは `.dependency-cruiser-known-violations.json`（今は空）。新規の違反は直し、ベースラインには足さない。ベースラインにある違反を直したら次のコマンドで作り直す（減らす方向にだけ使う）。
+dependency-cruiser のベースラインは `.dependency-cruiser-known-violations.json`。新規の違反は直し、ベースラインには足さない。ベースラインにある違反を直したら次のコマンドで作り直す（減らす方向にだけ使う）。
 
 ```sh
 npx depcruise app --config --output-type baseline > .dependency-cruiser-known-violations.json
