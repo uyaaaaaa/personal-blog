@@ -9,7 +9,7 @@
 | ドキュメント | 扱う範囲 |
 | :--- | :--- |
 | **DESIGN_GUIDELINE.md**（本書） | 大方針。コンセプト、デザイントークン、レイアウト原則、UX要件、既知の課題。 |
-| **[DECISIONS.md](./DECISIONS.md)** | 判断の記録。画面・機能ごとに、実装を読んでも分からない「なぜ」だけ。 |
+| **[DECISIONS.md](./DECISIONS.md)** | 判断の記録の索引。実装を読んでも分からない「なぜ」だけを `docs/adr/` と `docs/decisions/` に置く。 |
 | **[ICON_GUIDELINE.md](./ICON_GUIDELINE.md)** | アイコン定義。`u/` モノグラムの仕様、favicon 一式のファイル構成と生成手順。 |
 
 **実装が正**です。実装を変更した際は該当するドキュメントも併せて更新してください。
@@ -98,7 +98,7 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 
 `diff` の追加行・削除行だけは例外で、**行全体の背景を塗ります**。設計原則 1「面を塗って区切らない」に対する意図的な例外です。
 `+` / `-` と文字色だけでは変更された行の塊が追いづらく、差分は「どの行が変わったか」を面で追う情報だと判断しました。
-テーマ自身も diff のトークンに背景色を持っており、行背景はそれを行幅に広げたものと位置づけています（トークン側の塗りは打ち消す → [DECISIONS.md](./DECISIONS.md#prosepre)）。
+テーマ自身も diff のトークンに背景色を持っており、行背景はそれを行幅に広げたものと位置づけています（トークン側の塗りは打ち消す → [DECISIONS.md](./decisions/markdown.md#prosepre)）。
 
 | | 行背景（ライト） | 行背景（ダーク） | 文字色に対するコントラスト比 |
 | :--- | :--- | :--- | :--- |
@@ -117,7 +117,7 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 | 追加 | `#ABF2BC` | `rgba(46, 160, 67, 0.4)` | ライト 10.9:1 / ダーク 8.3:1 |
 | 削除 | `#FFC1C2` | `rgba(248, 81, 73, 0.4)` | ライト 11.0:1 / ダーク 6.0:1 |
 
-Callout は例外的に独自パレットを持ちます。Obsidian デフォルトテーマの色相をベースに、タイトル文字が両テーマでコントラスト比 4.5:1 以上になるようテーマ別に明度を調整した値です（→ [DECISIONS.md](./DECISIONS.md#callout)）。
+Callout は例外的に独自パレットを持ちます。Obsidian デフォルトテーマの色相をベースに、タイトル文字が両テーマでコントラスト比 4.5:1 以上になるようテーマ別に明度を調整した値です（→ [DECISIONS.md](./decisions/markdown.md#callout)）。
 記事本文（prose）のタイポグラフィ色も Tailwind typography プラグインの `prose-slate`（ダークは `dark:prose-invert`）由来でパレットの外側です。
 
 ### C. タイポグラフィ
@@ -153,7 +153,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 サイトのモーションは OS の「視差効果を減らす（Reduce Motion）」設定に関わらず、常に同じように動きます。
 `@media (prefers-reduced-motion: reduce)` も `matchMedia` による判定も、コンポーネント・グローバルCSS・composable のいずれにも置きません。
-これは意図的な選択で、検討した案と戻す条件は [DECISIONS.md](./DECISIONS.md#prefers-reduced-motion-を参照しない) にあります。
+これは意図的な選択で、検討した案と戻す条件は [DECISIONS.md](./adr/02-no-prefers-reduced-motion.md) にあります。
 
 `html` に `scroll-behavior: smooth` は**置きません**。Nuxt 既定の `scrollBehavior` は遷移時のスクロール位置を `behavior` 抜きで返すため、置くとページ遷移とブラウザバックの位置復元までアニメーションします。避けるには `app/router.options.ts` で `scrollBehavior` を丸ごと置き換えるしかなく、ハッシュ着地に `scroll-margin-top` を効かせている既定の処理まで自前で抱えることになります。
 
@@ -174,7 +174,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 
 `lg:` で消してもコンポーネントはマウントされたままなので、放っておくと画面に出ていない側もスクロールのたびに計算し続けます。実測（Chromium / 390×844 / CPU 6倍スロットル / 23見出しの記事）では、SPで非表示のデスクトップ用目次が、SP側の目次と同じだけの処理を裏で回していました。
 
-境界値の判定は `useIsDesktop`（`app/composables/useIsDesktop.ts`）が `matchMedia` で1本だけ持ち、`useScrollFrame` の `enabled` に渡します（→ [DECISIONS.md](./DECISIONS.md#usescrollframe)）。**表示の出し分けそのものは Tailwind の `lg:` のままです**。JS 側は購読を止めるだけで、`v-if` には置き換えません（SSR の HTML が変わり、デスクトップでサイドバーが後から現れるため）。
+境界値の判定は `useIsDesktop`（`app/composables/useIsDesktop.ts`）が `matchMedia` で1本だけ持ち、`useScrollFrame` の `enabled` に渡します（→ [DECISIONS.md](./decisions/shared.md#usescrollframe)）。**表示の出し分けそのものは Tailwind の `lg:` のままです**。JS 側は購読を止めるだけで、`v-if` には置き換えません（SSR の HTML が変わり、デスクトップでサイドバーが後から現れるため）。
 
 ---
 
@@ -200,7 +200,7 @@ OSネイティブフォントを優先し、Webフォントは読み込まない
 | `/tags/[tag]` | ページヘッダー + 絞り込んだ記事グリッド + ページャ。0件は404 |
 | `/category/[category]` | 同上。未知のカテゴリと0件は404。全カテゴリの一覧ページは持たない（索引はヘッダーの `Explore` が担う） |
 
-一覧の2ページ目以降は `.../page/[page]` に置き、範囲外のページ番号は404にします（→ [DECISIONS.md](./DECISIONS.md#ページ番号をクエリではなくパスで持つ)）。
+一覧の2ページ目以降は `.../page/[page]` に置き、範囲外のページ番号は404にします（→ [DECISIONS.md](./adr/01-page-number-in-path.md)）。
 
 **ページヘッダーの共通形式**: `h1` + 説明文（サブテキスト色）+ 下端に1pxボーダー。
 
@@ -211,7 +211,7 @@ TOP以外の一覧表示は、全ページで同じグリッドを使います�
 - SPは1カラム。`md` で2カラム、`lg` で3カラムに増やす。
 - 並び順は原則 `date` の降順。表示対象は `published: true` の記事のみ。
 - 一定件数で区切って下端に `Pagination` を置き、1ページに収まるときは出さない。
-- ページ番号はパスで持つ（→ [DECISIONS.md](./DECISIONS.md#ページ番号をクエリではなくパスで持つ)）。
+- ページ番号はパスで持つ（→ [DECISIONS.md](./adr/01-page-number-in-path.md)）。
 - 一覧ページの下端には戻り導線（`BackButton`）を置く。
 
 ### D. TOPのカテゴリ棚
@@ -224,7 +224,7 @@ TOPページだけはグリッドではなく、カテゴリ単位の棚（`Arti
 - `lg` 未満は横スクロール（カード単位にスナップ）、`lg` 以上はグリッドに切り替える。
 - Heroに出した記事は棚から除外する。同じカードが1画面に2回出ることを避けるため。
 - 棚に出すカードが0枚になったら棚ごと出さない。記事が0件のカテゴリだけでなく、記事1本のカテゴリでその1本がHeroになった場合も含む。
-- 棚は「見せ場」であり、カテゴリの索引ではない。索引はヘッダーの `Explore` が持つ（→ [DECISIONS.md](./DECISIONS.md#カテゴリの索引をtopの棚からヘッダーに移す)）。
+- 棚は「見せ場」であり、カテゴリの索引ではない。索引はヘッダーの `Explore` が持つ（→ [DECISIONS.md](./adr/10-category-index-in-header.md)）。
 - Heroにはカテゴリ名のチップを出す。TOPだけを見た読者にもカテゴリという軸の存在が見える状態を保つため。
 
 ### E. 記事詳細の2カラム
@@ -243,7 +243,7 @@ TOPページだけはグリッドではなく、カテゴリ単位の棚（`Arti
 - **コードにはファイル名を添えられるようにする。** ` ```lang [ラベル] ` で書いたラベルをコードブロックの上部に出す。面は塗らず、コードとの境界は 1px ボーダーで引く（設計原則 1）。
 - **差分は行で見せ、変化した語を濃く示す。** ` ```diff ` の追加行・削除行は行全体に背景を敷き（2-B の例外）、`-` 行と `+` 行が対応するときはその中で変化した語だけをさらに濃い背景で示す。行頭の `+` / `-` は本文色にして引っ込める。
 
-対応言語は `nuxt.config.ts` の `highlight.langs`、コードブロックの構造は `app/components/content/ProsePre.vue`、Callout の仕様は `app/components/content/Callout.vue` と `remark/obsidian-callout.mjs` が正です。判断の理由は [DECISIONS.md](./DECISIONS.md#記事本文markdown) にあります。
+対応言語は `nuxt.config.ts` の `highlight.langs`、コードブロックの構造は `app/components/content/ProsePre.vue`、Callout の仕様は `app/components/content/Callout.vue` と `remark/obsidian-callout.mjs` が正です。判断の理由は [DECISIONS.md](./decisions/markdown.md) にあります。
 
 ---
 
@@ -254,21 +254,21 @@ TOPページだけはグリッドではなく、カテゴリ単位の棚（`Arti
 | 項目 | 要件 |
 | :--- | :--- |
 | **パフォーマンス** | 表示速度を最優先する。Webフォントを読み込まず、`inlineStyles` を有効にする |
-| **静的生成** | Cloudflare Pages 向けにプリレンダリングし、プリレンダ済みのパスは Worker を通さない（→ [DECISIONS.md](./DECISIONS.md#プリレンダ済みパスの除外をワイルドカードで畳む)）。存在しないパスは静的な `404.html` が 404 で返す |
+| **静的生成** | Cloudflare Pages 向けにプリレンダリングし、プリレンダ済みのパスは Worker を通さない（→ [DECISIONS.md](./adr/09-prerender-exclude-wildcard.md)）。存在しないパスは静的な `404.html` が 404 で返す |
 | **公開制御** | `published: true` の記事のみを全ページで取得する |
 | **旧URL互換** | `/blog/**` `/book/**` は `/article/**` へ301リダイレクトする |
 | **タグ機能** | 全タグの一覧ページと、タグによる絞り込みを提供する |
-| **ページネーション** | 記事一覧を一定件数で区切り、ページ番号はパスで持つ（→ [DECISIONS.md](./DECISIONS.md#ページ番号をクエリではなくパスで持つ)） |
-| **カテゴリ機能** | `content.config.ts` の `z.enum` を正とし、その値をそのままURLセグメントに使う（→ [DECISIONS.md](./DECISIONS.md#カテゴリは-zenum-で固定し値をそのまま-url-セグメントにする)） |
+| **ページネーション** | 記事一覧を一定件数で区切り、ページ番号はパスで持つ（→ [DECISIONS.md](./adr/01-page-number-in-path.md)） |
+| **カテゴリ機能** | `content.config.ts` の `z.enum` を正とし、その値をそのままURLセグメントに使う（→ [DECISIONS.md](./adr/08-category-enum-as-url.md)） |
 | **スクロール追従** | 見出し位置に応じて目次のアクティブ項目をハイライトする |
-| **スムーズスクロール** | 見出し・目次のクリックでスムーズに移動し、URLハッシュを更新する。着地位置は `scroll-margin-top` で一元管理し、URLハッシュの直接オープンにも同じ余白を効かせる（→ [DECISIONS.md](./DECISIONS.md#ページ内リンクの着地位置)） |
-| **先頭に戻る** | 記事詳細の SP 幅でのみ、読み進めたら右下にボタンを浮かべる（→ [DECISIONS.md](./DECISIONS.md#scrolltotopbutton)） |
-| **脚注** | 本文の参照と記事末尾の脚注を相互にジャンプできる。固定ヘッダーやモバイル目次バーに潜り込ませず、ジャンプ先を `:target` で強調する（→ [DECISIONS.md](./DECISIONS.md#脚注)） |
+| **スムーズスクロール** | 見出し・目次のクリックでスムーズに移動し、URLハッシュを更新する。着地位置は `scroll-margin-top` で一元管理し、URLハッシュの直接オープンにも同じ余白を効かせる（→ [DECISIONS.md](./decisions/article-detail.md#ページ内リンクの着地位置)） |
+| **先頭に戻る** | 記事詳細の SP 幅でのみ、読み進めたら右下にボタンを浮かべる（→ [DECISIONS.md](./decisions/article-detail.md#scrolltotopbutton)） |
+| **脚注** | 本文の参照と記事末尾の脚注を相互にジャンプできる。固定ヘッダーやモバイル目次バーに潜り込ませず、ジャンプ先を `:target` で強調する（→ [DECISIONS.md](./decisions/markdown.md#脚注)） |
 | **UI文言** | ナビゲーション、ボタン、エラーなどUI側の文言は**英語**を基本とする（記事本文は日本語）。既存の例外は目次の「目次」 |
 | **アイコン** | favicon / PWA / iOS 向けアイコンを一式提供する（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
 | **OGP** | SNS シェア用の OGP / Twitter Card メタタグを全ページに出力する。共通画像は `public/ogp.png`、記事はフロントマターの `image` で差し替え可（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)）。記事を表示できないページは `og:type` を `website` にし、`article` を名乗らせない |
-| **ローディング表示** | ルート遷移中は画面上端にアクセント色のバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない（→ [DECISIONS.md](./DECISIONS.md#ローディングバー)） |
-| **記事取得の状態分離** | 記事詳細では「取得失敗」と「記事なし」を区別して表示し、HTTPステータスも実態に合わせる（→ [DECISIONS.md](./DECISIONS.md#記事詳細は取得が確定するまで何も出さず失敗と記事なしを区別する)） |
+| **ローディング表示** | ルート遷移中は画面上端にアクセント色のバーを表示する（`NuxtLoadingIndicator`）。面を塗らずレイアウトも動かさない（→ [DECISIONS.md](./decisions/build.md#ローディングバー)） |
+| **記事取得の状態分離** | 記事詳細では「取得失敗」と「記事なし」を区別して表示し、HTTPステータスも実態に合わせる（→ [DECISIONS.md](./adr/06-article-detail-fetch-states.md)） |
 | **ダークモード** | ヘッダーの `ThemeToggle` を押すと開くパネルから Light / Dark / System を選ぶ。`System` は `prefers-color-scheme` に追従し、選択は永続化する（FOUC 防止込みで `@nuxtjs/color-mode` が担う）。シンタックスハイライトと `theme-color` メタもテーマに追従する |
 
 ---

@@ -13,4 +13,4 @@ paths:
 - **パスは `~/` で書き、相対パスは同じディレクトリの中だけにする。** `app/` の外は `~~/`。`@/` と `../` は使わない。並びはコンポーネント → composable → util。
 - **barrel file（再エクスポートだけのファイル）を作らない。**
 
-循環と依存方向は lint が落とす。設定と強制手段の現状は [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)、そう決めた理由は [docs/DECISIONS.md](../../docs/DECISIONS.md)。置き場の判定は [structure.md](./structure.md)。
+循環と依存方向は lint が落とす。設定と強制手段の現状は [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)、そう決めた理由は [docs/adr/03-no-auto-import.md](../../docs/adr/03-no-auto-import.md)。置き場の判定は [structure.md](./structure.md)。
