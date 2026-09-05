@@ -23,4 +23,11 @@ describe('isCategory', () => {
 		expect(isCategory('')).toBe(false)
 		expect(isCategory('article')).toBe(false)
 	})
+
+	it('Object.prototype のキーでは偽になる', () => {
+		expect(isCategory('toString')).toBe(false)
+		expect(isCategory('constructor')).toBe(false)
+		expect(isCategory('hasOwnProperty')).toBe(false)
+		expect(isCategory('__proto__')).toBe(false)
+	})
 })
