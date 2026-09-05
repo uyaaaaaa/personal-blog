@@ -34,11 +34,11 @@ lint / テスト / CI の内訳は [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md
 
 ## ドキュメント
 
-**実装が正**です。UI や構造を変えたら、同じ変更で該当するドキュメントも直してください。何をどこに書くかは `.claude/rules/docs.md`。
+**実装が正**で、ドキュメントは原則書きません。残すのは方針レベルのものだけで、方針を変えたら同じ変更で直します。何を書き、何を書かないかは `.claude/rules/docs.md`。
 
 | いつ | 読む先 |
 | :--- | :--- |
-| 一見不要に見える指定を消す前 / 判断の理由を書くとき | [docs/DECISIONS.md](./docs/DECISIONS.md) |
+| 方針を覆すとき / 方針レベルの判断を記録するとき | [docs/DECISIONS.md](./docs/DECISIONS.md)（ADR の索引） |
 | トークン・レイアウト原則・UX 要件に触れるとき | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) |
 | 構造・依存方向・lint の範囲を変えるとき | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
 | favicon / OGP を作り直すとき | [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) |

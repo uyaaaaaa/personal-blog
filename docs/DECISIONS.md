@@ -1,44 +1,17 @@
 # 判断の記録
 
-**実装を読んでも分からない「なぜ」**だけを置くドキュメントの索引です。
-値・構造・props は書きません（実装が正です）。「一見不要に見える指定が必要な理由」「試して戻した案」「ブラウザ・ライブラリ・Cloudflare の都合」が対象です。
+思想が反映されていて、簡単には変えられない判断だけを `docs/adr/` に1判断1ファイルで置きます。
+コンポーネント内の設計や個々の制約は書きません（実装が正です）。基準と書き方は [.claude/rules/docs.md](../.claude/rules/docs.md)、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md)、構造と強制手段は [ARCHITECTURE.md](./ARCHITECTURE.md) にあります。
 
-サイト全体に横断する方針（トークン、ブレークポイント、モーション、レイアウト原則）は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) にあります。
-書き方（1項目の型、2つの粒度と置き場）は [.claude/rules/docs.md](../.claude/rules/docs.md) にあります。
+番号は連番で、ADR を消したら詰め直します。番号は固定の識別子ではなく、リンクはファイル名で引きます。
 
-## 構造に関わる判断
-
-動く選択肢が2つ以上あったうえで選んだもの。1判断1ファイルで `docs/adr/` に置きます。
-
-- [ページ番号をクエリではなくパスで持つ](./adr/01-page-number-in-path.md)
-- [`prefers-reduced-motion` を参照しない](./adr/02-no-prefers-reduced-motion.md)
-- [自作モジュールの auto-import を止める](./adr/03-no-auto-import.md)
-- [スクロールの購読をアプリ全体で1本にし、非表示のコンポーネントでは止める](./adr/04-single-scroll-subscription.md)
-- [メニューの先読みをホバー / フォーカスまで遅らせる](./adr/05-menu-prefetch-on-interaction.md)
-- [記事詳細は取得が確定するまで何も出さず、失敗と記事なしを区別する](./adr/06-article-detail-fetch-states.md)
-- [ディレクトリは型別のフラット構成を維持する](./adr/07-flat-directory-by-type.md)
-- [カテゴリは `z.enum` で固定し、値をそのまま URL セグメントにする](./adr/08-category-enum-as-url.md)
-- [プリレンダ済みパスの除外をワイルドカードで畳む](./adr/09-prerender-exclude-wildcard.md)
-- [カテゴリの索引をTOPの棚からヘッダーに移す](./adr/10-category-index-in-header.md)
-- [コードブロックの表示を `ProsePre.vue` に集約する](./adr/11-prose-pre-owns-code-block.md)
-- [コンポーネントの仕様書を持たず、判断の理由だけを残す](./adr/12-no-component-spec.md)
-- [整形は Prettier に任せ、ESLint には持たせない](./adr/13-prettier-owns-formatting.md)
-- [テストは実装の隣に置く](./adr/14-tests-next-to-source.md)
-- [Nuxt を起こすのはコンポーネントのテストだけにする](./adr/15-nuxt-environment-per-file.md)
-- [lint とテストを別のワークフローに分ける](./adr/16-separate-lint-and-test-workflows.md)
-- [テストを2回目の使用とみなして抽出する](./adr/17-test-as-second-use.md)
-- [タグのスラッグの一意性を lint で守る](./adr/18-tag-slug-uniqueness-check.md)
-- [サイズにも名前を付けてトークンに置き、任意値を lint で落とす](./adr/19-size-tokens-and-no-arbitrary-values.md)
-- [パスの書き分けとプラットフォーム系の禁止を ESLint の標準ルールで落とす](./adr/20-eslint-core-rules-for-paths-and-platform-apis.md)
-
-## 画面・機能ごとの制約
-
-そうするしかない実装上の制約。画面・機能の単位でまとめています。
-
-- [ヘッダーとナビゲーション](./decisions/header.md)
-- [記事一覧](./decisions/article-list.md)
-- [記事詳細](./decisions/article-detail.md)
-- [記事本文（Markdown）](./decisions/markdown.md)
-- [エラー](./decisions/error.md)
-- [ビルドと配信](./decisions/build.md)
-- [共有ロジック](./decisions/shared.md)
+- [01 ページ番号をクエリではなくパスで持つ](./adr/01-page-number-in-path.md)
+- [02 `prefers-reduced-motion` を参照しない](./adr/02-no-prefers-reduced-motion.md)
+- [03 自作モジュールの auto-import を止める](./adr/03-no-auto-import.md)
+- [04 ディレクトリは型別のフラット構成を維持する](./adr/04-flat-directory-by-type.md)
+- [05 整形は Prettier に任せ、ESLint には持たせない](./adr/05-prettier-owns-formatting.md)
+- [06 テストは実装の隣に置く](./adr/06-tests-next-to-source.md)
+- [07 Nuxt を起こすのはコンポーネントのテストだけにする](./adr/07-nuxt-environment-per-file.md)
+- [08 テストを2回目の使用とみなして抽出する](./adr/08-test-as-second-use.md)
+- [09 サイズにも名前を付けてトークンに置く](./adr/09-size-tokens-and-no-arbitrary-values.md)
+- [10 ドキュメントは原則持たず、思想が反映され簡単に変えられない判断だけを ADR に残す](./adr/10-docs-only-for-hard-to-reverse-decisions.md)
