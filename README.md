@@ -100,11 +100,11 @@ category: blog
 | ドキュメント | 内容 |
 | :--- | :--- |
 | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) | デザインの大方針。コンセプト、デザイントークン、レイアウト原則、UX要件。 |
-| [docs/DECISIONS.md](./docs/DECISIONS.md) | 判断の記録の索引。実装を読んでも分からない「なぜ」だけを、`docs/adr/`（構造に関わる判断）と `docs/decisions/`（画面・機能ごとの制約）に置く。値や構造は実装が正。 |
+| [docs/DECISIONS.md](./docs/DECISIONS.md) | ADR の索引。思想が反映され、簡単には変えられない判断だけを `docs/adr/` に置く。コンポーネント内の設計や個々の制約は書かず、実装が正。 |
 | [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) | アイコン定義。`u/` モノグラムの仕様と、favicon 一式・OGP 画像の生成手順。 |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 現状の構造、依存方向、データとスタイルの流れ、強制手段の状態。 |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 依存方向、データとスタイルの流れ、強制手段の状態。 |
 
-UI を変更した際は、該当するドキュメントも併せて更新してください。コーディングルールは `.claude/rules/`、作業手順は `.claude/skills/` にあります。
+ドキュメントは原則書かず、方針を変えたときだけ該当する文書を同じ変更で直します。コーディングルールは `.claude/rules/`、作業手順は `.claude/skills/` にあります。
 
 ## タスク管理
 
