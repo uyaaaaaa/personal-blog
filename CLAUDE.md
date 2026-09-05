@@ -28,6 +28,7 @@ UI と生成物は自動テストで守れないため、`npm run lint` と `npm
 | 記事の執筆・レビュー | `article` |
 | 変更を実測で確かめる | `verify` |
 | PR を作る | `pr` |
+| コードの差分・PR をレビューする | `review` |
 
 コーディングルールとコミットの規約は `.claude/rules/`（`comment` / `style` / `imports` / `structure` / `docs` / `commit`）にあります。
 
