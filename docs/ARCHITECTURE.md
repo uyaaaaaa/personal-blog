@@ -1,7 +1,7 @@
 # アーキテクチャ
 
 このリポジトリの**現状の構造**を説明します。守るべき個々の取り決めは `.claude/rules/` にあり、Claude Code のセッションで自動的に読み込まれます。
-人が読むための根拠は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) と [DECISIONS.md](./DECISIONS.md) にあります。コンポーネントの値や構造は実装が正で、写した文書を持ちません。
+人が読むための根拠は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) と [DECISIONS.md](./DECISIONS.md)（索引）にあります。コンポーネントの値や構造は実装が正で、写した文書を持ちません。
 
 以前ここにあったフレームワーク非依存の設計原則と規約は、このリポジトリの規模（1人・静的サイト）には合わないため退避しました。
 復元方法は [#105](https://github.com/uyaaaaaa/personal-blog/issues/105) を参照してください。
@@ -10,14 +10,14 @@
 
 ## 何を守るか
 
-**変更が数ファイルのコードと、DECISIONS.md の数項目で閉じること。**
+**変更が数ファイルのコードと、判断の記録の数項目で閉じること。**
 
-個人ブログなので、feature 分割や層の増設で得られるものより、ファイル数が増えるコストのほうが大きいです（検討した案と戻す条件は [DECISIONS.md](./DECISIONS.md#ディレクトリは型別のフラット構成を維持する)）。
+個人ブログなので、feature 分割や層の増設で得られるものより、ファイル数が増えるコストのほうが大きいです（検討した案と戻す条件は [DECISIONS.md](./adr/07-flat-directory-by-type.md)）。
 型別のフラットな構成（`components` / `composables` / `utils`）を維持し、代わりに次の3点で秩序を保ちます。
 
 1. 依存は一方向にしか流れない（下記）
 2. 自作モジュール間の依存は必ず `import` 文に現れる（lint が依存を見られる状態を保つ）
-3. 実装から読み取れない理由は DECISIONS.md に書く（コードにコメントを書かず、実装を写した文書も持たない）
+3. 実装から読み取れない理由は判断の記録（[DECISIONS.md](./DECISIONS.md)）に書く（コードにコメントを書かず、実装を写した文書も持たない）
 
 ---
 
@@ -44,7 +44,7 @@ app/
     Hero.vue ArticleList.vue ルート直下（歴史的経緯。移動は未定）
   composables/               reactive / lifecycle を使う共有ロジック。スクロール購読は useScrollFrame に集約
   utils/                     純粋関数（日付、タグ、カテゴリ）
-  **/*.test.ts               テストは実装の隣に置く（→ DECISIONS.md）
+  **/*.test.ts               テストは実装の隣に置く（→ adr/14）
 public/                      favicon、OGP 画像、manifest
 ```
 
@@ -75,7 +75,7 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 ```
 
 コンポーネントは Tailwind のクラスを基本にし、状態遷移やアニメーションが複雑なものだけ scoped CSS を持つ。
-記事本文は `@tailwindcss/typography` の `prose` を土台に `tailwind.config.ts` の `typography` 拡張で差分を当てるが、コードブロックだけは `ProsePre.vue` が見た目を持つ（→ [DECISIONS.md](./DECISIONS.md#コードブロックの表示を-proseprevue-に集約する)）。
+記事本文は `@tailwindcss/typography` の `prose` を土台に `tailwind.config.ts` の `typography` 拡張で差分を当てるが、コードブロックだけは `ProsePre.vue` が見た目を持つ（→ [DECISIONS.md](./adr/11-prose-pre-owns-code-block.md)）。
 
 ---
 
@@ -102,7 +102,7 @@ dependency-cruiser が `~/` `~~/` を解決するための paths は `tsconfig.d
 lint は2箇所で走る。`npm install` が有効にする pre-commit フック（`.githooks/pre-commit`）が commit のたびに回し、GitHub Actions の `Lint`（`.github/workflows/lint.yml`）が PR と `main` への push で回す。テストは別ワークフローの `Test`（`.github/workflows/test.yml`）が同じトリガーで並列に回し、pre-commit には載せない（commit のたびに待たされるのは lint だけにする）。build は CI では回さず、Cloudflare Pages が PR ごとに行うビルドとその `Cloudflare Pages` チェックが担う。
 2つのワークフローは `concurrency.group` を `lint-` / `test-` と別の接頭辞にする。同じグループ名にすると push のたびに互いをキャンセルし合い、片方しか完走しない。
 
-`npm test` は Vitest を1回だけ走らせる（`vitest run`）。設定は `vitest/config` の `defineConfig` だけで書き、Nuxt の設定は読み込まない（→ [DECISIONS.md](./DECISIONS.md#テストの土台は-nuxt-を起こさない範囲に留める)）。
+`npm test` は Vitest を1回だけ走らせる（`vitest run`）。設定は `vitest/config` の `defineConfig` だけで書き、Nuxt の設定は読み込まない（→ [DECISIONS.md](./adr/15-test-setup-without-nuxt.md)）。
 `Test` だけ `npm ci` を scripts ありで走らせる（`Lint` は `--ignore-scripts`）。`--ignore-scripts` では postinstall の `nuxt prepare` が走らず `.nuxt/tsconfig.app.json` が生成されないため、Vite がルートの `tsconfig.json` の references をたどれず `TSConfckParseError` で全テストが collect 前に落ちる。テスト自身は Nuxt を起こさないが、変換に使う tsconfig だけは生成物に依存している。
 
 lint を入れる順序は費用対効果順で、import の書き分け → Tailwind の任意値 → プラットフォーム系の禁止3点。

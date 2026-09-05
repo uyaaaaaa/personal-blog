@@ -8,7 +8,7 @@ paths:
 
 # スタイルのルール
 
-値と根拠は [docs/DESIGN_GUIDELINE.md](../../docs/DESIGN_GUIDELINE.md)。ここには判断だけを書く。
+色・フォントの値は `theme/tokens.ts`、大方針と根拠は [docs/DESIGN_GUIDELINE.md](../../docs/DESIGN_GUIDELINE.md)。ここには判断だけを書く。
 
 - **色・フォントは `theme/tokens.ts` が単一情報源。** コンポーネントにはトークン由来のクラスか CSS 変数で書き、直値はガイドラインが例外として挙げているものだけにする。
 - **ダークテーマはトークンの再定義で成立させる。** `dark:` を書くのはテーマで DOM を出し分ける場合だけで、色の分岐には使わない。
