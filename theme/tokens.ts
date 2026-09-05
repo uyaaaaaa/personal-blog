@@ -58,6 +58,30 @@ export const fontFamily = {
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 } as const
 
+export const sizes = {
+	borderRadius: {
+		card: '10px',
+	},
+	fontSize: {
+		emoji: '28px',
+	},
+	maxHeight: {
+		'sticky-column': 'calc(100vh - 6rem)',
+		'toc-dropdown': '60vh',
+	},
+	minHeight: {
+		'card-title': '2.6em',
+	},
+	spacing: {
+		'toc-guide': '3px',
+		'below-header': '74px',
+		'toc-hidden': '120px',
+		'hero-media': '230px',
+		'shelf-card': '264px',
+		sidebar: '300px',
+	},
+}
+
 const isHex = (value: string) => value.startsWith('#')
 
 function hexToRgbChannels(hex: string): string {

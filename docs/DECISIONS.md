@@ -27,6 +27,7 @@
 - [テストの土台は Nuxt を起こさない範囲に留める](./adr/15-test-setup-without-nuxt.md)
 - [lint とテストを別のワークフローに分ける](./adr/16-separate-lint-and-test-workflows.md)
 - [テストを2回目の使用とみなして抽出する](./adr/17-test-as-second-use.md)
+- [サイズにも名前を付けてトークンに置き、任意値を lint で落とす](./adr/18-size-tokens-and-no-arbitrary-values.md)
 
 ## 画面・機能ごとの制約
 

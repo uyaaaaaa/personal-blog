@@ -5,10 +5,10 @@
 		@click="navigateTo(article.path)"
 	>
 		<div
-			class="grid grid-cols-1 items-center overflow-hidden rounded-[10px] border border-border bg-surface transition-all duration-300 hover:shadow-md lg:grid-cols-2"
+			class="grid grid-cols-1 items-center overflow-hidden rounded-card border border-border bg-surface transition-all duration-300 hover:shadow-md lg:grid-cols-2"
 		>
 			<div
-				class="relative h-40 w-full overflow-hidden bg-surface-muted lg:h-full lg:min-h-[230px]"
+				class="relative h-40 w-full overflow-hidden bg-surface-muted lg:h-full lg:min-h-hero-media"
 			>
 				<img
 					v-if="article.image"
