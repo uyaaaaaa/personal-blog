@@ -43,19 +43,13 @@ effort の既定は **medium**。生成物・ルーティング・データ取�
 
 ### 機械が持っている領分は書かない
 
-`npm run lint` / `npm run build` / `npm test` が落とすものを人が指摘しても、CI と二重になるだけ。**通っていないなら「lint を回して」の1行で足り、個別の指摘にはしない。**
+`npm run lint` / `npm run build` / `npm test` / Git フックが落とすものを人が指摘しても、検査と二重になるだけ。
 
-| 落とすもの | 誰が持っているか |
-| :--- | :--- |
-| 整形、import の並び、クラスの順序 | Prettier（`npm run lint`） |
-| Tailwind の任意値、`~/` 以外のパス、`navigator.userAgent`、`unload` | ESLint（同上） |
-| 未 import のコンポーネント | `vue/no-undef-components`（同上） |
-| 循環依存、依存方向 | dependency-cruiser（同上） |
-| タグのスラッグの衝突 | `scripts/check-tags.mjs`（同上） |
-| 型と SFC の整合、composable / util の import 漏れ | `npm run build` |
-| `app/utils/` の純粋関数の振る舞い | `npm test` |
+**効いている検査の一覧は持たない**（→ [ADR 11](../../../docs/adr/11-no-enforcement-inventory.md)）。写した表は追従されず、必ず嘘になる。**どれが機械の担当かは、一覧を引かずに実行して確かめる。**
 
-強制手段の一覧は [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md#強制手段の現状)。ここに「あり」と書かれたものは書かない。
+- レビューの前に `npm run lint` と `npm test` を通す。**落ちたものは検査の担当**なので、指摘には起こさない。伝えるならサマリの1行で足りる
+- 依存が無いなどで通せないときは、サマリの「実測」に未実施と書き、機械が見ていそうな範囲（整形・import・循環・型）は指摘を控える
+- 残るのは**落ちないのに壊れているもの**だけ。それが §3
 
 ### このリポジトリでは指摘そのものが間違いになるもの
 
@@ -87,6 +81,7 @@ effort の既定は **medium**。生成物・ルーティング・データ取�
 | コメント | 足されたコメントが `comment.md` §2 に当たるか。当たらないなら消す指摘 | `.claude/rules/comment.md` |
 | 方針との整合 | 方針を覆したのに ADR / GUIDELINE が同じ変更で直っていない | `.claude/rules/docs.md` |
 | 実測の主張 | PR の「確認」に、走らせていないコマンドの結果が書かれていないか | `verify` |
+| コミット | 件名が「何を」と「どう変えたか」を両方言えているか。1コミットに2つの変更が入っていないか | `.claude/rules/commit.md` §2・§3 |
 
 **方針に触れる差分は、先に該当文書を読んでから指摘する。** 読まずに「ガイドラインに反する」と書かない。
 
