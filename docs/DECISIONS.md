@@ -1,7 +1,7 @@
 # 判断の記録
 
 思想が反映されていて、簡単には変えられない判断だけを `docs/adr/` に1判断1ファイルで置きます。
-コンポーネント内の設計や個々の制約は書きません（実装が正です）。基準と書き方は [.claude/rules/docs.md](../.claude/rules/docs.md)、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md)、構造と強制手段は [ARCHITECTURE.md](./ARCHITECTURE.md) にあります。
+コンポーネント内の設計や個々の制約は書きません（実装が正です）。基準と書き方は [.claude/rules/docs.md](../.claude/rules/docs.md)、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md)、構造と検査の置き場は [ARCHITECTURE.md](./ARCHITECTURE.md) にあります。
 
 番号は連番で、ADR を消したら詰め直します。番号は固定の識別子ではなく、リンクはファイル名で引きます。
 
@@ -15,3 +15,4 @@
 - [08 テストを2回目の使用とみなして抽出する](./adr/08-test-as-second-use.md)
 - [09 サイズにも名前を付けてトークンに置く](./adr/09-size-tokens-and-no-arbitrary-values.md)
 - [10 ドキュメントは原則持たず、思想が反映され簡単に変えられない判断だけを ADR に残す](./adr/10-docs-only-for-hard-to-reverse-decisions.md)
+- [11 効いている検査の一覧を文書に持たない](./adr/11-no-enforcement-inventory.md)

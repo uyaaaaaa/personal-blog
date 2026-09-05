@@ -24,7 +24,7 @@ npm run lint      # Prettier(--check) + ESLint + dependency-cruiser
 npm test          # テスト（Vitest）
 ```
 
-`npm install` で pre-commit フック（`.githooks/`）が有効になり、commit のたびに `npm run lint` が走ります。テスト（`npm test`）はフックに載せていないため、ローカルでは手で打つか PR に任せます。
+`npm install` で Git フック（`.githooks/`）が有効になり、commit のたびに `npm run lint` と、コミットメッセージの形式の検査（`.claude/rules/commit.md`）が走ります。テスト（`npm test`）はフックに載せていないため、ローカルでは手で打つか PR に任せます。
 整形で落ちたときは `npm run format` を実行してから commit し直してください。整形の対象はコードだけで、記事や設計ドキュメントの Markdown は含みません。
 
 Prettier 導入時の一括整形は独立した1コミットにしてあり、そのハッシュを `.git-blame-ignore-revs` に置いています。clone したら次を1回実行すると、`git blame` がそのコミットを飛ばします。
