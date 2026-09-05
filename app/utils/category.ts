@@ -7,4 +7,5 @@ export type Category = keyof typeof CATEGORY_LABELS
 
 export const CATEGORIES = Object.keys(CATEGORY_LABELS) as Category[]
 
-export const isCategory = (value: string): value is Category => value in CATEGORY_LABELS
+export const isCategory = (value: string): value is Category =>
+	Object.hasOwn(CATEGORY_LABELS, value)
