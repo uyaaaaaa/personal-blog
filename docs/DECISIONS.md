@@ -27,6 +27,7 @@
 - [テストの土台は Nuxt を起こさない範囲に留める](./adr/15-test-setup-without-nuxt.md)
 - [lint とテストを別のワークフローに分ける](./adr/16-separate-lint-and-test-workflows.md)
 - [テストを2回目の使用とみなして抽出する](./adr/17-test-as-second-use.md)
+- [タグのスラッグの一意性を lint で守る](./adr/18-tag-slug-uniqueness-check.md)
 
 ## 画面・機能ごとの制約
 

@@ -84,7 +84,8 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 | 何を | 手段 | 状態 |
 | :--- | :--- | :--- |
 | 型と SFC の整合 | `npm run build` | あり |
-| フロントマターのスキーマ | `content.config.ts` の zod | あり |
+| フロントマターのスキーマ | `content.config.ts` の zod | **無し**。`@nuxt/content` は schema をドキュメントの検証に使わず、DB の列と型の生成にだけ使う |
+| タグのスラッグの一意性 | `scripts/check-tags.mjs`（`npm run lint`）。空になるタグと、既存のタグと同じスラッグになるタグを落とす | あり |
 | 自作 composable / util の明示 import | `nuxt.config.ts` の `imports: { scan: false }`。書き忘れは prerender の `ReferenceError` で `npm run build` が落ちる | あり |
 | 自作コンポーネントの明示 import | `components: false` + `eslint.config.mjs` の `vue/no-undef-components`（`npm run lint`）。未 import はビルドでは落ちず、そのコンポーネントが消えた HTML が出るため lint が要る | あり |
 | 循環依存 | `.dependency-cruiser.cjs` の `no-circular`（`npm run lint`）。`import type` だけの循環は実行時依存が無いので許す | あり |
@@ -95,7 +96,7 @@ theme/tokens.ts → tailwind.config.ts → :root / .dark の CSS 変数 → text
 | コメント・スタイル・置き場・ドキュメント | `.claude/rules/` | Claude Code のセッションでのみ効く |
 | `~/` 以外のエイリアス、任意値、`navigator.userAgent`、`unload` | ESLint / Stylelint | **未導入**。次に入れる |
 
-`npm run lint` は Prettier・ESLint・dependency-cruiser をこの順で続けて回す。整形は Prettier に、ファイル1つで判定できるそれ以外の違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に置く。
+`npm run lint` は Prettier・ESLint・dependency-cruiser・タグの検査をこの順で続けて回す。整形は Prettier に、ファイル1つで判定できるそれ以外の違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に、記事をまたいで突き合わせる違反（タグのスラッグ）は `scripts/` の検査に置く。
 `prettier --check` が落ちたら `npm run format` で直す。整形して commit し直させる（`--write` してステージする）方式は取らない。commit の内容が黙って変わるため。
 dependency-cruiser が `~/` `~~/` を解決するための paths は `tsconfig.depcruise.json` にある。ルートの `tsconfig.json` は生成物（`.nuxt/`）への references だけで paths を持たないため、生成物に依存しない専用の tsconfig を持つ。
 

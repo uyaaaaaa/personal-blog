@@ -10,7 +10,7 @@ npm run build     # 本番ビルド
 npm run generate  # 静的生成
 npm run preview   # ビルド結果のプレビュー
 npm run format    # Prettier で整形
-npm run lint      # Prettier(--check) + ESLint + dependency-cruiser。落ちたら npm run format
+npm run lint      # Prettier(--check) + ESLint + dependency-cruiser + タグの検査。落ちたら npm run format
 npm test          # Vitest。テストがあるのは app/utils/ の純粋関数だけ
 ```
 
