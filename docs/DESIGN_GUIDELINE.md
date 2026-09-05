@@ -78,7 +78,7 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
 サイズは `sizes` が持ち、`tailwind.config.ts` の `theme.extend` に展開されて `w-sidebar` `rounded-card` `min-h-card-title` のようなクラスになります。CSS変数は出しません（Tailwindの外から参照する先が無いため）。
 
 - **Tailwindのスケールにある値はスケールで書く。** `w-12` `p-4` `-mt-px` `rounded-lg` のように既定のクラスで表せる値は `sizes` に足さない。
-- **スケールに無い値は `sizes` に名前を足してから使う。** `w-[264px]` のような任意値は書かない。`npm run lint` が角括弧を含むクラスを落とす（→ [判断の記録](./adr/18-size-tokens-and-no-arbitrary-values.md)）。
+- **スケールに無い値は `sizes` に名前を足してから使う。** `w-[264px]` のような任意値は書かない。`npm run lint` が角括弧を含むクラスを落とす（→ [判断の記録](./adr/19-size-tokens-and-no-arbitrary-values.md)）。
 
 ### B. 配色（Color Palette）
 
