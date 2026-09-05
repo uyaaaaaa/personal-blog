@@ -7,7 +7,7 @@
 		>
 			<ul class="relative space-y-2">
 				<div
-					class="absolute bottom-2 left-[3px] top-2 -z-10 w-[2px] bg-surface-muted"
+					class="absolute bottom-2 left-toc-guide top-2 -z-10 w-0.5 bg-surface-muted"
 				></div>
 
 				<li

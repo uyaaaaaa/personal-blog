@@ -1,6 +1,6 @@
 <template>
-	<aside class="sidebar w-full flex-shrink-0 lg:w-[300px]">
-		<div class="sticky top-24 flex max-h-[calc(100vh-6rem)] flex-col gap-8 pb-8">
+	<aside class="sidebar w-full flex-shrink-0 lg:w-sidebar">
+		<div class="sticky top-24 flex max-h-sticky-column flex-col gap-8 pb-8">
 			<div class="flex min-h-0 flex-col">
 				<slot name="toc" />
 			</div>

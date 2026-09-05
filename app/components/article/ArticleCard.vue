@@ -1,11 +1,11 @@
 <template>
 	<NuxtLink
 		:to="path"
-		class="article-card flex flex-col gap-3 rounded-[10px] border border-border bg-surface p-4 transition-shadow duration-200 hover:shadow-sm md:p-5"
+		class="article-card flex flex-col gap-3 rounded-card border border-border bg-surface p-4 transition-shadow duration-200 hover:shadow-sm md:p-5"
 	>
 		<div class="flex items-center justify-between">
 			<div class="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-muted">
-				<span class="text-[28px] leading-none">{{ emoji }}</span>
+				<span class="text-emoji leading-none">{{ emoji }}</span>
 			</div>
 			<time
 				class="font-mono text-sm text-sub"
@@ -14,7 +14,7 @@
 			>
 		</div>
 
-		<h3 class="line-clamp-2 min-h-[2.6em] text-base font-bold leading-snug text-main">
+		<h3 class="line-clamp-2 min-h-card-title text-base font-bold leading-snug text-main">
 			{{ title }}
 		</h3>
 

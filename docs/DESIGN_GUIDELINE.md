@@ -42,15 +42,17 @@
 
 ### A. 定義場所と単一情報源のルール
 
-色・フォントの値は **`theme/tokens.ts` の1箇所だけ**に定義します。
+色・フォント・サイズの値は **`theme/tokens.ts` の1箇所だけ**に定義します。
 `tailwind.config.ts` がこのトークンを読み込み、`:root` のCSS変数と、その変数を参照するTailwind themeを生成します。
 
 ```
 theme/tokens.ts（単一情報源）
    └─ tailwind.config.ts
         ├─ :root のCSS変数 → `--color-main` など（hex色にはRGBチャンネル版 `--color-main-rgb` も生成）
-        └─ Tailwind theme  → ユーティリティクラス（`text-main` `bg-accent` など）
+        └─ Tailwind theme  → 色・フォントのクラス（`text-main` `bg-accent` など）
                               値は hex ではなく上記CSS変数への参照
+                            → サイズのクラス（`w-sidebar` `rounded-card` など）
+                              CSS変数を経由せず値をそのまま持つ
 ```
 
 CSS変数名はトークンのキーからそのまま導出されます（`main` → `--color-main`、`sans` → `--font-sans`）。
@@ -70,6 +72,13 @@ RGBチャンネル版の変数は、Tailwindの不透明度修飾子（`bg-accen
   | :--- | :--- |
   | 白・黒とその透過 | モバイルTOC展開時の背面スクリム `bg-black/20`（テーマによらず黒の半透明でよい） |
   | アイコンのSVG | ヘッダーのロゴマーク（仕様は [ICON_GUIDELINE.md](./ICON_GUIDELINE.md) が持つ。アクセント色を含むため、パレットを変えたらこちらも直すこと）。ダークテーマでも固定色のまま使う。タイルがヘッダー背景に馴染む代わりに、白のグリフとアクセントのスラッシュで識別する意匠として確定済み |
+
+**サイズ**
+
+サイズは `sizes` が持ち、`tailwind.config.ts` の `theme.extend` に展開されて `w-sidebar` `rounded-card` `min-h-card-title` のようなクラスになります。CSS変数は出しません（Tailwindの外から参照する先が無いため）。
+
+- **Tailwindのスケールにある値はスケールで書く。** `w-12` `p-4` `-mt-px` `rounded-lg` のように既定のクラスで表せる値は `sizes` に足さない。
+- **スケールに無い値は `sizes` に名前を足してから使う。** `w-[264px]` のような任意値は書かない。`npm run lint` が角括弧を含むクラスを落とす（→ [判断の記録](./adr/19-size-tokens-and-no-arbitrary-values.md)）。
 
 ### B. 配色（Color Palette）
 
@@ -118,13 +127,13 @@ Callout は例外的に独自パレットを持ちます。Obsidian デフォル
 
 | 項目 | 値 | 適用箇所 |
 | :--- | :--- | :--- |
-| **カード角丸** | `10px` | 記事カード、Hero |
+| **カード角丸** | `rounded-card` | 記事カード、Hero |
 | **標準角丸** | `0.5rem` (`rounded-lg`) | Callout、モバイルTOC、絵文字タイル |
 | **小角丸** | `0.25rem` (`rounded`) | タグ、インラインコード |
 | **ピル** | `rounded-full` | カテゴリチップ（Hero、記事ヘッダー） |
 | **コンテナ最大幅** | `1200px` | `.container`（左右パディング `1rem`） |
 | **本文最大幅** | `max-w-3xl` (768px) | 記事詳細のメインカラム |
-| **サイドバー幅** | `300px` | 記事詳細の右カラム |
+| **サイドバー幅** | `w-sidebar` | 記事詳細の右カラム |
 | **ヘッダー高さ** | `64px` | sticky ヘッダー |
 | **ホバー** | 控えめな影の付与 + アクセント色への変化 + 矢印の `translate-x` | カード、リンク |
 | **トランジション** | `200ms`（色・影）/ `300ms`（変形・開閉）/ `500ms`（画像ズーム） | 全般 |
