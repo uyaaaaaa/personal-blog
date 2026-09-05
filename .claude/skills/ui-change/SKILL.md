@@ -47,5 +47,4 @@ UI 変更で必ず測るもの。
 
 ## 5. コミットする
 
-コミットメッセージは `.claude/rules/commit.md` に従う。ドキュメントの更新は実装と同じコミットに含める。
-commit のたびに pre-commit フックが §4 と同じ lint を回し、commit-msg フックがメッセージの形式を見るので、通らなければ先に直す。
+コミットメッセージは `.claude/rules/commit.md` に従う。
