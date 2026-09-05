@@ -24,7 +24,7 @@
 - [コンポーネントの仕様書を持たず、判断の理由だけを残す](./adr/12-no-component-spec.md)
 - [整形は Prettier に任せ、ESLint には持たせない](./adr/13-prettier-owns-formatting.md)
 - [テストは実装の隣に置く](./adr/14-tests-next-to-source.md)
-- [テストの土台は Nuxt を起こさない範囲に留める](./adr/15-test-setup-without-nuxt.md)
+- [Nuxt を起こすのはコンポーネントのテストだけにする](./adr/15-nuxt-environment-per-file.md)
 - [lint とテストを別のワークフローに分ける](./adr/16-separate-lint-and-test-workflows.md)
 - [テストを2回目の使用とみなして抽出する](./adr/17-test-as-second-use.md)
 
