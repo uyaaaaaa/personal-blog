@@ -2,8 +2,8 @@ import postcss from 'postcss'
 import resolveConfig from 'tailwindcss/resolveConfig.js'
 import { sizes } from '../theme/tokens.ts'
 
-const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
-const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
+export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
+export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
 
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [

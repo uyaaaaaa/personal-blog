@@ -1,10 +1,8 @@
 import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
-import styleTokens from './eslint-rules/style-tokens.mjs'
+import styleTokens, { DOCS_URL, TOKEN_URL } from './eslint-rules/style-tokens.mjs'
 
-const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
-const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-定義場所と単一情報源のルール`
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 
 const IMPORT_URL = `${DOCS_URL}/ARCHITECTURE.md#依存方向`
