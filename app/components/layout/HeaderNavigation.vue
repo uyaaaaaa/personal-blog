@@ -117,7 +117,7 @@
 							type="button"
 							class="drawer-close"
 							aria-label="Close menu"
-							@click="emit('close')"
+							@click="closeDrawer"
 						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
@@ -425,12 +425,32 @@
 	const isLatestOpen = ref(false)
 	const isTagsOpen = ref(false)
 
-	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから開く
-	const openSearch = () => {
+	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる
+	const closeDrawer = () => {
 		menuButtonRef.value?.focus()
 		emit('close')
+	}
+
+	const openSearch = () => {
+		closeDrawer()
 		emit('search')
 	}
+
+	// 開いた直後の focus はまだドロワーの外にあり、トラップも Tab を押すまでは
+	// 中に引き込まないので、Escape はドロワーではなく window で受ける
+	const onWindowKeydown = (event: KeyboardEvent) => {
+		if (event.key === 'Escape') closeDrawer()
+	}
+
+	watch(
+		() => props.isOpen,
+		(isOpen) => {
+			if (isOpen) window.addEventListener('keydown', onWindowKeydown)
+			else window.removeEventListener('keydown', onWindowKeydown)
+		},
+	)
+
+	onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKeydown))
 
 	const { data: categories } = useArticleCategories()
 
