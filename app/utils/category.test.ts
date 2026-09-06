@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CATEGORIES, CATEGORY_LABELS, isCategory } from './category'
+import { CATEGORIES, CATEGORY_LABELS, isCategory, summarizeCategories } from './category'
 
 describe('CATEGORIES', () => {
 	it('CATEGORY_LABELS のキーと同じ並びになる', () => {
@@ -29,5 +29,30 @@ describe('isCategory', () => {
 		expect(isCategory('constructor')).toBe(false)
 		expect(isCategory('hasOwnProperty')).toBe(false)
 		expect(isCategory('__proto__')).toBe(false)
+	})
+})
+
+describe('summarizeCategories', () => {
+	it('CATEGORIES の並びで、表示名と件数を付ける', () => {
+		expect(
+			summarizeCategories([{ category: 'book' }, { category: 'blog' }, { category: 'blog' }]),
+		).toEqual([
+			{ slug: 'blog', label: 'Blog', count: 2 },
+			{ slug: 'book', label: 'Books', count: 1 },
+		])
+	})
+
+	it('0件のカテゴリを落とす', () => {
+		expect(summarizeCategories([{ category: 'blog' }])).toEqual([
+			{ slug: 'blog', label: 'Blog', count: 1 },
+		])
+	})
+
+	it('カテゴリの無い記事と知らないカテゴリの記事を数えない', () => {
+		expect(summarizeCategories([{}, { category: '' }, { category: 'diary' }])).toEqual([])
+	})
+
+	it('記事が無ければ空にする', () => {
+		expect(summarizeCategories([])).toEqual([])
 	})
 })

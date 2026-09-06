@@ -20,7 +20,7 @@
 	import Hero from '~/components/Hero.vue'
 	import ArticleShelf from '~/components/article/ArticleShelf.vue'
 	import { usePageSeo } from '~/composables/usePageSeo'
-	import { CATEGORIES, CATEGORY_LABELS } from '~/utils/category'
+	import { buildShelves } from '~/utils/shelf'
 
 	const SHELF_LIMIT = 6
 
@@ -35,19 +35,7 @@
 	const heroArticle = computed(() => articles.value?.[0] ?? null)
 
 	const shelves = computed(() =>
-		CATEGORIES.map((category) => {
-			const inCategory = (articles.value ?? []).filter(
-				(article) => article.category === category,
-			)
-			return {
-				category,
-				title: CATEGORY_LABELS[category],
-				total: inCategory.length,
-				articles: inCategory
-					.filter((article) => article.path !== heroArticle.value?.path)
-					.slice(0, SHELF_LIMIT),
-			}
-		}).filter((shelf) => shelf.articles.length > 0),
+		buildShelves(articles.value ?? [], heroArticle.value?.path, SHELF_LIMIT),
 	)
 
 	usePageSeo()

@@ -27,7 +27,7 @@ pages ─→ components ─→ composables ─→ utils
 content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components/content/
 ```
 
-- 右から左への import は作らない。`utils` は何も import しない。`composables` はコンポーネントを import しない。
+- 右から左への import は作らない。`utils` は上の層を import しない。`composables` はコンポーネントを import しない。
 - `components/` の間では、`article/` が `common/` を使う。`layout/` は他の領域を使わない。
 - `content/` の記事は `@nuxt/content` と `remark/` を経て描画され、本文中のコンポーネントは `components/content/` だけが受ける。
 
