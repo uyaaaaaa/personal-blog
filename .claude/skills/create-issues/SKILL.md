@@ -58,6 +58,6 @@ description: "番号の無い課題感を GitHub issue にして発行する。�
 
 - タイトルは**1行の言い切り**。分類の接頭辞は付けない
 - ラベルは `bug` / `enhancement` / `documentation` から1つ
-- 書き手が決めるまで動かせないものには `needs-decision` を足す。`dispatch` が拾わない側に置く印
+- 書き手が決めるまで動かせないものには `needs-decision` を足す
 - 発行は GitHub MCP の issue 作成ツール
 - 発行したら番号と URL を報告する。複数に割ったら、その関係も
