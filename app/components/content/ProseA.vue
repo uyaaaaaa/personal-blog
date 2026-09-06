@@ -1,68 +1,68 @@
 <script setup lang="ts">
-const props = defineProps({
-  href: {
-    type: String,
-    default: ''
-  },
-  target: {
-    type: String,
-    default: undefined,
-    required: false
-  },
-  rel: {
-    type: String,
-    default: undefined,
-    required: false
-  }
-})
+	const props = defineProps({
+		href: {
+			type: String,
+			default: '',
+		},
+		target: {
+			type: String,
+			default: undefined,
+			required: false,
+		},
+		rel: {
+			type: String,
+			default: undefined,
+			required: false,
+		},
+	})
 
-const isExternal = computed(() => {
-  if (!props.href) return false
-  
-  return /^(http:\/\/|https:\/\/|\/\/)/.test(props.href)
-})
+	const isExternal = computed(() => {
+		if (!props.href) return false
 
-const isSameDocumentHash = computed(() => props.href.startsWith('#'))
+		return /^(http:\/\/|https:\/\/|\/\/)/.test(props.href)
+	})
 
-const targetAttr = computed(() => {
-  if (props.target) {
-    return props.target
-  }
-  return isExternal.value ? '_blank' : undefined
-})
+	const isSameDocumentHash = computed(() => props.href.startsWith('#'))
 
-// Nuxt Content（rehype-external-links）が外部リンクに rel="nofollow" を付ける
-const relAttr = computed(() => {
-  const tokens = new Set(props.rel?.split(/\s+/).filter(Boolean))
+	const targetAttr = computed(() => {
+		if (props.target) {
+			return props.target
+		}
+		return isExternal.value ? '_blank' : undefined
+	})
 
-  if (isExternal.value) {
-    tokens.add('noopener')
-    tokens.add('noreferrer')
-  }
+	// Nuxt Content（rehype-external-links）が外部リンクに rel="nofollow" を付ける
+	const relAttr = computed(() => {
+		const tokens = new Set(props.rel?.split(/\s+/).filter(Boolean))
 
-  return tokens.size ? [...tokens].join(' ') : undefined
-})
+		if (isExternal.value) {
+			tokens.add('noopener')
+			tokens.add('noreferrer')
+		}
 
-defineOptions({
-  name: 'ProseA'
-})
+		return tokens.size ? [...tokens].join(' ') : undefined
+	})
+
+	defineOptions({
+		name: 'ProseA',
+	})
 </script>
 
 <template>
-  <a
-    v-if="isSameDocumentHash"
-    :href="href"
-    :target="targetAttr"
-    :rel="relAttr"
-  >
-    <slot />
-  </a>
-  <NuxtLink
-    v-else
-    :href="href"
-    :target="targetAttr"
-    :rel="relAttr"
-  >
-    <slot />
-  </NuxtLink>
+	<a
+		v-if="isSameDocumentHash"
+		:href="href"
+		:target="targetAttr"
+		:rel="relAttr"
+	>
+		<slot />
+	</a>
+	<NuxtLink
+		v-else
+		:href="href"
+		:target="targetAttr"
+		:rel="relAttr"
+	>
+		<slot />
+	</NuxtLink>
 </template>
