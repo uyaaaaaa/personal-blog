@@ -1,9 +1,11 @@
 const FOCUSABLE_SELECTOR =
 	'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-// 閉じた列や被せる前の中身は DOM に残したまま visibility で隠しているので、
-// セレクタだけでは Tab の止まらない要素まで拾ってしまう
-const isTabbable = (element: HTMLElement) => getComputedStyle(element).visibility !== 'hidden'
+// 閉じた列や被せる前の中身は DOM に残したまま visibility と display で隠しているので、
+// セレクタだけでは Tab の止まらない要素まで拾ってしまう。display: none は
+// 算出値の visibility に出ないため、箱が取れるかどうかで見る
+const isTabbable = (element: HTMLElement) =>
+	getComputedStyle(element).visibility !== 'hidden' && element.getClientRects().length > 0
 
 export const useFocusTrap = (isOpen: Ref<boolean>) => {
 	const trapRef = ref<HTMLElement | null>(null)
@@ -20,10 +22,9 @@ export const useFocusTrap = (isOpen: Ref<boolean>) => {
 		const first = tabbables[0]
 		const last = tabbables.at(-1)
 
-		if (!first || !last) {
-			event.preventDefault()
-			return
-		}
+		// 行き先が無いまま止めると、開き際の数フレームと md を跨いだ後で
+		// Tab がどこにも進まなくなる。閉じ込めを諦めて移動を残す
+		if (!first || !last) return
 
 		const active = document.activeElement
 		const atEdge = event.shiftKey ? active === first : active === last

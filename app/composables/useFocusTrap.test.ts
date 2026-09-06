@@ -15,7 +15,7 @@ const mountTrap = (isOpen: Ref<boolean> = ref(false)) => {
 				return () =>
 					h('div', [
 						h('button', { class: 'outside' }, 'outside'),
-						h('div', { ref: trapRef }, [
+						h('div', { ref: trapRef, class: 'trap' }, [
 							h('button', { class: 'first' }, 'first'),
 							h('button', { class: 'last' }, 'last'),
 							h('button', { class: 'hidden', style: 'visibility: hidden' }, 'hidden'),
@@ -30,7 +30,13 @@ const mountTrap = (isOpen: Ref<boolean> = ref(false)) => {
 
 	const find = (selector: string) => wrapper.get(selector).element as HTMLElement
 
-	return { isOpen, first: find('.first'), last: find('.last'), outside: find('.outside') }
+	return {
+		isOpen,
+		trap: find('.trap'),
+		first: find('.first'),
+		last: find('.last'),
+		outside: find('.outside'),
+	}
 }
 
 const mountOpenTrap = async () => {
@@ -82,6 +88,19 @@ describe('useFocusTrap', () => {
 		first.focus()
 
 		expect(pressTab().defaultPrevented).toBe(false)
+	})
+
+	// happy-dom はレイアウトを持たず display: none でも箱が取れるので、
+	// 幅が md を跨いでドロワーごと消えた状態は自分で作る
+	it('行き先が1つも無ければ Tab を横取りしない', async () => {
+		const { trap, outside } = await mountOpenTrap()
+		for (const button of trap.querySelectorAll('button')) {
+			button.getClientRects = () => [] as unknown as DOMRectList
+		}
+		outside.focus()
+
+		expect(pressTab().defaultPrevented).toBe(false)
+		expect(document.activeElement).toBe(outside)
 	})
 
 	it('閉じている間は Tab を横取りしない', async () => {
