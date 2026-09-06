@@ -108,6 +108,7 @@
 				@click="emit('close')"
 			>
 				<aside
+					ref="trapRef"
 					class="mobile-drawer"
 					@click.stop
 				>
@@ -399,10 +400,11 @@
 	import HeaderMenuColumn from '~/components/layout/HeaderMenuColumn.vue'
 	import { useArticleCategories } from '~/composables/useArticleCategories'
 	import { useArticleTags } from '~/composables/useArticleTags'
+	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useHoverPanel } from '~/composables/useHoverPanel'
 	import { formatRelativeDate } from '~/utils/date'
 
-	defineProps<{
+	const props = defineProps<{
 		isOpen: boolean
 	}>()
 
@@ -416,6 +418,8 @@
 	const LATEST_ARTICLES_LIMIT = 5
 
 	const menuButtonRef = ref<HTMLButtonElement | null>(null)
+
+	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'))
 
 	const isCategoriesOpen = ref(false)
 	const isLatestOpen = ref(false)
