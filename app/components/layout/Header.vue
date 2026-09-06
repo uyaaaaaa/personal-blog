@@ -49,11 +49,12 @@
 
 			<div class="mx-8 hidden max-w-md flex-1 md:flex">
 				<button
+					ref="searchTriggerRef"
 					type="button"
 					class="group flex w-full items-center justify-between rounded-md border border-border bg-surface-subtle px-4 py-2 text-sub transition-colors hover:border-accent"
 					aria-haspopup="dialog"
 					:aria-expanded="isSearchOpen"
-					@click="openSearch"
+					@click="openSearchFromTrigger"
 				>
 					<span class="flex items-center gap-2">
 						<svg
@@ -115,6 +116,8 @@
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)
 
+	const searchTriggerRef = ref<HTMLButtonElement | null>(null)
+
 	// 戻し先はデスクトップとSPで別の要素になるので、開いた時点で当たっていたものを覚える
 	let searchOpener: HTMLElement | null = null
 
@@ -130,6 +133,13 @@
 		searchOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null
 		isMenuOpen.value = false
 		isSearchOpen.value = true
+	}
+
+	// Safari と Firefox は click で button にフォーカスを移さないので、
+	// ドロワーと同じく戻し先を自分に寄せてから開く
+	const openSearchFromTrigger = () => {
+		searchTriggerRef.value?.focus()
+		openSearch()
 	}
 
 	const closeSearch = () => {
