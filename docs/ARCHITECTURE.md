@@ -30,7 +30,7 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 - 右から左への import は作らない。`utils` は上の層を import しない。`composables` はコンポーネントを import しない。
 - `components/` は領域のディレクトリ（`layout/` `article/` `content/` `common/` `error/`）に分け、直下にファイルは置かない。領域の間では `article/` が `common/` を使い、`layout/` は他の領域を使わない。
 - `content/` の記事は `@nuxt/content` と `remark/` を経て描画され、本文中のコンポーネントは `components/content/` だけが受ける。
-- ページの文脈（route の値の読み取り・404 の送出・ページのメタの設定）は `pages/` だけが持つ。`components/` に置くと lint が落ちる。ページ番号の分だけルートファイルが増える一覧（[ADR 01](./adr/01-page-number-in-path.md)）は、本体を `pages/` 配下に `-` 始まりのファイル名（Nuxt のスキャン除外規則）で置き、ルートファイルはそれを import して描画するだけにする。
+- `components/` はページの文脈（route の値の読み取り・404 の送出・ページのメタの設定）を持たない。ページ番号の分だけルートファイルが増える一覧（[ADR 01](./adr/01-page-number-in-path.md)）は、本体を `pages/` 配下に `-` 始まりのファイル名（Nuxt のスキャン除外規則）で置き、ルートファイルはそれを import して描画するだけにする。
 
 ## 静的生成とスタイルの流れ
 
