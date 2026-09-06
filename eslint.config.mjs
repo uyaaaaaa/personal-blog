@@ -1,9 +1,8 @@
 import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
+import styleTokens, { DOCS_URL, TOKEN_URL } from './eslint-rules/style-tokens.mjs'
 
-const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
-const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-定義場所と単一情報源のルール`
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 
 const IMPORT_URL = `${DOCS_URL}/ARCHITECTURE.md#依存方向`
@@ -69,7 +68,7 @@ export default [
 	},
 	{
 		files: ['app/**/*.vue'],
-		plugins: { vue: pluginVue },
+		plugins: { vue: pluginVue, style: styleTokens },
 		languageOptions: {
 			parser: vueParser,
 			parserOptions: {
@@ -87,6 +86,9 @@ export default [
 					ignorePatterns: ['Nuxt[A-Z]\\w*', 'ContentRenderer'],
 				},
 			],
+			// scoped CSS の直値。クラス側の任意値と同じ基準を <style> にも当てる
+			'style/no-untokenized-size': 'error',
+			'style/no-color-literal': 'error',
 			// 角括弧を含むクラス（`w-[264px]` 等）がTailwindの任意値
 			'vue/no-restricted-syntax': [
 				'error',

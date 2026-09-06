@@ -128,7 +128,7 @@
 		background-color: var(--color-header-bg);
 		backdrop-filter: blur(10px);
 		border-bottom: 1px solid var(--color-border);
-		height: 64px;
+		height: 4rem;
 		display: flex;
 		align-items: center;
 	}
@@ -148,7 +148,7 @@
 		font-weight: 700;
 		font-size: 1.25rem;
 		font-family: var(--font-mono);
-		letter-spacing: -0.5px;
+		letter-spacing: -0.025em;
 	}
 
 	.logo-mark {
