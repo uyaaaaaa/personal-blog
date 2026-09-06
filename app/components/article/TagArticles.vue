@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import ArticleList from '~/components/ArticleList.vue'
+	import ArticleList from '~/components/article/ArticleList.vue'
 	import Pagination from '~/components/common/Pagination.vue'
 	import BackButton from '~/components/common/BackButton.vue'
 	import { usePagination } from '~/composables/usePagination'

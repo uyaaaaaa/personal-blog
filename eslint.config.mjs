@@ -5,8 +5,10 @@ import styleTokens, { DOCS_URL, TOKEN_URL } from './eslint-rules/style-tokens.mj
 
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 
-const IMPORT_URL = `${DOCS_URL}/ARCHITECTURE.md#依存方向`
+const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#依存方向`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
+
+const AREA_DIRECTORY_MESSAGE = `components/ の直下にファイルを置かない。layout / article / content / common / error のいずれかに入れる。 ${ARCHITECTURE_URL}`
 
 // ディレクトリを跨ぐ参照は `~/`（app/ の外は `~~/`）。相対パスは同じディレクトリの中だけ
 const CROSS_DIRECTORY_RELATIVE = ['..', '../*', '../**', './..', './../*', './../**']
@@ -29,11 +31,11 @@ const restrictions = {
 			patterns: [
 				{
 					group: CROSS_DIRECTORY_RELATIVE,
-					message: `ディレクトリを跨ぐ参照は ~/ で書く（app/ の外は ~~/）。相対パスは同じディレクトリの中だけ。 ${IMPORT_URL}`,
+					message: `ディレクトリを跨ぐ参照は ~/ で書く（app/ の外は ~~/）。相対パスは同じディレクトリの中だけ。 ${ARCHITECTURE_URL}`,
 				},
 				{
 					group: ['@/*', '@/**'],
-					message: `@/ は使わない。app/ の中は ~/、外は ~~/。 ${IMPORT_URL}`,
+					message: `@/ は使わない。app/ の中は ~/、外は ~~/。 ${ARCHITECTURE_URL}`,
 				},
 			],
 		},
@@ -116,6 +118,27 @@ export default [
 					selector:
 						"VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/\\[/], TemplateElement[value.cooked=/\\[/])",
 					message: ARBITRARY_VALUE_MESSAGE,
+				},
+			],
+		},
+	},
+	{
+		// コンポーネントは領域のディレクトリに属する。直下のファイルは Program ごと落とす
+		files: ['app/components/*.{vue,ts}'],
+		languageOptions: {
+			parser: vueParser,
+			parserOptions: {
+				parser: tsParser,
+				ecmaVersion: 'latest',
+				sourceType: 'module',
+			},
+		},
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector: 'Program',
+					message: AREA_DIRECTORY_MESSAGE,
 				},
 			],
 		},

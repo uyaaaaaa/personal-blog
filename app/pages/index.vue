@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-	import Hero from '~/components/Hero.vue'
+	import Hero from '~/components/article/Hero.vue'
 	import ArticleShelf from '~/components/article/ArticleShelf.vue'
 	import { usePageSeo } from '~/composables/usePageSeo'
 	import { buildShelves } from '~/utils/shelf'
