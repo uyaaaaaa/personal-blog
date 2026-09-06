@@ -22,7 +22,7 @@ jobs:
                   PR: ${{ github.event.pull_request.number }}
 
     needs-decision:
-        if: github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'needs-decision')
+        if: github.event_name == 'issues' && github.event.changes.body != null && contains(github.event.issue.labels.*.name, 'needs-decision')
         runs-on: ubuntu-latest
         steps:
             - run: gh issue edit "$ISSUE" --repo "$REPO" --remove-label 'needs-decision'
