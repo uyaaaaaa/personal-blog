@@ -90,6 +90,17 @@ describe('no-color-literal', () => {
 						'.a { border-color: rgb(255 255 255 / 50%); color: rgba(255, 255, 255, 50%); }',
 					),
 				},
+				// alpha を書かない形も例外
+				{
+					filename: 'a.vue',
+					code: sfc(
+						'.a { color: rgb(255, 255, 255); background-color: rgb(255 255 255); }',
+					),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { color: rgb(0, 0, 0); background-color: rgb(100% 100% 100%); }'),
+				},
 				// 色の名前と綴りが重なるだけの値
 				{
 					filename: 'a.vue',

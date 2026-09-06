@@ -79,7 +79,7 @@ function channelsOf(literal) {
 			parseInt(digits.slice(i * step, i * step + step).repeat(step === 1 ? 2 : 1), 16)
 		return [channel(0), channel(1), channel(2)]
 	}
-	const args = literal.slice(literal.indexOf('(') + 1)
+	const args = literal.slice(literal.indexOf('(') + 1, literal.lastIndexOf(')'))
 	return args
 		.split('/')[0]
 		.split(/[\s,]+/)
