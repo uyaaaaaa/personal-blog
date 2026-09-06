@@ -48,9 +48,8 @@ open issue を集め、上から順に落とす。
 
 | 指定するもの | 値 |
 | :--- | :--- |
-| `isolation` | `"remote"`。**`"worktree"` にしない。** dispatch 自身が使い捨てのコンテナで動くため、ローカル worktree にするとこのセッションの終了に道連れで止まる |
+| `isolation` | `"remote"`。**`"worktree"` にしない。** dispatch 自身が使い捨てのコンテナで動くため、ローカル worktree にするとこのセッションの終了に道連れで止まる。`remote` は常にバックグラウンドで動く |
 | `model` | `"opus"` |
-| `run_in_background` | `true`（既定値だが明示する） |
 | `subagent_type` | `general-purpose` |
 | `description` | `issue #<番号>` |
 | プロンプト | リポジトリ URL（`https://github.com/uyaaaaaa/personal-blog`。新しいセッションはこの会話を引き継がないので明記する）／`assign` に従って `#<番号>` を進めること／作業ブランチは `claude/issue-<番号>-<英数字4〜6>`（→ `assign`。次の回の重複判定がこれを見る）にすること／答えを待てる相手がいないこと。これだけ |
