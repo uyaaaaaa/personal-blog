@@ -18,7 +18,7 @@ const restrictions = {
 			paths: [
 				{
 					name: 'vue',
-					message: `Vue の組み込み API は import を書かない。プリセットの auto-import が解決する。 ${AUTO_IMPORT_URL}`,
+					message: `Vue の組み込み API は import を書かない。プリセットの auto-import が解決する。プリセットに無い名前（UnwrapRef 等）が要るときだけ eslint-disable を付けて import する。 ${AUTO_IMPORT_URL}`,
 				},
 				{
 					// scan: false のため #imports が出すのはプリセットの名前だけ。全部 auto-import される
