@@ -42,9 +42,7 @@
 					placeholder="Search articles by title"
 					aria-label="Search articles by title"
 					autocomplete="off"
-					@keydown.down.prevent="moveActive(1)"
-					@keydown.up.prevent="moveActive(-1)"
-					@keydown.enter.prevent="openActive"
+					@keydown="onInputKeydown"
 				/>
 			</div>
 
@@ -153,7 +151,25 @@
 		if (pressedOnOverlay) emit('close')
 	}
 
+	// 変換中のキーは IME のもの。横取りすると変換の確定も取り消しも奪う
+	const onInputKeydown = (event: KeyboardEvent) => {
+		if (event.isComposing) return
+
+		if (event.key === 'ArrowDown') {
+			event.preventDefault()
+			moveActive(1)
+		} else if (event.key === 'ArrowUp') {
+			event.preventDefault()
+			moveActive(-1)
+		} else if (event.key === 'Enter') {
+			event.preventDefault()
+			openActive()
+		}
+	}
+
 	const onWindowKeydown = (event: KeyboardEvent) => {
+		if (event.isComposing) return
+
 		if (event.key === 'Escape') emit('close')
 	}
 
