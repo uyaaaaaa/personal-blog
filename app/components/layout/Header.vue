@@ -49,7 +49,12 @@
 
 			<div class="mx-8 hidden max-w-md flex-1 md:flex">
 				<button
+					ref="searchTriggerRef"
+					type="button"
 					class="group flex w-full items-center justify-between rounded-md border border-border bg-surface-subtle px-4 py-2 text-sub transition-colors hover:border-accent"
+					aria-haspopup="dialog"
+					:aria-expanded="isSearchOpen"
+					@click="openSearch"
 				>
 					<span class="flex items-center gap-2">
 						<svg
@@ -91,32 +96,48 @@
 					:is-open="isMenuOpen"
 					@toggle="toggleMenu"
 					@close="closeMenu"
+					@search="openSearch"
 				/>
 			</div>
 		</div>
 	</header>
+
+	<SearchDialog
+		:is-open="isSearchOpen"
+		@close="closeSearch"
+	/>
 </template>
 
 <script setup lang="ts">
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
+	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
 
 	const isMenuOpen = ref(false)
+	const isSearchOpen = ref(false)
+	const searchTriggerRef = ref<HTMLButtonElement | null>(null)
 
 	const toggleMenu = () => {
 		isMenuOpen.value = !isMenuOpen.value
-
-		if (isMenuOpen.value) {
-			document.body.style.overflow = 'hidden'
-		} else {
-			document.body.style.overflow = ''
-		}
 	}
 
 	const closeMenu = () => {
 		isMenuOpen.value = false
-		document.body.style.overflow = ''
 	}
+
+	const openSearch = () => {
+		isMenuOpen.value = false
+		isSearchOpen.value = true
+	}
+
+	const closeSearch = () => {
+		isSearchOpen.value = false
+		searchTriggerRef.value?.focus()
+	}
+
+	watch([isMenuOpen, isSearchOpen], ([menuOpen, searchOpen]) => {
+		document.body.style.overflow = menuOpen || searchOpen ? 'hidden' : ''
+	})
 </script>
 
 <style scoped>

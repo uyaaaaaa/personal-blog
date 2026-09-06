@@ -156,6 +156,37 @@
 							<span class="drawer-row-label">Home</span>
 						</NuxtLink>
 
+						<button
+							type="button"
+							class="drawer-row"
+							@click="openSearch"
+						>
+							<svg
+								class="drawer-icon"
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+							>
+								<circle
+									cx="11"
+									cy="11"
+									r="8"
+								/>
+								<line
+									x1="21"
+									y1="21"
+									x2="16.65"
+									y2="16.65"
+								/>
+							</svg>
+							<span class="drawer-row-label">Search</span>
+						</button>
+
 						<p class="drawer-section-label">Explore</p>
 
 						<button
@@ -377,6 +408,7 @@
 	const emit = defineEmits<{
 		(e: 'toggle'): void
 		(e: 'close'): void
+		(e: 'search'): void
 	}>()
 
 	const TOP_TAGS_LIMIT = 10
@@ -385,6 +417,11 @@
 	const isCategoriesOpen = ref(false)
 	const isLatestOpen = ref(false)
 	const isTagsOpen = ref(false)
+
+	const openSearch = () => {
+		emit('close')
+		emit('search')
+	}
 
 	const { data: categories } = useArticleCategories()
 
