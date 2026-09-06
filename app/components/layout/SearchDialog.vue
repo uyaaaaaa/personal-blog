@@ -43,6 +43,8 @@
 					aria-label="Search articles by title"
 					autocomplete="off"
 					@keydown="onInputKeydown"
+					@compositionstart="startComposition"
+					@compositionend="endComposition"
 				/>
 			</div>
 
@@ -151,9 +153,25 @@
 		if (pressedOnOverlay) emit('close')
 	}
 
-	// 変換中のキーは IME のもの。横取りすると変換の確定も取り消しも奪う
+	// 変換中のキーは IME のもの。横取りすると変換の確定も取り消しも奪う。
+	// Safari は compositionend を keydown より先に出すため確定と取り消しは
+	// isComposing が false で届き、変換の終わり際は自前で覚えておくしかない
+	let composing = false
+
+	const startComposition = () => {
+		composing = true
+	}
+
+	const endComposition = () => {
+		requestAnimationFrame(() => {
+			composing = false
+		})
+	}
+
+	const isComposingKey = (event: KeyboardEvent) => event.isComposing || composing
+
 	const onInputKeydown = (event: KeyboardEvent) => {
-		if (event.isComposing) return
+		if (isComposingKey(event)) return
 
 		if (event.key === 'ArrowDown') {
 			event.preventDefault()
@@ -168,7 +186,7 @@
 	}
 
 	const onWindowKeydown = (event: KeyboardEvent) => {
-		if (event.isComposing) return
+		if (isComposingKey(event)) return
 
 		if (event.key === 'Escape') emit('close')
 	}
@@ -183,6 +201,7 @@
 			}
 
 			window.addEventListener('keydown', onWindowKeydown)
+			composing = false
 			query.value = ''
 			// visibility の遷移が始まるまで算出値は hidden のままで、focus() が黙って効かない
 			requestAnimationFrame(() => requestAnimationFrame(() => inputRef.value?.focus()))
