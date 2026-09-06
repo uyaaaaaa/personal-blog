@@ -20,6 +20,11 @@ const restrictions = {
 					name: 'vue',
 					message: `Vue の組み込み API は import を書かない。プリセットの auto-import が解決する。 ${AUTO_IMPORT_URL}`,
 				},
+				{
+					// scan: false のため #imports が出すのはプリセットの名前だけ。全部 auto-import される
+					name: '#imports',
+					message: `#imports から import を書かない。プリセットの auto-import が解決する。 ${AUTO_IMPORT_URL}`,
+				},
 			],
 			patterns: [
 				{
