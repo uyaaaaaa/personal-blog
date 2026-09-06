@@ -12,7 +12,6 @@
 				ref="triggerRef"
 				type="button"
 				class="explore-trigger"
-				aria-haspopup="true"
 				aria-controls="header-menu-panel"
 				:aria-expanded="isPanelOpen"
 				@click="togglePanel"
@@ -22,6 +21,8 @@
 
 			<HeaderMenuPanel
 				id="header-menu-panel"
+				role="navigation"
+				aria-label="Explore"
 				:is-open="isPanelOpen"
 			>
 				<HeaderMenuColumn label="Categories">

@@ -12,7 +12,6 @@
 			type="button"
 			class="theme-trigger"
 			aria-label="Theme"
-			aria-haspopup="menu"
 			aria-controls="theme-menu-panel"
 			:aria-expanded="isPanelOpen"
 			@click="togglePanel"
@@ -65,15 +64,14 @@
 			id="theme-menu-panel"
 			class="theme-panel shadow-lg"
 			:class="{ 'is-open': isPanelOpen }"
-			role="menu"
+			role="group"
 			aria-label="Theme"
 		>
 			<button
 				type="button"
 				class="theme-option"
 				:class="{ 'is-selected': isSelected('light') }"
-				role="menuitemradio"
-				:aria-checked="isSelected('light')"
+				:aria-pressed="isSelected('light')"
 				@click="select('light')"
 			>
 				<svg
@@ -108,8 +106,7 @@
 				type="button"
 				class="theme-option"
 				:class="{ 'is-selected': isSelected('dark') }"
-				role="menuitemradio"
-				:aria-checked="isSelected('dark')"
+				:aria-pressed="isSelected('dark')"
 				@click="select('dark')"
 			>
 				<svg
@@ -132,8 +129,7 @@
 				type="button"
 				class="theme-option"
 				:class="{ 'is-selected': isSelected('system') }"
-				role="menuitemradio"
-				:aria-checked="isSelected('system')"
+				:aria-pressed="isSelected('system')"
 				@click="select('system')"
 			>
 				<svg
