@@ -10,6 +10,10 @@ const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
 
 const AREA_DIRECTORY_MESSAGE = `components/ の直下にファイルを置かない。layout / article / content / common / error のいずれかに入れる。 ${ARCHITECTURE_URL}`
 
+const PAGE_CONTEXT_PARAMS_MESSAGE = `components/ は route の値を読まない（.params）。読むのは pages/ 側で、値は props で渡す。 ${ARCHITECTURE_URL}`
+const PAGE_CONTEXT_404_MESSAGE = `components/ は404を送出しない（createError）。判定は pages/ 側で行う。 ${ARCHITECTURE_URL}`
+const PAGE_CONTEXT_META_MESSAGE = `components/ はページのメタを設定しない（useSeoMeta / useHead / definePageMeta / usePageSeo）。設定は pages/ 側で行う。 ${ARCHITECTURE_URL}`
+
 // ディレクトリを跨ぐ参照は `~/`（app/ の外は `~~/`）。相対パスは同じディレクトリの中だけ
 const CROSS_DIRECTORY_RELATIVE = ['..', '../*', '../**', './..', './../*', './../**']
 
@@ -118,6 +122,37 @@ export default [
 					selector:
 						"VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/\\[/], TemplateElement[value.cooked=/\\[/])",
 					message: ARBITRARY_VALUE_MESSAGE,
+				},
+			],
+		},
+	},
+	{
+		// components/ はページの文脈（routeの値・404・ページのメタ）を持たない
+		files: ['app/components/**/*.vue'],
+		languageOptions: {
+			parser: vueParser,
+			parserOptions: {
+				parser: tsParser,
+				ecmaVersion: 'latest',
+				sourceType: 'module',
+			},
+		},
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				...restrictions['no-restricted-syntax'].slice(1),
+				{
+					selector: "MemberExpression[property.name='params']",
+					message: PAGE_CONTEXT_PARAMS_MESSAGE,
+				},
+				{
+					selector: "CallExpression[callee.name='createError']",
+					message: PAGE_CONTEXT_404_MESSAGE,
+				},
+				{
+					selector:
+						'CallExpression[callee.name=/^(useSeoMeta|useHead|definePageMeta|usePageSeo)$/]',
+					message: PAGE_CONTEXT_META_MESSAGE,
 				},
 			],
 		},

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import CategoryArticles from '~/components/article/CategoryArticles.vue'
+	import CategoryArticles from './-CategoryArticles.vue'
 </script>
 
 <template>
