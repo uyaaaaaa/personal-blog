@@ -192,6 +192,16 @@
 		text-decoration: underline;
 	}
 
+	.prose h4 a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.prose h4 a:hover {
+		color: var(--color-accent);
+		text-decoration: none;
+	}
+
 	.prose {
 		--landing-offset: 88px;
 	}
