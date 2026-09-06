@@ -1,6 +1,6 @@
 # scoped CSS の値も Tailwind の語彙に限り、ESLint で落とす
 
-`<style>` に書く色の直値と `px` / `rem` の直値を `npm run lint` が落とす。色は `var(--color-*)` 由来だけを許し、長さは `tailwind.config.ts` が解決したスケールと `theme/tokens.ts` の `sizes` にある値だけを許す。許す値は解決済みの theme から作るので、`sizes` に名前を足せばそのまま通る。
+`<style>` に書く色の直値と `px` / `rem` の直値を `npm run lint` が落とす。色は `var(--color-*)` 由来だけを許し、長さは Tailwind の既定のスケールと `theme/tokens.ts` の `sizes` にある値だけを許す。許す値は Tailwind の既定に `sizes` を重ねて解決した theme から作るので、`sizes` に名前を足せばそのまま通る。
 
 - **検討した案**
   - **Stylelint を入れる**: CSS の構文木が手に入るが、「値が解決済みの theme にあるか」は既存のルールで書けず結局は自作ルールになる。lint のツールだけが1つ増える。

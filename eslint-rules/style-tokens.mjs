@@ -47,7 +47,8 @@ function collectStrings(value, into) {
 		for (const item of Object.values(value)) collectStrings(item, into)
 }
 
-// 語彙は tailwind.config.ts が解決した theme から作る。theme/tokens.ts に名前を足せば自動で通る
+// 語彙は Tailwind の既定の theme に sizes を重ねて作る。sizes に名前を足せば通る。
+// tailwind.config.ts 自体は node が型注釈を落とせず読めないため、ここで組み直す
 function buildVocabulary() {
 	const theme = resolveConfig({ content: [], theme: { extend: { ...sizes } } }).theme
 	const strings = new Set()
