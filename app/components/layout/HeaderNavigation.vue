@@ -93,6 +93,7 @@
 
 		<div class="flex items-center md:hidden">
 			<button
+				ref="menuButtonRef"
 				class="mobile-menu-btn"
 				@click="emit('toggle')"
 				aria-label="Open menu"
@@ -117,7 +118,7 @@
 							type="button"
 							class="drawer-close"
 							aria-label="Close menu"
-							@click="emit('close')"
+							@click="closeDrawer"
 						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
@@ -139,7 +140,7 @@
 						<NuxtLink
 							to="/"
 							class="drawer-row"
-							@click="emit('close')"
+							@click="closeDrawer"
 						>
 							<svg
 								class="drawer-icon"
@@ -213,7 +214,7 @@
 										:to="`/category/${category.slug}`"
 										class="drawer-subrow drawer-subrow-split"
 										prefetch-on="interaction"
-										@click="emit('close')"
+										@click="closeDrawer"
 									>
 										<span class="drawer-subrow-name">{{ category.label }}</span>
 										<span class="drawer-subrow-count">{{
@@ -280,7 +281,7 @@
 										:to="article.path"
 										class="drawer-subrow"
 										prefetch-on="interaction"
-										@click="emit('close')"
+										@click="closeDrawer"
 									>
 										<span class="drawer-subrow-title">{{ article.title }}</span>
 										<time
@@ -349,7 +350,7 @@
 										:to="`/tags/${tag.slug}`"
 										class="drawer-subrow drawer-subrow-split"
 										prefetch-on="interaction"
-										@click="emit('close')"
+										@click="closeDrawer"
 									>
 										<span class="drawer-subrow-name">{{ tag.name }}</span>
 										<span class="drawer-subrow-count">{{ tag.count }}</span>
@@ -385,7 +386,15 @@
 	const TOP_TAGS_LIMIT = 10
 	const LATEST_ARTICLES_LIMIT = 5
 
-	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'))
+	const menuButtonRef = ref<HTMLButtonElement | null>(null)
+
+	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる
+	const closeDrawer = () => {
+		menuButtonRef.value?.focus()
+		emit('close')
+	}
+
+	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), closeDrawer)
 
 	const isCategoriesOpen = ref(false)
 	const isLatestOpen = ref(false)
