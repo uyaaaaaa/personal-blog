@@ -43,7 +43,7 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
-		max-width: 600px;
+		max-width: 36rem;
 	}
 
 	.error-code {
@@ -52,7 +52,7 @@
 		font-family: var(--font-mono);
 		margin: 0;
 		line-height: 1;
-		letter-spacing: -5px;
+		letter-spacing: -0.05em;
 	}
 
 	.error-message {
@@ -72,11 +72,11 @@
 		background-color: var(--color-accent);
 		color: var(--color-accent-contrast);
 		border: none;
-		padding: 0.8rem 1.5rem;
+		padding: 0.75rem 1.5rem;
 		font-size: 1rem;
 		font-weight: 500;
 		font-family: inherit;
-		border-radius: 6px;
+		border-radius: 0.375rem;
 		cursor: pointer;
 		transition: background-color 0.2s ease;
 	}

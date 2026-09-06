@@ -5,7 +5,7 @@
 	>
 		<div class="menu-panel-anchor container">
 			<div
-				class="menu-panel shadow-lg"
+				class="menu-panel w-menu-panel shadow-lg"
 				v-bind="$attrs"
 			>
 				<slot />
@@ -38,7 +38,6 @@
 
 	.menu-panel {
 		position: relative;
-		width: 960px;
 		max-width: 100%;
 		padding: 1.5rem;
 		background-color: var(--color-surface);

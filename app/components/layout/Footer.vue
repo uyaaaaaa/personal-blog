@@ -12,6 +12,6 @@
 		border-top: 1px solid var(--color-border);
 		text-align: center;
 		color: var(--color-sub);
-		font-size: 0.9rem;
+		font-size: 0.875rem;
 	}
 </style>
