@@ -6,14 +6,12 @@ on:
     issues:
         types: [edited]
 
-permissions:
-    issues: write
-    pull-requests: write
-
 jobs:
     in-review:
         if: github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'in review')
         runs-on: ubuntu-latest
+        permissions:
+            pull-requests: write
         steps:
             - run: gh pr edit "$PR" --repo "$REPO" --remove-label 'in review'
               env:
@@ -24,6 +22,8 @@ jobs:
     needs-decision:
         if: github.event_name == 'issues' && github.event.changes.body != null && contains(github.event.issue.labels.*.name, 'needs-decision')
         runs-on: ubuntu-latest
+        permissions:
+            issues: write
         steps:
             - run: gh issue edit "$ISSUE" --repo "$REPO" --remove-label 'needs-decision'
               env:
