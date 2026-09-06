@@ -9,3 +9,23 @@ export const CATEGORIES = Object.keys(CATEGORY_LABELS) as Category[]
 
 export const isCategory = (value: string): value is Category =>
 	Object.hasOwn(CATEGORY_LABELS, value)
+
+export interface CategorySummary {
+	slug: Category
+	label: string
+	count: number
+}
+
+export const summarizeCategories = (articles: { category?: string }[]): CategorySummary[] => {
+	const counts = new Map<string, number>()
+	for (const article of articles) {
+		if (!article.category) continue
+		counts.set(article.category, (counts.get(article.category) ?? 0) + 1)
+	}
+
+	return CATEGORIES.map((slug): CategorySummary => ({
+		slug,
+		label: CATEGORY_LABELS[slug],
+		count: counts.get(slug) ?? 0,
+	})).filter((category) => category.count > 0)
+}
