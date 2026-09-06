@@ -8,26 +8,24 @@ const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズ
 
 const IMPORT_URL = `${DOCS_URL}/ARCHITECTURE.md#依存方向`
 const PLATFORM_URL = `${DOCS_URL}/ARCHITECTURE.md#強制手段の現状`
+const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
 
 // ディレクトリを跨ぐ参照は `~/`（app/ の外は `~~/`）。相対パスは同じディレクトリの中だけ
 const CROSS_DIRECTORY_RELATIVE = ['..', '../*', '../**', './..', './../*', './../**']
 
+const IMPORT_PATTERNS = [
+	{
+		group: CROSS_DIRECTORY_RELATIVE,
+		message: `ディレクトリを跨ぐ参照は ~/ で書く（app/ の外は ~~/）。相対パスは同じディレクトリの中だけ。 ${IMPORT_URL}`,
+	},
+	{
+		group: ['@/*', '@/**'],
+		message: `@/ は使わない。app/ の中は ~/、外は ~~/。 ${IMPORT_URL}`,
+	},
+]
+
 const restrictions = {
-	'no-restricted-imports': [
-		'error',
-		{
-			patterns: [
-				{
-					group: CROSS_DIRECTORY_RELATIVE,
-					message: `ディレクトリを跨ぐ参照は ~/ で書く（app/ の外は ~~/）。相対パスは同じディレクトリの中だけ。 ${IMPORT_URL}`,
-				},
-				{
-					group: ['@/*', '@/**'],
-					message: `@/ は使わない。app/ の中は ~/、外は ~~/。 ${IMPORT_URL}`,
-				},
-			],
-		},
-	],
+	'no-restricted-imports': ['error', { patterns: IMPORT_PATTERNS }],
 	'no-restricted-syntax': [
 		'error',
 		{
@@ -99,6 +97,25 @@ export default [
 					selector:
 						"VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/\\[/], TemplateElement[value.cooked=/\\[/])",
 					message: ARBITRARY_VALUE_MESSAGE,
+				},
+			],
+		},
+	},
+	{
+		// テストは Nuxt の外（happy-dom / node）で走り auto-import が効かないため、対象から外す
+		files: ['app/**/*.ts', 'app/**/*.vue'],
+		ignores: ['app/**/*.test.ts', 'app/**/*.test-helper.ts'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					paths: [
+						{
+							name: 'vue',
+							message: `Vue の組み込み API は import を書かない。プリセットの auto-import が解決する。 ${AUTO_IMPORT_URL}`,
+						},
+					],
+					patterns: IMPORT_PATTERNS,
 				},
 			],
 		},

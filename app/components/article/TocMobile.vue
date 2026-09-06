@@ -93,7 +93,6 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, computed, watch, nextTick } from 'vue'
 	import { useScrollTo } from '~/composables/useScrollTo'
 	import { isProgrammaticScroll } from '~/composables/useProgrammaticScroll'
 	import { useScrollDirection } from '~/composables/useScrollDirection'

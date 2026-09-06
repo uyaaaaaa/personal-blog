@@ -1,5 +1,4 @@
 <script setup lang="ts">
-	import { ref } from 'vue'
 	import { useScrollTo } from '~/composables/useScrollTo'
 	import { useIsDesktop } from '~/composables/useIsDesktop'
 	import { useScrollFrame } from '~/composables/useScrollFrame'

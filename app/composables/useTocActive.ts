@@ -1,4 +1,3 @@
-import { ref, computed, type Ref } from 'vue'
 import { useScrollFrame } from './useScrollFrame'
 
 interface TocLink {

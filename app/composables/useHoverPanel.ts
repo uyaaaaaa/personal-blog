@@ -1,5 +1,3 @@
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-
 const CLOSE_DELAY_MS = 150
 
 export const useHoverPanel = () => {

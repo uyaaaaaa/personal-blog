@@ -98,7 +98,6 @@
 </template>
 
 <script setup lang="ts">
-	import { ref } from 'vue'
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
 
