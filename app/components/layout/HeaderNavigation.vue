@@ -388,33 +388,17 @@
 
 	const menuButtonRef = ref<HTMLButtonElement | null>(null)
 
-	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'))
-
-	const isCategoriesOpen = ref(false)
-	const isLatestOpen = ref(false)
-	const isTagsOpen = ref(false)
-
 	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる
 	const closeDrawer = () => {
 		menuButtonRef.value?.focus()
 		emit('close')
 	}
 
-	// 開いた直後の focus はまだドロワーの外にあり、トラップも Tab を押すまでは
-	// 中に引き込まないので、Escape はドロワーではなく window で受ける
-	const onWindowKeydown = (event: KeyboardEvent) => {
-		if (event.key === 'Escape') closeDrawer()
-	}
+	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), closeDrawer)
 
-	watch(
-		() => props.isOpen,
-		(isOpen) => {
-			if (isOpen) window.addEventListener('keydown', onWindowKeydown)
-			else window.removeEventListener('keydown', onWindowKeydown)
-		},
-	)
-
-	onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKeydown))
+	const isCategoriesOpen = ref(false)
+	const isLatestOpen = ref(false)
+	const isTagsOpen = ref(false)
 
 	const { data: categories } = useArticleCategories()
 
