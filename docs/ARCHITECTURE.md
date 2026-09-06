@@ -28,7 +28,7 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 ```
 
 - 右から左への import は作らない。`utils` は上の層を import しない。`composables` はコンポーネントを import しない。
-- `components/` の間では、`article/` が `common/` を使う。`layout/` は他の領域を使わない。
+- `components/` は領域のディレクトリ（`layout/` `article/` `content/` `common/` `error/`）に分け、直下にファイルは置かない。領域の間では `article/` が `common/` を使い、`layout/` は他の領域を使わない。
 - `content/` の記事は `@nuxt/content` と `remark/` を経て描画され、本文中のコンポーネントは `components/content/` だけが受ける。
 
 ## 静的生成とスタイルの流れ
