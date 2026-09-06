@@ -3,17 +3,30 @@ name: Unlabel
 on:
     pull_request_target:
         types: [closed]
-
-permissions:
-    pull-requests: write
+    issues:
+        types: [edited]
 
 jobs:
     in-review:
-        if: contains(github.event.pull_request.labels.*.name, 'in review')
+        if: github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'in review')
         runs-on: ubuntu-latest
+        permissions:
+            pull-requests: write
         steps:
             - run: gh pr edit "$PR" --repo "$REPO" --remove-label 'in review'
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   REPO: ${{ github.repository }}
                   PR: ${{ github.event.pull_request.number }}
+
+    needs-decision:
+        if: github.event_name == 'issues' && github.event.changes.body != null && contains(github.event.issue.labels.*.name, 'needs-decision')
+        runs-on: ubuntu-latest
+        permissions:
+            issues: write
+        steps:
+            - run: gh issue edit "$ISSUE" --repo "$REPO" --remove-label 'needs-decision'
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  REPO: ${{ github.repository }}
+                  ISSUE: ${{ github.event.issue.number }}
