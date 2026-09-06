@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { searchByTitle } from './search'
+import { searchArticles } from './search'
 
 const articles = [
-	{ title: 'Nuxt Content で作るブログ' },
-	{ title: 'Cloudflare Pages の trailing slash' },
-	{ title: 'Nuxt を Cloudflare Pages に載せる' },
-	{ title: 'vim のコマンド' },
+	{ title: 'Nuxt Content で作るブログ', tags: ['Nuxt', 'SSG'] },
+	{ title: 'Cloudflare Pages の trailing slash', tags: ['Cloudflare'] },
+	{ title: 'Nuxt を Cloudflare Pages に載せる', tags: ['Nuxt', 'Cloudflare'] },
+	{ title: 'vim のコマンド', tags: ['Vim', 'Shell'] },
 ]
 
-const titles = (query: string) => searchByTitle(articles, query).map((article) => article.title)
+const titles = (query: string) => searchArticles(articles, query).map((article) => article.title)
 
-describe('searchByTitle', () => {
+describe('searchArticles', () => {
 	it('タイトルの一部に一致した記事を返す', () => {
 		expect(titles('trailing')).toEqual(['Cloudflare Pages の trailing slash'])
 	})
@@ -52,5 +52,31 @@ describe('searchByTitle', () => {
 	it('空の検索語では何も返さない', () => {
 		expect(titles('')).toEqual([])
 		expect(titles('   ')).toEqual([])
+	})
+
+	it('タイトルに現れない語でも、タグに一致すれば返す', () => {
+		expect(titles('shell')).toEqual(['vim のコマンド'])
+	})
+
+	it('大文字と小文字を区別せずタグに一致する', () => {
+		expect(titles('SSG')).toEqual(['Nuxt Content で作るブログ'])
+	})
+
+	it('複数の語はタイトルとタグのどちらで満たしてもよい', () => {
+		expect(titles('ブログ ssg')).toEqual(['Nuxt Content で作るブログ'])
+		expect(titles('vim shell')).toEqual(['vim のコマンド'])
+	})
+
+	it('タイトルとタグの両方に一致しても同じ記事を2回返さない', () => {
+		expect(titles('nuxt')).toEqual([
+			'Nuxt Content で作るブログ',
+			'Nuxt を Cloudflare Pages に載せる',
+		])
+	})
+
+	it('タグを持たない記事も対象にできる', () => {
+		expect(searchArticles([{ title: 'タグ無し記事' }], 'タグ')).toEqual([
+			{ title: 'タグ無し記事' },
+		])
 	})
 })
