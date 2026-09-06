@@ -2,14 +2,13 @@
 	<div
 		class="search-overlay"
 		:class="{ 'is-open': isOpen }"
-		@click="emit('close')"
+		@pointerdown="onOverlayPointerDown"
+		@click="onOverlayClick"
 	>
 		<div
 			class="search-dialog rounded-card border border-border bg-surface shadow-lg"
 			role="dialog"
 			aria-label="Search articles"
-			@click.stop
-			@keydown.escape="emit('close')"
 		>
 			<div class="search-field">
 				<svg
@@ -142,17 +141,39 @@
 		resultsRef.value?.querySelector('.is-active')?.scrollIntoView({ block: 'nearest' })
 	})
 
+	// 押した位置が外側のときだけ閉じる。入力欄からドラッグして外で離すと click は
+	// オーバーレイに来るため、click だけで判定すると選択のたびに閉じてしまう
+	let pressedOnOverlay = false
+
+	const onOverlayPointerDown = (event: PointerEvent) => {
+		pressedOnOverlay = event.target === event.currentTarget
+	}
+
+	const onOverlayClick = () => {
+		if (pressedOnOverlay) emit('close')
+	}
+
+	const onWindowKeydown = (event: KeyboardEvent) => {
+		if (event.key === 'Escape') emit('close')
+	}
+
 	// 閉じるアニメーションの間も結果を出したままにするため、消すのは開くとき
 	watch(
 		() => props.isOpen,
 		(isOpen) => {
-			if (!isOpen) return
+			if (!isOpen) {
+				window.removeEventListener('keydown', onWindowKeydown)
+				return
+			}
 
+			window.addEventListener('keydown', onWindowKeydown)
 			query.value = ''
 			// visibility の遷移が始まるまで算出値は hidden のままで、focus() が黙って効かない
 			requestAnimationFrame(() => requestAnimationFrame(() => inputRef.value?.focus()))
 		},
 	)
+
+	onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKeydown))
 </script>
 
 <style scoped>

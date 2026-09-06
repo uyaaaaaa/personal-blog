@@ -92,6 +92,7 @@
 
 		<div class="flex items-center md:hidden">
 			<button
+				ref="menuButtonRef"
 				class="mobile-menu-btn"
 				@click="emit('toggle')"
 				aria-label="Open menu"
@@ -414,11 +415,15 @@
 	const TOP_TAGS_LIMIT = 10
 	const LATEST_ARTICLES_LIMIT = 5
 
+	const menuButtonRef = ref<HTMLButtonElement | null>(null)
+
 	const isCategoriesOpen = ref(false)
 	const isLatestOpen = ref(false)
 	const isTagsOpen = ref(false)
 
+	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから開く
 	const openSearch = () => {
+		menuButtonRef.value?.focus()
 		emit('close')
 		emit('search')
 	}
