@@ -6,7 +6,6 @@ import styleTokens, { DOCS_URL, TOKEN_URL } from './eslint-rules/style-tokens.mj
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 
 const IMPORT_URL = `${DOCS_URL}/ARCHITECTURE.md#依存方向`
-const PLATFORM_URL = `${DOCS_URL}/ARCHITECTURE.md#強制手段の現状`
 
 // ディレクトリを跨ぐ参照は `~/`（app/ の外は `~~/`）。相対パスは同じディレクトリの中だけ
 const CROSS_DIRECTORY_RELATIVE = ['..', '../*', '../**', './..', './../*', './../**']
@@ -32,21 +31,25 @@ const restrictions = {
 		{
 			// window.navigator.userAgent と navigator['userAgent'] も落とす
 			selector: "MemberExpression[property.name='userAgent']",
-			message: `navigator.userAgent で分岐しない。機能の有無か、CSS のメディア特性で判定する。 ${PLATFORM_URL}`,
+			message:
+				'navigator.userAgent で分岐しない。機能の有無か、CSS のメディア特性で判定する。',
 		},
 		{
 			selector: "MemberExpression[computed=true] > Literal[value='userAgent']",
-			message: `navigator.userAgent で分岐しない。機能の有無か、CSS のメディア特性で判定する。 ${PLATFORM_URL}`,
+			message:
+				'navigator.userAgent で分岐しない。機能の有無か、CSS のメディア特性で判定する。',
 		},
 		{
 			// bfcache を壊すため、離脱時の処理は pagehide / visibilitychange に置く
 			selector:
 				'CallExpression[callee.property.name=/^(add|remove)EventListener$/] > Literal[value=/^(before)?unload$/]',
-			message: `unload / beforeunload は購読しない。離脱時の処理は pagehide か visibilitychange に置く。 ${PLATFORM_URL}`,
+			message:
+				'unload / beforeunload は購読しない。離脱時の処理は pagehide か visibilitychange に置く。',
 		},
 		{
 			selector: 'MemberExpression[property.name=/^on(before)?unload$/]',
-			message: `onunload / onbeforeunload は使わない。離脱時の処理は pagehide か visibilitychange に置く。 ${PLATFORM_URL}`,
+			message:
+				'onunload / onbeforeunload は使わない。離脱時の処理は pagehide か visibilitychange に置く。',
 		},
 	],
 }
