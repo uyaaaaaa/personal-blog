@@ -152,8 +152,15 @@
 		document.body.style.overflow = menuOpen || searchOpen ? 'hidden' : ''
 	})
 
+	// リンクを踏まない移動（ブラウザバック）でも、被せたものは残さない
 	const route = useRoute()
-	watch(() => route.fullPath, closeSearch)
+	watch(
+		() => route.fullPath,
+		() => {
+			closeMenu()
+			closeSearch()
+		},
+	)
 </script>
 
 <style scoped>
