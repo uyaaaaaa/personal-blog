@@ -49,12 +49,11 @@
 
 			<div class="mx-8 hidden max-w-md flex-1 md:flex">
 				<button
-					ref="searchTriggerRef"
 					type="button"
 					class="group flex w-full items-center justify-between rounded-md border border-border bg-surface-subtle px-4 py-2 text-sub transition-colors hover:border-accent"
 					aria-haspopup="dialog"
 					:aria-expanded="isSearchOpen"
-					@click="openSearchFromTrigger"
+					@click="openSearch"
 				>
 					<span class="flex items-center gap-2">
 						<svg
@@ -91,12 +90,45 @@
 			</div>
 
 			<div class="flex items-stretch gap-3 self-stretch md:gap-5">
+				<button
+					type="button"
+					class="flex h-8 w-8 items-center justify-center self-center rounded-md text-sub transition-colors hover:text-accent md:hidden"
+					aria-label="Search"
+					aria-haspopup="dialog"
+					:aria-expanded="isSearchOpen"
+					@click="openSearch"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true"
+					>
+						<circle
+							cx="11"
+							cy="11"
+							r="8"
+						></circle>
+						<line
+							x1="21"
+							y1="21"
+							x2="16.65"
+							y2="16.65"
+						></line>
+					</svg>
+				</button>
+
 				<ThemeToggle class="self-center" />
 				<Navigation
 					:is-open="isMenuOpen"
 					@toggle="toggleMenu"
 					@close="closeMenu"
-					@search="openSearch"
 				/>
 			</div>
 		</div>
@@ -116,9 +148,7 @@
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)
 
-	const searchTriggerRef = ref<HTMLButtonElement | null>(null)
-
-	// 戻し先はデスクトップとSPで別の要素になるので、開いた時点で当たっていたものを覚える
+	// 戻し先はデスクトップとSPで別のボタンになるので、押されたものを覚える
 	let searchOpener: HTMLElement | null = null
 
 	const toggleMenu = () => {
@@ -129,17 +159,11 @@
 		isMenuOpen.value = false
 	}
 
-	const openSearch = () => {
-		searchOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null
-		isMenuOpen.value = false
+	// Safari と Firefox は click で button にフォーカスを移さないので、開く前に寄せる
+	const openSearch = (event: MouseEvent) => {
+		searchOpener = event.currentTarget instanceof HTMLElement ? event.currentTarget : null
+		searchOpener?.focus()
 		isSearchOpen.value = true
-	}
-
-	// Safari と Firefox は click で button にフォーカスを移さないので、
-	// ドロワーと同じく戻し先を自分に寄せてから開く
-	const openSearchFromTrigger = () => {
-		searchTriggerRef.value?.focus()
-		openSearch()
 	}
 
 	const closeSearch = () => {
