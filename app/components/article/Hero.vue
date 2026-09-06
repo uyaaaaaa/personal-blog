@@ -1,8 +1,8 @@
 <template>
-	<section
+	<NuxtLink
 		v-if="article"
-		class="group relative cursor-pointer"
-		@click="navigateTo(article.path)"
+		:to="article.path"
+		class="group relative block"
 	>
 		<div
 			class="grid grid-cols-1 items-center overflow-hidden rounded-card border border-border bg-surface transition-all duration-300 hover:shadow-md lg:grid-cols-2"
@@ -81,7 +81,7 @@
 				</div>
 			</div>
 		</div>
-	</section>
+	</NuxtLink>
 </template>
 
 <script setup lang="ts">
