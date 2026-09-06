@@ -17,6 +17,6 @@ UI と生成物は自動テストが守らない。根拠になるのは、そ�
 | いつ | 読む先 |
 | :--- | :--- |
 | 方針を覆すとき / 方針レベルの判断を記録するとき | [docs/DECISIONS.md](./docs/DECISIONS.md)（ADR の索引） |
-| トークン・レイアウト原則・UX 要件に触れるとき | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) |
+| デザインの判断に迷ったとき | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) |
 | 構造・依存方向・検査の置き場を変えるとき | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
 | favicon / OGP を作り直すとき | [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) |
