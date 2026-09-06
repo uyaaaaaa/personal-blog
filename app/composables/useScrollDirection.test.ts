@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
 import { isProgrammaticScroll } from './useProgrammaticScroll'
 import { useScrollDirection } from './useScrollDirection'
 import { withSetup } from './withSetup.test-helper'

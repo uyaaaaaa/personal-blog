@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick, ref } from 'vue'
 import { useScrollFrame } from './useScrollFrame'
 import { withSetup } from './withSetup.test-helper'
 
