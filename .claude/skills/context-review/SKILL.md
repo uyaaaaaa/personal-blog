@@ -1,6 +1,6 @@
 ---
 name: context-review
-description: "CLAUDE.md・.claude/rules・.claude/skills の棚卸し。「コンテキストを見直して」「CLAUDE.md を整理して」「モデルが変わったので調整して」という依頼で使う。書き足すのではなく、消せるものを探す。"
+description: "CLAUDE.md・.claude/rules・.claude/skills・.claude/agents の棚卸し。「コンテキストを見直して」「CLAUDE.md を整理して」「モデルが変わったので調整して」という依頼で使う。書き足すのではなく、消せるものを探す。"
 ---
 
 # コンテキストの棚卸し
@@ -14,6 +14,7 @@ description: "CLAUDE.md・.claude/rules・.claude/skills の棚卸し。「コ�
 | `CLAUDE.md`、`paths` の無い rule、`paths: "**"` の rule | 毎セッション | 毎回効く事実だけ。落とすと同じ間違いを繰り返すもの |
 | `paths` 付きの rule | 該当ファイルを開いたとき | そのファイル種別に閉じた判断 |
 | skill | 依頼が該当したとき | 手順。フェーズごとに参照する文書はさらに別ファイルに分ける |
+| agent | 投げられたとき（description は毎セッション） | 投げた先で完結する手順。判断はメインに残す |
 
 ## 手順
 
