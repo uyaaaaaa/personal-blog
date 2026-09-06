@@ -1,16 +1,19 @@
 // @vitest-environment happy-dom
 import { mount } from '@vue/test-utils'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useFocusTrap } from './useFocusTrap'
 
 const mounted: Array<() => void> = []
 
 // 末尾の1つは visibility で隠してあり、Tab の行き先は last になる
-const mountTrap = (isOpen: Ref<boolean> = ref(false)) => {
+const mountTrap = (
+	isOpen: Ref<boolean> = ref(false),
+	onEscape?: (event: KeyboardEvent) => void,
+) => {
 	const wrapper = mount(
 		defineComponent({
 			setup: () => {
-				const { trapRef } = useFocusTrap(isOpen)
+				const { trapRef } = useFocusTrap(isOpen, onEscape)
 
 				return () =>
 					h('div', [
@@ -39,8 +42,8 @@ const mountTrap = (isOpen: Ref<boolean> = ref(false)) => {
 	}
 }
 
-const mountOpenTrap = async () => {
-	const trap = mountTrap()
+const mountOpenTrap = async (onEscape?: (event: KeyboardEvent) => void) => {
+	const trap = mountTrap(ref(false), onEscape)
 	trap.isOpen.value = true
 	await nextTick()
 
@@ -49,6 +52,12 @@ const mountOpenTrap = async () => {
 
 const pressTab = ({ shiftKey } = { shiftKey: false }) => {
 	const event = new KeyboardEvent('keydown', { key: 'Tab', shiftKey, cancelable: true })
+	window.dispatchEvent(event)
+	return event
+}
+
+const pressEscape = () => {
+	const event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true })
 	window.dispatchEvent(event)
 	return event
 }
@@ -115,5 +124,25 @@ describe('useFocusTrap', () => {
 		last.focus()
 
 		expect(pressTab().defaultPrevented).toBe(false)
+	})
+
+	it('開いている間の Escape で onEscape を呼ぶ', async () => {
+		const onEscape = vi.fn()
+		await mountOpenTrap(onEscape)
+
+		pressEscape()
+
+		expect(onEscape).toHaveBeenCalledOnce()
+	})
+
+	it('閉じている間は Escape で onEscape を呼ばない', async () => {
+		const onEscape = vi.fn()
+		const { isOpen } = await mountOpenTrap(onEscape)
+		isOpen.value = false
+		await nextTick()
+
+		pressEscape()
+
+		expect(onEscape).not.toHaveBeenCalled()
 	})
 })

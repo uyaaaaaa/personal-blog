@@ -99,7 +99,10 @@
 		(e: 'close'): void
 	}>()
 
-	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'))
+	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), (event) => {
+		if (isComposingKey(event)) return
+		emit('close')
+	})
 
 	const { data: articles } = useAsyncData('search-articles', () =>
 		queryCollection('article')
@@ -194,30 +197,18 @@
 		}
 	}
 
-	const onWindowKeydown = (event: KeyboardEvent) => {
-		if (isComposingKey(event)) return
-
-		if (event.key === 'Escape') emit('close')
-	}
-
 	// 閉じるアニメーションの間も結果を出したままにするため、消すのは開くとき
 	watch(
 		() => props.isOpen,
 		(isOpen) => {
-			if (!isOpen) {
-				window.removeEventListener('keydown', onWindowKeydown)
-				return
-			}
+			if (!isOpen) return
 
-			window.addEventListener('keydown', onWindowKeydown)
 			composing = false
 			query.value = ''
 			// visibility の遷移が始まるまで算出値は hidden のままで、focus() が黙って効かない
 			requestAnimationFrame(() => requestAnimationFrame(() => inputRef.value?.focus()))
 		},
 	)
-
-	onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKeydown))
 </script>
 
 <style scoped>

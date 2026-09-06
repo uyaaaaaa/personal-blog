@@ -7,10 +7,17 @@ const FOCUSABLE_SELECTOR =
 const isTabbable = (element: HTMLElement) =>
 	getComputedStyle(element).visibility !== 'hidden' && element.getClientRects().length > 0
 
-export const useFocusTrap = (isOpen: Ref<boolean>) => {
+export const useFocusTrap = (isOpen: Ref<boolean>, onEscape?: (event: KeyboardEvent) => void) => {
 	const trapRef = ref<HTMLElement | null>(null)
 
+	// 開いた直後はまだ外側にフォーカスがあり、Tab を押すまで中に引き込まないため、
+	// Escape も Tab と同じく window で受ける
 	const onKeydown = (event: KeyboardEvent) => {
+		if (event.key === 'Escape') {
+			onEscape?.(event)
+			return
+		}
+
 		if (event.key !== 'Tab') return
 
 		const root = trapRef.value
