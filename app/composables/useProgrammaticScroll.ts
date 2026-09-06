@@ -1,5 +1,3 @@
-import { ref } from 'vue'
-
 export const isProgrammaticScroll = ref(false)
 
 let settleTimer: ReturnType<typeof setTimeout> | undefined

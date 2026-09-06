@@ -1,5 +1,3 @@
-import { computed, onMounted, ref } from 'vue'
-
 // Tailwindのlgブレークポイント。Sidebar・TocMobile・ScrollToTopButtonの lg: と同じ幅で切り替える
 const DESKTOP_QUERY = '(min-width: 1024px)'
 

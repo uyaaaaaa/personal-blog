@@ -1,4 +1,3 @@
-import { ref, type Ref } from 'vue'
 import { isProgrammaticScroll } from './useProgrammaticScroll'
 import { useScrollFrame } from './useScrollFrame'
 

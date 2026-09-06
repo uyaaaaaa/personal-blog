@@ -6,6 +6,7 @@ import styleTokens, { DOCS_URL, TOKEN_URL } from './eslint-rules/style-tokens.mj
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 
 const IMPORT_URL = `${DOCS_URL}/ARCHITECTURE.md#依存方向`
+const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
 
 // ディレクトリを跨ぐ参照は `~/`（app/ の外は `~~/`）。相対パスは同じディレクトリの中だけ
 const CROSS_DIRECTORY_RELATIVE = ['..', '../*', '../**', './..', './../*', './../**']
@@ -14,6 +15,17 @@ const restrictions = {
 	'no-restricted-imports': [
 		'error',
 		{
+			paths: [
+				{
+					name: 'vue',
+					message: `Vue の組み込み API は import を書かない。プリセットの auto-import が解決する。プリセットに無い名前（UnwrapRef 等）が要るときだけ eslint-disable を付けて import する。 ${AUTO_IMPORT_URL}`,
+				},
+				{
+					// scan: false のため #imports が出すのはプリセットの名前だけ。全部 auto-import される
+					name: '#imports',
+					message: `#imports から import を書かない。プリセットの auto-import が解決する。 ${AUTO_IMPORT_URL}`,
+				},
+			],
 			patterns: [
 				{
 					group: CROSS_DIRECTORY_RELATIVE,
