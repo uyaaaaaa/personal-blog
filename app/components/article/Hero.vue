@@ -13,7 +13,7 @@
 				<img
 					v-if="article.image"
 					:src="article.image"
-					:alt="article.title"
+					alt=""
 					class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
 				/>
 				<div
