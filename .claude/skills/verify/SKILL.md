@@ -54,7 +54,6 @@ npm run lint > .verify/lint.log 2>&1; echo $?   # 出力はファイル、終了
 
 `npm run dev` を起こし、SP 375px / PC 1280px × ライト / ダークの4通りを撮る。
 **撮った PNG は必ず開いて見る。** 置いただけでは確認にならない。見るのは、横スクロール、着地位置がヘッダーに潜っていないか、`before-` との差。
-**UI を変えたときは、撮った4枚を会話にも渡す。** `before-` があれば並べて渡す。
 
 ```sh
 CH=$(command -v chromium || ls -d /opt/pw-browsers/chromium-*/chrome-linux/chrome | head -1)
