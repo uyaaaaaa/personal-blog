@@ -140,7 +140,7 @@
 						<NuxtLink
 							to="/"
 							class="drawer-row"
-							@click="emit('close')"
+							@click="closeDrawer"
 						>
 							<svg
 								class="drawer-icon"
@@ -214,7 +214,7 @@
 										:to="`/category/${category.slug}`"
 										class="drawer-subrow drawer-subrow-split"
 										prefetch-on="interaction"
-										@click="emit('close')"
+										@click="closeDrawer"
 									>
 										<span class="drawer-subrow-name">{{ category.label }}</span>
 										<span class="drawer-subrow-count">{{
@@ -281,7 +281,7 @@
 										:to="article.path"
 										class="drawer-subrow"
 										prefetch-on="interaction"
-										@click="emit('close')"
+										@click="closeDrawer"
 									>
 										<span class="drawer-subrow-title">{{ article.title }}</span>
 										<time
@@ -350,7 +350,7 @@
 										:to="`/tags/${tag.slug}`"
 										class="drawer-subrow drawer-subrow-split"
 										prefetch-on="interaction"
-										@click="emit('close')"
+										@click="closeDrawer"
 									>
 										<span class="drawer-subrow-name">{{ tag.name }}</span>
 										<span class="drawer-subrow-count">{{ tag.count }}</span>
