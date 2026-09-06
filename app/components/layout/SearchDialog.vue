@@ -157,13 +157,16 @@
 	// Safari は compositionend を keydown より先に出すため確定と取り消しは
 	// isComposing が false で届き、変換の終わり際は自前で覚えておくしかない
 	let composing = false
+	let endFrame = 0
 
+	// 変換が切れてすぐ次が始まる IME もあり、待たせたフレームは始まりで取り消す
 	const startComposition = () => {
+		cancelAnimationFrame(endFrame)
 		composing = true
 	}
 
 	const endComposition = () => {
-		requestAnimationFrame(() => {
+		endFrame = requestAnimationFrame(() => {
 			composing = false
 		})
 	}
