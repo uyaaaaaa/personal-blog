@@ -6,6 +6,7 @@
 		@click="onOverlayClick"
 	>
 		<div
+			ref="trapRef"
 			class="search-dialog rounded-card border border-border bg-surface shadow-lg"
 			role="dialog"
 			aria-label="Search articles"
@@ -86,6 +87,7 @@
 </template>
 
 <script setup lang="ts">
+	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { formatDate } from '~/utils/date'
 	import { searchArticles } from '~/utils/search'
 
@@ -96,6 +98,8 @@
 	const emit = defineEmits<{
 		(e: 'close'): void
 	}>()
+
+	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'))
 
 	const { data: articles } = useAsyncData('search-articles', () =>
 		queryCollection('article')
