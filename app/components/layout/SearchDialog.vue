@@ -39,8 +39,8 @@
 					v-model="query"
 					type="search"
 					class="search-input"
-					placeholder="Search articles by title"
-					aria-label="Search articles by title"
+					placeholder="Search articles by title or tag"
+					aria-label="Search articles by title or tag"
 					autocomplete="off"
 					@keydown="onInputKeydown"
 					@compositionstart="startComposition"
@@ -87,7 +87,7 @@
 
 <script setup lang="ts">
 	import { formatDate } from '~/utils/date'
-	import { searchByTitle } from '~/utils/search'
+	import { searchArticles } from '~/utils/search'
 
 	const props = defineProps<{
 		isOpen: boolean
@@ -101,7 +101,7 @@
 		queryCollection('article')
 			.where('published', '=', true)
 			.order('date', 'DESC')
-			.select('path', 'title', 'date')
+			.select('path', 'title', 'date', 'tags')
 			.all(),
 	)
 
@@ -110,10 +110,12 @@
 	const inputRef = ref<HTMLInputElement | null>(null)
 	const resultsRef = ref<HTMLElement | null>(null)
 
-	const results = computed(() => searchByTitle(articles.value ?? [], query.value))
+	const results = computed(() => searchArticles(articles.value ?? [], query.value))
 
 	const emptyMessage = computed(() =>
-		query.value.trim() === '' ? 'Type to search articles by title.' : 'No articles found.',
+		query.value.trim() === ''
+			? 'Type to search articles by title or tag.'
+			: 'No articles found.',
 	)
 
 	const moveActive = (delta: number) => {
