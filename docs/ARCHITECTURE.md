@@ -3,9 +3,6 @@
 このリポジトリの**現状の構造**と、検査をどこに置くかを説明します。守るべき個々の取り決めは `.claude/rules/` にあります。
 判断の理由は [DECISIONS.md](./DECISIONS.md)（ADR の索引）、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md) にあります。コンポーネントの値や構造は実装が正で、写した文書を持ちません。
 
-以前ここにあったフレームワーク非依存の設計原則と規約は、このリポジトリの規模（1人・静的サイト）には合わないため退避しました。
-復元方法は [#105](https://github.com/uyaaaaaa/personal-blog/issues/105) を参照してください。
-
 ---
 
 ## 何を守るか
@@ -34,13 +31,12 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 - `components/` の間では、`article/` が `common/` を使う。`layout/` は他の領域を使わない。
 - `content/` の記事は `@nuxt/content` と `remark/` を経て描画され、本文中のコンポーネントは `components/content/` だけが受ける。
 
-## データとスタイルの流れ
+## 静的生成とスタイルの流れ
 
-- データ取得（`queryCollection`）を呼ぶのはページと、ページの実体である一覧コンポーネントだけ。部品は props で受け取る。
 - 静的生成でビルド時に全ページを作る。ビルド時刻が焼き付く値はクライアントで `onMounted` 後に計算する。
-- URL が持つ状態（ページ番号・タグ・カテゴリ）は `route.params` から導き、別の state を持たない。
-- スタイルは `theme/tokens.ts` → `tailwind.config.ts` → CSS 変数と Tailwind theme の一方向。コンポーネントは Tailwind のクラスを基本にし、状態遷移やアニメーションが複雑なものだけ scoped CSS を持つ。
-- テーマは `@nuxtjs/color-mode` が `<html>` のクラスで持ち、CSS 変数の再定義で切り替わる。
+- スタイルは `theme/tokens.ts` → `tailwind.config.ts` → CSS 変数と Tailwind theme の一方向。テーマの切り替えは CSS 変数の再定義で成立させる。
+
+データの流れと状態の持ち方は `.claude/rules/structure.md` にある。
 
 ---
 
