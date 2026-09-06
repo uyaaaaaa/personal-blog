@@ -27,6 +27,11 @@ const LENGTH = /(-?)(\d*\.?\d+)(px|rem)\b/gi
 const HEX = /#[0-9a-f]{3,8}\b/gi
 const COLOR_FUNCTION = /\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix)\(\s*[^)]*\)/gi
 const QUOTED = /'[^']*'|"[^"]*"/g
+const URL_FUNCTION = /url\((?:[^()]|\([^()]*\))*\)/gi
+const CUSTOM_PROPERTY = /--[A-Za-z0-9_-]+/g
+
+// 文字列と url() の中身は値ではない。色はさらに、トークンの名前を色の名前と読まないよう落とす
+const readable = (value) => value.replace(QUOTED, '').replace(URL_FUNCTION, '')
 
 // CSS の色キーワード。transparent と currentColor は色の指定ではないので含めない
 const NAMED_COLORS = new Set(
@@ -74,10 +79,13 @@ function channelsOf(literal) {
 			parseInt(digits.slice(i * step, i * step + step).repeat(step === 1 ? 2 : 1), 16)
 		return [channel(0), channel(1), channel(2)]
 	}
-	const numbers = [...literal.matchAll(/-?\d*\.?\d+/g)].map((match) => Number(match[0]))
-	return literal.includes('%')
-		? numbers.slice(0, 3).map((value) => (value * 255) / 100)
-		: numbers.slice(0, 3)
+	const args = literal.slice(literal.indexOf('(') + 1)
+	return args
+		.split('/')[0]
+		.split(/[\s,]+/)
+		.filter(Boolean)
+		.slice(0, 3)
+		.map((part) => (part.endsWith('%') ? (Number.parseFloat(part) * 255) / 100 : Number(part)))
 }
 
 // ガイドラインが例外に挙げる「白・黒とその透過」
@@ -128,8 +136,8 @@ const noUntokenizedSize = {
 		},
 	},
 	create(context) {
-		const check = (text, loc) => {
-			for (const [literal, , number, unit] of text.matchAll(LENGTH)) {
+		const check = (value, loc) => {
+			for (const [literal, , number, unit] of readable(value).matchAll(LENGTH)) {
 				if (vocabulary[unit.toLowerCase()].has(Math.abs(Number(number)))) continue
 				context.report({ loc, messageId: 'untokenized', data: { literal } })
 			}
@@ -156,7 +164,7 @@ const noColorLiteral = {
 	},
 	create(context) {
 		const check = (value, loc) => {
-			const text = value.replace(QUOTED, '')
+			const text = readable(value).replace(CUSTOM_PROPERTY, '')
 			const found = [
 				...text.matchAll(HEX),
 				...text.matchAll(COLOR_FUNCTION),
