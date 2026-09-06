@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-// remark-mdc は @nuxt/content の依存で、記事を実際に変換するのもその同じ実体。ここで
-// 別に宣言すると版が離れ、production と違うパーサを測ることになるため依存に足さない
+// remark-mdc だけ依存に宣言しない。宣言すると版が別に解決され、記事を変換するのとは
+// 違う実体を測ることになるため
 import remarkMdc from 'remark-mdc'
 import remarkParse from 'remark-parse'
 import { unified } from 'unified'
