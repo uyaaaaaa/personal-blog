@@ -1,0 +1,19 @@
+name: Unlabel
+
+on:
+    pull_request_target:
+        types: [closed]
+
+permissions:
+    pull-requests: write
+
+jobs:
+    in-review:
+        if: contains(github.event.pull_request.labels.*.name, 'in review')
+        runs-on: ubuntu-latest
+        steps:
+            - run: gh pr edit "$PR" --repo "$REPO" --remove-label 'in review'
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  REPO: ${{ github.repository }}
+                  PR: ${{ github.event.pull_request.number }}
