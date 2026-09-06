@@ -443,7 +443,7 @@
 		border: none;
 		background: none;
 		font-family: inherit;
-		font-size: 0.95rem;
+		font-size: 1rem;
 		font-weight: 500;
 		color: var(--color-main);
 		cursor: pointer;
@@ -532,7 +532,7 @@
 	.menu-category-name {
 		min-width: 0;
 		font-family: var(--font-mono);
-		font-size: 0.8125rem;
+		font-size: 0.875rem;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -551,8 +551,8 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
-		width: 20px;
-		height: 15px;
+		width: 1.25rem;
+		height: 1rem;
 		background: none;
 		border: none;
 		cursor: pointer;
@@ -595,7 +595,7 @@
 		top: 0;
 		right: 0;
 		width: 80%;
-		max-width: 320px;
+		max-width: 20rem;
 		height: 100%;
 		background-color: var(--color-surface);
 		border-left: 1px solid var(--color-border);
@@ -617,7 +617,7 @@
 		display: flex;
 		justify-content: flex-end;
 		align-items: center;
-		height: 64px;
+		height: 4rem;
 		margin: 0 -0.75rem 0.5rem;
 		padding: 0 0.5rem;
 		background-color: var(--color-surface);
@@ -628,8 +628,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 36px;
-		height: 36px;
+		width: 2.25rem;
+		height: 2.25rem;
 		padding: 0;
 		border: none;
 		border-radius: 0.5rem;
@@ -639,8 +639,8 @@
 	}
 
 	.drawer-close svg {
-		width: 20px;
-		height: 20px;
+		width: 1.25rem;
+		height: 1.25rem;
 	}
 
 	.drawer-close:hover {
@@ -662,7 +662,7 @@
 		border-radius: 0.5rem;
 		background: none;
 		font-family: inherit;
-		font-size: 0.95rem;
+		font-size: 1rem;
 		font-weight: 500;
 		text-align: left;
 		color: var(--color-main);
@@ -684,8 +684,8 @@
 
 	.drawer-icon {
 		flex: none;
-		width: 18px;
-		height: 18px;
+		width: 1.125rem;
+		height: 1.125rem;
 		color: var(--color-sub);
 	}
 
@@ -696,8 +696,8 @@
 
 	.drawer-chevron {
 		flex: none;
-		width: 16px;
-		height: 16px;
+		width: 1rem;
+		height: 1rem;
 		color: var(--color-sub);
 		transform: rotate(-90deg);
 		transition: transform 0.2s ease-in-out;
@@ -775,7 +775,7 @@
 		display: block;
 		margin-top: 0.125rem;
 		font-family: var(--font-mono);
-		font-size: 0.7rem;
+		font-size: 0.75rem;
 		color: var(--color-sub);
 	}
 

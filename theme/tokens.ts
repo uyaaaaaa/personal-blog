@@ -69,16 +69,22 @@ export const sizes = {
 		'sticky-column': 'calc(100vh - 6rem)',
 		'toc-dropdown': '60vh',
 	},
+	maxWidth: {
+		container: '1200px',
+	},
 	minHeight: {
 		'card-title': '2.6em',
 	},
 	spacing: {
 		'toc-guide': '3px',
 		'below-header': '74px',
+		'landing-offset': '88px',
+		'landing-offset-lg': '96px',
 		'toc-hidden': '120px',
 		'hero-media': '230px',
 		'shelf-card': '264px',
 		sidebar: '300px',
+		'menu-panel': '960px',
 	},
 }
 

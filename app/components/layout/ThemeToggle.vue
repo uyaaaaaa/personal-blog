@@ -275,8 +275,8 @@
 
 	.theme-option-icon {
 		flex: none;
-		width: 16px;
-		height: 16px;
+		width: 1rem;
+		height: 1rem;
 		color: var(--color-sub);
 	}
 

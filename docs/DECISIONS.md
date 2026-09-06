@@ -16,3 +16,4 @@
 - [09 サイズにも名前を付けてトークンに置く](./adr/09-size-tokens-and-no-arbitrary-values.md)
 - [10 ドキュメントは原則持たず、思想が反映され簡単に変えられない判断だけを ADR に残す](./adr/10-docs-only-for-hard-to-reverse-decisions.md)
 - [11 効いている検査の一覧を文書に持たない](./adr/11-no-enforcement-inventory.md)
+- [12 scoped CSS の値も Tailwind の語彙に限り、ESLint で落とす](./adr/12-style-block-token-lint.md)
