@@ -5,7 +5,6 @@
 	import Toc from '~/components/article/Toc.vue'
 	import TocMobile from '~/components/article/TocMobile.vue'
 	import ArticleFallback from '~/components/article/ArticleFallback.vue'
-	import { useScrollTo } from '~/composables/useScrollTo'
 	import { beginProgrammaticScroll } from '~/composables/useProgrammaticScroll'
 	import { usePageSeo } from '~/composables/usePageSeo'
 	import { formatDate } from '~/utils/date'
@@ -82,26 +81,6 @@
 		tags: () => page.value?.tags,
 	})
 
-	const { scrollTo } = useScrollTo()
-	const articleRef = ref<HTMLElement | null>(null)
-
-	const setupHeaderClickListeners = () => {
-		if (!articleRef.value) return
-
-		const headers = articleRef.value.querySelectorAll('h2, h3, h4, h5, h6')
-		headers.forEach((header) => {
-			const el = header as HTMLElement
-			el.style.cursor = 'pointer'
-
-			el.onclick = (e) => {
-				e.preventDefault()
-				if (el.id) {
-					scrollTo(el.id)
-				}
-			}
-		})
-	}
-
 	const FOOTNOTE_LINK_SELECTOR = 'a[data-footnote-ref], a[data-footnote-backref]'
 
 	// pointerdownで目次バーの退避を先行させ、キーボード操作を拾うためにclickでも呼ぶ
@@ -111,18 +90,6 @@
 
 		beginProgrammaticScroll()
 	}
-
-	onMounted(() => {
-		setupHeaderClickListeners()
-	})
-
-	watch(
-		() => page.value,
-		async () => {
-			await nextTick()
-			setupHeaderClickListeners()
-		},
-	)
 </script>
 
 <template>
@@ -178,7 +145,6 @@
 				<TocMobile :links="tocLinks" />
 
 				<div
-					ref="articleRef"
 					class="prose prose-slate max-w-none dark:prose-invert"
 					@pointerdown="handleFootnoteJump"
 					@click="handleFootnoteJump"
@@ -224,16 +190,6 @@
 
 	.prose a:hover {
 		text-decoration: underline;
-	}
-
-	.prose :where(h1, h2, h3, h4, h5, h6) a {
-		color: inherit;
-		text-decoration: none;
-	}
-
-	.prose :where(h1, h2, h3, h4, h5, h6) a:hover {
-		color: var(--color-accent);
-		text-decoration: none;
 	}
 
 	.prose {
