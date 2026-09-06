@@ -4,3 +4,4 @@ dist/
 /content/
 *.md
 package-lock.json
+.claude/settings.local.json
