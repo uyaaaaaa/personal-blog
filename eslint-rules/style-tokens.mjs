@@ -4,6 +4,7 @@ import { sizes } from '../theme/tokens.ts'
 
 export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
 export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
+export const MOTION_URL = `${DOCS_URL}/adr/02-no-prefers-reduced-motion.md`
 
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
@@ -190,9 +191,58 @@ const noColorLiteral = {
 	},
 }
 
+const noImportant = {
+	meta: {
+		type: 'problem',
+		schema: [],
+		messages: {
+			important:
+				'!important は書かない。第三者由来のインラインスタイルを打ち消すときだけ、理由を添えた eslint-disable を <script> に置いて許す。',
+		},
+	},
+	create(context) {
+		return {
+			Program() {
+				eachStyleBlock(context, (root, locate) => {
+					root.walkDecls((decl) => {
+						if (decl.important)
+							context.report({ loc: locate(decl), messageId: 'important' })
+					})
+				})
+			},
+		}
+	},
+}
+
+const REDUCED_MOTION = /prefers-reduced-motion/i
+
+const noReducedMotion = {
+	meta: {
+		type: 'problem',
+		schema: [],
+		messages: {
+			reducedMotion: `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`,
+		},
+	},
+	create(context) {
+		return {
+			Program() {
+				eachStyleBlock(context, (root, locate) => {
+					root.walkAtRules((rule) => {
+						if (REDUCED_MOTION.test(rule.params))
+							context.report({ loc: locate(rule), messageId: 'reducedMotion' })
+					})
+				})
+			},
+		}
+	},
+}
+
 export default {
 	rules: {
 		'no-untokenized-size': noUntokenizedSize,
 		'no-color-literal': noColorLiteral,
+		'no-important': noImportant,
+		'no-reduced-motion': noReducedMotion,
 	},
 }

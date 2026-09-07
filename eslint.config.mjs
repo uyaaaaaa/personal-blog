@@ -1,12 +1,24 @@
 import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
-import styleTokens, { DOCS_URL, TOKEN_URL } from './eslint-rules/style-tokens.mjs'
+import styleTokens, { DOCS_URL, MOTION_URL, TOKEN_URL } from './eslint-rules/style-tokens.mjs'
 
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
+const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
 
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#依存方向`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
+const TESTS_URL = `${DOCS_URL}/adr/06-tests-next-to-source.md`
+
+const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`
+const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
+const PAGES_TEST_MESSAGE = `app/pages/ にテストを置かない。テストは実装の隣に置く。 ${TESTS_URL}`
+
+const PALETTE_COLORS =
+	'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
+const PALETTE_CLASS = `(?:^|[\\s:])[a-z]+(?:-[a-z]+)*-(?:${PALETTE_COLORS})-(?:50|[1-9]00|950)\\b`
+
+const REEXPORT = ':matches(ExportNamedDeclaration[source], ExportAllDeclaration)'
 
 const AREA_DIRECTORY_MESSAGE = `components/ の直下にファイルを置かない。layout / article / content / common / error のいずれかに入れる。 ${ARCHITECTURE_URL}`
 
@@ -69,6 +81,11 @@ const restrictions = {
 			message:
 				'onunload / onbeforeunload は使わない。離脱時の処理は pagehide か visibilitychange に置く。',
 		},
+		{
+			selector:
+				':matches(Literal[value=/prefers-reduced-motion/], TemplateElement[value.cooked=/prefers-reduced-motion/])',
+			message: REDUCED_MOTION_MESSAGE,
+		},
 	],
 }
 
@@ -85,7 +102,16 @@ export default [
 				sourceType: 'module',
 			},
 		},
-		rules: { ...restrictions },
+		rules: {
+			...restrictions,
+			'no-restricted-syntax': [
+				...restrictions['no-restricted-syntax'],
+				{
+					selector: `Program:has(> ${REEXPORT}):not(:has(> :not(${REEXPORT})))`,
+					message: BARREL_MESSAGE,
+				},
+			],
+		},
 	},
 	{
 		files: ['app/**/*.vue'],
@@ -110,6 +136,8 @@ export default [
 			// scoped CSS の直値。クラス側の任意値と同じ基準を <style> にも当てる
 			'style/no-untokenized-size': 'error',
 			'style/no-color-literal': 'error',
+			'style/no-important': 'error',
+			'style/no-reduced-motion': 'error',
 			// 角括弧を含むクラス（`w-[264px]` 等）がTailwindの任意値
 			'vue/no-restricted-syntax': [
 				'error',
@@ -122,6 +150,14 @@ export default [
 					selector:
 						"VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/\\[/], TemplateElement[value.cooked=/\\[/])",
 					message: ARBITRARY_VALUE_MESSAGE,
+				},
+				{
+					selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${PALETTE_CLASS}/]`,
+					message: PALETTE_MESSAGE,
+				},
+				{
+					selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${PALETTE_CLASS}/], TemplateElement[value.cooked=/${PALETTE_CLASS}/])`,
+					message: PALETTE_MESSAGE,
 				},
 			],
 		},
@@ -153,6 +189,19 @@ export default [
 					selector:
 						'CallExpression[callee.name=/^(useSeoMeta|useHead|definePageMeta|usePageSeo)$/]',
 					message: PAGE_CONTEXT_META_MESSAGE,
+				},
+			],
+		},
+	},
+	{
+		// ルートファイルはロジックを持たないので、テストの相手にならない
+		files: ['app/pages/**/*.test.ts'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector: 'Program',
+					message: PAGES_TEST_MESSAGE,
 				},
 			],
 		},
