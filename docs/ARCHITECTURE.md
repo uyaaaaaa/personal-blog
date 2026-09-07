@@ -21,10 +21,12 @@
 ## 依存方向
 
 ```
-pages   ─┐
-layouts ─┴─→ components ─→ composables ─→ utils
-         │        │             │
-         └────────┴─────────────┴──→ theme/tokens.ts（app.vue のみ直接参照）
+pages     ─┐
+layouts   ─┤
+app.vue   ─┤
+error.vue ─┼─→ components ─→ composables ─→ utils
+           │        │             │
+           └────────┴─────────────┴──→ theme/tokens.ts（app.vue のみ直接参照）
 content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components/content/
 ```
 
