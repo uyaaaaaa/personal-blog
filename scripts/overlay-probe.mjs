@@ -542,9 +542,7 @@ const probes = [
 	{
 		name: 'history-back',
 		run: async (p) => {
-			// フルロードで戻ると被せた側ごと作り直され、閉じる経路を通らずに閉じて見える。
-			// 同じ文書に戻れたときだけ測る
-			for (let attempt = 0; attempt < 3; attempt++) {
+			const cycle = async () => {
 				await p.open()
 				if (config.input) await p.typeQuery()
 				if (config.expand) {
@@ -570,9 +568,18 @@ const probes = [
 					throw new Error('history.back() で戻らない')
 				}
 				await p.waitClosed()
-				const state = await p.evaluate(
-					'return { ...$state(), same: !!window.__overlayProbe }',
-				)
+				return p.evaluate('return { ...$state(), same: !!window.__overlayProbe }')
+			}
+
+			// dev は1往復目でその経路を組み立てる。組み立ての遅れを閉じない証拠にしないため、
+			// 1往復は捨てて測り直す。フルロードで戻った回も、状態ごと復元されるので測れていない
+			for (let attempt = 0; attempt < 3; attempt++) {
+				await cycle()
+				await p.reload()
+				sentSteps.length = 0
+				sent('（下ごしらえ）遷移と戻るを1往復')
+
+				const state = await cycle()
 				if (!state.same) {
 					await p.reload()
 					continue
