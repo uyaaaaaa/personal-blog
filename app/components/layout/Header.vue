@@ -49,6 +49,7 @@
 
 			<div class="mx-8 hidden max-w-md flex-1 md:flex">
 				<button
+					ref="desktopSearchRef"
 					type="button"
 					class="group flex w-full items-center justify-between rounded-md border border-border bg-surface-subtle px-4 py-2 text-sub transition-colors hover:border-accent"
 					aria-haspopup="dialog"
@@ -91,6 +92,7 @@
 
 			<div class="flex items-stretch gap-3 self-stretch md:gap-5">
 				<button
+					ref="mobileSearchRef"
 					type="button"
 					class="flex h-8 w-8 items-center justify-center self-center rounded-md text-sub transition-colors hover:text-accent md:hidden"
 					aria-label="Search"
@@ -144,9 +146,12 @@
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
+	import { isSearchShortcut } from '~/utils/search'
 
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)
+	const desktopSearchRef = ref<HTMLElement | null>(null)
+	const mobileSearchRef = ref<HTMLElement | null>(null)
 
 	// 戻し先はデスクトップとSPで別のボタンになるので、押されたものを覚える
 	let searchOpener: HTMLElement | null = null
@@ -159,11 +164,15 @@
 		isMenuOpen.value = false
 	}
 
-	// Safari と Firefox は click で button にフォーカスを移さないので、開く前に寄せる
-	const openSearch = (event: MouseEvent) => {
-		searchOpener = event.currentTarget instanceof HTMLElement ? event.currentTarget : null
-		searchOpener?.focus()
+	const openSearchFrom = (opener: HTMLElement | null) => {
+		searchOpener = opener
+		// Safari と Firefox は click で button にフォーカスを移さないので、開く前に寄せる
+		opener?.focus()
 		isSearchOpen.value = true
+	}
+
+	const openSearch = (event: MouseEvent) => {
+		openSearchFrom(event.currentTarget instanceof HTMLElement ? event.currentTarget : null)
 	}
 
 	const closeSearch = () => {
@@ -171,6 +180,28 @@
 		searchOpener?.focus()
 		searchOpener = null
 	}
+
+	// キーで開いたときの戻し先は、その幅で出ている方のボタン。隠れている側に戻すと
+	// 閉じた後のフォーカスが見えない要素に乗る
+	const visibleSearchButton = () =>
+		[desktopSearchRef.value, mobileSearchRef.value].find(
+			(button) => button && button.getClientRects().length > 0,
+		) ?? null
+
+	const onSearchShortcut = (event: KeyboardEvent) => {
+		if (!isSearchShortcut(event)) return
+		// 変換中の Ctrl+K は mac の IME がカタカナ変換に使う。横取りしない
+		if (event.isComposing) return
+
+		event.preventDefault()
+		// 開き直すと入力済みが消えるので、開いている間はブラウザの検索を止めるだけ
+		if (isSearchOpen.value) return
+
+		openSearchFrom(visibleSearchButton())
+	}
+
+	onMounted(() => window.addEventListener('keydown', onSearchShortcut))
+	onBeforeUnmount(() => window.removeEventListener('keydown', onSearchShortcut))
 
 	watch([isMenuOpen, isSearchOpen], ([menuOpen, searchOpen]) => {
 		document.body.style.overflow = menuOpen || searchOpen ? 'hidden' : ''

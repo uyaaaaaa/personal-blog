@@ -22,6 +22,7 @@ const TRANSITION = 400
 const OVERLAYS = {
 	search: {
 		trigger: 'header button[aria-haspopup="dialog"]',
+		shortcut: 'K',
 		overlay: '.search-overlay',
 		trap: '.search-dialog',
 		input: '.search-input',
@@ -30,6 +31,7 @@ const OVERLAYS = {
 	},
 	drawer: {
 		trigger: '.mobile-menu-btn',
+		shortcut: null,
 		overlay: '.mobile-menu-overlay',
 		trap: '.mobile-drawer',
 		input: null,
@@ -46,7 +48,26 @@ const KEYS = {
 	Enter: { key: 'Enter', code: 'Enter', keyCode: 13 },
 	ArrowDown: { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40 },
 	ArrowUp: { key: 'ArrowUp', code: 'ArrowUp', keyCode: 38 },
+	K: { key: 'k', code: 'KeyK', keyCode: 75 },
 }
+
+// Input.dispatchKeyEvent の modifiers のビット
+const ALT = 1
+const CTRL = 2
+const META = 4
+const SHIFT = 8
+
+const MODIFIER_LABELS = [
+	[META, 'Cmd'],
+	[CTRL, 'Ctrl'],
+	[ALT, 'Alt'],
+	[SHIFT, 'Shift'],
+]
+
+const keyLabel = (name, modifiers) =>
+	[...MODIFIER_LABELS.filter(([bit]) => modifiers & bit).map(([, label]) => label), name].join(
+		'+',
+	)
 
 const [, , target = 'search', baseUrl = 'http://localhost:3000'] = process.argv
 const config = OVERLAYS[target]
@@ -213,11 +234,27 @@ const start = async () => {
 	}
 
 	const pressKey = async (name, modifiers = 0) => {
-		sent(modifiers === SHIFT ? `Shift+${name}` : name)
+		sent(keyLabel(name, modifiers))
 		const { key, code, keyCode } = KEYS[name]
 		const base = { key, code, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode }
 		await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'rawKeyDown', modifiers })
 		await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'keyUp', modifiers })
+	}
+
+	// ブラウザ既定（アドレスバーへの移動）を止めているかは defaultPrevented で見る。
+	// アプリより後ろで受けないと止める前を読むので、送るたびに listener を付け直す
+	const pressShortcut = async (modifiers) => {
+		await evaluate(`
+			window.__shortcut = null
+			if (window.__shortcutHook) window.removeEventListener('keydown', window.__shortcutHook)
+			window.__shortcutHook = (event) => {
+				window.__shortcut = { key: event.key, prevented: event.defaultPrevented }
+			}
+			window.addEventListener('keydown', window.__shortcutHook)
+		`)
+		await pressKey(config.shortcut, modifiers)
+		await evaluate('await $frames(2)')
+		return evaluate('return window.__shortcut')
 	}
 
 	const mouse = async (type, { x, y }, buttons) =>
@@ -257,6 +294,23 @@ const start = async () => {
 			await sleep(50)
 		}
 		throw new Error(`押した位置にあるのは ${selector} ではなく ${blocked}`)
+	}
+
+	// キーもハイドレーションの前に送ると何も起きない。開くまで同じキーを送り直す
+	const openByShortcut = async (modifiers) => {
+		let key = null
+		for (let attempt = 0; attempt < 8; attempt++) {
+			key = await pressShortcut(modifiers)
+			const opened = await waitFor(
+				`getComputedStyle(document.querySelector(OVERLAY)).visibility === 'visible'`,
+				1000,
+			)
+			if (opened) {
+				await evaluate('return $settled(TRAP)')
+				return { key, opened: true }
+			}
+		}
+		return { key, opened: false }
 	}
 
 	// synthetic は click でフォーカスを動かさないブラウザ（Safari / Firefox）と同じ状況を作る。
@@ -338,6 +392,8 @@ const start = async () => {
 		waitClosed,
 		reload,
 		pressKey,
+		pressShortcut,
+		openByShortcut,
 		mouse,
 		centerOf,
 		click,
@@ -347,8 +403,6 @@ const start = async () => {
 		typeQuery,
 	}
 }
-
-const SHIFT = 8
 
 // 証跡に残すのは、書いた手順ではなく実際に送った操作。同じものが続いたらまとめる
 const sentSteps = []
@@ -404,6 +458,98 @@ const probes = [
 		name: 'focus-return/合成クリック',
 		run: async (p) => {
 			await p.open({ synthetic: true })
+			await p.pressKey('Escape')
+			await p.waitClosed()
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'active', 'activeShown']),
+				ok: state.overlay === 'hidden' && state.activeShown,
+			}
+		},
+	},
+	{
+		name: 'shortcut-Cmd+K で開く',
+		shortcut: true,
+		run: async (p) => {
+			sent('activeElement を blur')
+			await p.evaluate(`document.activeElement?.blur()`)
+			const { key, opened } = await p.openByShortcut(META)
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
+			return {
+				observed: `${show(state, ['overlay', 'active'])} prevented=${key?.prevented}`,
+				ok: opened && state.inInput && key?.prevented === true,
+			}
+		},
+	},
+	{
+		name: 'shortcut-Ctrl+K で開く',
+		shortcut: true,
+		run: async (p) => {
+			sent('activeElement を blur')
+			await p.evaluate(`document.activeElement?.blur()`)
+			const { key, opened } = await p.openByShortcut(CTRL)
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
+			return {
+				observed: `${show(state, ['overlay', 'active'])} prevented=${key?.prevented}`,
+				ok: opened && state.inInput && key?.prevented === true,
+			}
+		},
+	},
+	{
+		name: 'shortcut-開いている間の Cmd+K',
+		shortcut: true,
+		run: async (p) => {
+			await p.open()
+			const query = await p.typeQuery()
+			await p.pressShortcut(META)
+			await sleep(TRANSITION)
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'query']),
+				ok: state.overlay === 'visible' && state.query === query,
+			}
+		},
+	},
+	{
+		name: 'shortcut-変換中の Ctrl+K',
+		shortcut: true,
+		run: async (p) => {
+			await p.open()
+			await p.typeQuery()
+			await p.compose('あ')
+			const composing = await p.evaluate('return $state()')
+			const key = await p.pressShortcut(CTRL)
+			await sleep(TRANSITION)
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: `${show(state, ['overlay', 'query'])} prevented=${key?.prevented}`,
+				// mac の変換中の Ctrl+K はカタカナ変換。横取りしていないことを見る
+				ok:
+					state.overlay === 'visible' &&
+					state.query === composing.query &&
+					key?.prevented === false,
+			}
+		},
+	},
+	{
+		name: 'focus-return/ショートカット',
+		shortcut: true,
+		run: async (p) => {
+			sent('activeElement を blur')
+			await p.evaluate(`document.activeElement?.blur()`)
+			const { opened } = await p.openByShortcut(META)
+			if (!opened) throw new Error('ショートカットで開かない')
+
 			await p.pressKey('Escape')
 			await p.waitClosed()
 			const state = await p.evaluate('return $state()')
@@ -738,6 +884,7 @@ const main = async () => {
 			await probe.setWidth(width)
 			for (const item of probes) {
 				if (item.input && !config.input) continue
+				if (item.shortcut && !config.shortcut) continue
 				if (item.widths && !item.widths.includes(width)) continue
 
 				await probe.reload()
