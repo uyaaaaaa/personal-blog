@@ -39,7 +39,7 @@ const review = (rest) => {
 		fail('review に渡すのは PR の番号1つだけ。', '', ...USAGE)
 	}
 	return {
-		title: `PR #${number}`,
+		title: `Review PR #${number}`,
 		body: `review スキルの「見届けを頼まれたとき」に従って ${SOURCE_URL}/pull/${number} を見る。`,
 	}
 }
@@ -63,14 +63,16 @@ const task = (rest) => {
 }
 
 const [kind, ...rest] = process.argv.slice(2)
-const build = { issue, review, task }[kind]
-if (!build) fail(...USAGE)
+const builders = { issue, review, task }
+if (!Object.hasOwn(builders, kind ?? '')) fail(...USAGE)
+
+const build = builders[kind]
 
 const { title, branch, body } = build(rest)
 const prompt = [
 	body,
 	...(branch ? [`作業ブランチは ${branch} にする。`] : []),
-	'答えを待てる相手はいないので、判断は自分で決めて進める。',
+	'答えを待てる相手はいない。',
 ].join('\n')
 
 console.log(JSON.stringify({ model: MODEL, source_url: SOURCE_URL, title, prompt }, null, 2))
