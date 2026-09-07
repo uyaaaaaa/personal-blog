@@ -19,16 +19,10 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約から、�
 
 ## 2. 置き場で落とす
 
-判定に何が要るかで置き場を決める（→ `docs/ARCHITECTURE.md`）。決まらなければ落とす。
+判定に何が要るかで置き場を決める。基準は `docs/ARCHITECTURE.md` の「検査の置き場」。
+そこに無い置き場が2つ。**`<style>` の中身**は ESLint（`eslint-rules/style-tokens.mjs` が postcss で読んでいる）。**コミットの本文**は `.githooks/`。ブラウザの probe は lint では回らず `verify` から叩く。
 
-| 判定に要るもの | 置き場 |
-| :--- | :--- |
-| 整形 | Prettier |
-| ファイル1つ | ESLint。`<style>` の中身は `eslint-rules/style-tokens.mjs` が postcss で読んでいる |
-| 依存グラフ | dependency-cruiser |
-| ファイルをまたぐ突き合わせ | `scripts/` の検査 |
-| ブラウザで操作しないと分からない | `scripts/` の probe。lint では回らず `verify` から叩く |
-| コミットの本文 | `.githooks/` |
+決まらなければ落とす。
 
 **人の読みが要るものは落とす。** 「原則として書かない」「2箇所以上で使うものだけ」「同じ値の正本を2箇所に作らない」は、判定に文脈が要る。規約のまま置くのが正しい。
 
