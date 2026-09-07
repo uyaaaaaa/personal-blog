@@ -213,6 +213,7 @@ const start = async () => {
 	}
 
 	const pressKey = async (name, modifiers = 0) => {
+		sent(modifiers === SHIFT ? `Shift+${name}` : name)
 		const { key, code, keyCode } = KEYS[name]
 		const base = { key, code, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode }
 		await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'rawKeyDown', modifiers })
@@ -238,7 +239,8 @@ const start = async () => {
 		`)
 
 	// 開き際は座標だけ先に決まって、そこに見えているのは別の要素という状態がある
-	const click = async (selector) => {
+	const click = async (selector, label) => {
+		sent(`${label}を実クリック`)
 		let blocked = null
 		for (let waited = 0; waited < 2000; waited += 50) {
 			const point = await centerOf(selector)
@@ -262,11 +264,12 @@ const start = async () => {
 	const open = async ({ synthetic = false } = {}) => {
 		for (let attempt = 0; attempt < 8; attempt++) {
 			if (synthetic) {
+				sent('トリガに合成 click（フォーカスを動かさない）')
 				await evaluate(
 					`$vis(TRIGGER).dispatchEvent(new MouseEvent('click', { bubbles: true }))`,
 				)
 			} else {
-				await click(config.trigger)
+				await click(config.trigger, 'トリガ')
 			}
 
 			const opened = await waitFor(
@@ -281,9 +284,30 @@ const start = async () => {
 		throw new Error('被せた UI が開かない')
 	}
 
+	const compose = async (text) => {
+		sent('imeSetComposition で変換中にする')
+		await cdp.send('Input.imeSetComposition', {
+			text,
+			selectionStart: text.length,
+			selectionEnd: text.length,
+		})
+	}
+
 	// 閉じるアニメーションの分だけ待つ。閉じないものは待っても閉じない
 	const waitClosed = () =>
-		waitFor(`getComputedStyle(document.querySelector(OVERLAY)).visibility === 'hidden'`, 1500)
+		waitFor(`getComputedStyle(document.querySelector(OVERLAY)).visibility === 'hidden'`, 2500)
+
+	// dev はそのルートに初めて入るときコンパイルする。その待ちを操作の結果として測らない
+	const warm = async () => {
+		await reload()
+		const article = await evaluate(
+			`return document.querySelector('a[href^="/article/"]')?.getAttribute('href') ?? null`,
+		)
+		if (article) {
+			await cdp.send('Page.navigate', { url: `${baseUrl}${article}` })
+			await waitFor(`document.readyState === 'complete'`, 30000)
+		}
+	}
 
 	// 結果が出ないと Enter もリンクも測れないので、当たる語を探して打つ
 	const typeQuery = async () => {
@@ -291,7 +315,10 @@ const start = async () => {
 			await evaluate(`document.querySelector(INPUT).focus()`)
 			await cdp.send('Input.insertText', { text: query })
 			await evaluate('await $frames(2)')
-			if (await evaluate(`return !!$vis(LINK)`)) return query
+			if (await evaluate(`return !!$vis(LINK)`)) {
+				sent(`語を打つ（"${query}"）`)
+				return query
+			}
 			await evaluate(`
 				const input = document.querySelector(INPUT)
 				input.value = ''
@@ -315,13 +342,27 @@ const start = async () => {
 		centerOf,
 		click,
 		open,
+		warm,
+		compose,
 		typeQuery,
 	}
 }
 
+const SHIFT = 8
+
+// 証跡に残すのは、書いた手順ではなく実際に送った操作。同じものが続いたらまとめる
+const sentSteps = []
+const sent = (step) => {
+	const last = sentSteps.at(-1)
+	if (last?.step === step) last.count += 1
+	else sentSteps.push({ step, count: 1 })
+}
+const sentLine = () =>
+	sentSteps.map(({ step, count }) => (count > 1 ? `${step} ×${count}` : step)).join(' → ')
+
 const results = []
-const record = (width, name, sent, observed, ok) => {
-	results.push({ width, name, sent, observed, ok })
+const record = (width, name, observed, ok) => {
+	results.push({ width, name, sent: sentLine(), observed, ok })
 	console.log(`[${width}] ${ok ? 'OK' : 'NG'} ${name}`)
 }
 
@@ -333,9 +374,9 @@ const show = (state, keys) =>
 const probes = [
 	{
 		name: 'escape-outside',
-		sent: 'トリガを実クリック → activeElement を blur → Escape',
 		run: async (p) => {
 			await p.open()
+			sent('activeElement を blur')
 			await p.evaluate(`document.activeElement?.blur()`)
 			await p.pressKey('Escape')
 			await p.waitClosed()
@@ -348,7 +389,6 @@ const probes = [
 	},
 	{
 		name: 'focus-return/実クリック',
-		sent: 'トリガを実クリック → Escape',
 		run: async (p) => {
 			await p.open()
 			await p.pressKey('Escape')
@@ -362,7 +402,6 @@ const probes = [
 	},
 	{
 		name: 'focus-return/合成クリック',
-		sent: 'トリガに合成 click（フォーカスを動かさない） → Escape',
 		run: async (p) => {
 			await p.open({ synthetic: true })
 			await p.pressKey('Escape')
@@ -376,7 +415,6 @@ const probes = [
 	},
 	{
 		name: 'tab-cycle',
-		sent: 'トリガを実クリック → 語を打つ → Tab ×8 → Shift+Tab ×2',
 		run: async (p) => {
 			await p.open()
 			if (config.input) await p.typeQuery()
@@ -388,7 +426,7 @@ const probes = [
 			`)
 			const landings = []
 			for (let i = 0; i < 10; i++) {
-				await p.pressKey('Tab', i < 8 ? 0 : 8)
+				await p.pressKey('Tab', i < 8 ? 0 : SHIFT)
 				landings.push(
 					await p.evaluate(`
 						const active = document.activeElement
@@ -401,57 +439,92 @@ const probes = [
 				)
 			}
 			const stuck = landings.filter((landing) => !landing.shown)
+			const outside = landings.filter((landing) => !landing.inside)
 			const moved = new Set(landings.map((landing) => landing.name)).size > 1
 			return {
 				observed: `行き先=${destinations}件 ${landings.map((l) => `${l.name}${l.inside ? '' : '(外)'}`).join(' → ')}`,
-				ok: stuck.length === 0 && (destinations < 2 || moved),
+				ok: stuck.length === 0 && outside.length === 0 && (destinations < 2 || moved),
 			}
 		},
 	},
 	{
 		name: 'tab-md-cross',
 		widths: [375],
-		sent: '375 で開く → 語を打つ → 1280 に広げる → Tab ×5 → Shift+Tab ×2',
 		run: async (p) => {
 			await p.open()
 			if (config.input) await p.typeQuery()
+			sent('幅を 1280 に広げる')
 			await p.setWidth(1280)
 			await p.evaluate('await $frames(3)')
+			// 跨いだ先で被せた側が消える（ドロワー）なら、行き先は背後のページしか無い
+			const trapShown = await p.evaluate(`return $shown(document.querySelector(TRAP))`)
 			const landings = []
 			for (let i = 0; i < 7; i++) {
-				await p.pressKey('Tab', i < 5 ? 0 : 8)
-				landings.push(await p.evaluate(`return $name(document.activeElement)`))
+				await p.pressKey('Tab', i < 5 ? 0 : SHIFT)
+				landings.push(
+					await p.evaluate(`
+						const active = document.activeElement
+						return {
+							name: $name(active),
+							shown: $shown(active) && active !== document.body,
+							inside: !!document.querySelector(TRAP)?.contains(active),
+						}
+					`),
+				)
 			}
 			await p.setWidth(375)
-			const moved = new Set(landings).size > 1 && !landings.every((name) => name === 'BODY')
-			return { observed: `行き先: ${landings.join(' → ')}`, ok: moved }
+			const moved = new Set(landings.map((landing) => landing.name)).size > 1
+			const misplaced = landings.filter((landing) => landing.inside !== trapShown)
+			return {
+				observed: `被せた側=${trapShown ? '出たまま' : '消える'} 行き先: ${landings
+					.map((l) => `${l.name}${l.inside ? '' : '(外)'}`)
+					.join(' → ')}`,
+				ok: moved && misplaced.length === 0 && landings.every((landing) => landing.shown),
+			}
 		},
 	},
 	{
 		name: 'tab-開き際のフレーム',
-		sent: '合成 click で開く → 開いた同じフレームから6フレーム、各フレームで Tab（cancelable）',
 		run: async (p) => {
-			const samples = await p.evaluate(`
-				$vis(TRIGGER).dispatchEvent(new MouseEvent('click', { bubbles: true }))
-				const samples = []
-				for (let frame = 0; frame < 6; frame++) {
-					await Promise.resolve()
-					const root = document.querySelector(TRAP)
-					const destinations = [...root.querySelectorAll(FOCUSABLE)].filter(
-						(el) => getComputedStyle(el).visibility !== 'hidden' && $shown(el),
-					).length
-					const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
-					window.dispatchEvent(event)
-					samples.push({
-						frame,
-						open: document.querySelector(OVERLAY).classList.contains('is-open'),
-						destinations,
-						prevented: event.defaultPrevented,
-					})
-					await $frames(1)
+			// ハイドレーションの前に押しても開かない。開くまで押し直し、開けなかったら NG
+			let samples = []
+			for (
+				let attempt = 0;
+				attempt < 8 && !samples.some((sample) => sample.open);
+				attempt++
+			) {
+				const stillOpen = await p.evaluate(
+					`return getComputedStyle(document.querySelector(OVERLAY)).visibility === 'visible'`,
+				)
+				if (stillOpen) {
+					await p.pressKey('Escape')
+					if (!(await p.waitClosed())) throw new Error('開いたまま閉じられない')
 				}
-				return samples
-			`)
+
+				sent('トリガに合成 click（フォーカスを動かさない）')
+				sent('同じフレームから6フレーム、各フレームで Tab（cancelable）')
+				samples = await p.evaluate(`
+					$vis(TRIGGER).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+					const samples = []
+					for (let frame = 0; frame < 6; frame++) {
+						await Promise.resolve()
+						const root = document.querySelector(TRAP)
+						const destinations = [...root.querySelectorAll(FOCUSABLE)].filter(
+							(el) => getComputedStyle(el).visibility !== 'hidden' && $shown(el),
+						).length
+						const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+						window.dispatchEvent(event)
+						samples.push({
+							frame,
+							open: document.querySelector(OVERLAY).classList.contains('is-open'),
+							destinations,
+							prevented: event.defaultPrevented,
+						})
+						await $frames(1)
+					}
+					return samples
+				`)
+			}
 			return {
 				observed: samples
 					.map(
@@ -459,48 +532,68 @@ const probes = [
 							`f${s.frame}=${s.open ? '開' : '閉'}/行き先${s.destinations}件/prevent=${s.prevented}`,
 					)
 					.join(' '),
-				// 行き先が0件のまま握りつぶすと、Tab はどこにも進まない
-				ok: !samples.some((sample) => sample.destinations === 0 && sample.prevented),
+				// 開いていなければ何も送れていない。行き先0件のまま握りつぶすと Tab はどこにも進まない
+				ok:
+					samples.some((sample) => sample.open) &&
+					!samples.some((sample) => sample.destinations === 0 && sample.prevented),
 			}
 		},
 	},
 	{
 		name: 'history-back',
-		sent: '開く → 中のリンクを実クリックで遷移 → もう一度開く → history.back()',
 		run: async (p) => {
-			await p.open()
-			if (config.input) await p.typeQuery()
-			if (config.expand) {
-				await p.click(config.expand)
-				await p.waitFor(`getComputedStyle($vis(LINK)).visibility === 'visible'`)
-				await p.evaluate('return $settled(LINK)')
+			// フルロードで戻ると被せた側ごと作り直され、閉じる経路を通らずに閉じて見える。
+			// 同じ文書に戻れたときだけ測る
+			for (let attempt = 0; attempt < 3; attempt++) {
+				await p.open()
+				if (config.input) await p.typeQuery()
+				if (config.expand) {
+					await p.click(config.expand, '折りたたみ')
+					if (
+						!(await p.waitFor(`getComputedStyle($vis(LINK)).visibility === 'visible'`))
+					) {
+						throw new Error('折りたたみが開かない')
+					}
+					await p.evaluate('return $settled(LINK)')
+				}
+				const from = await p.evaluate(`return $path()`)
+				await p.evaluate(`window.__overlayProbe = 1`)
+				await p.click(config.link, '中のリンク')
+				if (!(await p.waitFor(`$path() !== ${JSON.stringify(from)}`))) {
+					throw new Error('リンクで遷移しない')
+				}
+				await sleep(TRANSITION)
+				await p.open()
+				sent('history.back()')
+				await p.evaluate(`history.back()`)
+				if (!(await p.waitFor(`$path() === ${JSON.stringify(from)}`))) {
+					throw new Error('history.back() で戻らない')
+				}
+				await p.waitClosed()
+				const state = await p.evaluate(
+					'return { ...$state(), same: !!window.__overlayProbe }',
+				)
+				if (!state.same) {
+					await p.reload()
+					continue
+				}
+				return {
+					observed: show(state, ['overlay', 'overflow', 'path']),
+					ok: state.overlay === 'hidden' && state.overflow === '',
+				}
 			}
-			const from = await p.evaluate(`return $path()`)
-			await p.click(config.link)
-			if (!(await p.waitFor(`$path() !== ${JSON.stringify(from)}`))) {
-				throw new Error('リンクで遷移しない')
-			}
-			await sleep(TRANSITION)
-			await p.open()
-			await p.evaluate(`history.back()`)
-			await p.waitFor(`$path() === ${JSON.stringify(from)}`)
-			await p.waitClosed()
-			const state = await p.evaluate('return $state()')
-			return {
-				observed: show(state, ['overlay', 'overflow', 'path']),
-				ok: state.overlay === 'hidden' && state.overflow === '',
-			}
+			throw new Error('同じ文書に戻らない（フルロードになる）')
 		},
 	},
 	{
 		name: 'pointer-入力欄から外へドラッグ',
 		input: true,
-		sent: '開く → 語を打つ → 入力欄で mousedown → 外に move → 外で mouseup',
 		run: async (p) => {
 			await p.open()
 			const query = await p.typeQuery()
 			const inside = await p.centerOf(config.input)
 			const outside = { x: 5, y: 5 }
+			sent('入力欄で mousedown → 外に move → 外で mouseup')
 			await p.mouse('mousePressed', inside, 1)
 			await p.mouse('mouseMoved', outside, 1)
 			await p.mouse('mouseReleased', outside, 0)
@@ -515,15 +608,10 @@ const probes = [
 	{
 		name: 'ime-変換中の Escape',
 		input: true,
-		sent: '開く → 語を打つ → imeSetComposition で変換中にする → Escape',
 		run: async (p) => {
 			await p.open()
 			await p.typeQuery()
-			await p.cdp.send('Input.imeSetComposition', {
-				text: 'あ',
-				selectionStart: 1,
-				selectionEnd: 1,
-			})
+			await p.compose('あ')
 			await p.pressKey('Escape')
 			await sleep(TRANSITION)
 			const state = await p.evaluate('return $state()')
@@ -533,16 +621,11 @@ const probes = [
 	{
 		name: 'ime-変換中の Enter',
 		input: true,
-		sent: '開く → 語を打つ → imeSetComposition で変換中にする → Enter',
 		run: async (p) => {
 			await p.open()
 			await p.typeQuery()
 			const from = await p.evaluate(`return $path()`)
-			await p.cdp.send('Input.imeSetComposition', {
-				text: 'あ',
-				selectionStart: 1,
-				selectionEnd: 1,
-			})
+			await p.compose('あ')
 			await p.pressKey('Enter')
 			await sleep(TRANSITION)
 			const state = await p.evaluate('return $state()')
@@ -555,10 +638,10 @@ const probes = [
 	{
 		name: 'ime-確定が先に届く順序（Safari）',
 		input: true,
-		sent: '開く → 語を打つ → compositionstart / compositionend → isComposing=false の Enter と Escape',
 		run: async (p) => {
 			await p.open()
 			await p.typeQuery()
+			sent('compositionstart / compositionend → isComposing=false の Enter と Escape')
 			const observed = await p.evaluate(`
 				const input = document.querySelector(INPUT)
 				const from = $path()
@@ -590,10 +673,10 @@ const probes = [
 	{
 		name: 'ime-変換が切れて続く',
 		input: true,
-		sent: '開く → 語を打つ → compositionstart → 同じフレームで end + start → 2フレーム後に確定の Enter',
 		run: async (p) => {
 			await p.open()
 			await p.typeQuery()
+			sent('compositionstart → 同じフレームで end + start → 2フレーム後に確定の Enter')
 			const observed = await p.evaluate(`
 				const input = document.querySelector(INPUT)
 				const from = $path()
@@ -620,7 +703,6 @@ const probes = [
 	{
 		name: '変換していない ↓ と Enter',
 		input: true,
-		sent: '開く → 語を打つ → ArrowDown → Enter',
 		run: async (p) => {
 			await p.open()
 			await p.typeQuery()
@@ -644,6 +726,7 @@ const main = async () => {
 	let failed = 0
 
 	try {
+		await probe.warm()
 		for (const width of config.widths) {
 			await probe.setWidth(width)
 			for (const item of probes) {
@@ -652,12 +735,13 @@ const main = async () => {
 
 				await probe.reload()
 				await probe.setWidth(width)
+				sentSteps.length = 0
 				try {
 					const { observed, ok } = await item.run(probe)
-					record(width, item.name, item.sent, observed, ok)
+					record(width, item.name, observed, ok)
 					if (ok === false) failed++
 				} catch (error) {
-					record(width, item.name, item.sent, `送れなかった: ${error.message}`, false)
+					record(width, item.name, `送れなかった: ${error.message}`, false)
 					failed++
 				}
 			}
