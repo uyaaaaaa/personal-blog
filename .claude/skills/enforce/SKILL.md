@@ -27,6 +27,7 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約から、�
 | ファイル1つ | ESLint。`<style>` の中身は `eslint-rules/style-tokens.mjs` が postcss で読んでいる |
 | 依存グラフ | dependency-cruiser |
 | ファイルをまたぐ突き合わせ | `scripts/` の検査 |
+| ブラウザで操作しないと分からない | `scripts/` の probe。lint では回らず `verify` から叩く |
 | コミットの本文 | `.githooks/` |
 
 **人の読みが要るものは落とす。** 「原則として書かない」「2箇所以上で使うものだけ」「同じ値の正本を2箇所に作らない」は、判定に文脈が要る。規約のまま置くのが正しい。
@@ -35,7 +36,9 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約から、�
 
 ## 3. 既に落ちるか試す
 
-**その規約を破る最小の例を書いて `npm run lint` と `npm test` にかける。** どのツールが何を見ているかを設定から読み解かない。読み解くと、既に効いている検査をもう一度足す issue が出る（→ ADR 11 の対価）。試した細工はコミットに含めない（→ `.claude/rules/commit.md`）。
+**その規約を破る最小の例を書いて `npm run lint`・`npm test`・`scripts/` の probe にかける。** どのツールが何を見ているかを設定から読み解かない。読み解くと、既に効いている検査をもう一度足す issue が出る（→ ADR 11 の対価）。
+
+**probe は lint に乗っていない。** そこだけで守られている規約を「未強制」と読み違えやすい（→ `verify`）。試した細工はコミットに含めない（→ `.claude/rules/commit.md`）。
 
 | 結果 | どうする |
 | :--- | :--- |
@@ -69,7 +72,7 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約から、�
 
 完了条件は次の2つだけにする。どちらも外から判定できる。
 
-- その規約を破った変更が `npm run lint` / `npm test` / フックのどれかで落ちる
+- その規約を破った変更を `npm run lint` / `npm test` / フック / `scripts/` の probe のどれかが落とす
 - 移した規約の行が `.claude/rules/` か `docs/DESIGN_GUIDELINE.md` から消えている
 
 **どのツールにどう書くかを完了条件に入れない。** 置き場の見当は「手がかり」に1行で添え、指示ではないと明記する。
