@@ -146,7 +146,7 @@
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
-	import { isSearchShortcut } from '~/utils/search'
+	import { isSearchShortcut } from '~/utils/shortcut'
 
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)
@@ -181,8 +181,7 @@
 		searchOpener = null
 	}
 
-	// キーで開いたときの戻し先は、その幅で出ている方のボタン。隠れている側に戻すと
-	// 閉じた後のフォーカスが見えない要素に乗る
+	// 隠れている側に戻すと、閉じた後のフォーカスが見えない要素に乗る
 	const visibleSearchButton = () =>
 		[desktopSearchRef.value, mobileSearchRef.value].find(
 			(button) => button && button.getClientRects().length > 0,
