@@ -767,14 +767,18 @@ const probes = [
 			// 指の当たり判定は読み込みの時点で決まる。開いた後に入れても cancelable にならない
 			await p.setTouch(true)
 			await p.reload()
-			// 0 のまま送ると、動かなかったのか動く余地が無かったのかが観測に出ない
+			// 指は上に運ぶので、要るのは下に残っている余地。下がった量では測れない
 			sent('背後のページを 300px 下げる')
-			await p.evaluate(`window.scrollTo(0, 300); await $frames(2)`)
+			const room = await p.evaluate(`
+				window.scrollTo(0, 300)
+				await $frames(2)
+				return document.documentElement.scrollHeight - window.innerHeight - window.scrollY
+			`)
+			if (room <= 0) throw new Error('背後のページに下がる余地が無い')
 			await p.open()
 			await p.typeQuery()
 			await p.watchTouchMoves()
 			const before = await p.evaluate(`return window.scrollY`)
-			if (before === 0) throw new Error('背後のページが下がらない（動く余地が無い）')
 			await p.touchDrag(await p.overlayPoint(), 240, '素の部分で押して上に240pxドラッグ')
 			const observed = await p.evaluate(`
 				return { moves: window.__touchMoves, scrollY: window.scrollY, ...$state() }
@@ -782,7 +786,7 @@ const probes = [
 			await p.setTouch(false)
 			const cancelable = observed.moves.filter((move) => move.cancelable)
 			return {
-				observed: `touchmove=${observed.moves.length}件（cancelable=${cancelable.length}件）うち止めた=${cancelable.filter((m) => m.prevented).length}件 scrollY=${before}→${observed.scrollY} overlay="${observed.overlay}"`,
+				observed: `残りの余地=${room}px touchmove=${observed.moves.length}件（cancelable=${cancelable.length}件）うち止めた=${cancelable.filter((m) => m.prevented).length}件 scrollY=${before}→${observed.scrollY} overlay="${observed.overlay}"`,
 				ok:
 					cancelable.length > 0 &&
 					cancelable.every((move) => move.prevented) &&

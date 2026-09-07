@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { mount } from '@vue/test-utils'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useTouchScrollLock } from './useTouchScrollLock'
 
 const mounted: Array<() => void> = []
@@ -54,13 +54,20 @@ const mountLock = () => {
 	}
 }
 
-// happy-dom に TouchEvent が無いので、判定に使う分だけ持たせた touchmove を送る
+// happy-dom に TouchEvent が無いので、判定に使う分だけ持たせた touchmove を送る。
+// cancelable でない event は preventDefault を呼んでも defaultPrevented が立たず、
+// 触ったかどうかが結果に出ない。呼ばれたこと自体を見る
 const touchMove = (from: HTMLElement, { fingers = 1, cancelable = true } = {}) => {
 	const event = new Event('touchmove', { bubbles: true, cancelable })
 	Object.defineProperty(event, 'touches', { value: new Array(fingers).fill({}) })
+	const preventDefault = vi.fn(event.preventDefault.bind(event))
+	event.preventDefault = preventDefault
 	from.dispatchEvent(event)
 
-	return event
+	return {
+		prevented: preventDefault.mock.calls.length > 0,
+		defaultPrevented: event.defaultPrevented,
+	}
 }
 
 afterEach(() => {
@@ -71,45 +78,45 @@ describe('useTouchScrollLock', () => {
 	it('被せた側の外枠に来た指は止める', () => {
 		const { overlay } = mountLock()
 
-		expect(touchMove(overlay).defaultPrevented).toBe(true)
+		expect(touchMove(overlay)).toEqual({ prevented: true, defaultPrevented: true })
 	})
 
 	it('スクロールしない中身に来た指も止める', () => {
 		const { field, input } = mountLock()
 
-		expect(touchMove(field).defaultPrevented).toBe(true)
-		expect(touchMove(input).defaultPrevented).toBe(true)
+		expect(touchMove(field).prevented).toBe(true)
+		expect(touchMove(input).prevented).toBe(true)
 	})
 
 	it('あふれているスクローラの上は止めない', () => {
 		const { scroller, row } = mountLock()
 
-		expect(touchMove(scroller).defaultPrevented).toBe(false)
-		expect(touchMove(row).defaultPrevented).toBe(false)
+		expect(touchMove(scroller).prevented).toBe(false)
+		expect(touchMove(row).prevented).toBe(false)
 	})
 
 	it('あふれていないスクローラは止める', () => {
 		const { short } = mountLock()
 
-		expect(touchMove(short).defaultPrevented).toBe(true)
+		expect(touchMove(short).prevented).toBe(true)
 	})
 
 	it('指が2本のときは止めない', () => {
 		const { overlay } = mountLock()
 
-		expect(touchMove(overlay, { fingers: 2 }).defaultPrevented).toBe(false)
+		expect(touchMove(overlay, { fingers: 2 }).prevented).toBe(false)
 	})
 
 	it('cancelable でない touchmove には触らない', () => {
 		const { overlay } = mountLock()
 
-		expect(touchMove(overlay, { cancelable: false }).defaultPrevented).toBe(false)
+		expect(touchMove(overlay, { cancelable: false }).prevented).toBe(false)
 	})
 
 	it('unmount の後は止めない', () => {
 		const { overlay, unmount } = mountLock()
 		unmount()
 
-		expect(touchMove(overlay).defaultPrevented).toBe(false)
+		expect(touchMove(overlay).prevented).toBe(false)
 	})
 })
