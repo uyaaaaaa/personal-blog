@@ -12,7 +12,6 @@
 				ref="triggerRef"
 				type="button"
 				class="explore-trigger"
-				aria-haspopup="true"
 				aria-controls="header-menu-panel"
 				:aria-expanded="isPanelOpen"
 				@click="togglePanel"
@@ -22,6 +21,8 @@
 
 			<HeaderMenuPanel
 				id="header-menu-panel"
+				role="navigation"
+				aria-label="Explore"
 				:is-open="isPanelOpen"
 			>
 				<HeaderMenuColumn label="Categories">
@@ -108,6 +109,7 @@
 				@click="emit('close')"
 			>
 				<aside
+					ref="trapRef"
 					class="mobile-drawer"
 					@click.stop
 				>
@@ -116,7 +118,7 @@
 							type="button"
 							class="drawer-close"
 							aria-label="Close menu"
-							@click="emit('close')"
+							@click="closeDrawer"
 						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
@@ -138,7 +140,7 @@
 						<NuxtLink
 							to="/"
 							class="drawer-row"
-							@click="emit('close')"
+							@click="closeDrawer"
 						>
 							<svg
 								class="drawer-icon"
@@ -156,37 +158,6 @@
 							</svg>
 							<span class="drawer-row-label">Home</span>
 						</NuxtLink>
-
-						<button
-							type="button"
-							class="drawer-row"
-							@click="openSearch"
-						>
-							<svg
-								class="drawer-icon"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								aria-hidden="true"
-							>
-								<circle
-									cx="11"
-									cy="11"
-									r="8"
-								/>
-								<line
-									x1="21"
-									y1="21"
-									x2="16.65"
-									y2="16.65"
-								/>
-							</svg>
-							<span class="drawer-row-label">Search</span>
-						</button>
 
 						<p class="drawer-section-label">Explore</p>
 
@@ -243,7 +214,7 @@
 										:to="`/category/${category.slug}`"
 										class="drawer-subrow drawer-subrow-split"
 										prefetch-on="interaction"
-										@click="emit('close')"
+										@click="closeDrawer"
 									>
 										<span class="drawer-subrow-name">{{ category.label }}</span>
 										<span class="drawer-subrow-count">{{
@@ -310,7 +281,7 @@
 										:to="article.path"
 										class="drawer-subrow"
 										prefetch-on="interaction"
-										@click="emit('close')"
+										@click="closeDrawer"
 									>
 										<span class="drawer-subrow-title">{{ article.title }}</span>
 										<time
@@ -379,7 +350,7 @@
 										:to="`/tags/${tag.slug}`"
 										class="drawer-subrow drawer-subrow-split"
 										prefetch-on="interaction"
-										@click="emit('close')"
+										@click="closeDrawer"
 									>
 										<span class="drawer-subrow-name">{{ tag.name }}</span>
 										<span class="drawer-subrow-count">{{ tag.count }}</span>
@@ -399,17 +370,17 @@
 	import HeaderMenuColumn from '~/components/layout/HeaderMenuColumn.vue'
 	import { useArticleCategories } from '~/composables/useArticleCategories'
 	import { useArticleTags } from '~/composables/useArticleTags'
+	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useHoverPanel } from '~/composables/useHoverPanel'
 	import { formatRelativeDate } from '~/utils/date'
 
-	defineProps<{
+	const props = defineProps<{
 		isOpen: boolean
 	}>()
 
 	const emit = defineEmits<{
 		(e: 'toggle'): void
 		(e: 'close'): void
-		(e: 'search'): void
 	}>()
 
 	const TOP_TAGS_LIMIT = 10
@@ -417,16 +388,17 @@
 
 	const menuButtonRef = ref<HTMLButtonElement | null>(null)
 
+	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる
+	const closeDrawer = () => {
+		menuButtonRef.value?.focus()
+		emit('close')
+	}
+
+	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), closeDrawer)
+
 	const isCategoriesOpen = ref(false)
 	const isLatestOpen = ref(false)
 	const isTagsOpen = ref(false)
-
-	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから開く
-	const openSearch = () => {
-		menuButtonRef.value?.focus()
-		emit('close')
-		emit('search')
-	}
 
 	const { data: categories } = useArticleCategories()
 

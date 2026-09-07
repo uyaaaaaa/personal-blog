@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import AllArticles from '~/components/article/AllArticles.vue'
+	import AllArticles from './-AllArticles.vue'
 </script>
 
 <template>

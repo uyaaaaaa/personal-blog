@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import TagArticles from '~/components/article/TagArticles.vue'
+	import TagArticles from './-TagArticles.vue'
 </script>
 
 <template>
