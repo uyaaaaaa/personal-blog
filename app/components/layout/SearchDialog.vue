@@ -196,7 +196,9 @@
 		if (!isComposingKey(event)) emit('close')
 	})
 
-	// 閉じるアニメーションの間も結果を出したままにするため、消すのは開くとき
+	// 閉じるアニメーションの間も結果を出したままにするため、消すのは開くとき。
+	// フォーカスは押したときと同じ tick で寄せる。フレームを待つと、多くのモバイル
+	// ブラウザが仮想キーボードを自動表示する判定から外れる（表示の確定は CSS 側が持つ）
 	watch(
 		() => props.isOpen,
 		(isOpen) => {
@@ -204,9 +206,9 @@
 
 			composing = false
 			query.value = ''
-			// visibility の遷移が始まるまで算出値は hidden のままで、focus() が黙って効かない
-			requestAnimationFrame(() => requestAnimationFrame(() => inputRef.value?.focus()))
+			inputRef.value?.focus()
 		},
+		{ flush: 'post' },
 	)
 </script>
 
@@ -228,14 +230,19 @@
 		visibility: hidden;
 		overflow: hidden;
 		overscroll-behavior: contain;
+		/* 閉じる側だけ遅らせる。開く側も遅らせると、算出値が hidden のままの
+		   1フレームが空き、そこに focus() を出しても黙って効かない */
 		transition:
 			opacity 0.2s ease-in-out,
-			visibility 0.2s ease-in-out;
+			visibility 0s linear 0.2s;
 	}
 
 	.search-overlay.is-open {
 		opacity: 1;
 		visibility: visible;
+		transition:
+			opacity 0.2s ease-in-out,
+			visibility 0s;
 	}
 
 	.search-dialog {
