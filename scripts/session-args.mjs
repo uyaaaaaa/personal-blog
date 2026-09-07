@@ -8,6 +8,7 @@ const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789'
 const USAGE = [
 	'使い方:',
 	'  node scripts/session-args.mjs issue <番号>',
+	'  node scripts/session-args.mjs review <PR番号>',
 	'  node scripts/session-args.mjs task <スラッグ> <プロンプト>',
 	'',
 	'出力の JSON をそのまま create_session に渡す。',
@@ -32,6 +33,17 @@ const issue = (rest) => {
 	}
 }
 
+const review = (rest) => {
+	const [number, ...extra] = rest
+	if (!/^[1-9][0-9]*$/.test(number ?? '') || extra.length > 0) {
+		fail('review に渡すのは PR の番号1つだけ。', '', ...USAGE)
+	}
+	return {
+		title: `PR #${number}`,
+		body: `review スキルの「見届けを頼まれたとき」に従って ${SOURCE_URL}/pull/${number} を見る。`,
+	}
+}
+
 const task = (rest) => {
 	const [slug, ...body] = rest
 	if (!SLUG.test(slug ?? '')) {
@@ -51,13 +63,13 @@ const task = (rest) => {
 }
 
 const [kind, ...rest] = process.argv.slice(2)
-const build = { issue, task }[kind]
+const build = { issue, review, task }[kind]
 if (!build) fail(...USAGE)
 
 const { title, branch, body } = build(rest)
 const prompt = [
 	body,
-	`作業ブランチは ${branch} にする。`,
+	...(branch ? [`作業ブランチは ${branch} にする。`] : []),
 	'答えを待てる相手はいないので、判断は自分で決めて進める。',
 ].join('\n')
 
