@@ -8,11 +8,9 @@ const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は
 
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#依存方向`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
-const TESTS_URL = `${DOCS_URL}/adr/06-tests-next-to-source.md`
 
 const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
-const PAGES_TEST_MESSAGE = `app/pages/ にテストを置かない。テストは実装の隣に置く。 ${TESTS_URL}`
 
 const PALETTE_COLORS =
 	'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
@@ -189,19 +187,6 @@ export default [
 					selector:
 						'CallExpression[callee.name=/^(useSeoMeta|useHead|definePageMeta|usePageSeo)$/]',
 					message: PAGE_CONTEXT_META_MESSAGE,
-				},
-			],
-		},
-	},
-	{
-		// ルートファイルはロジックを持たないので、テストの相手にならない
-		files: ['app/pages/**/*.test.ts'],
-		rules: {
-			'no-restricted-syntax': [
-				'error',
-				{
-					selector: 'Program',
-					message: PAGES_TEST_MESSAGE,
 				},
 			],
 		},
