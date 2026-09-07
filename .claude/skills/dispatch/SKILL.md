@@ -44,12 +44,13 @@ open issue を上から順に落とす。
 
 **サブエージェント（`Agent` ツール）にしない。** dispatch 自身が使い捨てのコンテナで動くため、このセッションの終了に道連れで止まる。
 
-| 指定するもの | 値 |
-| :--- | :--- |
-| `model` | `claude-opus-5`。**省略しない。** 省くと発火元の Routine のモデルを継ぐ |
-| `source_url` | `https://github.com/uyaaaaaa/personal-blog`。プロンプトに URL を書くだけでは、起きたセッションから GitHub に投稿できない |
-| `title` | `issue #<番号>` |
-| `prompt` | `assign` に従って `#<番号>` を進めること／作業ブランチは `claude/issue-<番号>-<英数字4〜6>`（次の回の重複判定がこれを見る）にすること／答えを待てる相手がいないこと。これだけ |
+引数はスクリプトが出す。出力の JSON をそのまま `create_session` に渡す。
+
+```sh
+node scripts/session-args.mjs issue <番号>
+```
+
+**出力を書き換えない。** `model` を省くと発火元の Routine のモデルを継ぎ、`source_url` を省くと起きたセッションから GitHub に投稿できず、ブランチ名を変えると次の回の重複判定（`claude/issue-<番号>-`）が外れる。
 
 **実装の方針を渡さない。** issue の読み方は `assign` が持っている。
 
