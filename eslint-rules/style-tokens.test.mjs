@@ -66,6 +66,43 @@ describe('no-untokenized-size', () => {
 	})
 })
 
+describe('no-important', () => {
+	it('!important だけを落とす', () => {
+		tester.run('no-important', styleTokens.rules['no-important'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { color: var(--color-main); }') },
+				{ filename: 'a.vue', code: sfc(".a { content: '!important'; }") },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { color: var(--color-main) !important; }'),
+					errors: [{ messageId: 'important' }],
+				},
+			],
+		})
+	})
+})
+
+describe('no-reduced-motion', () => {
+	it('prefers-reduced-motion を参照する @media を落とす', () => {
+		tester.run('no-reduced-motion', styleTokens.rules['no-reduced-motion'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('@media (min-width: 1024px) { .a { top: 0; } }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc(
+						'@media (prefers-reduced-motion: reduce) { .a { transition: none; } }',
+					),
+					errors: [{ messageId: 'reducedMotion' }],
+				},
+			],
+		})
+	})
+})
+
 describe('no-color-literal', () => {
 	it('トークン由来の色だけを通す', () => {
 		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {

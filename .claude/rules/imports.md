@@ -9,6 +9,5 @@ paths:
 
 - **例外は、フレームワークが名前で解決する領域。** markdown から名前で参照されるコンポーネントは import できない。
 - **import の並びはコンポーネント → composable → util。**
-- **barrel file（再エクスポートだけのファイル）を作らない。**
 
 auto-import を止めた理由は [docs/adr/03-no-auto-import.md](../../docs/adr/03-no-auto-import.md)。置き場の判定は [structure.md](./structure.md)。
