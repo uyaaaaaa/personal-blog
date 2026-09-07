@@ -197,6 +197,8 @@
 		// 開き直すと入力済みが消えるので、開いている間はブラウザの検索を止めるだけ
 		if (isSearchOpen.value) return
 
+		// ドロワーは検索より下の層に残り、開いたままだと戻し先のボタンを覆う
+		closeMenu()
 		openSearchFrom(visibleSearchButton())
 	}
 

@@ -23,6 +23,8 @@ const OVERLAYS = {
 	search: {
 		trigger: 'header button[aria-haspopup="dialog"]',
 		shortcut: 'K',
+		// 下の層に残って戻し先を覆いうる被せ物
+		covering: 'drawer',
 		overlay: '.search-overlay',
 		trap: '.search-dialog',
 		input: '.search-input',
@@ -75,6 +77,8 @@ if (!config) {
 	console.error(`知らない対象: ${target}（${Object.keys(OVERLAYS).join(' / ')}）`)
 	process.exit(2)
 }
+
+const covering = config.covering ? OVERLAYS[config.covering] : null
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -155,6 +159,7 @@ const PAGE_HELPERS = `
 	const TRAP = ${JSON.stringify(config.trap)}
 	const INPUT = ${JSON.stringify(config.input)}
 	const LINK = ${JSON.stringify(config.link)}
+	const COVER = ${JSON.stringify(covering?.overlay ?? null)}
 	const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 	const $shown = (el) => !!el && el.getClientRects().length > 0
 	const $vis = (sel) => [...document.querySelectorAll(sel)].find($shown) ?? null
@@ -242,19 +247,23 @@ const start = async () => {
 	}
 
 	// ブラウザ既定（アドレスバーへの移動）を止めているかは defaultPrevented で見る。
-	// アプリより後ろで受けないと止める前を読むので、送るたびに listener を付け直す
+	// listener の中で読むと登録の順で結果が変わるので、全部走り終えてから読む
 	const pressShortcut = async (modifiers) => {
 		await evaluate(`
-			window.__shortcut = null
-			if (window.__shortcutHook) window.removeEventListener('keydown', window.__shortcutHook)
-			window.__shortcutHook = (event) => {
-				window.__shortcut = { key: event.key, prevented: event.defaultPrevented }
+			window.__shortcutEvent = null
+			if (!window.__shortcutHooked) {
+				window.__shortcutHooked = true
+				window.addEventListener('keydown', (event) => {
+					window.__shortcutEvent = event
+				})
 			}
-			window.addEventListener('keydown', window.__shortcutHook)
 		`)
 		await pressKey(config.shortcut, modifiers)
 		await evaluate('await $frames(2)')
-		return evaluate('return window.__shortcut')
+		return evaluate(`
+			const event = window.__shortcutEvent
+			return event ? { key: event.key, prevented: event.defaultPrevented } : null
+		`)
 	}
 
 	const mouse = async (type, { x, y }, buttons) =>
@@ -311,6 +320,22 @@ const start = async () => {
 			}
 		}
 		return { key, opened: false }
+	}
+
+	// 下の層も、ハイドレーションの前に押しても開かない
+	const openCover = async () => {
+		for (let attempt = 0; attempt < 8; attempt++) {
+			await click(covering.trigger, '下の層のトリガ')
+			const opened = await waitFor(
+				`getComputedStyle(document.querySelector(COVER)).visibility === 'visible'`,
+				1000,
+			)
+			if (opened) {
+				await evaluate(`return $settled(${JSON.stringify(covering?.trap ?? null)})`)
+				return
+			}
+		}
+		throw new Error('下の層が開かない')
 	}
 
 	// synthetic は click でフォーカスを動かさないブラウザ（Safari / Firefox）と同じ状況を作る。
@@ -394,6 +419,7 @@ const start = async () => {
 		pressKey,
 		pressShortcut,
 		openByShortcut,
+		openCover,
 		mouse,
 		centerOf,
 		click,
@@ -538,6 +564,39 @@ const probes = [
 					state.overlay === 'visible' &&
 					state.query === composing.query &&
 					key?.prevented === false,
+			}
+		},
+	},
+	{
+		name: 'shortcut-ドロワーを開いたまま',
+		covering: true,
+		widths: [375],
+		run: async (p) => {
+			await p.openCover()
+
+			const { opened } = await p.openByShortcut(META)
+			if (!opened) throw new Error('ショートカットで開かない')
+
+			await p.pressKey('Escape')
+			await p.waitClosed()
+			const state = await p.evaluate(`
+				const active = document.activeElement
+				const box = active.getBoundingClientRect()
+				const at = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+				return {
+					...$state(),
+					cover: getComputedStyle(document.querySelector(COVER)).visibility,
+					covered: !active.contains(at) && active !== at,
+					at: $name(at),
+				}
+			`)
+			return {
+				observed: `${show(state, ['overlay', 'active', 'activeShown'])} 下の層="${state.cover}" 戻し先の位置に居るのは ${state.at}`,
+				ok:
+					state.overlay === 'hidden' &&
+					state.activeShown &&
+					!state.covered &&
+					state.cover === 'hidden',
 			}
 		},
 	},
@@ -885,6 +944,7 @@ const main = async () => {
 			for (const item of probes) {
 				if (item.input && !config.input) continue
 				if (item.shortcut && !config.shortcut) continue
+				if (item.covering && !covering) continue
 				if (item.widths && !item.widths.includes(width)) continue
 
 				await probe.reload()
