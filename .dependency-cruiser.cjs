@@ -1,4 +1,5 @@
-const RULE_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs/ARCHITECTURE.md#依存方向'
+const RULE_URL =
+	'https://github.com/uyaaaaaa/personal-blog/blob/main/docs/ARCHITECTURE.md#層と依存方向'
 
 const upperLayers = {
 	utils: '^app/(composables|components|pages|layouts)/|^app/(app|error)\\.vue$',
