@@ -1,9 +1,6 @@
 ---
 paths:
-  - "app/**"
-  - "theme/**"
-  - "remark/**"
-  - "*.config.ts"
+  - "**"
 ---
 
 # コメントのルール
@@ -11,7 +8,8 @@ paths:
 **原則としてコメントは書かない。** コードを読めば分かることは、コメントではなくコードで表現する。
 コメントは実装と一緒には更新されず必ず乖離し、乖離したコメントは無いより有害。
 
-対象は `app/`・`theme/`・`remark/` と設定ファイル。記事本文（`content/`）と `docs/` は対象外。
+対象はリポジトリのコードすべて。`app/`・`theme/`・`remark/` に加え、`scripts/`・`eslint-rules/`・`.githooks/` と設定ファイルも含む。
+記事本文（`content/`）と散文（`docs/`・`.claude/`・`README.md`）は `.claude/rules/docs.md` の範囲。
 
 ## 残してよいもの
 
