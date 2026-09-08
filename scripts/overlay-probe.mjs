@@ -799,7 +799,8 @@ const probes = [
 			`)
 			const cancelable = observed.moves.filter((move) => move.cancelable)
 			return {
-				observed: `幅=${width}px 残りの余地=${room}px touchmove=${observed.moves.length}件（cancelable=${cancelable.length}件）うち止めた=${cancelable.filter((m) => m.prevented).length}件 scrollY=${before}→${observed.scrollY} overlay="${observed.overlay}"`,
+				width,
+				observed: `残りの余地=${room}px touchmove=${observed.moves.length}件（cancelable=${cancelable.length}件）うち止めた=${cancelable.filter((m) => m.prevented).length}件 scrollY=${before}→${observed.scrollY} overlay="${observed.overlay}"`,
 				ok:
 					cancelable.length > 0 &&
 					cancelable.every((move) => move.prevented) &&
@@ -913,8 +914,9 @@ const main = async () => {
 				await probe.setWidth(width)
 				sentSteps.length = 0
 				try {
-					const { observed, ok } = await item.run(probe)
-					record(width, item.name, observed, ok)
+					// 幅を自分で変える probe がある。行の幅は送った側に合わせる
+					const { observed, ok, width: sent = width } = await item.run(probe)
+					record(sent, item.name, observed, ok)
 					if (ok === false) failed++
 				} catch (error) {
 					record(width, item.name, `送れなかった: ${error.message}`, false)
