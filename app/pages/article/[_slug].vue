@@ -69,6 +69,7 @@
 	)
 
 	usePageSeo({
+		path: () => route.path,
 		type: page.value ? 'article' : 'website',
 		title: () => page.value?.title ?? (isNotFound.value ? 'Article Not Found' : undefined),
 		description: () =>

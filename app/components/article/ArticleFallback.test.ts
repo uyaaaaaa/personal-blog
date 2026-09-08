@@ -22,7 +22,8 @@ mockNuxtImport('queryCollection', () => () => {
 	return builder
 })
 
-const mount = (props: Record<string, unknown>) => mountSuspended(ArticleFallback, { props })
+const mount = (props: InstanceType<typeof ArticleFallback>['$props']) =>
+	mountSuspended(ArticleFallback, { props })
 
 describe('ArticleFallback', () => {
 	it('error は再試行できる文言にし、進行を読み上げに載せる', async () => {

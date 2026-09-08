@@ -34,7 +34,7 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 - `layouts/` は `pages/` と並ぶ入口で、ルートを持たず全ページ共通の枠を置く。ルートに紐付かない表示はここから下に生える。
 - `components/` は領域のディレクトリ（`layout/` `article/` `content/` `common/` `error/`）に分け、直下にファイルは置かない。領域の間では `article/` が `common/` を使い、`layout/` は他の領域を使わない。
 - `content/` の記事は `@nuxt/content` と `remark/` を経て描画され、本文中のコンポーネントは `components/content/` だけが受ける。
-- `components/` はページの文脈（route のパラメータの読み取り・404 の送出・ページのメタの設定）を持たない。ページ番号の分だけルートファイルが増える一覧（[ADR 01](./adr/01-page-number-in-path.md)）は、本体を `pages/` 配下に `-` 始まりのファイル名（Nuxt のスキャン除外規則）で置き、ルートファイルはそれを import して描画するだけにする。
+- `components/` はページの文脈（route の読み取り・404 の送出・ページのメタの設定）を持たない。route を読むのは入口（`pages/` `layouts/` `app.vue` `error.vue`）だけで、`components/` は props、`composables/` と `utils/` は引数で受け取る（[ADR 14](./adr/14-route-read-only-at-entry.md)）。ページ番号の分だけルートファイルが増える一覧（[ADR 01](./adr/01-page-number-in-path.md)）は、本体を `pages/` 配下に `-` 始まりのファイル名（Nuxt のスキャン除外規則）で置き、ルートファイルはそれを import して描画するだけにする。
 
 ## 静的生成とスタイルの流れ
 
@@ -47,12 +47,12 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 
 ## 検査の置き場
 
-検査を足すときの置き場は、判定に何が要るかで決める。整形は Prettier に、ファイル1つで判定できるそれ以外の違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に、記事をまたいで突き合わせる違反（タグのスラッグ）は `scripts/` の検査に置く。
+検査を足すときの置き場は、判定に何が要るかで決める。整形は Prettier に、ファイル1つで判定できるそれ以外の違反は ESLint に、型の解決が要る違反（シグネチャの不一致・解決できない型の import）は `nuxt typecheck` に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に、記事をまたいで突き合わせる違反（タグのスラッグ）は `scripts/` の検査に置く。
 ブラウザで操作しないと判定できない違反（被せた UI のキーボード・日本語入力・履歴の経路）は `scripts/` の probe に置き、lint では回さない。
 ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。整形ルールは足さない。
 lint で落とせるようになったルールは `.claude/rules/` から消す（二重管理にしない）。
 
-commit のたびに回すのは lint だけにする。待たされるものを増やさないため、テストと build は PR で受ける。
+commit のたびに回すのは lint だけにする。待たされるものを増やさないため、テストと型検査と build は PR で受ける。
 
 dependency-cruiser のベースラインは `.dependency-cruiser-known-violations.json`。新規の違反は直し、ベースラインには足さない。ベースラインにある違反を直したら次のコマンドで作り直す（減らす方向にだけ使う）。
 

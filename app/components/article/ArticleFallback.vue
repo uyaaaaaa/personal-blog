@@ -41,7 +41,7 @@
 		<div
 			class="flex flex-col items-center gap-3 rounded-card border border-dashed border-border bg-surface px-6 py-10 text-center"
 			:role="variant === 'error' ? 'status' : undefined"
-			:aria-busy="variant === 'error' ? String(Boolean(pending)) : undefined"
+			:aria-busy="variant === 'error' ? Boolean(pending) : undefined"
 		>
 			<h1 class="text-xl font-bold text-main">{{ heading }}</h1>
 

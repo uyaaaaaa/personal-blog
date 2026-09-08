@@ -29,18 +29,35 @@ const OVERLAYS = {
 		trap: '.search-dialog',
 		input: '.search-input',
 		link: '.search-result',
+		scroller: '.search-results',
+		dialog: true,
 		widths: [375, 1280],
 	},
 	drawer: {
 		trigger: '.mobile-menu-btn',
-		shortcut: null,
 		overlay: '.mobile-menu-overlay',
 		trap: '.mobile-drawer',
 		input: null,
 		// 折りたたみの中のリンクしか他のページに行かないので、開いてから押す
 		expand: 'button[aria-controls="drawer-group-latest"]',
 		link: '#drawer-group-latest a',
+		scroller: '.mobile-drawer',
+		dialog: true,
+		// 指のドラッグが cancelable で届くのは中央の帯だけ（emulation の癖）。ドロワーは
+		// 右端に寄り、375 では中央まで覆う。max-width で覆わなくなる幅に広げてから送る
+		dragWidth: 700,
 		widths: [375],
+	},
+	// フォーカスを閉じ込めず背後も固定しないので、ダイアログ向けの操作は送らない
+	menu: {
+		trigger: '.explore-trigger',
+		overlay: '.menu-panel',
+		trap: '.menu-panel',
+		input: null,
+		link: '.menu-category',
+		scroller: null,
+		dialog: false,
+		widths: [1280],
 	},
 }
 
@@ -214,13 +231,58 @@ const start = async () => {
 		return result.result.value
 	}
 
-	const setWidth = (width) =>
+	const setWidth = (width, height = 900) =>
 		cdp.send('Emulation.setDeviceMetricsOverride', {
 			width,
-			height: 900,
+			height,
 			deviceScaleFactor: 1,
 			mobile: false,
 		})
+
+	// 指の操作は mouse と別の経路で届く。戻すのは probe を回す側が持つ
+	const setTouch = (enabled) =>
+		cdp.send('Emulation.setTouchEmulationEnabled', { enabled, maxTouchPoints: 5 })
+
+	// 押した点から dy だけ上に運ぶ。1回で運ぶとタップ扱いになる
+	const touchDrag = async (point, dy, label) => {
+		sent(label)
+		const at = (offset) => [{ x: Math.round(point.x), y: Math.round(point.y - offset) }]
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: at(0) })
+		for (let step = 1; step <= 8; step++) {
+			await cdp.send('Input.dispatchTouchEvent', {
+				type: 'touchMove',
+				touchPoints: at((dy * step) / 8),
+			})
+			await sleep(16)
+		}
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+		await evaluate('await $frames(3)')
+	}
+
+	// 被せた側の handler が動いたあとに読みたいので、document まで上がってから記録する
+	const watchTouchMoves = () =>
+		evaluate(`
+			window.__touchMoves = []
+			document.addEventListener('touchmove', (event) => {
+				window.__touchMoves.push({
+					prevented: event.defaultPrevented,
+					cancelable: event.cancelable,
+					target: $name(event.target),
+				})
+			})
+		`)
+
+	// 被せた側の素の部分。ダイアログの外で、かつ他の要素に隠れていない点を探す
+	const overlayPoint = () =>
+		evaluate(`
+			const overlay = document.querySelector(OVERLAY)
+			const box = overlay.getBoundingClientRect()
+			const x = box.left + box.width / 2
+			for (let y = box.bottom - 8; y > box.top; y -= 8) {
+				if (document.elementFromPoint(x, y) === overlay) return { x, y }
+			}
+			throw new Error('被せた側の素の部分が見つからない')
+		`)
 
 	const waitFor = async (body, timeout = OPEN_TIMEOUT) => {
 		for (let waited = 0; waited < timeout; waited += 50) {
@@ -407,12 +469,31 @@ const start = async () => {
 		throw new Error('結果の出る語が見つからない')
 	}
 
+	// 中身を出しきる下ごしらえ。何を出せば増えるかは対象ごとに違う
+	const reveal = async () => {
+		if (config.input) await typeQuery()
+		if (config.expand) {
+			await click(config.expand, '折りたたみ')
+			if (!(await waitFor(`getComputedStyle($vis(LINK)).visibility === 'visible'`))) {
+				throw new Error('折りたたみが開かない')
+			}
+			// 開く途中の高さで測ると、あふれていないように見える。$settled はフレームで
+			// 見ているので、刻みが粗いと途中の1枚を止まったものと読む
+			await sleep(TRANSITION)
+			await evaluate('return $settled(LINK)')
+		}
+	}
+
 	return {
 		cdp,
 		browser,
 		profile,
 		evaluate,
 		setWidth,
+		setTouch,
+		touchDrag,
+		watchTouchMoves,
+		overlayPoint,
 		waitFor,
 		waitClosed,
 		reload,
@@ -427,6 +508,7 @@ const start = async () => {
 		warm,
 		compose,
 		typeQuery,
+		reveal,
 	}
 }
 
@@ -454,6 +536,7 @@ const show = (state, keys) =>
 const probes = [
 	{
 		name: 'escape-outside',
+		dialog: true,
 		run: async (p) => {
 			await p.open()
 			sent('activeElement を blur')
@@ -469,6 +552,7 @@ const probes = [
 	},
 	{
 		name: 'focus-return/実クリック',
+		dialog: true,
 		run: async (p) => {
 			await p.open()
 			await p.pressKey('Escape')
@@ -482,6 +566,7 @@ const probes = [
 	},
 	{
 		name: 'focus-return/合成クリック',
+		dialog: true,
 		run: async (p) => {
 			await p.open({ synthetic: true })
 			await p.pressKey('Escape')
@@ -620,6 +705,7 @@ const probes = [
 	},
 	{
 		name: 'tab-cycle',
+		dialog: true,
 		run: async (p) => {
 			await p.open()
 			if (config.input) await p.typeQuery()
@@ -654,6 +740,7 @@ const probes = [
 	},
 	{
 		name: 'tab-md-cross',
+		dialog: true,
 		widths: [375],
 		run: async (p) => {
 			await p.open()
@@ -690,6 +777,7 @@ const probes = [
 	},
 	{
 		name: 'tab-開き際のフレーム',
+		dialog: true,
 		run: async (p) => {
 			// ハイドレーションの前に押しても開かない。開くまで押し直し、開けなかったら NG
 			let samples = []
@@ -749,16 +837,7 @@ const probes = [
 		run: async (p) => {
 			const cycle = async () => {
 				await p.open()
-				if (config.input) await p.typeQuery()
-				if (config.expand) {
-					await p.click(config.expand, '折りたたみ')
-					if (
-						!(await p.waitFor(`getComputedStyle($vis(LINK)).visibility === 'visible'`))
-					) {
-						throw new Error('折りたたみが開かない')
-					}
-					await p.evaluate('return $settled(LINK)')
-				}
+				await p.reveal()
 				const from = await p.evaluate(`return $path()`)
 				await p.evaluate(`window.__overlayProbe = 1`)
 				await p.click(config.link, '中のリンク')
@@ -913,6 +992,115 @@ const probes = [
 		},
 	},
 	{
+		// 背後が動かないことは、body の overflow だけでは足りないブラウザがある。
+		// touchmove が止まったかどうかまで見ないと、止め方が効いているか分からない
+		name: 'touch-被せた側の素の部分をドラッグ',
+		dialog: true,
+		scroller: true,
+		widths: [375],
+		run: async (p) => {
+			const width = config.dragWidth ?? 375
+			// 指の当たり判定は読み込みの時点で決まる。開いた後に入れても cancelable にならない
+			await p.setWidth(width)
+			await p.setTouch(true)
+			await p.reload()
+			await p.setWidth(width)
+			// 指は上に運ぶので、要るのは下に残っている余地。下がった量では測れない
+			sent('背後のページを 300px 下げる')
+			const room = await p.evaluate(`
+				window.scrollTo(0, 300)
+				await $frames(2)
+				return document.documentElement.scrollHeight - window.innerHeight - window.scrollY
+			`)
+			if (room <= 0) throw new Error('背後のページに下がる余地が無い')
+			await p.open()
+			await p.reveal()
+			await p.watchTouchMoves()
+			const before = await p.evaluate(`return window.scrollY`)
+			await p.touchDrag(await p.overlayPoint(), 240, '素の部分で押して上に240pxドラッグ')
+			const observed = await p.evaluate(`
+				return { moves: window.__touchMoves, scrollY: window.scrollY, ...$state() }
+			`)
+			const cancelable = observed.moves.filter((move) => move.cancelable)
+			return {
+				width,
+				observed: `残りの余地=${room}px touchmove=${observed.moves.length}件（cancelable=${cancelable.length}件）うち止めた=${cancelable.filter((m) => m.prevented).length}件 scrollY=${before}→${observed.scrollY} overlay="${observed.overlay}"`,
+				ok:
+					cancelable.length > 0 &&
+					cancelable.every((move) => move.prevented) &&
+					observed.scrollY === before &&
+					observed.overlay === 'visible',
+			}
+		},
+	},
+	{
+		name: 'touch-中のスクローラをドラッグ',
+		dialog: true,
+		scroller: true,
+		widths: [375],
+		run: async (p) => {
+			// 高さを詰めないと、中身の量によってはあふれず、送っても動く余地が無い
+			await p.setWidth(375, 420)
+			await p.setTouch(true)
+			await p.reload()
+			await p.setWidth(375, 420)
+			await p.open()
+			await p.reveal()
+			const room = await p.evaluate(`
+				const el = $vis(${JSON.stringify(config.scroller)})
+				if (!el) throw new Error('スクローラが見えていない')
+				return el.scrollHeight - el.clientHeight
+			`)
+			if (room <= 0) throw new Error('中身があふれていない（送っても動く余地が無い）')
+
+			await p.watchTouchMoves()
+			await p.touchDrag(
+				await p.centerOf(config.scroller),
+				120,
+				'スクローラの上で押して上に120pxドラッグ',
+			)
+			const observed = await p.evaluate(`
+				return {
+					moves: window.__touchMoves,
+					scrollTop: $vis(${JSON.stringify(config.scroller)}).scrollTop,
+					scrollY: window.scrollY,
+				}
+			`)
+			const prevented = observed.moves.filter((move) => move.cancelable && move.prevented)
+			return {
+				observed: `あふれ=${room}px touchmove=${observed.moves.length}件 うち止めた=${prevented.length}件 scrollTop=${observed.scrollTop} scrollY=${observed.scrollY}`,
+				ok: prevented.length === 0 && observed.scrollTop > 0 && observed.scrollY === 0,
+			}
+		},
+	},
+	{
+		name: 'touch-指2本（ピンチ）',
+		dialog: true,
+		scroller: true,
+		widths: [375],
+		run: async (p) => {
+			await p.open()
+			sent('素の部分に指1本と指2本の touchmove を送る')
+			const observed = await p.evaluate(`
+				const overlay = document.querySelector(OVERLAY)
+				const fire = (count) => {
+					const touches = Array.from(
+						{ length: count },
+						() => new Touch({ identifier: 0, target: overlay }),
+					)
+					const event = new TouchEvent('touchmove', { bubbles: true, cancelable: true, touches })
+					overlay.dispatchEvent(event)
+					return event.defaultPrevented
+				}
+				return { one: fire(1), two: fire(2) }
+			`)
+			return {
+				observed: `指1本=${observed.one ? '止めた' : '通した'} 指2本=${observed.two ? '止めた' : '通した'}`,
+				ok: observed.one === true && observed.two === false,
+			}
+		},
+	},
+	{
 		name: '変換していない ↓ と Enter',
 		input: true,
 		run: async (p) => {
@@ -945,14 +1133,19 @@ const main = async () => {
 				if (item.input && !config.input) continue
 				if (item.shortcut && !config.shortcut) continue
 				if (item.covering && !covering) continue
+				if (item.scroller && !config.scroller) continue
+				if (item.dialog && !config.dialog) continue
 				if (item.widths && !item.widths.includes(width)) continue
 
+				// CDP の指の設定は reload でも消えない。前の probe の条件を持ち越さない
+				await probe.setTouch(false)
 				await probe.reload()
 				await probe.setWidth(width)
 				sentSteps.length = 0
 				try {
-					const { observed, ok } = await item.run(probe)
-					record(width, item.name, observed, ok)
+					// 幅を自分で変える probe がある。行の幅は送った側に合わせる
+					const { observed, ok, width: sent = width } = await item.run(probe)
+					record(sent, item.name, observed, ok)
 					if (ok === false) failed++
 				} catch (error) {
 					record(width, item.name, `送れなかった: ${error.message}`, false)
