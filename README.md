@@ -42,7 +42,7 @@ Cloudflare Pages の Git 連携が有効なため、Pull Request を作ると自
 | :--- | :--- |
 | [docs/DESIGN_GUIDELINE.md](./docs/DESIGN_GUIDELINE.md) | デザインの判断基準。コンセプトと原則 |
 | [docs/DECISIONS.md](./docs/DECISIONS.md) | ADR の索引。思想が反映され、簡単には変えられない判断だけを置く |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 構造、依存方向、検査の置き場 |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 層と依存方向・不変条件の全体図と、検査の置き場 |
 | [docs/ICON_GUIDELINE.md](./docs/ICON_GUIDELINE.md) | `u/` モノグラムの仕様と、favicon 一式・OGP 画像の生成手順 |
 
 コーディングルールは `.claude/rules/`、作業手順は `.claude/skills/` にあります。

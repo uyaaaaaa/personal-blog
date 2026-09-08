@@ -4,6 +4,7 @@
 	"private": true,
 	"scripts": {
 		"build": "nuxt build",
+		"depcruise:baseline": "depcruise app --config --output-type baseline > .dependency-cruiser-known-violations.json",
 		"dev": "nuxt dev",
 		"format": "prettier --write .",
 		"generate": "nuxt generate",
