@@ -37,6 +37,10 @@ const OVERLAYS = {
 		// 折りたたみの中のリンクしか他のページに行かないので、開いてから押す
 		expand: 'button[aria-controls="drawer-group-latest"]',
 		link: '#drawer-group-latest a',
+		scroller: '.mobile-drawer',
+		// 指のドラッグが cancelable で届くのは中央の帯だけ（emulation の癖）。ドロワーは
+		// 右端に寄り、375 では中央まで覆う。max-width で覆わなくなる幅に広げてから送る
+		dragWidth: 700,
 		widths: [375],
 	},
 }
@@ -771,9 +775,12 @@ const probes = [
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
+			const width = config.dragWidth ?? 375
 			// 指の当たり判定は読み込みの時点で決まる。開いた後に入れても cancelable にならない
+			await p.setWidth(width)
 			await p.setTouch(true)
 			await p.reload()
+			await p.setWidth(width)
 			// 指は上に運ぶので、要るのは下に残っている余地。下がった量では測れない
 			sent('背後のページを 300px 下げる')
 			const room = await p.evaluate(`
@@ -792,7 +799,7 @@ const probes = [
 			`)
 			const cancelable = observed.moves.filter((move) => move.cancelable)
 			return {
-				observed: `残りの余地=${room}px touchmove=${observed.moves.length}件（cancelable=${cancelable.length}件）うち止めた=${cancelable.filter((m) => m.prevented).length}件 scrollY=${before}→${observed.scrollY} overlay="${observed.overlay}"`,
+				observed: `幅=${width}px 残りの余地=${room}px touchmove=${observed.moves.length}件（cancelable=${cancelable.length}件）うち止めた=${cancelable.filter((m) => m.prevented).length}件 scrollY=${before}→${observed.scrollY} overlay="${observed.overlay}"`,
 				ok:
 					cancelable.length > 0 &&
 					cancelable.every((move) => move.prevented) &&
@@ -806,7 +813,7 @@ const probes = [
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
-			// 高さを詰めないと、記事の数によっては結果があふれず、送っても動く余地が無い
+			// 高さを詰めないと、中身の量によってはあふれず、送っても動く余地が無い
 			await p.setWidth(375, 420)
 			await p.setTouch(true)
 			await p.reload()
@@ -818,7 +825,7 @@ const probes = [
 				if (!el) throw new Error('スクローラが見えていない')
 				return el.scrollHeight - el.clientHeight
 			`)
-			if (room <= 0) throw new Error('結果があふれていない（送っても動く余地が無い）')
+			if (room <= 0) throw new Error('中身があふれていない（送っても動く余地が無い）')
 
 			await p.watchTouchMoves()
 			await p.touchDrag(
