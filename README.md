@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-コマンドの一覧は `package.json` の `scripts`、記事のフロントマターのスキーマは `content.config.ts` にあります。
+コマンドの一覧は `package.json` の `scripts`、記事のフロントマターのスキーマは `content.schema.ts` にあります。
 
 `npm install` で Git フック（`.githooks/`）が有効になり、commit のたびに `npm run lint` とコミットメッセージの形式の検査が走ります。テストはフックに載せていないので、ローカルでは手で打つか PR に任せます。整形で落ちたときは `npm run format` を実行してから commit し直してください。整形の対象はコードだけで、記事と設計ドキュメントの Markdown は含みません。
 
