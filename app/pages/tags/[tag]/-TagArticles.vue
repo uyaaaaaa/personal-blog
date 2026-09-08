@@ -35,9 +35,13 @@
 		throw createError({ statusCode: 404, statusMessage: 'Tag not found', fatal: true })
 	}
 
-	const { page, totalPages, pagedItems, basePath } = usePagination(filteredArticles)
+	const { page, totalPages, pagedItems, basePath } = usePagination(filteredArticles, {
+		pageParam: () => route.params.page,
+		path: () => route.path,
+	})
 
 	usePageSeo({
+		path: () => route.path,
 		title: () =>
 			page.value > 1
 				? `#${tagName.value} (${page.value}/${totalPages.value})`

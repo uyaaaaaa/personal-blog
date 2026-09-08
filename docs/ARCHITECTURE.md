@@ -8,7 +8,7 @@
 ## 層と依存方向
 
 ```
-   pages/    layouts/    app.vue    error.vue        入口。ルートとページの文脈を持つ
+   pages/    layouts/    app.vue    error.vue        入口。route を読めるのはここだけ
       └─────────┴──────────┴──────────┘
                       ║
                       ▼
@@ -23,16 +23,16 @@
 
 | 線 | 意味 | 誰が守るか |
 | :--- | :--- | :--- |
-| `═▶` | 逆流させない。循環も作らない。`theme/` を直接参照するのは `app.vue` だけ | dependency-cruiser。破れば `npm run lint` が落ちる |
+| `═▶` | 逆流させない。循環も作らない。`theme/` を直接参照するのは `app.vue` だけ | dependency-cruiser |
 | `─▶` | `components/` の領域間の依存。`layout/` は他の領域を使わない | 人（→ [rules/structure.md](../.claude/rules/structure.md)） |
 | `╌▶` | 名前で解決され、`import` 文に現れない唯一の経路 | 人（→ [rules/imports.md](../.claude/rules/imports.md)、[ADR 03](./adr/03-no-auto-import.md)） |
 
 ## 不変条件
 
 ```
-        URL ═══(正本)══▶ pages/ ───(props)──▶ components/
-                           │                      │
-                 route に依る取得         route に依らない取得
+        URL ═══(正本)══▶ 入口 ═══(props / 引数)═══▶ components/  composables/  utils/
+                          │                              │
+                route に依る取得                route に依らない取得
 
   scroll / resize ──▶ useScrollFrame（全体で1本）──▶ 購読側
 
@@ -41,7 +41,7 @@
   ビルド時 ──▶ 全ページを静的生成
 ```
 
-各条件の細目は [rules/structure.md](../.claude/rules/structure.md) と [rules/style.md](../.claude/rules/style.md)、理由は [ADR 13](./adr/13-fetch-follows-route-dependency.md)・[ADR 09](./adr/09-size-tokens-and-no-arbitrary-values.md)・[ADR 12](./adr/12-style-block-token-lint.md) が持ちます。
+各条件の細目は [rules/structure.md](../.claude/rules/structure.md) と [rules/style.md](../.claude/rules/style.md)、理由は [ADR 14](./adr/14-route-read-only-at-entry.md)・[ADR 13](./adr/13-fetch-follows-route-dependency.md)・[ADR 09](./adr/09-size-tokens-and-no-arbitrary-values.md)・[ADR 12](./adr/12-style-block-token-lint.md) が持ちます。
 
 ## 検査の置き場
 

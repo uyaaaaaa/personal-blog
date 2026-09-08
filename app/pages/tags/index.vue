@@ -2,9 +2,12 @@
 	import { useArticleTags } from '~/composables/useArticleTags'
 	import { usePageSeo } from '~/composables/usePageSeo'
 
+	const route = useRoute()
+
 	const { data: tags } = useArticleTags()
 
 	usePageSeo({
+		path: () => route.path,
 		title: 'Tags',
 		description: '記事に付けられたタグの一覧。',
 	})

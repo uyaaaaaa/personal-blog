@@ -2,14 +2,22 @@ import { parsePage, stripPagePath } from '~/utils/pagination'
 
 export const ARTICLES_PER_PAGE = 9
 
-export const usePagination = <T>(items: Ref<T[]>, perPage = ARTICLES_PER_PAGE) => {
-	const route = useRoute()
+type PaginationLocation = {
+	pageParam: MaybeRefOrGetter<unknown>
+	path: MaybeRefOrGetter<string>
+}
 
+export const usePagination = <T>(
+	items: Ref<T[]>,
+	location: PaginationLocation,
+	perPage = ARTICLES_PER_PAGE,
+) => {
 	const totalPages = computed(() => Math.max(1, Math.ceil(items.value.length / perPage)))
 
-	const page = computed(() => parsePage(route.params.page) ?? 1)
+	const pageParam = computed(() => toValue(location.pageParam))
+	const page = computed(() => parsePage(pageParam.value) ?? 1)
 
-	if (route.params.page !== undefined && (page.value < 2 || page.value > totalPages.value)) {
+	if (pageParam.value !== undefined && (page.value < 2 || page.value > totalPages.value)) {
 		throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
 	}
 
@@ -17,7 +25,7 @@ export const usePagination = <T>(items: Ref<T[]>, perPage = ARTICLES_PER_PAGE) =
 		items.value.slice((page.value - 1) * perPage, page.value * perPage),
 	)
 
-	const basePath = computed(() => stripPagePath(route.path))
+	const basePath = computed(() => stripPagePath(toValue(location.path)))
 
 	return { page, totalPages, pagedItems, basePath }
 }

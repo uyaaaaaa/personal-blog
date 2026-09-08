@@ -378,6 +378,7 @@
 
 	const props = defineProps<{
 		isOpen: boolean
+		location: string
 	}>()
 
 	const emit = defineEmits<{
@@ -439,8 +440,7 @@
 		onFocusout: onPanelFocusout,
 	} = useHoverPanel()
 
-	const route = useRoute()
-	watch(() => route.fullPath, closePanel)
+	watch(() => props.location, closePanel)
 
 	onMounted(() => {
 		now.value = Date.now()

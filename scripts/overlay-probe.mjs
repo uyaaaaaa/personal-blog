@@ -22,11 +22,15 @@ const TRANSITION = 400
 const OVERLAYS = {
 	search: {
 		trigger: 'header button[aria-haspopup="dialog"]',
+		shortcut: 'K',
+		// 下の層に残って戻し先を覆いうる被せ物
+		covering: 'drawer',
 		overlay: '.search-overlay',
 		trap: '.search-dialog',
 		input: '.search-input',
 		link: '.search-result',
 		scroller: '.search-results',
+		dialog: true,
 		widths: [375, 1280],
 	},
 	drawer: {
@@ -38,10 +42,22 @@ const OVERLAYS = {
 		expand: 'button[aria-controls="drawer-group-latest"]',
 		link: '#drawer-group-latest a',
 		scroller: '.mobile-drawer',
+		dialog: true,
 		// 指のドラッグが cancelable で届くのは中央の帯だけ（emulation の癖）。ドロワーは
 		// 右端に寄り、375 では中央まで覆う。max-width で覆わなくなる幅に広げてから送る
 		dragWidth: 700,
 		widths: [375],
+	},
+	// フォーカスを閉じ込めず背後も固定しないので、ダイアログ向けの操作は送らない
+	menu: {
+		trigger: '.explore-trigger',
+		overlay: '.menu-panel',
+		trap: '.menu-panel',
+		input: null,
+		link: '.menu-category',
+		scroller: null,
+		dialog: false,
+		widths: [1280],
 	},
 }
 
@@ -51,7 +67,26 @@ const KEYS = {
 	Enter: { key: 'Enter', code: 'Enter', keyCode: 13 },
 	ArrowDown: { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40 },
 	ArrowUp: { key: 'ArrowUp', code: 'ArrowUp', keyCode: 38 },
+	K: { key: 'k', code: 'KeyK', keyCode: 75 },
 }
+
+// Input.dispatchKeyEvent の modifiers のビット
+const ALT = 1
+const CTRL = 2
+const META = 4
+const SHIFT = 8
+
+const MODIFIER_LABELS = [
+	[META, 'Cmd'],
+	[CTRL, 'Ctrl'],
+	[ALT, 'Alt'],
+	[SHIFT, 'Shift'],
+]
+
+const keyLabel = (name, modifiers) =>
+	[...MODIFIER_LABELS.filter(([bit]) => modifiers & bit).map(([, label]) => label), name].join(
+		'+',
+	)
 
 const [, , target = 'search', baseUrl = 'http://localhost:3000'] = process.argv
 const config = OVERLAYS[target]
@@ -59,6 +94,8 @@ if (!config) {
 	console.error(`知らない対象: ${target}（${Object.keys(OVERLAYS).join(' / ')}）`)
 	process.exit(2)
 }
+
+const covering = config.covering ? OVERLAYS[config.covering] : null
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -139,6 +176,7 @@ const PAGE_HELPERS = `
 	const TRAP = ${JSON.stringify(config.trap)}
 	const INPUT = ${JSON.stringify(config.input)}
 	const LINK = ${JSON.stringify(config.link)}
+	const COVER = ${JSON.stringify(covering?.overlay ?? null)}
 	const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 	const $shown = (el) => !!el && el.getClientRects().length > 0
 	const $vis = (sel) => [...document.querySelectorAll(sel)].find($shown) ?? null
@@ -263,11 +301,31 @@ const start = async () => {
 	}
 
 	const pressKey = async (name, modifiers = 0) => {
-		sent(modifiers === SHIFT ? `Shift+${name}` : name)
+		sent(keyLabel(name, modifiers))
 		const { key, code, keyCode } = KEYS[name]
 		const base = { key, code, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode }
 		await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'rawKeyDown', modifiers })
 		await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'keyUp', modifiers })
+	}
+
+	// ブラウザ既定（アドレスバーへの移動）を止めているかは defaultPrevented で見る。
+	// listener の中で読むと登録の順で結果が変わるので、全部走り終えてから読む
+	const pressShortcut = async (modifiers) => {
+		await evaluate(`
+			window.__shortcutEvent = null
+			if (!window.__shortcutHooked) {
+				window.__shortcutHooked = true
+				window.addEventListener('keydown', (event) => {
+					window.__shortcutEvent = event
+				})
+			}
+		`)
+		await pressKey(config.shortcut, modifiers)
+		await evaluate('await $frames(2)')
+		return evaluate(`
+			const event = window.__shortcutEvent
+			return event ? { key: event.key, prevented: event.defaultPrevented } : null
+		`)
 	}
 
 	const mouse = async (type, { x, y }, buttons) =>
@@ -307,6 +365,39 @@ const start = async () => {
 			await sleep(50)
 		}
 		throw new Error(`押した位置にあるのは ${selector} ではなく ${blocked}`)
+	}
+
+	// キーもハイドレーションの前に送ると何も起きない。開くまで同じキーを送り直す
+	const openByShortcut = async (modifiers) => {
+		let key = null
+		for (let attempt = 0; attempt < 8; attempt++) {
+			key = await pressShortcut(modifiers)
+			const opened = await waitFor(
+				`getComputedStyle(document.querySelector(OVERLAY)).visibility === 'visible'`,
+				1000,
+			)
+			if (opened) {
+				await evaluate('return $settled(TRAP)')
+				return { key, opened: true }
+			}
+		}
+		return { key, opened: false }
+	}
+
+	// 下の層も、ハイドレーションの前に押しても開かない
+	const openCover = async () => {
+		for (let attempt = 0; attempt < 8; attempt++) {
+			await click(covering.trigger, '下の層のトリガ')
+			const opened = await waitFor(
+				`getComputedStyle(document.querySelector(COVER)).visibility === 'visible'`,
+				1000,
+			)
+			if (opened) {
+				await evaluate(`return $settled(${JSON.stringify(covering?.trap ?? null)})`)
+				return
+			}
+		}
+		throw new Error('下の層が開かない')
 	}
 
 	// synthetic は click でフォーカスを動かさないブラウザ（Safari / Firefox）と同じ状況を作る。
@@ -407,6 +498,9 @@ const start = async () => {
 		waitClosed,
 		reload,
 		pressKey,
+		pressShortcut,
+		openByShortcut,
+		openCover,
 		mouse,
 		centerOf,
 		click,
@@ -417,8 +511,6 @@ const start = async () => {
 		reveal,
 	}
 }
-
-const SHIFT = 8
 
 // 証跡に残すのは、書いた手順ではなく実際に送った操作。同じものが続いたらまとめる
 const sentSteps = []
@@ -444,6 +536,7 @@ const show = (state, keys) =>
 const probes = [
 	{
 		name: 'escape-outside',
+		dialog: true,
 		run: async (p) => {
 			await p.open()
 			sent('activeElement を blur')
@@ -459,6 +552,7 @@ const probes = [
 	},
 	{
 		name: 'focus-return/実クリック',
+		dialog: true,
 		run: async (p) => {
 			await p.open()
 			await p.pressKey('Escape')
@@ -472,6 +566,7 @@ const probes = [
 	},
 	{
 		name: 'focus-return/合成クリック',
+		dialog: true,
 		run: async (p) => {
 			await p.open({ synthetic: true })
 			await p.pressKey('Escape')
@@ -484,7 +579,133 @@ const probes = [
 		},
 	},
 	{
+		name: 'shortcut-Cmd+K で開く',
+		shortcut: true,
+		run: async (p) => {
+			sent('activeElement を blur')
+			await p.evaluate(`document.activeElement?.blur()`)
+			const { key, opened } = await p.openByShortcut(META)
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
+			return {
+				observed: `${show(state, ['overlay', 'active'])} prevented=${key?.prevented}`,
+				ok: opened && state.inInput && key?.prevented === true,
+			}
+		},
+	},
+	{
+		name: 'shortcut-Ctrl+K で開く',
+		shortcut: true,
+		run: async (p) => {
+			sent('activeElement を blur')
+			await p.evaluate(`document.activeElement?.blur()`)
+			const { key, opened } = await p.openByShortcut(CTRL)
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
+			return {
+				observed: `${show(state, ['overlay', 'active'])} prevented=${key?.prevented}`,
+				ok: opened && state.inInput && key?.prevented === true,
+			}
+		},
+	},
+	{
+		name: 'shortcut-開いている間の Cmd+K',
+		shortcut: true,
+		run: async (p) => {
+			await p.open()
+			const query = await p.typeQuery()
+			await p.pressShortcut(META)
+			await sleep(TRANSITION)
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'query']),
+				ok: state.overlay === 'visible' && state.query === query,
+			}
+		},
+	},
+	{
+		name: 'shortcut-変換中の Ctrl+K',
+		shortcut: true,
+		run: async (p) => {
+			await p.open()
+			await p.typeQuery()
+			await p.compose('あ')
+			const composing = await p.evaluate('return $state()')
+			const key = await p.pressShortcut(CTRL)
+			await sleep(TRANSITION)
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: `${show(state, ['overlay', 'query'])} prevented=${key?.prevented}`,
+				// mac の変換中の Ctrl+K はカタカナ変換。横取りしていないことを見る
+				ok:
+					state.overlay === 'visible' &&
+					state.query === composing.query &&
+					key?.prevented === false,
+			}
+		},
+	},
+	{
+		name: 'shortcut-ドロワーを開いたまま',
+		covering: true,
+		widths: [375],
+		run: async (p) => {
+			await p.openCover()
+
+			const { opened } = await p.openByShortcut(META)
+			if (!opened) throw new Error('ショートカットで開かない')
+
+			await p.pressKey('Escape')
+			await p.waitClosed()
+			const state = await p.evaluate(`
+				const active = document.activeElement
+				const box = active.getBoundingClientRect()
+				const at = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+				return {
+					...$state(),
+					cover: getComputedStyle(document.querySelector(COVER)).visibility,
+					covered: !active.contains(at) && active !== at,
+					at: $name(at),
+				}
+			`)
+			return {
+				observed: `${show(state, ['overlay', 'active', 'activeShown'])} 下の層="${state.cover}" 戻し先の位置に居るのは ${state.at}`,
+				ok:
+					state.overlay === 'hidden' &&
+					state.activeShown &&
+					!state.covered &&
+					state.cover === 'hidden',
+			}
+		},
+	},
+	{
+		name: 'focus-return/ショートカット',
+		shortcut: true,
+		run: async (p) => {
+			sent('activeElement を blur')
+			await p.evaluate(`document.activeElement?.blur()`)
+			const { opened } = await p.openByShortcut(META)
+			if (!opened) throw new Error('ショートカットで開かない')
+
+			await p.pressKey('Escape')
+			await p.waitClosed()
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'active', 'activeShown']),
+				ok: state.overlay === 'hidden' && state.activeShown,
+			}
+		},
+	},
+	{
 		name: 'tab-cycle',
+		dialog: true,
 		run: async (p) => {
 			await p.open()
 			if (config.input) await p.typeQuery()
@@ -519,6 +740,7 @@ const probes = [
 	},
 	{
 		name: 'tab-md-cross',
+		dialog: true,
 		widths: [375],
 		run: async (p) => {
 			await p.open()
@@ -555,6 +777,7 @@ const probes = [
 	},
 	{
 		name: 'tab-開き際のフレーム',
+		dialog: true,
 		run: async (p) => {
 			// ハイドレーションの前に押しても開かない。開くまで押し直し、開けなかったら NG
 			let samples = []
@@ -772,6 +995,7 @@ const probes = [
 		// 背後が動かないことは、body の overflow だけでは足りないブラウザがある。
 		// touchmove が止まったかどうかまで見ないと、止め方が効いているか分からない
 		name: 'touch-被せた側の素の部分をドラッグ',
+		dialog: true,
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
@@ -811,6 +1035,7 @@ const probes = [
 	},
 	{
 		name: 'touch-中のスクローラをドラッグ',
+		dialog: true,
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
@@ -850,6 +1075,7 @@ const probes = [
 	},
 	{
 		name: 'touch-指2本（ピンチ）',
+		dialog: true,
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
@@ -905,7 +1131,10 @@ const main = async () => {
 			await probe.setWidth(width)
 			for (const item of probes) {
 				if (item.input && !config.input) continue
+				if (item.shortcut && !config.shortcut) continue
+				if (item.covering && !covering) continue
 				if (item.scroller && !config.scroller) continue
+				if (item.dialog && !config.dialog) continue
 				if (item.widths && !item.widths.includes(width)) continue
 
 				// CDP の指の設定は reload でも消えない。前の probe の条件を持ち越さない

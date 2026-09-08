@@ -24,6 +24,8 @@
 
 	const SHELF_LIMIT = 6
 
+	const route = useRoute()
+
 	const { data: articles } = await useAsyncData('home-articles', () =>
 		queryCollection('article')
 			.where('published', '=', true)
@@ -38,5 +40,5 @@
 		buildShelves(articles.value ?? [], heroArticle.value?.path, SHELF_LIMIT),
 	)
 
-	usePageSeo()
+	usePageSeo({ path: () => route.path })
 </script>
