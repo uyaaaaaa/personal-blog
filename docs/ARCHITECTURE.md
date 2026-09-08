@@ -1,7 +1,7 @@
 # アーキテクチャ
 
 このリポジトリの**構造の全体図**と、構造が守っている**不変条件**だけを置きます。
-個々の取り決めは `.claude/rules/`、判断の理由は [DECISIONS.md](./DECISIONS.md)、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md)。実装を読めば分かること（値・props・ファイルの一覧）は持ちません。
+個々の取り決めは `.claude/rules/`、判断の理由は [DECISIONS.md](./DECISIONS.md)、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md)。
 
 **守るのは、変更が数ファイルのコードで閉じること。** 型別のフラットな構成（→ [ADR 04](./adr/04-flat-directory-by-type.md)）を維持したまま、下の2枚で秩序を保ちます。
 
@@ -41,13 +41,7 @@
   ビルド時 ──▶ 全ページを静的生成
 ```
 
-1. **保持されるべき状態の正本は URL。** 別の state に複製せず、URL が表現できない値は 404 にする。
-2. **取得の所有は route への依存で決まる**（→ [ADR 13](./adr/13-fetch-follows-route-dependency.md)）。置かれる場所で中身が変わる部品は props で受け取る。
-3. **購読は全体で1本**にまとめ、1フレームに集約する。表示の出し分けは CSS が行う。
-4. **スタイルの値はトークンから一方向に流れ**、テーマの切り替えは再定義で成立する（→ [ADR 09](./adr/09-size-tokens-and-no-arbitrary-values.md)、[ADR 12](./adr/12-style-block-token-lint.md)）。
-5. **ビルド時刻が焼き付く値はクライアントで計算する。** 静的生成なので、ビルド時に決めた値はページの寿命の間そのまま出る。
-
-細目は [rules/structure.md](../.claude/rules/structure.md) と [rules/style.md](../.claude/rules/style.md) が持ちます。
+各条件の細目は [rules/structure.md](../.claude/rules/structure.md) と [rules/style.md](../.claude/rules/style.md)、理由は [ADR 13](./adr/13-fetch-follows-route-dependency.md)・[ADR 09](./adr/09-size-tokens-and-no-arbitrary-values.md)・[ADR 12](./adr/12-style-block-token-lint.md) が持ちます。
 
 ## 検査の置き場
 
@@ -62,5 +56,4 @@
 | 記事をまたぐ突き合わせ | `scripts/` の検査 |
 | ブラウザでの操作 | `scripts/` の probe（lint では回さない） |
 
-機械に落とせないものは `.claude/rules/` か skill が持ち、文書は持たない（→ [ADR 10](./adr/10-docs-only-for-hard-to-reverse-decisions.md)、[ADR 11](./adr/11-no-enforcement-inventory.md)）。lint で落とせるようになったルールは rules から消す。
-commit のたびに回すのは lint だけにする。テストと型検査と build は PR で受ける。
+commit のたびに回すのは lint だけにし、テストと型検査と build は PR で受ける。lint で落とせるようになったルールは `.claude/rules/` から消す。
