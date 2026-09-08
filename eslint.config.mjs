@@ -6,7 +6,7 @@ import styleTokens, { DOCS_URL, MOTION_URL, TOKEN_URL } from './eslint-rules/sty
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
 
-const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#依存方向`
+const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
 
 const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`
