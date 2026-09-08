@@ -1,5 +1,6 @@
 <template>
 	<div
+		ref="lockRef"
 		class="search-overlay"
 		:class="{ 'is-open': isOpen }"
 		@pointerdown="onOverlayPointerDown"
@@ -88,6 +89,7 @@
 
 <script setup lang="ts">
 	import { useFocusTrap } from '~/composables/useFocusTrap'
+	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 	import { formatDate } from '~/utils/date'
 	import { searchArticles } from '~/utils/search'
 
@@ -195,6 +197,8 @@
 	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), (event) => {
 		if (!isComposingKey(event)) emit('close')
 	})
+
+	const { lockRef } = useTouchScrollLock()
 
 	// 閉じるアニメーションの間も結果を出したままにするため、消すのは開くとき。
 	// フォーカスは押したときと同じ tick で寄せる。フレームを待つと、多くのモバイル
