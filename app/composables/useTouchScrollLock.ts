@@ -2,8 +2,6 @@
 // touchmove を止めて背後のページを動かさない。止めるのは被せた側の中に来た指だけで、
 // ページ全体では止めない
 
-// 中でスクロールできる要素の上なら、そのスクロールに任せる。端まで来たあとの連鎖は
-// overscroll-behavior が止める
 const isScrollable = (element: Element) => {
 	const overflowY = getComputedStyle(element).overflowY
 	return (
@@ -24,8 +22,6 @@ const startsInScroller = (target: EventTarget | null, root: HTMLElement) => {
 	return false
 }
 
-// 閉じている間の指は、visibility: hidden の要素が当たり判定を持たないので届かない。
-// 付けたままにして、閉じるアニメーションで見えている間も止め続ける
 export const useTouchScrollLock = () => {
 	const lockRef = ref<HTMLElement | null>(null)
 
@@ -43,8 +39,6 @@ export const useTouchScrollLock = () => {
 		event.preventDefault()
 	}
 
-	// touchmove は既定が passive のブラウザがあり、passive のままだと preventDefault が
-	// 黙って捨てられる。明示して付ける
 	onMounted(() => lockRef.value?.addEventListener('touchmove', onTouchMove, { passive: false }))
 	onBeforeUnmount(() => lockRef.value?.removeEventListener('touchmove', onTouchMove))
 

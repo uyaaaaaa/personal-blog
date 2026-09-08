@@ -197,7 +197,7 @@ const start = async () => {
 			mobile: false,
 		})
 
-	// 指の操作は mouse と別の経路で届く。触る probe の間だけ入れて、終わりに戻す
+	// 指の操作は mouse と別の経路で届く。戻すのは probe を回す側が持つ
 	const setTouch = (enabled) =>
 		cdp.send('Emulation.setTouchEmulationEnabled', { enabled, maxTouchPoints: 5 })
 
@@ -783,7 +783,6 @@ const probes = [
 			const observed = await p.evaluate(`
 				return { moves: window.__touchMoves, scrollY: window.scrollY, ...$state() }
 			`)
-			await p.setTouch(false)
 			const cancelable = observed.moves.filter((move) => move.cancelable)
 			return {
 				observed: `残りの余地=${room}px touchmove=${observed.moves.length}件（cancelable=${cancelable.length}件）うち止めた=${cancelable.filter((m) => m.prevented).length}件 scrollY=${before}→${observed.scrollY} overlay="${observed.overlay}"`,
@@ -827,8 +826,6 @@ const probes = [
 					scrollY: window.scrollY,
 				}
 			`)
-			await p.setTouch(false)
-			await p.setWidth(375)
 			const prevented = observed.moves.filter((move) => move.cancelable && move.prevented)
 			return {
 				observed: `あふれ=${room}px touchmove=${observed.moves.length}件 うち止めた=${prevented.length}件 scrollTop=${observed.scrollTop} scrollY=${observed.scrollY}`,
@@ -896,6 +893,8 @@ const main = async () => {
 				if (item.scroller && !config.scroller) continue
 				if (item.widths && !item.widths.includes(width)) continue
 
+				// CDP の指の設定は reload でも消えない。前の probe の条件を持ち越さない
+				await probe.setTouch(false)
 				await probe.reload()
 				await probe.setWidth(width)
 				sentSteps.length = 0
