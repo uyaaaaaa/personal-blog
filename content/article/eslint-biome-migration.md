@@ -1,7 +1,7 @@
 ---
-title: "ESLintからBiomeに移せるかは、templateを見ているルールがあるかで決まる"
+title: "ESLintとPrettierをBiomeやoxlintに乗り換えられるか試す"
 emoji: "🦀"
-description: "乗り換えの可否を決めるのは速度でもファイル数でもなく、自分のlintルールがSFCのどこを見ているか"
+description: "速度だけ見て決めると痛い目に遭います"
 published: false
 date: 2026-09-07
 tags:
@@ -11,13 +11,23 @@ tags:
 category: blog
 ---
 
-ESLint と Prettier、使っていますか。Biome や oxlint が速いという話を聞くたびに、乗り換えを検討しては戻ってきていませんか。
+## はじめに
 
-このブログもそうでした。ただ、戻ってきた理由は速度ではありません。**見るべきなのは、自分の lint ルールが Vue SFC のどこを見ているかです。**
+みなさん、ESLint と Prettier、使っていますか？
 
-## 前提: プリセットを取り込まない ESLint 設定
+Biome や oxlint が「Rust製で爆速」という話を聞くたびに、乗り換えたくなってきませんか？私はなります。
 
-このブログの `eslint.config.mjs` は、スタイルガイドのプリセットを1つも取り込んでいません。規約を機械に落とすために1本ずつ足したもので、中身のほとんどが `no-restricted-syntax` の [esquery](https://github.com/estools/esquery) セレクタです。
+というわけで、このブログ（Nuxt 4）で実際に試してみました。結論から言うと**乗り換えませんでした**。理由が速度とは全然違うところにあったので、その話をします。
+
+## 今の構成
+
+- Nuxt 4.2 / ESLint 10.9 / Prettier 3.9 + `prettier-plugin-tailwindcss` / Tailwind 3.4
+- 対象は `app/` の86ファイル、約2,200行
+- ESLint はスタイルガイドのプリセットを一切入れておらず、自分で足したルールだけが入っている
+
+※ 86ファイルなので、正直なところ lint が何秒かかろうと体感は変わりません。完全に趣味です😇
+
+足したルールはこういうやつです。`no-restricted-syntax` にセレクタを書いて「この構文は書くな」を表現しています。
 
 ```js [eslint.config.mjs]
 {
@@ -28,15 +38,13 @@ ESLint と Prettier、使っていますか。Biome や oxlint が速いとい�
 }
 ```
 
-同じ調子のルールが `<template>` と `<style>` にもあります。Tailwind の任意値（`w-[264px]`）を禁止するもの、`<style>` の色とサイズの直値を禁止するもの。後者は198行の自作ルールです。
+これが8本。あとは `<template>` の Tailwind 任意値（`w-[264px]`）を禁止するものと、`<style>` の色とサイズの直値を禁止する自作ルール（198行）があります。
 
-対象は `app/` で86ファイル、約2,200行。**この規模なら lint が何秒かかろうと体感は変わりません。** それでも試したのは、Rust 製のツールが Vue SFC を扱えるようになったと聞いたからでした。
+## まずはformatterから
 
-## formatter は、もう完全に移せた
+Prettier で整形済みのリポジトリに別の formatter をかけ、出力が変わるか見てみます。
 
-Prettier で整形済みのリポジトリに別の formatter をかけ、出力が1バイトでも変わるかを見ます。
-
-[oxfmt](https://oxc.rs/docs/guide/usage/formatter.html) 0.66.0 には、`.prettierrc` を読む移行コマンドがあります。
+[oxfmt](https://oxc.rs/docs/guide/usage/formatter.html) には `.prettierrc` を読む移行コマンドがありました。親切ですね。
 
 ```sh
 $ oxfmt --migrate=prettier
@@ -47,9 +55,9 @@ $ oxfmt --write .
 Finished in 2123ms on 112 files using 4 threads.
 ```
 
-結果は **112ファイルすべてで差分ゼロ**。`semi: false` や `singleAttributePerLine` はもちろん、`prettier-plugin-tailwindcss` のクラス並べ替えまで組み込みの `sortTailwindcss` が引き継ぎ、`tailwind.config.ts` を自動で見つけて同じ順序を出します。
+結果、**112ファイルすべてで差分ゼロ**。`prettier-plugin-tailwindcss` のクラス並べ替えまで内蔵していて、`tailwind.config.ts` を勝手に見つけて同じ順序を出してくれます。すごい。
 
-一方 [markup_fmt](https://github.com/g-plane/markup_fmt) 0.27.3（dprint 経由）は、設定を寄せても **104ファイル中56ファイル・835行**がずれました。
+一方 [markup_fmt](https://github.com/g-plane/markup_fmt)（dprint 経由）は、104ファイル中56ファイルがずれました。
 
 ```diff [Prettierとの差分]
  				<NuxtLink
@@ -60,24 +68,26 @@ Finished in 2123ms on 112 files using 4 threads.
 +				>{{ title }}</NuxtLink>
 ```
 
-閉じタグの `>` の置き方、`<script setup lang="ts">` を属性ごとに改行する挙動、長い属性が1つの要素を折り返さない挙動。markup_fmt は Prettier 互換を名乗っていないので、これは不具合ではなく設計の違いです。
+※ こちらは Prettier 互換を名乗っていないので、不具合ではなくそういう設計です。むしろ人間の目には markup_fmt のほうが読みやすい気も...
 
-**少なくとも oxfmt を選ぶ限り、formatter は乗り換えの障害ではなくなっています。**
+→ **formatter は oxfmt を選べば、そのまま移せそう**
 
-## 移せるルールと、移せないルールがあった
+## oxlintを試す
 
-問題は lint 側でした。ルールを1本ずつ実際に走らせます。
-
-[oxlint](https://github.com/oxc-project/oxc) 1.81.0 は、設定を読んだ時点で止まりました。
+問題は lint でした。設定を書いて実行したら、いきなりこうなります。
 
 ```txt
 Failed to parse oxlint configuration file.
   x Rule 'no-restricted-syntax' not found in plugin 'eslint'
 ```
 
-**`no-restricted-syntax` が実装されていません。** 主力が丸ごと書けないので、ここで終わりです。
+`no-restricted-syntax` が**実装されていません**。ファイルを1つも読まずに落ちます😇
 
-[Biome](https://biomejs.dev/) 2.5.12 は違いました。GritQL のプラグインで AST のパターンを自分で書けます。
+`no-restricted-imports` は動きました。ただ `require-v-for-key` も `no-v-html` も `no-undef-components` も軒並み `not found` で、`<template>` を見るルールは1本もありません。
+
+## Biomeを試す
+
+[Biome](https://biomejs.dev/) は良さそうでした。GritQL でルールを自作できます。
 
 ```txt [plugins/no-user-agent.grit]
 `$obj.userAgent` as $match where {
@@ -85,9 +95,11 @@ Failed to parse oxlint configuration file.
 }
 ```
 
-これは `.ts` でも `.vue` の `<script>` でも発火しました。`overrides` の `includes` でプラグインを当てる範囲も絞れるので、「`components/` の中だけ `route.params` を禁止する」も書けます。
+`.ts` でも `.vue` の `<script>` でもちゃんと発火しました。`overrides` で当てる範囲も絞れるので、「`components/` の中だけ `route.params` を禁止」も書けます。
 
-ところが、`<template>` の class 属性を見るプラグインは**発火しません**。
+→ **`<script>` を見るルールは全部移せる**
+
+ところが `<template>` の class を見るルールは、うんともすんとも言いません。
 
 ```txt [plugins/no-arbitrary.grit]
 language html
@@ -95,39 +107,37 @@ language html
 `class=$value` where { ... }
 ```
 
-`.vue` でも `.html` でも、`html.experimentalFullSupportEnabled` を立てても、診断は1件も出ませんでした。`<style>` に至っては、GritQL に CSS 用の入口がありません。
+`.vue` でも `.html` でも、`html.experimentalFullSupportEnabled` を立てても、診断は1件も出ません。`<style>` に至っては CSS 用の入口自体がありませんでした。
 
-## 分かれ目は script / template / style だった
+> [!HELP] 疑問
+> formatter は同じSFCを整形できているのに、なぜ lint からは `<template>` が見えないのか...?
 
-| ルールが見ているもの | oxlint 1.81 | Biome 2.5.12 |
-| :--- | :--- | :--- |
-| `<script>` と `.ts`（import 制限、AST パターン、パス限定） | 一部のみ | **移せる** |
-| `<template>`（Tailwind の任意値、未定義コンポーネント） | 未実装 | 移せない |
-| `<style>`（色とサイズの直値） | 未実装 | 移せない |
+パーサが無いわけではなさそうなので、プラグインから触れる形にまだなっていないのだと思います。
 
-**Rust 製のツールは、SFC の `<script>` を JavaScript として取り出すところまでは来ています。** 止まっているのは `<template>` と `<style>` の構文木を lint に開くところで、formatter は同じ SFC を整形できている以上、パーサが無いわけではありません。プラグインから触れる形になっていないのだと思います（推測です）。
+## 分かったこと
 
-つまり「ESLint に規約を寄せるほど乗り換えが遠のく」ではありません。**`<template>` と `<style>` を見に行った瞬間に、ESLint から出られなくなります。**
+移せるかどうかは、**そのルールがSFCのどこを見ているか**で決まっていました。
 
-このブログの2本は、どちらもデザインの一貫性を機械に守らせるために入れたものでした。手放せば規約が目視に戻るので、速度と引き換えにはできません。ESLint が残った理由はこれだけです。
+1. `<script>` / `.ts` を見るルール
+    - import 制限、AST パターン、パス限定 → **Biome に移せる**
+2. `<template>` を見るルール
+    - Tailwind の任意値、未定義コンポーネントの検出 → **移せない**
+3. `<style>` を見るルール
+    - 色とサイズの直値 → **移せない**
 
-## 自分の設定を仕分ける
+このブログは 2 と 3 を持っていました。どちらもデザインの一貫性を機械に守らせるためのもので、手放すと目視に戻ります。さすがに速度と引き換えにはできないので、ESLint 続投です。
 
-乗り換えを検討しているなら、ベンチマークを読む前に設定を3つに分けてください。
+※ 逆に言うと、2 と 3 が1本も無いなら乗り換えの障害は無さそうです。ベンチマークを読む前に、自分の設定を上の3つに仕分けてみてください。
 
-1. **プリセット由来のルール** — 同等品が移行先にあるかを見る
-2. **`<script>` / `.ts` だけを見る自作ルール** — import 制限、AST パターン、パス限定。Biome なら移せる
-3. **`<template>` / `<style>` を見るルール** — 1本でもあれば、その時点で ESLint は残ります
+## さいごに
 
-3 が無ければ、あとは速度と好みの話です。1本でもあれば、速度をいくら比べても結論は変わりません。
+formatter だけ先に移す手もありますね。oxfmt が Prettier と同じ出力を出す以上、**lint は ESLint のまま、整形だけ oxfmt** が普通に成立します。
 
-なお formatter はこの判断と独立に動かせます。oxfmt が Prettier と同じ出力を出す以上、**lint を ESLint に残したまま整形だけ移す構成が成立します。**
+そのうちやるかもしれません😴
 
 ## 参考
 
 - [Oxfmt | The JavaScript Oxidation Compiler](https://oxc.rs/docs/guide/usage/formatter.html)
 - [markup_fmt](https://github.com/g-plane/markup_fmt)
-- [Biome v2.4 — Embedded Snippets, HTML Accessibility, and Better Framework Support](https://biomejs.dev/blog/biome-v2-4/)
 - [Biome — Language support](https://biomejs.dev/internals/language-support/)
 - [このブログの eslint.config.mjs](https://github.com/uyaaaaaa/personal-blog/blob/main/eslint.config.mjs)
-- [ADR 12: scoped CSS の値も Tailwind の語彙に限り、ESLint で落とす](https://github.com/uyaaaaaa/personal-blog/blob/main/docs/adr/12-style-block-token-lint.md)
