@@ -1,5 +1,4 @@
 import { fileURLToPath } from 'node:url'
-// @ts-expect-error 型定義のないローカルESMモジュール
 import remarkObsidianCallout from './remark/obsidian-callout.mjs'
 import { CATEGORIES } from './app/utils/category'
 
