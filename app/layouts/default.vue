@@ -1,6 +1,6 @@
 <template>
 	<div class="layout-container">
-		<Header />
+		<Header :location="route.fullPath" />
 		<main class="main-content container">
 			<slot />
 		</main>
@@ -11,6 +11,8 @@
 <script setup lang="ts">
 	import Header from '~/components/layout/Header.vue'
 	import Footer from '~/components/layout/Footer.vue'
+
+	const route = useRoute()
 </script>
 
 <style>

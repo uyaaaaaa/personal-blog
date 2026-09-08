@@ -27,6 +27,7 @@ const OVERLAYS = {
 		input: '.search-input',
 		link: '.search-result',
 		scroller: '.search-results',
+		dialog: true,
 		widths: [375, 1280],
 	},
 	drawer: {
@@ -38,10 +39,22 @@ const OVERLAYS = {
 		expand: 'button[aria-controls="drawer-group-latest"]',
 		link: '#drawer-group-latest a',
 		scroller: '.mobile-drawer',
+		dialog: true,
 		// 指のドラッグが cancelable で届くのは中央の帯だけ（emulation の癖）。ドロワーは
 		// 右端に寄り、375 では中央まで覆う。max-width で覆わなくなる幅に広げてから送る
 		dragWidth: 700,
 		widths: [375],
+	},
+	// フォーカスを閉じ込めず背後も固定しないので、ダイアログ向けの操作は送らない
+	menu: {
+		trigger: '.explore-trigger',
+		overlay: '.menu-panel',
+		trap: '.menu-panel',
+		input: null,
+		link: '.menu-category',
+		scroller: null,
+		dialog: false,
+		widths: [1280],
 	},
 }
 
@@ -444,6 +457,7 @@ const show = (state, keys) =>
 const probes = [
 	{
 		name: 'escape-outside',
+		dialog: true,
 		run: async (p) => {
 			await p.open()
 			sent('activeElement を blur')
@@ -459,6 +473,7 @@ const probes = [
 	},
 	{
 		name: 'focus-return/実クリック',
+		dialog: true,
 		run: async (p) => {
 			await p.open()
 			await p.pressKey('Escape')
@@ -472,6 +487,7 @@ const probes = [
 	},
 	{
 		name: 'focus-return/合成クリック',
+		dialog: true,
 		run: async (p) => {
 			await p.open({ synthetic: true })
 			await p.pressKey('Escape')
@@ -485,6 +501,7 @@ const probes = [
 	},
 	{
 		name: 'tab-cycle',
+		dialog: true,
 		run: async (p) => {
 			await p.open()
 			if (config.input) await p.typeQuery()
@@ -519,6 +536,7 @@ const probes = [
 	},
 	{
 		name: 'tab-md-cross',
+		dialog: true,
 		widths: [375],
 		run: async (p) => {
 			await p.open()
@@ -555,6 +573,7 @@ const probes = [
 	},
 	{
 		name: 'tab-開き際のフレーム',
+		dialog: true,
 		run: async (p) => {
 			// ハイドレーションの前に押しても開かない。開くまで押し直し、開けなかったら NG
 			let samples = []
@@ -772,6 +791,7 @@ const probes = [
 		// 背後が動かないことは、body の overflow だけでは足りないブラウザがある。
 		// touchmove が止まったかどうかまで見ないと、止め方が効いているか分からない
 		name: 'touch-被せた側の素の部分をドラッグ',
+		dialog: true,
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
@@ -811,6 +831,7 @@ const probes = [
 	},
 	{
 		name: 'touch-中のスクローラをドラッグ',
+		dialog: true,
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
@@ -850,6 +871,7 @@ const probes = [
 	},
 	{
 		name: 'touch-指2本（ピンチ）',
+		dialog: true,
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
@@ -906,6 +928,7 @@ const main = async () => {
 			for (const item of probes) {
 				if (item.input && !config.input) continue
 				if (item.scroller && !config.scroller) continue
+				if (item.dialog && !config.dialog) continue
 				if (item.widths && !item.widths.includes(width)) continue
 
 				// CDP の指の設定は reload でも消えない。前の probe の条件を持ち越さない
