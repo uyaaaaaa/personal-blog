@@ -4,7 +4,7 @@
 
 ## フロントマター
 
-スキーマは `content.config.ts`。**スキーマ外のキーは Zod が黙って捨てるので書かない**（`layout` など）。
+スキーマは `content.schema.ts`。
 
 ```md
 ---

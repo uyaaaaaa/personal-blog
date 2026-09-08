@@ -7,7 +7,6 @@ date: 2026-01-27
 tags:
   - zsh
   - linux
-layout: default
 category: blog
 ---
 

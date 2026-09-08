@@ -8,7 +8,6 @@ tags:
   - vim
   - tips
   - beginner
-layout: default
 category: blog
 ---
 

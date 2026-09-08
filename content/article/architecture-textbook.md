@@ -7,7 +7,6 @@ date: 2026-01-30
 tags:
   - book
   - architecture
-layout: default
 category: book
 ---
 

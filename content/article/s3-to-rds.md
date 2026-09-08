@@ -8,7 +8,6 @@ tags:
   - AWS
   - S3
   - RDS
-layout: default
 category: blog
 ---
 

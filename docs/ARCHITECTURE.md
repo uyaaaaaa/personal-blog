@@ -54,6 +54,7 @@
 | 型の解決 | `nuxt typecheck` |
 | 依存グラフ | dependency-cruiser |
 | 記事をまたぐ突き合わせ | `scripts/` の検査 |
+| ESLint が読まないファイル（記事の Markdown） | `scripts/` の検査 |
 | ブラウザでの操作 | `scripts/` の probe（lint では回さない） |
 
 commit のたびに回すのは lint だけにし、テストと型検査と build は PR で受ける。lint で落とせるようになったルールは `.claude/rules/` から消す。

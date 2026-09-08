@@ -7,7 +7,6 @@ date: 2026-01-16
 tags:
   - vim
   - markdown
-layout: default
 category: blog
 ---
 
