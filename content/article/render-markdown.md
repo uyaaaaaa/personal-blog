@@ -8,7 +8,6 @@ tags:
   - neovim
   - plugins
   - beginner
-layout: default
 category: blog
 ---
 

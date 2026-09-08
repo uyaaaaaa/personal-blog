@@ -7,7 +7,6 @@ date: 2026-01-14
 tags:
   - linux
   - beginner
-layout: default
 category: blog
 ---
 

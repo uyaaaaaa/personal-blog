@@ -7,7 +7,6 @@ date: 2026-01-24
 tags:
   - php
   - programing
-layout: default
 category: blog
 ---
 

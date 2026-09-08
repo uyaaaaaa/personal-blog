@@ -8,7 +8,6 @@ tags:
   - nuxt.js
   - cloudflare
   - "@nuxt/content"
-layout: default
 category: blog
 ---
 

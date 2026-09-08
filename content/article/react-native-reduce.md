@@ -8,7 +8,6 @@ tags:
   - ReactNative
   - ExpoGo
   - ios
-layout: default
 category: blog
 ---
 

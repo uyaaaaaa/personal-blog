@@ -7,7 +7,6 @@ date: 2026-01-22
 tags:
   - mysql
   - index
-layout: default
 category: blog
 ---
 ## 概要

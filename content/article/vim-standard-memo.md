@@ -7,7 +7,6 @@ date: 2026-01-11
 tags:
   - vim
   - tools
-layout: default
 category: blog
 ---
 ## コピー&ペースト系

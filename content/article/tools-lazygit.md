@@ -8,7 +8,6 @@ tags:
   - tool
   - git
   - terminal
-layout: default
 category: blog
 ---
 ## はじめに

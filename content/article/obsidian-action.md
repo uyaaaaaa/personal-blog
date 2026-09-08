@@ -7,7 +7,6 @@ date: 2026-01-26
 tags:
   - obsidian
   - github action
-layout: default
 category: blog
 ---
 
