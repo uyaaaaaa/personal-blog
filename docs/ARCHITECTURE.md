@@ -47,12 +47,12 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 
 ## 検査の置き場
 
-検査を足すときの置き場は、判定に何が要るかで決める。整形は Prettier に、ファイル1つで判定できるそれ以外の違反は ESLint に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に、記事をまたいで突き合わせる違反（タグのスラッグ）は `scripts/` の検査に置く。
+検査を足すときの置き場は、判定に何が要るかで決める。整形は Prettier に、ファイル1つで判定できるそれ以外の違反は ESLint に、型の解決が要る違反（シグネチャの不一致・解決できない型の import）は `nuxt typecheck` に、依存グラフが要る違反（循環・依存方向）は dependency-cruiser に、記事をまたいで突き合わせる違反（タグのスラッグ）は `scripts/` の検査に置く。
 ブラウザで操作しないと判定できない違反（被せた UI のキーボード・日本語入力・履歴の経路）は `scripts/` の probe に置き、lint では回さない。
 ESLint はスタイルガイドのプリセットを取り込まず、ルールを1本ずつ足す。整形ルールは足さない。
 lint で落とせるようになったルールは `.claude/rules/` から消す（二重管理にしない）。
 
-commit のたびに回すのは lint だけにする。待たされるものを増やさないため、テストと build は PR で受ける。
+commit のたびに回すのは lint だけにする。待たされるものを増やさないため、テストと型検査と build は PR で受ける。
 
 dependency-cruiser のベースラインは `.dependency-cruiser-known-violations.json`。新規の違反は直し、ベースラインには足さない。ベースラインにある違反を直したら次のコマンドで作り直す（減らす方向にだけ使う）。
 
