@@ -4,6 +4,8 @@
 	import { usePagination } from '~/composables/usePagination'
 	import { usePageSeo } from '~/composables/usePageSeo'
 
+	const route = useRoute()
+
 	const { data: articles } = await useAsyncData('article-list', () =>
 		queryCollection('article')
 			.where('published', '=', true)
@@ -14,9 +16,11 @@
 
 	const { page, totalPages, pagedItems, basePath } = usePagination(
 		computed(() => articles.value ?? []),
+		{ pageParam: () => route.params.page, path: () => route.path },
 	)
 
 	usePageSeo({
+		path: () => route.path,
 		title: () => (page.value > 1 ? `Articles (${page.value}/${totalPages.value})` : 'Articles'),
 		description: '公開中の記事の一覧。',
 	})

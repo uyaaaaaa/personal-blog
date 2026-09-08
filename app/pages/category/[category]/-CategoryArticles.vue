@@ -30,9 +30,11 @@
 
 	const { page, totalPages, pagedItems, basePath } = usePagination(
 		computed(() => articles.value ?? []),
+		{ pageParam: () => route.params.page, path: () => route.path },
 	)
 
 	usePageSeo({
+		path: () => route.path,
 		title: () => (page.value > 1 ? `${label} (${page.value}/${totalPages.value})` : label),
 		description: `${label} カテゴリの記事一覧。`,
 	})
