@@ -104,6 +104,7 @@
 			</button>
 
 			<div
+				ref="lockRef"
 				class="mobile-menu-overlay"
 				:class="{ 'is-open': isOpen }"
 				@click="emit('close')"
@@ -372,6 +373,7 @@
 	import { useArticleTags } from '~/composables/useArticleTags'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useHoverPanel } from '~/composables/useHoverPanel'
+	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 	import { formatRelativeDate } from '~/utils/date'
 
 	const props = defineProps<{
@@ -395,6 +397,8 @@
 	}
 
 	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), closeDrawer)
+
+	const { lockRef } = useTouchScrollLock()
 
 	const isCategoriesOpen = ref(false)
 	const isLatestOpen = ref(false)

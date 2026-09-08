@@ -37,6 +37,10 @@ const OVERLAYS = {
 		// 折りたたみの中のリンクしか他のページに行かないので、開いてから押す
 		expand: 'button[aria-controls="drawer-group-latest"]',
 		link: '#drawer-group-latest a',
+		scroller: '.mobile-drawer',
+		// 指のドラッグが cancelable で届くのは中央の帯だけ（emulation の癖）。ドロワーは
+		// 右端に寄り、375 では中央まで覆う。max-width で覆わなくなる幅に広げてから送る
+		dragWidth: 700,
 		widths: [375],
 	},
 }
@@ -374,6 +378,21 @@ const start = async () => {
 		throw new Error('結果の出る語が見つからない')
 	}
 
+	// 中身を出しきる下ごしらえ。何を出せば増えるかは対象ごとに違う
+	const reveal = async () => {
+		if (config.input) await typeQuery()
+		if (config.expand) {
+			await click(config.expand, '折りたたみ')
+			if (!(await waitFor(`getComputedStyle($vis(LINK)).visibility === 'visible'`))) {
+				throw new Error('折りたたみが開かない')
+			}
+			// 開く途中の高さで測ると、あふれていないように見える。$settled はフレームで
+			// 見ているので、刻みが粗いと途中の1枚を止まったものと読む
+			await sleep(TRANSITION)
+			await evaluate('return $settled(LINK)')
+		}
+	}
+
 	return {
 		cdp,
 		browser,
@@ -395,6 +414,7 @@ const start = async () => {
 		warm,
 		compose,
 		typeQuery,
+		reveal,
 	}
 }
 
@@ -594,16 +614,7 @@ const probes = [
 		run: async (p) => {
 			const cycle = async () => {
 				await p.open()
-				if (config.input) await p.typeQuery()
-				if (config.expand) {
-					await p.click(config.expand, '折りたたみ')
-					if (
-						!(await p.waitFor(`getComputedStyle($vis(LINK)).visibility === 'visible'`))
-					) {
-						throw new Error('折りたたみが開かない')
-					}
-					await p.evaluate('return $settled(LINK)')
-				}
+				await p.reveal()
 				const from = await p.evaluate(`return $path()`)
 				await p.evaluate(`window.__overlayProbe = 1`)
 				await p.click(config.link, '中のリンク')
@@ -764,9 +775,12 @@ const probes = [
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
+			const width = config.dragWidth ?? 375
 			// 指の当たり判定は読み込みの時点で決まる。開いた後に入れても cancelable にならない
+			await p.setWidth(width)
 			await p.setTouch(true)
 			await p.reload()
+			await p.setWidth(width)
 			// 指は上に運ぶので、要るのは下に残っている余地。下がった量では測れない
 			sent('背後のページを 300px 下げる')
 			const room = await p.evaluate(`
@@ -776,7 +790,7 @@ const probes = [
 			`)
 			if (room <= 0) throw new Error('背後のページに下がる余地が無い')
 			await p.open()
-			await p.typeQuery()
+			await p.reveal()
 			await p.watchTouchMoves()
 			const before = await p.evaluate(`return window.scrollY`)
 			await p.touchDrag(await p.overlayPoint(), 240, '素の部分で押して上に240pxドラッグ')
@@ -785,6 +799,7 @@ const probes = [
 			`)
 			const cancelable = observed.moves.filter((move) => move.cancelable)
 			return {
+				width,
 				observed: `残りの余地=${room}px touchmove=${observed.moves.length}件（cancelable=${cancelable.length}件）うち止めた=${cancelable.filter((m) => m.prevented).length}件 scrollY=${before}→${observed.scrollY} overlay="${observed.overlay}"`,
 				ok:
 					cancelable.length > 0 &&
@@ -799,19 +814,19 @@ const probes = [
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
-			// 高さを詰めないと、記事の数によっては結果があふれず、送っても動く余地が無い
+			// 高さを詰めないと、中身の量によってはあふれず、送っても動く余地が無い
 			await p.setWidth(375, 420)
 			await p.setTouch(true)
 			await p.reload()
 			await p.setWidth(375, 420)
 			await p.open()
-			await p.typeQuery()
+			await p.reveal()
 			const room = await p.evaluate(`
 				const el = $vis(${JSON.stringify(config.scroller)})
 				if (!el) throw new Error('スクローラが見えていない')
 				return el.scrollHeight - el.clientHeight
 			`)
-			if (room <= 0) throw new Error('結果があふれていない（送っても動く余地が無い）')
+			if (room <= 0) throw new Error('中身があふれていない（送っても動く余地が無い）')
 
 			await p.watchTouchMoves()
 			await p.touchDrag(
@@ -899,8 +914,9 @@ const main = async () => {
 				await probe.setWidth(width)
 				sentSteps.length = 0
 				try {
-					const { observed, ok } = await item.run(probe)
-					record(width, item.name, observed, ok)
+					// 幅を自分で変える probe がある。行の幅は送った側に合わせる
+					const { observed, ok, width: sent = width } = await item.run(probe)
+					record(sent, item.name, observed, ok)
 					if (ok === false) failed++
 				} catch (error) {
 					record(width, item.name, `送れなかった: ${error.message}`, false)
