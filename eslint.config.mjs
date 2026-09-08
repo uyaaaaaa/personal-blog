@@ -50,6 +50,19 @@ const ROUTE_ACCESS_TEMPLATE = {
 	message: PAGE_CONTEXT_ROUTE_MESSAGE,
 }
 
+// components/ が持たないページの文脈。拡張子で落ちるものが変わらないよう1つにまとめる
+const PAGE_CONTEXT = [
+	...ROUTE_ACCESS,
+	{
+		selector: "CallExpression[callee.name='createError']",
+		message: PAGE_CONTEXT_404_MESSAGE,
+	},
+	{
+		selector: 'CallExpression[callee.name=/^(useSeoMeta|useHead|definePageMeta|usePageSeo)$/]',
+		message: PAGE_CONTEXT_META_MESSAGE,
+	},
+]
+
 // 角括弧を含むクラス（`w-[264px]` 等）がTailwindの任意値
 const TEMPLATE_RESTRICTIONS = [
 	{
@@ -215,30 +228,29 @@ export default [
 			'no-restricted-syntax': [
 				'error',
 				...restrictions['no-restricted-syntax'].slice(1),
-				...ROUTE_ACCESS,
-				{
-					selector: "CallExpression[callee.name='createError']",
-					message: PAGE_CONTEXT_404_MESSAGE,
-				},
-				{
-					selector:
-						'CallExpression[callee.name=/^(useSeoMeta|useHead|definePageMeta|usePageSeo)$/]',
-					message: PAGE_CONTEXT_META_MESSAGE,
-				},
+				...PAGE_CONTEXT,
 			],
 			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS, ROUTE_ACCESS_TEMPLATE],
 		},
 	},
 	{
-		// components/ から composables/ 経由で route に届く経路も塞ぐ
-		files: ['app/components/**/*.ts', 'app/composables/**/*.ts', 'app/utils/**/*.ts'],
-		languageOptions: {
-			parser: tsParser,
-			parserOptions: {
-				ecmaVersion: 'latest',
-				sourceType: 'module',
-			},
+		files: ['app/components/**/*.ts'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				...restrictions['no-restricted-syntax'].slice(1),
+				...PAGE_CONTEXT,
+				{
+					selector: `Program:has(> ${REEXPORT}):not(:has(> :not(:matches(ImportDeclaration, ${REEXPORT}))))`,
+					message: BARREL_MESSAGE,
+				},
+			],
 		},
+	},
+	{
+		// components/ から呼ばれる層。route に届く経路を塞ぐ。404 はページ側の判定を受けて
+		// composable が送出するので、ここでは落とさない
+		files: ['app/composables/**/*.ts', 'app/utils/**/*.ts'],
 		rules: {
 			'no-restricted-syntax': [
 				'error',
