@@ -34,7 +34,7 @@ content/ ─→ @nuxt/content + remark/ ─→ ContentRenderer ─→ components
 - `layouts/` は `pages/` と並ぶ入口で、ルートを持たず全ページ共通の枠を置く。ルートに紐付かない表示はここから下に生える。
 - `components/` は領域のディレクトリ（`layout/` `article/` `content/` `common/` `error/`）に分け、直下にファイルは置かない。領域の間では `article/` が `common/` を使い、`layout/` は他の領域を使わない。
 - `content/` の記事は `@nuxt/content` と `remark/` を経て描画され、本文中のコンポーネントは `components/content/` だけが受ける。
-- `components/` はページの文脈（route のパラメータの読み取り・404 の送出・ページのメタの設定）を持たない。ページ番号の分だけルートファイルが増える一覧（[ADR 01](./adr/01-page-number-in-path.md)）は、本体を `pages/` 配下に `-` 始まりのファイル名（Nuxt のスキャン除外規則）で置き、ルートファイルはそれを import して描画するだけにする。
+- `components/` はページの文脈（route の読み取り・404 の送出・ページのメタの設定）を持たない。route を読むのは入口（`pages/` `layouts/` `app.vue` `error.vue`）だけで、`components/` は props、`composables/` と `utils/` は引数で受け取る（[ADR 14](./adr/14-route-read-only-at-entry.md)）。ページ番号の分だけルートファイルが増える一覧（[ADR 01](./adr/01-page-number-in-path.md)）は、本体を `pages/` 配下に `-` 始まりのファイル名（Nuxt のスキャン除外規則）で置き、ルートファイルはそれを import して描画するだけにする。
 
 ## 静的生成とスタイルの流れ
 

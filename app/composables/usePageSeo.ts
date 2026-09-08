@@ -1,6 +1,7 @@
 type Resolvable<T> = T | Ref<T> | (() => T)
 
 type PageSeoInput = {
+	path: Resolvable<string>
 	title?: Resolvable<string | undefined>
 	description?: Resolvable<string | undefined>
 	image?: Resolvable<string | undefined>
@@ -18,8 +19,7 @@ const DEFAULT_OGP_IMAGE = '/ogp.png'
  * og:imageやog:urlは絶対URLでないとクローラが解決できないため、
  * runtimeConfig.public.siteUrl を基準に組み立てる。
  */
-export const usePageSeo = (input: PageSeoInput = {}) => {
-	const route = useRoute()
+export const usePageSeo = (input: PageSeoInput) => {
 	const { siteUrl } = useRuntimeConfig().public
 	const origin = String(siteUrl).replace(/\/+$/, '')
 
@@ -34,7 +34,7 @@ export const usePageSeo = (input: PageSeoInput = {}) => {
 	})
 	const description = computed(() => toValue(input.description)?.trim() || SITE_DESCRIPTION)
 	const image = computed(() => toAbsoluteUrl(customImage.value ?? DEFAULT_OGP_IMAGE))
-	const url = computed(() => toAbsoluteUrl(route.path))
+	const url = computed(() => toAbsoluteUrl(toValue(input.path)))
 
 	useSeoMeta({
 		title: () => title.value,

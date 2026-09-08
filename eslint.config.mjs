@@ -25,12 +25,81 @@ const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> Ex
 
 const AREA_DIRECTORY_MESSAGE = `components/ の直下にファイルを置かない。layout / article / content / common / error のいずれかに入れる。 ${ARCHITECTURE_URL}`
 
-const PAGE_CONTEXT_PARAMS_MESSAGE = `components/ は route の値を読まない（.params）。読むのは pages/ 側で、値は props で渡す。 ${ARCHITECTURE_URL}`
+const PAGE_CONTEXT_ROUTE_MESSAGE = `route を読むのは入口（pages/ layouts/ app.vue error.vue）だけ。ここでは props か引数で受け取る。 ${ARCHITECTURE_URL}`
 const PAGE_CONTEXT_404_MESSAGE = `components/ は404を送出しない（createError）。判定は pages/ 側で行う。 ${ARCHITECTURE_URL}`
 const PAGE_CONTEXT_META_MESSAGE = `components/ はページのメタを設定しない（useSeoMeta / useHead / definePageMeta / usePageSeo）。設定は pages/ 側で行う。 ${ARCHITECTURE_URL}`
 
 // ディレクトリを跨ぐ参照は `~/`（app/ の外は `~~/`）。相対パスは同じディレクトリの中だけ
 const CROSS_DIRECTORY_RELATIVE = ['..', '../*', '../**', './..', './../*', './../**']
+
+// route に届く入口を落とす。値の読み方（.params・分割代入）ではなく取得そのものを見る
+const ROUTE_ACCESS = [
+	{
+		selector: 'CallExpression[callee.name=/^useRouter?$/]',
+		message: PAGE_CONTEXT_ROUTE_MESSAGE,
+	},
+	{
+		selector: 'MemberExpression[property.name=/^\\$rou(te|ter)$/]',
+		message: PAGE_CONTEXT_ROUTE_MESSAGE,
+	},
+]
+
+// テンプレートの $route / $router。script と違い Vue が名前で解決するので import に現れない
+const ROUTE_ACCESS_TEMPLATE = {
+	selector: 'VExpressionContainer Identifier[name=/^\\$rou(te|ter)$/]',
+	message: PAGE_CONTEXT_ROUTE_MESSAGE,
+}
+
+// components/ が持たないページの文脈。拡張子で落ちるものが変わらないよう1つにまとめる
+const PAGE_CONTEXT = [
+	...ROUTE_ACCESS,
+	{
+		selector: "CallExpression[callee.name='createError']",
+		message: PAGE_CONTEXT_404_MESSAGE,
+	},
+	{
+		selector: 'CallExpression[callee.name=/^(useSeoMeta|useHead|definePageMeta|usePageSeo)$/]',
+		message: PAGE_CONTEXT_META_MESSAGE,
+	},
+]
+
+// 角括弧を含むクラス（`w-[264px]` 等）がTailwindの任意値
+const TEMPLATE_RESTRICTIONS = [
+	{
+		selector: "VAttribute[directive=false][key.name='class'] > VLiteral[value=/\\[/]",
+		message: ARBITRARY_VALUE_MESSAGE,
+	},
+	{
+		selector:
+			"VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/\\[/], TemplateElement[value.cooked=/\\[/])",
+		message: ARBITRARY_VALUE_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${PALETTE_CLASS}/]`,
+		message: PALETTE_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${PALETTE_CLASS}/], TemplateElement[value.cooked=/${PALETTE_CLASS}/])`,
+		message: PALETTE_MESSAGE,
+	},
+	// クラスの `!` 修飾子と style 属性の !important。<style> の中は style/no-important が見る
+	{
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${BANG_CLASS}/]`,
+		message: IMPORTANT_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${BANG_CLASS}/], TemplateElement[value.cooked=/${BANG_CLASS}/])`,
+		message: IMPORTANT_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=false][key.name='style'] > VLiteral[value=/${INLINE_IMPORTANT}/i]`,
+		message: IMPORTANT_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Literal[value=/${INLINE_IMPORTANT}/i], TemplateElement[value.cooked=/${INLINE_IMPORTANT}/i])`,
+		message: IMPORTANT_MESSAGE,
+	},
+]
 
 const restrictions = {
 	'no-restricted-imports': [
@@ -141,49 +210,11 @@ export default [
 			'style/no-color-literal': 'error',
 			'style/no-important': 'error',
 			'style/no-reduced-motion': 'error',
-			// 角括弧を含むクラス（`w-[264px]` 等）がTailwindの任意値
-			'vue/no-restricted-syntax': [
-				'error',
-				{
-					selector:
-						"VAttribute[directive=false][key.name='class'] > VLiteral[value=/\\[/]",
-					message: ARBITRARY_VALUE_MESSAGE,
-				},
-				{
-					selector:
-						"VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/\\[/], TemplateElement[value.cooked=/\\[/])",
-					message: ARBITRARY_VALUE_MESSAGE,
-				},
-				{
-					selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${PALETTE_CLASS}/]`,
-					message: PALETTE_MESSAGE,
-				},
-				{
-					selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${PALETTE_CLASS}/], TemplateElement[value.cooked=/${PALETTE_CLASS}/])`,
-					message: PALETTE_MESSAGE,
-				},
-				// クラスの `!` 修飾子と style 属性の !important。<style> の中は style/no-important が見る
-				{
-					selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${BANG_CLASS}/]`,
-					message: IMPORTANT_MESSAGE,
-				},
-				{
-					selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${BANG_CLASS}/], TemplateElement[value.cooked=/${BANG_CLASS}/])`,
-					message: IMPORTANT_MESSAGE,
-				},
-				{
-					selector: `VAttribute[directive=false][key.name='style'] > VLiteral[value=/${INLINE_IMPORTANT}/i]`,
-					message: IMPORTANT_MESSAGE,
-				},
-				{
-					selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Literal[value=/${INLINE_IMPORTANT}/i], TemplateElement[value.cooked=/${INLINE_IMPORTANT}/i])`,
-					message: IMPORTANT_MESSAGE,
-				},
-			],
+			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS],
 		},
 	},
 	{
-		// components/ はページの文脈（routeの値・404・ページのメタ）を持たない
+		// components/ はページの文脈（routeの読み取り・404・ページのメタ）を持たない
 		files: ['app/components/**/*.vue'],
 		languageOptions: {
 			parser: vueParser,
@@ -197,18 +228,37 @@ export default [
 			'no-restricted-syntax': [
 				'error',
 				...restrictions['no-restricted-syntax'].slice(1),
+				...PAGE_CONTEXT,
+			],
+			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS, ROUTE_ACCESS_TEMPLATE],
+		},
+	},
+	{
+		files: ['app/components/**/*.ts'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				...restrictions['no-restricted-syntax'].slice(1),
+				...PAGE_CONTEXT,
 				{
-					selector: "MemberExpression[property.name='params']",
-					message: PAGE_CONTEXT_PARAMS_MESSAGE,
+					selector: `Program:has(> ${REEXPORT}):not(:has(> :not(:matches(ImportDeclaration, ${REEXPORT}))))`,
+					message: BARREL_MESSAGE,
 				},
+			],
+		},
+	},
+	{
+		// components/ から呼ばれる層。route に届く経路を塞ぐ。404 はページ側の判定を受けて
+		// composable が送出するので、ここでは落とさない
+		files: ['app/composables/**/*.ts', 'app/utils/**/*.ts'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				...restrictions['no-restricted-syntax'].slice(1),
+				...ROUTE_ACCESS,
 				{
-					selector: "CallExpression[callee.name='createError']",
-					message: PAGE_CONTEXT_404_MESSAGE,
-				},
-				{
-					selector:
-						'CallExpression[callee.name=/^(useSeoMeta|useHead|definePageMeta|usePageSeo)$/]',
-					message: PAGE_CONTEXT_META_MESSAGE,
+					selector: `Program:has(> ${REEXPORT}):not(:has(> :not(:matches(ImportDeclaration, ${REEXPORT}))))`,
+					message: BARREL_MESSAGE,
 				},
 			],
 		},

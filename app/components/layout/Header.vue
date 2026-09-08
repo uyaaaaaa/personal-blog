@@ -127,6 +127,7 @@
 				<ThemeToggle class="self-center" />
 				<Navigation
 					:is-open="isMenuOpen"
+					:location="location"
 					@toggle="toggleMenu"
 					@close="closeMenu"
 				/>
@@ -144,6 +145,10 @@
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
+
+	const props = defineProps<{
+		location: string
+	}>()
 
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)
@@ -177,9 +182,8 @@
 	})
 
 	// リンクを踏まない移動（ブラウザバック）でも、被せたものは残さない
-	const route = useRoute()
 	watch(
-		() => route.fullPath,
+		() => props.location,
 		() => {
 			closeMenu()
 			closeSearch()

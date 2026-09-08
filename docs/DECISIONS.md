@@ -18,3 +18,4 @@
 - [11 効いている検査の一覧を文書に持たない](./adr/11-no-enforcement-inventory.md)
 - [12 scoped CSS の値も Tailwind の語彙に限り、ESLint で落とす](./adr/12-style-block-token-lint.md)
 - [13 route に依らない取得は、それを出すコンポーネントが持つ](./adr/13-fetch-follows-route-dependency.md)
+- [14 route を読むのは入口だけにし、下の層は props と引数で受け取る](./adr/14-route-read-only-at-entry.md)
