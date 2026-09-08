@@ -374,6 +374,21 @@ const start = async () => {
 		throw new Error('結果の出る語が見つからない')
 	}
 
+	// 中身を出しきる下ごしらえ。何を出せば増えるかは対象ごとに違う
+	const reveal = async () => {
+		if (config.input) await typeQuery()
+		if (config.expand) {
+			await click(config.expand, '折りたたみ')
+			if (!(await waitFor(`getComputedStyle($vis(LINK)).visibility === 'visible'`))) {
+				throw new Error('折りたたみが開かない')
+			}
+			// 開く途中の高さで測ると、あふれていないように見える。$settled はフレームで
+			// 見ているので、刻みが粗いと途中の1枚を止まったものと読む
+			await sleep(TRANSITION)
+			await evaluate('return $settled(LINK)')
+		}
+	}
+
 	return {
 		cdp,
 		browser,
@@ -395,6 +410,7 @@ const start = async () => {
 		warm,
 		compose,
 		typeQuery,
+		reveal,
 	}
 }
 
@@ -594,16 +610,7 @@ const probes = [
 		run: async (p) => {
 			const cycle = async () => {
 				await p.open()
-				if (config.input) await p.typeQuery()
-				if (config.expand) {
-					await p.click(config.expand, '折りたたみ')
-					if (
-						!(await p.waitFor(`getComputedStyle($vis(LINK)).visibility === 'visible'`))
-					) {
-						throw new Error('折りたたみが開かない')
-					}
-					await p.evaluate('return $settled(LINK)')
-				}
+				await p.reveal()
 				const from = await p.evaluate(`return $path()`)
 				await p.evaluate(`window.__overlayProbe = 1`)
 				await p.click(config.link, '中のリンク')
@@ -776,7 +783,7 @@ const probes = [
 			`)
 			if (room <= 0) throw new Error('背後のページに下がる余地が無い')
 			await p.open()
-			await p.typeQuery()
+			await p.reveal()
 			await p.watchTouchMoves()
 			const before = await p.evaluate(`return window.scrollY`)
 			await p.touchDrag(await p.overlayPoint(), 240, '素の部分で押して上に240pxドラッグ')
@@ -805,7 +812,7 @@ const probes = [
 			await p.reload()
 			await p.setWidth(375, 420)
 			await p.open()
-			await p.typeQuery()
+			await p.reveal()
 			const room = await p.evaluate(`
 				const el = $vis(${JSON.stringify(config.scroller)})
 				if (!el) throw new Error('スクローラが見えていない')
