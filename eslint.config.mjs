@@ -1,16 +1,19 @@
 import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
+import importLayers from './eslint-rules/import-layers.mjs'
 import styleTokens, { DOCS_URL, MOTION_URL, TOKEN_URL } from './eslint-rules/style-tokens.mjs'
 
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
 
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
+const INVARIANT_URL = `${DOCS_URL}/ARCHITECTURE.md#不変条件`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
 
 const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
+const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない。読み取りを useScrollFrame に渡し、アプリ全体で1本の購読に集約する。 ${INVARIANT_URL}`
 const IMPORTANT_MESSAGE =
 	'!important は書かない。Tailwind の ! 修飾子と style 属性も同じ。第三者由来のインラインスタイルを打ち消すときだけ、理由を添えた eslint-disable で許す。'
 
@@ -22,6 +25,19 @@ const INLINE_IMPORTANT = '!\\s*important'
 
 // 実体を持たない export（`export * from` と `export { … }`）だけで構成されるのが barrel
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
+
+// 集約先の useScrollFrame だけが例外。除くために、この配列の同一性で識別する
+const SCROLL_SUBSCRIPTION = [
+	{
+		selector:
+			'CallExpression[callee.property.name=/^(add|remove)EventListener$/] > Literal[value=/^(scroll|resize)$/]',
+		message: SCROLL_SUBSCRIPTION_MESSAGE,
+	},
+	{
+		selector: 'MemberExpression[property.name=/^on(scroll|resize)$/]',
+		message: SCROLL_SUBSCRIPTION_MESSAGE,
+	},
+]
 
 const AREA_DIRECTORY_MESSAGE = `components/ の直下にファイルを置かない。layout / article / content / common / error のいずれかに入れる。 ${ARCHITECTURE_URL}`
 
@@ -158,8 +174,20 @@ const restrictions = {
 				':matches(Literal[value=/prefers-reduced-motion/], TemplateElement[value.cooked=/prefers-reduced-motion/])',
 			message: REDUCED_MOTION_MESSAGE,
 		},
+		...SCROLL_SUBSCRIPTION,
 	],
 }
+
+// components/ から呼ばれる層。route に届く経路を塞ぐ。404 はページ側の判定を受けて
+// composable が送出するので、ここでは落とさない
+const CALLED_LAYER_SYNTAX = [
+	...restrictions['no-restricted-syntax'].slice(1),
+	...ROUTE_ACCESS,
+	{
+		selector: `Program:has(> ${REEXPORT}):not(:has(> :not(:matches(ImportDeclaration, ${REEXPORT}))))`,
+		message: BARREL_MESSAGE,
+	},
+]
 
 export default [
 	{
@@ -167,6 +195,7 @@ export default [
 	},
 	{
 		files: ['app/**/*.ts'],
+		plugins: { imports: importLayers },
 		languageOptions: {
 			parser: tsParser,
 			parserOptions: {
@@ -176,6 +205,7 @@ export default [
 		},
 		rules: {
 			...restrictions,
+			'imports/order': 'error',
 			'no-restricted-syntax': [
 				...restrictions['no-restricted-syntax'],
 				{
@@ -187,7 +217,7 @@ export default [
 	},
 	{
 		files: ['app/**/*.vue'],
-		plugins: { vue: pluginVue, style: styleTokens },
+		plugins: { vue: pluginVue, style: styleTokens, imports: importLayers },
 		languageOptions: {
 			parser: vueParser,
 			parserOptions: {
@@ -198,6 +228,7 @@ export default [
 		},
 		rules: {
 			...restrictions,
+			'imports/order': 'error',
 			// components: false 後もグローバル登録が残るのはNuxtの組み込みコンポーネントのみ
 			'vue/no-undef-components': [
 				'error',
@@ -248,18 +279,18 @@ export default [
 		},
 	},
 	{
-		// components/ から呼ばれる層。route に届く経路を塞ぐ。404 はページ側の判定を受けて
-		// composable が送出するので、ここでは落とさない
 		files: ['app/composables/**/*.ts', 'app/utils/**/*.ts'],
+		rules: {
+			'no-restricted-syntax': ['error', ...CALLED_LAYER_SYNTAX],
+		},
+	},
+	{
+		// 購読を集約する場所そのもの。scroll / resize を購読してよい唯一のファイル
+		files: ['app/composables/useScrollFrame.ts'],
 		rules: {
 			'no-restricted-syntax': [
 				'error',
-				...restrictions['no-restricted-syntax'].slice(1),
-				...ROUTE_ACCESS,
-				{
-					selector: `Program:has(> ${REEXPORT}):not(:has(> :not(:matches(ImportDeclaration, ${REEXPORT}))))`,
-					message: BARREL_MESSAGE,
-				},
+				...CALLED_LAYER_SYNTAX.filter((rule) => !SCROLL_SUBSCRIPTION.includes(rule)),
 			],
 		},
 	},

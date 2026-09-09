@@ -1,16 +1,23 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useScrollFrame } from './useScrollFrame'
+import { readOnScrollFrame, useScrollFrame } from './useScrollFrame'
 import { withSetup } from './withSetup.test-helper'
 
 // 購読とフレームはモジュールスコープに持たれる。全員 unmount すれば購読が外れて素に戻るので、
 // モジュールを入れ直さずに、後片付けそのものを測る形にする
 const mounted: Array<() => void> = []
+const stopped: Array<() => void> = []
 
 const mountFrame = (read: () => void, enabled = ref(true)) => {
 	const { unmount } = withSetup(() => useScrollFrame(read, enabled))
 	mounted.push(unmount)
 	return { enabled, unmount }
+}
+
+const startRead = (read: () => void) => {
+	const stop = readOnScrollFrame(read)
+	stopped.push(stop)
+	return stop
 }
 
 const frames = new Map<number, FrameRequestCallback>()
@@ -45,6 +52,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+	for (const stop of stopped.splice(0)) stop()
 	for (const unmount of mounted.splice(0)) unmount()
 	vi.unstubAllGlobals()
 	vi.restoreAllMocks()
@@ -153,5 +161,53 @@ describe('useScrollFrame', () => {
 		mountFrame(vi.fn())
 
 		expect(countCalls(addEventListener, 'scroll')).toBe(1)
+	})
+})
+
+describe('readOnScrollFrame', () => {
+	it('登録した時点で1回読み、以後はフレームごとに読む', () => {
+		const read = vi.fn()
+		startRead(read)
+
+		expect(read).toHaveBeenCalledTimes(1)
+
+		window.dispatchEvent(new Event('scroll'))
+		runFrame()
+
+		expect(read).toHaveBeenCalledTimes(2)
+	})
+
+	it('コンポーネントの読み取りと購読を分け合う', () => {
+		mountFrame(vi.fn())
+		startRead(vi.fn())
+
+		expect(countCalls(addEventListener, 'scroll')).toBe(1)
+		expect(countCalls(addEventListener, 'resize')).toBe(1)
+	})
+
+	it('止めるとその読み取りだけが外れる', () => {
+		const stopping = vi.fn()
+		const staying = vi.fn()
+		const stop = startRead(stopping)
+		startRead(staying)
+
+		stop()
+		stopping.mockClear()
+		staying.mockClear()
+
+		window.dispatchEvent(new Event('scroll'))
+		runFrame()
+
+		expect(stopping).not.toHaveBeenCalled()
+		expect(staying).toHaveBeenCalledTimes(1)
+	})
+
+	it('最後の1つを止めたら購読も外れる', () => {
+		const stop = startRead(vi.fn())
+
+		stop()
+
+		expect(countCalls(removeEventListener, 'scroll')).toBe(1)
+		expect(countCalls(removeEventListener, 'resize')).toBe(1)
 	})
 })
