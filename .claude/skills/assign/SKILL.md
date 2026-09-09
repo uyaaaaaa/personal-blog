@@ -80,6 +80,7 @@ description: "このリポジトリの GitHub issue を1本、着手から PR �
 
 ### 終わり
 
+- **受けた指摘を台帳に書き留める。** `node scripts/harness-journal.mjs append <PR番号>` に、指摘の要旨と直し方を標準入力で渡す。**指摘が0件なら書かない**（→ `codify`）
 - **マージしない。** CI が緑で `Approve` でも、マージは書き手が判断する
 - **判定・CI・実測を報告して終える。** issue は書き手のマージで `Closes` が閉じる
 
