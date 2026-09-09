@@ -31,10 +31,9 @@ const QUOTED = /'[^']*'|"[^"]*"/g
 const URL_FUNCTION = /url\((?:[^()]|\([^()]*\))*\)/gi
 const CUSTOM_PROPERTY = /--[A-Za-z0-9_-]+/g
 
-// 文字列と url() の中身は値ではない。色はさらに、トークンの名前を色の名前と読まないよう落とす
-const readable = (value) => value.replace(QUOTED, '').replace(URL_FUNCTION, '')
+const stripNonValues = (value) => value.replace(QUOTED, '').replace(URL_FUNCTION, '')
 
-// CSS の色キーワード。transparent と currentColor は色の指定ではないので含めない
+// transparent と currentColor は色の指定ではないので含めない
 const NAMED_COLORS = new Set(
 	'aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue cornsilk crimson cyan darkblue darkcyan darkgoldenrod darkgray darkgreen darkgrey darkkhaki darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue dimgray dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite gold goldenrod gray green greenyellow grey honeydew hotpink indianred indigo ivory khaki lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon lightseagreen lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen linen magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen mediumslateblue mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown seagreen seashell sienna silver skyblue slateblue slategray slategrey snow springgreen steelblue tan teal thistle tomato turquoise violet wheat white whitesmoke yellow yellowgreen'.split(
 		' ',
@@ -48,7 +47,6 @@ function collectStrings(value, into) {
 		for (const item of Object.values(value)) collectStrings(item, into)
 }
 
-// 語彙は Tailwind の既定の theme に sizes を重ねて作る。sizes に名前を足せば通る。
 // tailwind.config.ts 自体は node が型注釈を落とせず読めないため、ここで組み直す
 function buildVocabulary() {
 	const theme = resolveConfig({ content: [], theme: { extend: { ...sizes } } }).theme
@@ -90,8 +88,7 @@ function channelsOf(literal) {
 		.map((part) => (part.endsWith('%') ? (Number.parseFloat(part) * 255) / 100 : Number(part)))
 }
 
-// ガイドラインが例外に挙げる「白・黒とその透過」
-function isNeutral(literal) {
+function isWhiteOrBlack(literal) {
 	const lower = literal.toLowerCase()
 	if (lower === 'white' || lower === 'black') return true
 	if (!/^(#|rgba?\()/i.test(lower)) return false
@@ -139,7 +136,7 @@ const noUntokenizedSize = {
 	},
 	create(context) {
 		const check = (value, loc) => {
-			for (const [literal, , number, unit] of readable(value).matchAll(LENGTH)) {
+			for (const [literal, , number, unit] of stripNonValues(value).matchAll(LENGTH)) {
 				if (vocabulary[unit.toLowerCase()].has(Math.abs(Number(number)))) continue
 				context.report({ loc, messageId: 'untokenized', data: { literal } })
 			}
@@ -166,7 +163,7 @@ const noColorLiteral = {
 	},
 	create(context) {
 		const check = (value, loc) => {
-			const text = readable(value).replace(CUSTOM_PROPERTY, '')
+			const text = stripNonValues(value).replace(CUSTOM_PROPERTY, '')
 			const found = [
 				...text.matchAll(HEX),
 				...text.matchAll(COLOR_FUNCTION),
@@ -176,7 +173,7 @@ const noColorLiteral = {
 			]
 			for (const [literal] of found) {
 				// var() を含む関数はトークン由来（Callout の --callout-rgb）
-				if (literal.includes('var(') || isNeutral(literal)) continue
+				if (literal.includes('var(') || isWhiteOrBlack(literal)) continue
 				context.report({ loc, messageId: 'literal', data: { literal } })
 			}
 		}

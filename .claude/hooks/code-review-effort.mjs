@@ -1,10 +1,7 @@
 #!/usr/bin/env node
-// Skill(code-review) の呼び出しに effort が無ければ medium を足す。
-// 明示された effort（high など）はそのまま通す。
 const LEVELS = new Set(['low', 'medium', 'high', 'xhigh', 'max'])
 const DEFAULT = 'medium'
 
-// 引数のどこかで effort が指定されているか。`high` と `--effort=high` の両方を見る。
 const hasLevel = (args) =>
 	args
 		.split(/\s+/)
@@ -39,6 +36,4 @@ try {
 			)
 		}
 	}
-} catch {
-	// 握りつぶす
-}
+} catch {}

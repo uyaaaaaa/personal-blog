@@ -1,6 +1,3 @@
-// 被せた UI（ダイアログ・ドロワー）に操作を送り、送った操作と観測を .verify/ に残す。
-// npm run dev を起こしてから: node scripts/overlay-probe.mjs search [URL]
-
 import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -17,12 +14,10 @@ const CHROMIUM_CANDIDATES = [
 const DEBUG_PORT = 9333
 // 色を持たない border-left-color の算出値
 const TRANSPARENT = 'rgba(0, 0, 0, 0)'
-// 選択中そのものが無いときに $line() が返す値
 const NO_ACTIVE = 'なし'
 const OPEN_TIMEOUT = 4000
 const TRANSITION = 400
 
-// 被せた UI と、そこに送る操作の当て先。増えたらここに足す
 const OVERLAYS = {
 	search: {
 		trigger: 'header button[aria-haspopup="dialog"]',
@@ -136,9 +131,7 @@ const launch = async () => {
 			)
 			const page = pages.find((p) => p.type === 'page')
 			if (page) return { browser, profile, wsUrl: page.webSocketDebuggerUrl }
-		} catch {
-			// まだ待ち受けていない
-		}
+		} catch {}
 		await sleep(100)
 	}
 	throw new Error('Chromium の CDP に繋がらない')
@@ -173,7 +166,6 @@ const connect = (wsUrl) =>
 		)
 	})
 
-// ページ側で使う道具。$vis は同じセレクタで幅ごとに出ている方を選ぶ
 const PAGE_HELPERS = `
 	const TRIGGER = ${JSON.stringify(config.trigger)}
 	const OVERLAY = ${JSON.stringify(config.overlay)}
@@ -248,11 +240,11 @@ const start = async () => {
 			mobile: false,
 		})
 
-	// 指の操作は mouse と別の経路で届く。戻すのは probe を回す側が持つ
+	// 指の操作は mouse と別の経路で届く
 	const setTouch = (enabled) =>
 		cdp.send('Emulation.setTouchEmulationEnabled', { enabled, maxTouchPoints: 5 })
 
-	// 押した点から dy だけ上に運ぶ。1回で運ぶとタップ扱いになる
+	// 1回で運ぶとタップ扱いになるので、刻んで送る
 	const touchDrag = async (point, dy, label) => {
 		sent(label)
 		const at = (offset) => [{ x: Math.round(point.x), y: Math.round(point.y - offset) }]
@@ -281,7 +273,6 @@ const start = async () => {
 			})
 		`)
 
-	// 被せた側の素の部分。ダイアログの外で、かつ他の要素に隠れていない点を探す
 	const overlayPoint = () =>
 		evaluate(`
 			const overlay = document.querySelector(OVERLAY)
@@ -376,7 +367,7 @@ const start = async () => {
 		throw new Error(`押した位置にあるのは ${selector} ではなく ${blocked}`)
 	}
 
-	// キーもハイドレーションの前に送ると何も起きない。開くまで同じキーを送り直す
+	// ハイドレーションの前に送っても何も起きないので、開くまで送り直す
 	const openByShortcut = async (modifiers) => {
 		let key = null
 		for (let attempt = 0; attempt < 8; attempt++) {
@@ -393,7 +384,6 @@ const start = async () => {
 		return { key, opened: false }
 	}
 
-	// 下の層も、ハイドレーションの前に押しても開かない
 	const openCover = async () => {
 		for (let attempt = 0; attempt < 8; attempt++) {
 			await click(covering.trigger, '下の層のトリガ')
@@ -410,7 +400,6 @@ const start = async () => {
 	}
 
 	// synthetic は click でフォーカスを動かさないブラウザ（Safari / Firefox）と同じ状況を作る。
-	// ハイドレーションの前に押しても何も起きないので、開くまで同じ押し方で押し直す
 	const open = async ({ synthetic = false } = {}) => {
 		for (let attempt = 0; attempt < 8; attempt++) {
 			if (synthetic) {
@@ -443,7 +432,6 @@ const start = async () => {
 		})
 	}
 
-	// 閉じるアニメーションの分だけ待つ。閉じないものは待っても閉じない
 	const waitClosed = () =>
 		waitFor(`getComputedStyle(document.querySelector(OVERLAY)).visibility === 'hidden'`, 2500)
 
@@ -459,7 +447,6 @@ const start = async () => {
 		}
 	}
 
-	// 結果が出ないと Enter もリンクも測れないので、当たる語を探して打つ
 	const typeQuery = async () => {
 		for (const query of ['a', 'vim', 'e', 'i']) {
 			await evaluate(`document.querySelector(INPUT).focus()`)
@@ -478,7 +465,6 @@ const start = async () => {
 		throw new Error('結果の出る語が見つからない')
 	}
 
-	// 中身を出しきる下ごしらえ。何を出せば増えるかは対象ごとに違う
 	const reveal = async () => {
 		if (config.input) await typeQuery()
 		if (config.expand) {
@@ -521,7 +507,6 @@ const start = async () => {
 	}
 }
 
-// 証跡に残すのは、書いた手順ではなく実際に送った操作。同じものが続いたらまとめる
 const sentSteps = []
 const sent = (step) => {
 	const last = sentSteps.at(-1)
@@ -788,7 +773,6 @@ const probes = [
 		name: 'tab-開き際のフレーム',
 		dialog: true,
 		run: async (p) => {
-			// ハイドレーションの前に押しても開かない。開くまで押し直し、開けなかったら NG
 			let samples = []
 			for (
 				let attempt = 0;

@@ -23,7 +23,6 @@ const PALETTE_CLASS = `(?:^|[\\s:])!?[a-z]+(?:-[a-z]+)*-(?:${PALETTE_COLORS})-(?
 const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
 
-// 実体を持たない export（`export * from` と `export { … }`）だけで構成されるのが barrel
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
 
 // 集約先の useScrollFrame だけが例外。除くために、この配列の同一性で識別する
@@ -45,10 +44,9 @@ const PAGE_CONTEXT_ROUTE_MESSAGE = `route を読むのは入口（pages/ layouts
 const PAGE_CONTEXT_404_MESSAGE = `components/ は404を送出しない（createError）。判定は pages/ 側で行う。 ${ARCHITECTURE_URL}`
 const PAGE_CONTEXT_META_MESSAGE = `components/ はページのメタを設定しない（useSeoMeta / useHead / definePageMeta / usePageSeo）。設定は pages/ 側で行う。 ${ARCHITECTURE_URL}`
 
-// ディレクトリを跨ぐ参照は `~/`（app/ の外は `~~/`）。相対パスは同じディレクトリの中だけ
 const CROSS_DIRECTORY_RELATIVE = ['..', '../*', '../**', './..', './../*', './../**']
 
-// route に届く入口を落とす。値の読み方（.params・分割代入）ではなく取得そのものを見る
+// 値の読み方（.params・分割代入）ではなく、route を取得するところを見る
 const ROUTE_ACCESS = [
 	{
 		selector: 'CallExpression[callee.name=/^useRouter?$/]',
@@ -60,13 +58,13 @@ const ROUTE_ACCESS = [
 	},
 ]
 
-// テンプレートの $route / $router。script と違い Vue が名前で解決するので import に現れない
+// script と違いテンプレートの $route / $router は Vue が名前で解決するので、import に現れない
 const ROUTE_ACCESS_TEMPLATE = {
 	selector: 'VExpressionContainer Identifier[name=/^\\$rou(te|ter)$/]',
 	message: PAGE_CONTEXT_ROUTE_MESSAGE,
 }
 
-// components/ が持たないページの文脈。拡張子で落ちるものが変わらないよう1つにまとめる
+// 拡張子で落ちるものが変わらないよう1つにまとめる
 const PAGE_CONTEXT = [
 	...ROUTE_ACCESS,
 	{
@@ -98,7 +96,6 @@ const TEMPLATE_RESTRICTIONS = [
 		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${PALETTE_CLASS}/], TemplateElement[value.cooked=/${PALETTE_CLASS}/])`,
 		message: PALETTE_MESSAGE,
 	},
-	// クラスの `!` 修飾子と style 属性の !important。<style> の中は style/no-important が見る
 	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${BANG_CLASS}/]`,
 		message: IMPORTANT_MESSAGE,
@@ -147,7 +144,6 @@ const restrictions = {
 	'no-restricted-syntax': [
 		'error',
 		{
-			// window.navigator.userAgent と navigator['userAgent'] も落とす
 			selector: "MemberExpression[property.name='userAgent']",
 			message:
 				'navigator.userAgent で分岐しない。機能の有無か、CSS のメディア特性で判定する。',
@@ -158,16 +154,15 @@ const restrictions = {
 				'navigator.userAgent で分岐しない。機能の有無か、CSS のメディア特性で判定する。',
 		},
 		{
-			// bfcache を壊すため、離脱時の処理は pagehide / visibilitychange に置く
 			selector:
 				'CallExpression[callee.property.name=/^(add|remove)EventListener$/] > Literal[value=/^(before)?unload$/]',
 			message:
-				'unload / beforeunload は購読しない。離脱時の処理は pagehide か visibilitychange に置く。',
+				'unload / beforeunload は購読しない。bfcache を壊すので、離脱時の処理は pagehide か visibilitychange に置く。',
 		},
 		{
 			selector: 'MemberExpression[property.name=/^on(before)?unload$/]',
 			message:
-				'onunload / onbeforeunload は使わない。離脱時の処理は pagehide か visibilitychange に置く。',
+				'onunload / onbeforeunload は使わない。bfcache を壊すので、離脱時の処理は pagehide か visibilitychange に置く。',
 		},
 		{
 			selector:
@@ -178,8 +173,7 @@ const restrictions = {
 	],
 }
 
-// components/ から呼ばれる層。route に届く経路を塞ぐ。404 はページ側の判定を受けて
-// composable が送出するので、ここでは落とさない
+// 404 はページ側の判定を受けて composable が送出するので、ここでは落とさない
 const CALLED_LAYER_SYNTAX = [
 	...restrictions['no-restricted-syntax'].slice(1),
 	...ROUTE_ACCESS,
@@ -236,7 +230,6 @@ export default [
 					ignorePatterns: ['Nuxt[A-Z]\\w*', 'ContentRenderer'],
 				},
 			],
-			// scoped CSS の直値。クラス側の任意値と同じ基準を <style> にも当てる
 			'style/no-untokenized-size': 'error',
 			'style/no-color-literal': 'error',
 			'style/no-important': 'error',
@@ -245,7 +238,6 @@ export default [
 		},
 	},
 	{
-		// components/ はページの文脈（routeの読み取り・404・ページのメタ）を持たない
 		files: ['app/components/**/*.vue'],
 		languageOptions: {
 			parser: vueParser,
@@ -285,7 +277,6 @@ export default [
 		},
 	},
 	{
-		// 購読を集約する場所そのもの。scroll / resize を購読してよい唯一のファイル
 		files: ['app/composables/useScrollFrame.ts'],
 		rules: {
 			'no-restricted-syntax': [
@@ -295,7 +286,6 @@ export default [
 		},
 	},
 	{
-		// コンポーネントは領域のディレクトリに属する。直下のファイルは Program ごと落とす
 		files: ['app/components/*.{vue,ts}'],
 		languageOptions: {
 			parser: vueParser,
