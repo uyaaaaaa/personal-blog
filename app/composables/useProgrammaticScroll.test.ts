@@ -5,7 +5,6 @@ import { beginProgrammaticScroll, isProgrammaticScroll } from './useProgrammatic
 // 実装が「150ms 止まったら落ち着いた」と決めている。手前と直後の両方を測る
 const SETTLE_MS = 150
 
-// 沈黙の検出は useScrollFrame の読み取りとして走る。イベントだけでは数え直されない
 const scroll = () => {
 	window.dispatchEvent(new Event('scroll'))
 	vi.advanceTimersToNextFrame()
