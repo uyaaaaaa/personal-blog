@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import ArticleList from '~/components/article/ArticleList.vue'
-	import Pagination from '~/components/common/Pagination.vue'
+	import Pagination from '~/components/ui/Pagination.vue'
 	import { usePagination } from '~/composables/usePagination'
 	import { usePageSeo } from '~/composables/usePageSeo'
 
