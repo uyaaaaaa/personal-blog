@@ -9,7 +9,7 @@ description: "PR で受けた指摘のうち、繰り返したものだけを規
 
 **ここで足すのは `.claude/rules/` の1行まで。** 検査に落ちるものは issue にして `assign` に渡す。実装は持たない。
 
-**台帳は main の外にある**（→ [ADR 15](../../../docs/adr/15-review-ledger-outside-main.md)）。読み書きは `scripts/harness-journal.mjs` を通す。中の形を手で決めない。
+**台帳は main の外の orphan ブランチにある。** 読み書きは `scripts/harness-journal.mjs` を通し、中の形を手で決めない。
 
 ## 1. 畳む
 
