@@ -28,12 +28,10 @@ const PALETTE_COLORS =
 const PALETTE_CLASS = `(?:^|[\\s:])!?[a-z]+(?:-[a-z]+)*-(?:${PALETTE_COLORS})-(?:50|[1-9]00|950)\\b`
 // 任意値の variant（min-[600px]:）は角括弧の検査が落とす
 const BREAKPOINT_CLASS = `(?:^|[\\s:])(?:${OFF_BREAKPOINT_VARIANTS.join('|')}):`
-// matchMedia に渡す文字列。宣言（max-width: 36rem）と分けるため、どちらも括弧から見る。
-// <style> の @media は style/no-custom-breakpoint が見る
+// 宣言（max-width: 36rem）と混ざらないよう、括弧から見る
 const WIDTHS = BREAKPOINT_WIDTHS.join('|')
-// 幅を見る条件に入っている、境界でない長さ。単位は列挙せず <style> 側と同じく何でも見る
 const WIDTH_BY_LENGTH = `\\((?=[^()]*width)[^()]*?(?<![\\d.])(?!(?:${WIDTHS})\\b)\\d*\\.?\\d+[a-z%]+`
-// 長さが同じ括弧の中に無い形（`(min-width: ${w}px)` のように組み立てたもの）は綴りから見る
+// 組み立てた文字列は長さが別のリテラルに出るので、綴りからも見る
 const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))`
 const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 const BANG_CLASS = '(?:^|[\\s:])!'
