@@ -1,10 +1,10 @@
 <script setup lang="ts">
-	import Sidebar from '~/components/common/Sidebar.vue'
-	import BackButton from '~/components/common/BackButton.vue'
-	import ScrollToTopButton from '~/components/common/ScrollToTopButton.vue'
+	import Sidebar from '~/components/article/Sidebar.vue'
 	import Toc from '~/components/article/Toc.vue'
 	import TocMobile from '~/components/article/TocMobile.vue'
 	import ArticleFallback from '~/components/article/ArticleFallback.vue'
+	import BackButton from '~/components/ui/BackButton.vue'
+	import ScrollToTopButton from '~/components/ui/ScrollToTopButton.vue'
 	import { beginProgrammaticScroll } from '~/composables/useProgrammaticScroll'
 	import { usePageSeo } from '~/composables/usePageSeo'
 	import { formatDate } from '~/utils/date'
@@ -101,7 +101,10 @@
 		<main class="min-w-0 max-w-3xl flex-1">
 			<article class="space-y-8">
 				<div class="mb-4">
-					<BackButton :label="'Back to Articles'" />
+					<BackButton
+						to="/article"
+						label="Back to Articles"
+					/>
 				</div>
 
 				<header class="space-y-4 border-b border-border pb-8">
@@ -155,7 +158,10 @@
 			</article>
 
 			<div class="mt-16">
-				<BackButton :label="'Back to Articles'" />
+				<BackButton
+					to="/article"
+					label="Back to Articles"
+				/>
 			</div>
 		</main>
 
