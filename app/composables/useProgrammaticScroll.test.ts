@@ -5,6 +5,11 @@ import { beginProgrammaticScroll, isProgrammaticScroll } from './useProgrammatic
 // 実装が「150ms 止まったら落ち着いた」と決めている。手前と直後の両方を測る
 const SETTLE_MS = 150
 
+const scroll = () => {
+	window.dispatchEvent(new Event('scroll'))
+	vi.advanceTimersToNextFrame()
+}
+
 let addEventListener: ReturnType<typeof vi.spyOn>
 let removeEventListener: ReturnType<typeof vi.spyOn>
 
@@ -47,11 +52,10 @@ describe('beginProgrammaticScroll', () => {
 		expect(isProgrammaticScroll.value).toBe(true)
 	})
 
-	it('scroll が来るたびに数え直し、止まってから倒す', () => {
+	it('スクロールが続くうちは数え直し、止まってから倒す', () => {
 		beginProgrammaticScroll()
 
-		vi.advanceTimersByTime(SETTLE_MS - 1)
-		window.dispatchEvent(new Event('scroll'))
+		scroll()
 		vi.advanceTimersByTime(SETTLE_MS - 1)
 
 		expect(isProgrammaticScroll.value).toBe(true)
@@ -61,26 +65,24 @@ describe('beginProgrammaticScroll', () => {
 		expect(isProgrammaticScroll.value).toBe(false)
 	})
 
-	it('倒れたら scroll の購読も外し、以後のスクロールでは立てない', () => {
+	it('倒れたら読み取りも外し、以後のスクロールでは立てない', () => {
 		beginProgrammaticScroll()
 		vi.advanceTimersByTime(SETTLE_MS)
 
 		expect(countCalls(removeEventListener, 'scroll')).toBe(1)
 
-		window.dispatchEvent(new Event('scroll'))
+		scroll()
 		vi.advanceTimersByTime(SETTLE_MS)
 
 		expect(isProgrammaticScroll.value).toBe(false)
 	})
 
-	it('続けて呼ばれても scroll の購読は1本しか残さない', () => {
+	it('自前で購読せず、useScrollFrame の1本に相乗りする', () => {
 		beginProgrammaticScroll()
 		beginProgrammaticScroll()
 		beginProgrammaticScroll()
 
-		const added = countCalls(addEventListener, 'scroll')
-		const removed = countCalls(removeEventListener, 'scroll')
-
-		expect(added - removed).toBe(1)
+		expect(countCalls(addEventListener, 'scroll')).toBe(1)
+		expect(countCalls(addEventListener, 'resize')).toBe(1)
 	})
 })
