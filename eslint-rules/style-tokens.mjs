@@ -95,10 +95,9 @@ const breakpoints = buildBreakpoints()
 export const BREAKPOINT_LABEL = breakpoints.label
 
 // 同じ境界を CSS に書ける綴り。文字列は正規表現で見るので、通す形を並べておく
-export const BREAKPOINT_WIDTHS = [...breakpoints.pixels].flatMap((px) => [
-	`${px}px`,
-	`${px / PIXELS_PER.rem}rem`,
-])
+export const BREAKPOINT_WIDTHS = [...breakpoints.pixels].flatMap((px) =>
+	Object.entries(PIXELS_PER).map(([unit, scale]) => `${px / scale}${unit}`),
+)
 
 // 使わない variant。max- は同じ値でも向きが違うので md lg も含めて落とす
 export const OFF_BREAKPOINT_VARIANTS = [

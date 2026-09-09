@@ -28,9 +28,11 @@ const PALETTE_COLORS =
 const PALETTE_CLASS = `(?:^|[\\s:])!?[a-z]+(?:-[a-z]+)*-(?:${PALETTE_COLORS})-(?:50|[1-9]00|950)\\b`
 // 任意値の variant（min-[600px]:）は角括弧の検査が落とす
 const BREAKPOINT_CLASS = `(?:^|[\\s:])(?:${OFF_BREAKPOINT_VARIANTS.join('|')}):`
-// matchMedia に渡す文字列。宣言（max-width: 36rem）と分けるため括弧から見る。
+const LENGTH_UNITS = 'px|r?em|v[wh]|vmin|vmax|ch|ex|cm|mm|in|pt|pc|%'
+// matchMedia に渡す文字列。`min-width:` の綴りではなく幅を見る条件そのものを探し、
+// 宣言（max-width: 36rem）と分けるため括弧から見る。
 // <style> の @media は style/no-custom-breakpoint が見る
-const BREAKPOINT_MEDIA = `\\((?:min|max)-width\\s*:(?!\\s*(?:${BREAKPOINT_WIDTHS.join('|')})\\s*\\))`
+const BREAKPOINT_MEDIA = `\\((?=[^()]*width)[^()]*?(?<![\\d.])(?!(?:${BREAKPOINT_WIDTHS.join('|')})\\b)\\d*\\.?\\d+(?:${LENGTH_UNITS})`
 const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
 
