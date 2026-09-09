@@ -1,3 +1,5 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import tsParser from '@typescript-eslint/parser'
 import { RuleTester } from 'eslint'
 import vueParser from 'vue-eslint-parser'
@@ -18,11 +20,24 @@ const ts = new RuleTester({
 	},
 })
 
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const file = (relative) => path.join(ROOT, relative)
+
 const sfc = (...imports) =>
 	`<template><div /></template>\n<script setup lang="ts">\n${imports.join('\n')}\n</script>`
 
-const PAGE = 'app/pages/index.vue'
-const COMPONENT = 'app/components/article/Hero.vue'
+const PAGE = file('app/pages/index.vue')
+const COMPONENT = file('app/components/article/Hero.vue')
+const PROSE = file('app/components/content/ProseH2.vue')
+
+const RELATIVE_AFTER_UTIL = {
+	filename: PROSE,
+	code: sfc(
+		"import { useScrollTo } from '~/composables/useScrollTo'",
+		"import HeadingAnchor from './HeadingAnchor.vue'",
+	),
+	errors: [{ messageId: 'order' }],
+}
 
 describe('order', () => {
 	it('自作モジュールの並びがコンポーネント → composable → util のものだけを通す', () => {
@@ -46,7 +61,7 @@ describe('order', () => {
 				},
 				// 相対パスは import する側から辿る
 				{
-					filename: 'app/components/content/ProseH2.vue',
+					filename: PROSE,
 					code: sfc(
 						"import HeadingAnchor from './HeadingAnchor.vue'",
 						"import { useScrollTo } from '~/composables/useScrollTo'",
@@ -54,7 +69,7 @@ describe('order', () => {
 				},
 				// ページ配下の実体コンポーネントもコンポーネント
 				{
-					filename: 'app/pages/article/page/[page].vue',
+					filename: file('app/pages/article/page/[page].vue'),
 					code: sfc(
 						"import AllArticles from '~/pages/article/-AllArticles.vue'",
 						"import { formatDate } from '~/utils/date'",
@@ -115,43 +130,60 @@ describe('order', () => {
 					),
 					errors: [{ messageId: 'order' }],
 				},
-				{
-					filename: 'app/components/content/ProseH2.vue',
-					code: sfc(
-						"import { useScrollTo } from '~/composables/useScrollTo'",
-						"import HeadingAnchor from './HeadingAnchor.vue'",
-					),
-					errors: [{ messageId: 'order' }],
-				},
+				RELATIVE_AFTER_UTIL,
 			],
 		})
+	})
+
+	it('eslint を打つ場所が変わっても相対 import の層を見る', () => {
+		const cwd = process.cwd()
+		process.chdir(file('app'))
+		try {
+			// cwd は RuleTester を作った時点のものが渡るので、移った後に作り直す
+			const moved = new RuleTester({
+				languageOptions: {
+					parser: vueParser,
+					parserOptions: {
+						parser: tsParser,
+						ecmaVersion: 'latest',
+						sourceType: 'module',
+					},
+				},
+			})
+			moved.run('order', importLayers.rules.order, {
+				valid: [],
+				invalid: [RELATIVE_AFTER_UTIL],
+			})
+		} finally {
+			process.chdir(cwd)
+		}
 	})
 
 	it('.ts でも同じ並びを見る', () => {
 		ts.run('order', importLayers.rules.order, {
 			valid: [
 				{
-					filename: 'app/composables/useArticleTags.ts',
+					filename: file('app/composables/useArticleTags.ts'),
 					code: "import { countTags } from '~/utils/tag'",
 				},
 				{
-					filename: 'app/composables/useScrollDirection.ts',
+					filename: file('app/composables/useScrollDirection.ts'),
 					code: "import { useScrollFrame } from './useScrollFrame'\nimport { tagToSlug } from '~/utils/tag'",
 				},
 				{
-					filename: 'app/utils/shelf.test.ts',
+					filename: file('app/utils/shelf.test.ts'),
 					code: "import { describe } from 'vitest'\nimport { buildShelves } from './shelf'",
 				},
 			],
 			invalid: [
 				{
-					filename: 'app/composables/usePagination.ts',
+					filename: file('app/composables/usePagination.ts'),
 					code: "import { pageLink } from '~/utils/pagination'\nimport { useTocActive } from './useTocActive'",
 					errors: [{ messageId: 'order' }],
 				},
 				// 型だけの import も1本と数える
 				{
-					filename: 'app/components/article/ArticleCard.test.ts',
+					filename: file('app/components/article/ArticleCard.test.ts'),
 					code: "import { formatDate } from '~/utils/date'\nimport type { Props } from './ArticleCard.vue'",
 					errors: [{ messageId: 'order' }],
 				},
