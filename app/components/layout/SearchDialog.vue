@@ -68,8 +68,8 @@
 				>
 					<NuxtLink
 						:to="article.path"
-						class="search-result"
-						:class="{ 'is-active': index === activeIndex }"
+						class="search-result border-l-2 border-l-transparent"
+						:class="{ 'is-active md:border-l-accent': index === activeIndex }"
 						prefetch-on="interaction"
 						@click="emit('close')"
 						@pointermove="activeIndex = index"
@@ -179,8 +179,15 @@
 
 	const isComposingKey = (event: KeyboardEvent) => event.isComposing || composing
 
+	// Tailwind の md。ヘッダーが検索の入口を PC 用と SP 用に出し分けるのと同じ幅で、
+	// テンプレートが選択中の縦線を出すのもここから。ずれると見えない選択にキーが効く
+	const KEYBOARD_SELECT_QUERY = '(min-width: 768px)'
+
+	const canSelectByKey = () => window.matchMedia(KEYBOARD_SELECT_QUERY).matches
+
 	const onInputKeydown = (event: KeyboardEvent) => {
 		if (isComposingKey(event)) return
+		if (!canSelectByKey()) return
 
 		if (event.key === 'ArrowDown') {
 			event.preventDefault()
@@ -324,7 +331,8 @@
 		justify-content: space-between;
 		gap: 1rem;
 		padding: 0.5rem 0.75rem;
-		border-left: 2px solid transparent;
+		/* 縦線は幅で出し分けるので border-left は Tailwind 側だけに置く。ここに書くと
+		   scoped の詳細度が md: のクラスに勝ち、色が黙って出なくなる */
 		border-radius: 0.375rem;
 		color: var(--color-main);
 		transition: background-color 0.15s;
@@ -333,10 +341,6 @@
 	.search-result:hover,
 	.search-result.is-active {
 		background-color: var(--color-surface-subtle);
-	}
-
-	.search-result.is-active {
-		border-left-color: var(--color-accent);
 	}
 
 	.search-result-title {
