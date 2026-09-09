@@ -103,6 +103,64 @@ describe('no-reduced-motion', () => {
 	})
 })
 
+describe('no-custom-breakpoint', () => {
+	it('md と lg の境界だけを通す', () => {
+		tester.run('no-custom-breakpoint', styleTokens.rules['no-custom-breakpoint'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('@media (min-width: 768px) { .a { top: 0; } }') },
+				{ filename: 'a.vue', code: sfc('@media (min-width: 1024px) { .a { top: 0; } }') },
+				// 同じ境界を rem と em で書いたもの
+				{ filename: 'a.vue', code: sfc('@media (max-width: 48rem) { .a { top: 0; } }') },
+				{ filename: 'a.vue', code: sfc('@media (width >= 64em) { .a { top: 0; } }') },
+				{
+					filename: 'a.vue',
+					code: sfc('@media screen and (min-width: 768px) { .a { top: 0; } }'),
+				},
+				// 幅で分けない @media は見ない
+				{ filename: 'a.vue', code: sfc('@media print { .a { top: 0; } }') },
+				{
+					filename: 'a.vue',
+					code: sfc('@media (min-resolution: 2dppx) { .a { top: 0; } }'),
+				},
+				// 宣言の min-width / max-width は境界ではない
+				{ filename: 'a.vue', code: sfc('.a { min-width: 0; max-width: 36rem; }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('@media (min-width: 640px) { .a { top: 0; } }'),
+					errors: [{ messageId: 'breakpoint' }],
+				},
+				// 1px ずらした境界も別の境界
+				{
+					filename: 'a.vue',
+					code: sfc('@media (max-width: 1023px) { .a { top: 0; } }'),
+					errors: [{ messageId: 'breakpoint' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@media (width < 40rem) { .a { top: 0; } }'),
+					errors: [{ messageId: 'breakpoint' }],
+				},
+				// 幅の条件が2つあれば2件
+				{
+					filename: 'a.vue',
+					code: sfc(
+						'@media (min-width: 640px) and (max-width: 1280px) { .a { top: 0; } }',
+					),
+					errors: [{ messageId: 'breakpoint' }, { messageId: 'breakpoint' }],
+				},
+				// 長さで書かれていない幅の条件も通さない
+				{
+					filename: 'a.vue',
+					code: sfc('@media (min-width: 50vw) { .a { top: 0; } }'),
+					errors: [{ messageId: 'breakpoint' }],
+				},
+			],
+		})
+	})
+})
+
 describe('no-color-literal', () => {
 	it('トークン由来の色だけを通す', () => {
 		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
