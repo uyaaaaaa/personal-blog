@@ -9,7 +9,7 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約から、�
 
 **検査を足すことと、移った規約の行を消すことで1つの変換。** 片方だけだと二重管理が残る（→ `docs/ARCHITECTURE.md`）。
 
-**判定の結果を文書に残さない。** 出すのは issue だけ。除外リストも進捗表も作らない（→ [ADR 11](../../docs/adr/11-no-enforcement-inventory.md)）。
+**判定の結果を文書に残さない。** 出すのは issue だけ。除外リストも進捗表も作らない（→ [ADR 11](../../../docs/adr/11-no-enforcement-inventory.md)）。
 
 ## 1. 集める
 
@@ -26,7 +26,7 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約から、�
 
 **人の読みが要るものは落とす。** 「原則として書かない」「2箇所以上で使うものだけ」「同じ値の正本を2箇所に作らない」は、判定に文脈が要る。規約のまま置くのが正しい。
 
-**ツールを増やさないと書けないものは落とす。** 今ある道具で書けるものだけ拾う（→ [ADR 12](../../docs/adr/12-style-block-token-lint.md) が Stylelint を退けた理由と同じ）。
+**ツールを増やさないと書けないものは落とす。** 今ある道具で書けるものだけ拾う（→ [ADR 12](../../../docs/adr/12-style-block-token-lint.md) が Stylelint を退けた理由と同じ）。
 
 ## 3. 既に落ちるか試す
 
