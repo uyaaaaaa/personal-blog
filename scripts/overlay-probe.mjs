@@ -17,6 +17,8 @@ const CHROMIUM_CANDIDATES = [
 const DEBUG_PORT = 9333
 // 色を持たない border-left-color の算出値
 const TRANSPARENT = 'rgba(0, 0, 0, 0)'
+// 選択中そのものが無いときに $line() が返す値
+const NO_ACTIVE = 'なし'
 const OPEN_TIMEOUT = 4000
 const TRANSITION = 400
 
@@ -201,7 +203,7 @@ const PAGE_HELPERS = `
 	// 選択中を示す縦線。border-left-color で出しているので、無い幅では透明が返る
 	const $line = () => {
 		const active = document.querySelector(LINK + '.is-active')
-		return active ? getComputedStyle(active).borderLeftColor : 'なし'
+		return active ? getComputedStyle(active).borderLeftColor : ${JSON.stringify(NO_ACTIVE)}
 	}
 	const $frames = (n) => new Promise((done) => {
 		const step = () => (n-- > 0 ? requestAnimationFrame(step) : done())
@@ -1124,7 +1126,11 @@ const probes = [
 			const state = await p.evaluate('return $state()')
 			return {
 				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}"`,
-				ok: moved && state.overlay === 'hidden' && line !== TRANSPARENT,
+				ok:
+					moved &&
+					state.overlay === 'hidden' &&
+					line !== TRANSPARENT &&
+					line !== NO_ACTIVE,
 			}
 		},
 	},
