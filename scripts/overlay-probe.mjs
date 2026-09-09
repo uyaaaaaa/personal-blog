@@ -15,6 +15,8 @@ const CHROMIUM_CANDIDATES = [
 ]
 
 const DEBUG_PORT = 9333
+// 色を持たない border-left-color の算出値
+const TRANSPARENT = 'rgba(0, 0, 0, 0)'
 const OPEN_TIMEOUT = 4000
 const TRANSITION = 400
 
@@ -196,6 +198,11 @@ const PAGE_HELPERS = `
 	const $router = () => document.querySelector('#__nuxt')?.__vue_app__?.config?.globalProperties?.$router
 	// URL は popstate で先に変わる。閉じる側が見ているのはルータが移り終えた後の route
 	const $path = () => $router()?.currentRoute?.value?.path ?? location.pathname
+	// 選択中を示す縦線。border-left-color で出しているので、無い幅では透明が返る
+	const $line = () => {
+		const active = document.querySelector(LINK + '.is-active')
+		return active ? getComputedStyle(active).borderLeftColor : 'なし'
+	}
 	const $frames = (n) => new Promise((done) => {
 		const step = () => (n-- > 0 ? requestAnimationFrame(step) : done())
 		step()
@@ -1103,6 +1110,30 @@ const probes = [
 	{
 		name: '変換していない ↓ と Enter',
 		input: true,
+		widths: [1280],
+		run: async (p) => {
+			await p.open()
+			await p.typeQuery()
+			const from = await p.evaluate(`return $path()`)
+			await p.pressKey('ArrowDown')
+			await p.evaluate('await $frames(2)')
+			const line = await p.evaluate('return $line()')
+			await p.pressKey('Enter')
+			const moved = await p.waitFor(`$path() !== ${JSON.stringify(from)}`)
+			await sleep(TRANSITION)
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}"`,
+				ok: moved && state.overlay === 'hidden' && line !== TRANSPARENT,
+			}
+		},
+	},
+	{
+		// SP に ↑↓ は無く、押せるのは確定 / 検索キーだけ。縦線を出さない幅で効くと、
+		// 見えていない選択のまま記事へ飛ぶ
+		name: '↑↓ の無い幅の ↓ と確定キー',
+		input: true,
+		widths: [375],
 		run: async (p) => {
 			await p.open()
 			await p.typeQuery()
@@ -1110,12 +1141,12 @@ const probes = [
 			await p.pressKey('ArrowDown')
 			await p.evaluate('await $frames(2)')
 			await p.pressKey('Enter')
-			const moved = await p.waitFor(`$path() !== ${JSON.stringify(from)}`)
 			await sleep(TRANSITION)
 			const state = await p.evaluate('return $state()')
+			const line = await p.evaluate('return $line()')
 			return {
-				observed: show(state, ['overlay', 'path']),
-				ok: moved && state.overlay === 'hidden',
+				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}"`,
+				ok: state.overlay === 'visible' && state.path === from && line === TRANSPARENT,
 			}
 		},
 	},
