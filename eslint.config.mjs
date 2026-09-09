@@ -2,7 +2,15 @@ import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
 import importLayers from './eslint-rules/import-layers.mjs'
-import styleTokens, { DOCS_URL, MOTION_URL, TOKEN_URL } from './eslint-rules/style-tokens.mjs'
+import styleTokens, {
+	BREAKPOINT_LABEL,
+	BREAKPOINT_URL,
+	BREAKPOINT_WIDTHS,
+	DOCS_URL,
+	MOTION_URL,
+	OFF_BREAKPOINT_VARIANTS,
+	TOKEN_URL,
+} from './eslint-rules/style-tokens.mjs'
 
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
@@ -12,6 +20,7 @@ const INVARIANT_URL = `${DOCS_URL}/ARCHITECTURE.md#不変条件`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
 
 const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`
+const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL}の2つだけ。他の境界を作らない。 ${BREAKPOINT_URL}`
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
 const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない。読み取りを useScrollFrame に渡し、アプリ全体で1本の購読に集約する。 ${INVARIANT_URL}`
 const IMPORTANT_MESSAGE =
@@ -20,6 +29,14 @@ const IMPORTANT_MESSAGE =
 const PALETTE_COLORS =
 	'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
 const PALETTE_CLASS = `(?:^|[\\s:])!?[a-z]+(?:-[a-z]+)*-(?:${PALETTE_COLORS})-(?:50|[1-9]00|950)\\b`
+// 任意値の variant（min-[600px]:）は角括弧の検査が落とす
+const BREAKPOINT_CLASS = `(?:^|[\\s:])(?:${OFF_BREAKPOINT_VARIANTS.join('|')}):`
+// 宣言（max-width: 36rem）と混ざらないよう、括弧から見る
+const WIDTHS = BREAKPOINT_WIDTHS.join('|')
+const WIDTH_BY_LENGTH = `\\((?=[^()]*width)[^()]*?(?<![\\d.])(?!(?:${WIDTHS})\\b)\\d*\\.?\\d+[a-z%]+`
+// 組み立てた文字列は長さが別のリテラルに出るので、綴りからも見る
+const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))`
+const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
 
@@ -98,6 +115,14 @@ const TEMPLATE_RESTRICTIONS = [
 		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${PALETTE_CLASS}/], TemplateElement[value.cooked=/${PALETTE_CLASS}/])`,
 		message: PALETTE_MESSAGE,
 	},
+	{
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${BREAKPOINT_CLASS}/]`,
+		message: BREAKPOINT_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${BREAKPOINT_CLASS}/], TemplateElement[value.cooked=/${BREAKPOINT_CLASS}/])`,
+		message: BREAKPOINT_MESSAGE,
+	},
 	// クラスの `!` 修飾子と style 属性の !important。<style> の中は style/no-important が見る
 	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${BANG_CLASS}/]`,
@@ -174,6 +199,10 @@ const restrictions = {
 				':matches(Literal[value=/prefers-reduced-motion/], TemplateElement[value.cooked=/prefers-reduced-motion/])',
 			message: REDUCED_MOTION_MESSAGE,
 		},
+		{
+			selector: `:matches(Literal[value=/${BREAKPOINT_MEDIA}/i], TemplateElement[value.cooked=/${BREAKPOINT_MEDIA}/i])`,
+			message: BREAKPOINT_MESSAGE,
+		},
 		...SCROLL_SUBSCRIPTION,
 	],
 }
@@ -241,6 +270,7 @@ export default [
 			'style/no-color-literal': 'error',
 			'style/no-important': 'error',
 			'style/no-reduced-motion': 'error',
+			'style/no-custom-breakpoint': 'error',
 			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS],
 		},
 	},

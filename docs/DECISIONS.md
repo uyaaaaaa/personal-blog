@@ -19,4 +19,5 @@
 - [12 scoped CSS の値も Tailwind の語彙に限り、ESLint で落とす](./adr/12-style-block-token-lint.md)
 - [13 route に依らない取得は、それを出すコンポーネントが持つ](./adr/13-fetch-follows-route-dependency.md)
 - [14 route を読むのは入口だけにし、下の層は props と引数で受け取る](./adr/14-route-read-only-at-entry.md)
-- [15 `components/` の共有部品は題材を知らないものだけを `ui/` に置く](./adr/15-ui-knows-no-domain.md)
+- [15 ブレークポイントは md と lg の2つに限り、ESLint で落とす](./adr/15-two-breakpoints.md)
+- [16 `components/` の共有部品は題材を知らないものだけを `ui/` に置く](./adr/16-ui-knows-no-domain.md)
