@@ -1,6 +1,7 @@
 import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
+import importLayers from './eslint-rules/import-layers.mjs'
 import styleTokens, { DOCS_URL, MOTION_URL, TOKEN_URL } from './eslint-rules/style-tokens.mjs'
 
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
@@ -167,6 +168,7 @@ export default [
 	},
 	{
 		files: ['app/**/*.ts'],
+		plugins: { imports: importLayers },
 		languageOptions: {
 			parser: tsParser,
 			parserOptions: {
@@ -176,6 +178,7 @@ export default [
 		},
 		rules: {
 			...restrictions,
+			'imports/order': 'error',
 			'no-restricted-syntax': [
 				...restrictions['no-restricted-syntax'],
 				{
@@ -187,7 +190,7 @@ export default [
 	},
 	{
 		files: ['app/**/*.vue'],
-		plugins: { vue: pluginVue, style: styleTokens },
+		plugins: { vue: pluginVue, style: styleTokens, imports: importLayers },
 		languageOptions: {
 			parser: vueParser,
 			parserOptions: {
@@ -198,6 +201,7 @@ export default [
 		},
 		rules: {
 			...restrictions,
+			'imports/order': 'error',
 			// components: false 後もグローバル登録が残るのはNuxtの組み込みコンポーネントのみ
 			'vue/no-undef-components': [
 				'error',
