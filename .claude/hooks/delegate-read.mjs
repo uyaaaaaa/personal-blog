@@ -48,7 +48,7 @@ export const decide = (input, sizeOf = bytesOf) => {
 	const bytes = sizeOf(target)
 	if (bytes === null || bytes < MIN_BYTES) return null
 
-	return `${target} は ${bytes} バイトで、委譲の下限 ${MIN_BYTES} を超える。自分で開かず Agent(subagent_type: "read") に読ませ、聞きたいことを渡して事実だけ受け取る。原文そのものが要る（引用する・編集する）なら、Read に offset / limit を付けて必要な範囲だけ読む。`
+	return `${bytes} バイト。Agent(subagent_type: "read") に聞く。原文が要るなら Read に offset / limit を付ける。`
 }
 
 const read = async () => {
