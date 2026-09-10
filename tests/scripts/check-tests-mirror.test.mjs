@@ -90,6 +90,30 @@ describe('実装からテスト', () => {
 		expect(stderr).toMatch(/tests\/scripts\/check-css\.test\.mjs/)
 	})
 
+	it('npm run を挟んだ先の検査も見る', () => {
+		write('scripts/check-css.mjs')
+		write(
+			'package.json',
+			JSON.stringify({
+				scripts: {
+					lint: 'npm run lint:checks',
+					'lint:checks': 'node scripts/check-css.mjs',
+				},
+			}),
+		)
+		expect(check().status).toBe(1)
+
+		write('tests/scripts/check-css.test.mjs')
+		expect(check().status).toBe(0)
+	})
+
+	it('テストの綴りが .spec. でも通す', () => {
+		write('scripts/check-css.mjs')
+		write('tests/scripts/check-css.spec.mjs')
+		lint('scripts/check-css.mjs')
+		expect(check().status).toBe(0)
+	})
+
 	it('githook で回す検査にテストが無い状態を落とす', () => {
 		write('scripts/check-commit-msg.mjs')
 		hook('commit-msg', 'node scripts/check-commit-msg.mjs "$1"')

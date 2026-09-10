@@ -31,7 +31,9 @@ const sourcesOf = (test) => {
 	]
 }
 
-const testOf = (source) => `${TESTS}/${source.replace(/\.([cm]?[jt]sx?)$/, '.test.$1')}`
+// 探す側も TEST と同じ綴りを見る。方向によって通る入力が変わらないようにする
+const testsOf = (source) =>
+	['test', 'spec'].map((kind) => `${TESTS}/${source.replace(/\.([cm]?[jt]sx?)$/, `.${kind}.$1`)}`)
 
 // scripts/ には検査でないもの（harness-journal・session-args・probe）も居る。
 // どれが検査かは回している側が持っているので、一覧を別に作らずそこから読む
@@ -42,7 +44,7 @@ const runners = () => {
 	const hooks = readdirSync(join(ROOT, HOOKS)).map((name) =>
 		readFileSync(join(ROOT, HOOKS, name), 'utf8'),
 	)
-	return [scripts.lint, ...hooks]
+	return [...Object.values(scripts), ...hooks]
 }
 
 const tests = walk('').filter((path) => TEST.test(path))
@@ -64,9 +66,10 @@ for (const test of tests) {
 }
 
 for (const check of checks) {
-	if (existsSync(join(ROOT, testOf(check)))) continue
+	const candidates = testsOf(check)
+	if (candidates.some((test) => existsSync(join(ROOT, test)))) continue
 
-	errors.push(`${check}: 回している検査に対応するテストが無い（${testOf(check)}）`)
+	errors.push(`${check}: 回している検査に対応するテストが無い（${candidates.join(' / ')}）`)
 }
 
 if (errors.length > 0) {
