@@ -3,7 +3,6 @@
 	import Toc from '~/components/article/Toc.vue'
 	import TocMobile from '~/components/article/TocMobile.vue'
 	import ArticleFallback from '~/components/article/ArticleFallback.vue'
-	import BackButton from '~/components/ui/BackButton.vue'
 	import ScrollToTopButton from '~/components/ui/ScrollToTopButton.vue'
 	import { beginProgrammaticScroll } from '~/composables/useProgrammaticScroll'
 	import { usePageSeo } from '~/composables/usePageSeo'
@@ -100,13 +99,6 @@
 	>
 		<main class="min-w-0 max-w-3xl flex-1">
 			<article class="space-y-8">
-				<div class="mb-4">
-					<BackButton
-						to="/article"
-						label="Back to Articles"
-					/>
-				</div>
-
 				<header class="space-y-4 border-b border-border pb-8">
 					<div class="flex flex-col gap-2.5 font-mono text-sm text-sub">
 						<div
@@ -156,13 +148,6 @@
 					<ContentRenderer :value="page" />
 				</div>
 			</article>
-
-			<div class="mt-16">
-				<BackButton
-					to="/article"
-					label="Back to Articles"
-				/>
-			</div>
 		</main>
 
 		<Sidebar class="hidden lg:block">

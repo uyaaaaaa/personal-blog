@@ -226,47 +226,57 @@
 							</ul>
 						</div>
 
-						<button
-							type="button"
-							class="drawer-row"
-							:aria-expanded="isLatestOpen"
-							aria-controls="drawer-group-latest"
-							@click="isLatestOpen = !isLatestOpen"
-						>
-							<svg
-								class="drawer-icon"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								aria-hidden="true"
+						<div class="drawer-split">
+							<NuxtLink
+								to="/article"
+								class="drawer-row"
+								prefetch-on="interaction"
+								@click="closeDrawer"
 							>
-								<circle
-									cx="12"
-									cy="12"
-									r="9"
-								/>
-								<path d="M12 7v5l3.5 2" />
-							</svg>
-							<span class="drawer-row-label">Latest</span>
-							<svg
-								class="drawer-chevron"
-								:class="{ 'is-open': isLatestOpen }"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								aria-hidden="true"
+								<svg
+									class="drawer-icon"
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<circle
+										cx="12"
+										cy="12"
+										r="9"
+									/>
+									<path d="M12 7v5l3.5 2" />
+								</svg>
+								<span class="drawer-row-label">Latest</span>
+							</NuxtLink>
+							<button
+								type="button"
+								class="drawer-toggle"
+								aria-label="Toggle latest articles"
+								:aria-expanded="isLatestOpen"
+								aria-controls="drawer-group-latest"
+								@click="isLatestOpen = !isLatestOpen"
 							>
-								<polyline points="6 9 12 15 18 9" />
-							</svg>
-						</button>
+								<svg
+									class="drawer-chevron"
+									:class="{ 'is-open': isLatestOpen }"
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<polyline points="6 9 12 15 18 9" />
+								</svg>
+							</button>
+						</div>
 
 						<div
 							id="drawer-group-latest"
@@ -295,47 +305,57 @@
 							</ul>
 						</div>
 
-						<button
-							type="button"
-							class="drawer-row"
-							:aria-expanded="isTagsOpen"
-							aria-controls="drawer-group-tags"
-							@click="isTagsOpen = !isTagsOpen"
-						>
-							<svg
-								class="drawer-icon"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								aria-hidden="true"
+						<div class="drawer-split">
+							<NuxtLink
+								to="/tags"
+								class="drawer-row"
+								prefetch-on="interaction"
+								@click="closeDrawer"
 							>
-								<path d="M3 3h8l10 10-8 8L3 11V3Z" />
-								<circle
-									cx="7.5"
-									cy="7.5"
-									r="1.5"
-								/>
-							</svg>
-							<span class="drawer-row-label">Tags</span>
-							<svg
-								class="drawer-chevron"
-								:class="{ 'is-open': isTagsOpen }"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								aria-hidden="true"
+								<svg
+									class="drawer-icon"
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<path d="M3 3h8l10 10-8 8L3 11V3Z" />
+									<circle
+										cx="7.5"
+										cy="7.5"
+										r="1.5"
+									/>
+								</svg>
+								<span class="drawer-row-label">Tags</span>
+							</NuxtLink>
+							<button
+								type="button"
+								class="drawer-toggle"
+								aria-label="Toggle tags"
+								:aria-expanded="isTagsOpen"
+								aria-controls="drawer-group-tags"
+								@click="isTagsOpen = !isTagsOpen"
 							>
-								<polyline points="6 9 12 15 18 9" />
-							</svg>
-						</button>
+								<svg
+									class="drawer-chevron"
+									:class="{ 'is-open': isTagsOpen }"
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<polyline points="6 9 12 15 18 9" />
+								</svg>
+							</button>
+						</div>
 
 						<div
 							id="drawer-group-tags"
@@ -710,6 +730,33 @@
 	.drawer-row-label {
 		flex: 1;
 		min-width: 0;
+	}
+
+	.drawer-split {
+		display: flex;
+		align-items: center;
+	}
+
+	.drawer-split .drawer-row {
+		flex: 1;
+		width: auto;
+		min-width: 0;
+	}
+
+	.drawer-toggle {
+		flex: none;
+		display: flex;
+		align-items: center;
+		padding: 0.625rem 0.75rem;
+		border: none;
+		border-radius: 0.5rem;
+		background: none;
+		cursor: pointer;
+		transition: background-color 0.2s;
+	}
+
+	.drawer-toggle:hover {
+		background-color: var(--color-surface-subtle);
 	}
 
 	.drawer-chevron {

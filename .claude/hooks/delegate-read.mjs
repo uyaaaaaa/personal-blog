@@ -37,6 +37,8 @@ const bytesOf = (path) => {
 }
 
 export const decide = (input, sizeOf = bytesOf) => {
+	// agent_id はサブエージェント内で発火したときだけ入る。委譲先の context は守らない
+	if (input.agent_id) return null
 	const target =
 		input.tool_name === 'Read'
 			? readTarget(input.tool_input)

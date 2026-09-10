@@ -34,6 +34,11 @@ describe('decide', () => {
 		expect(decide(bash('cat big.ts > out.txt'), big)).toBeNull()
 	})
 
+	it('サブエージェント内では止めない', () => {
+		expect(decide({ agent_id: 'x', ...read({ file_path: '/a/big.ts' }) }, big)).toBeNull()
+		expect(decide({ agent_id: 'x', ...bash('cat big.ts') }, big)).toBeNull()
+	})
+
 	it('読み取り以外のツールは見ない', () => {
 		expect(
 			decide({ tool_name: 'Edit', tool_input: { file_path: '/a/big.ts' } }, big),
