@@ -21,7 +21,7 @@ const visitBlockquotes = (node, callback) => {
 	}
 }
 
-// remark-mdcが `[!note]` から生成する属性なしspanノードか判定し、タイプ名を返す
+// remark-mdc が `[!note]` から生成するのは、属性なしの span ノード
 const calloutTypeFromSpan = (node) => {
 	if (node?.type !== 'textComponent' || node.name !== 'span') return null
 	if (Object.keys(node.attributes || {}).length > 0) return null
