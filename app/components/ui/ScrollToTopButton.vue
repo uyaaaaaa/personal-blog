@@ -30,7 +30,7 @@
 	<button
 		v-if="opacity > 0"
 		type="button"
-		aria-label="Back to top"
+		aria-label="Scroll to top"
 		:style="{ opacity }"
 		class="group fixed bottom-6 right-6 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface/90 text-sub shadow-sm backdrop-blur transition-colors duration-200 hover:border-accent hover:text-accent lg:hidden"
 		@click="backToTop"

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 	import ArticleList from '~/components/article/ArticleList.vue'
 	import Pagination from '~/components/ui/Pagination.vue'
-	import BackButton from '~/components/ui/BackButton.vue'
 	import { usePagination } from '~/composables/usePagination'
 	import { usePageSeo } from '~/composables/usePageSeo'
 	import { tagToSlug } from '~/utils/tag'
@@ -70,11 +69,6 @@
 			:page="page"
 			:total-pages="totalPages"
 			:base-path="basePath"
-		/>
-
-		<BackButton
-			to="/tags"
-			label="All tags"
 		/>
 	</div>
 </template>
