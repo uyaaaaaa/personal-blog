@@ -51,7 +51,6 @@ describe('order', () => {
 						"import { buildShelves } from '~/utils/shelf'",
 					),
 				},
-				// 同じ層の中の並びは見ない
 				{
 					filename: COMPONENT,
 					code: sfc(
@@ -59,7 +58,6 @@ describe('order', () => {
 						"import { useIsDesktop } from '~/composables/useIsDesktop'",
 					),
 				},
-				// 相対パスは import する側から辿る
 				{
 					filename: PROSE,
 					code: sfc(
@@ -67,7 +65,6 @@ describe('order', () => {
 						"import { useScrollTo } from '~/composables/useScrollTo'",
 					),
 				},
-				// ページ配下の実体コンポーネントもコンポーネント
 				{
 					filename: file('app/pages/article/page/[page].vue'),
 					code: sfc(
@@ -75,7 +72,6 @@ describe('order', () => {
 						"import { formatDate } from '~/utils/date'",
 					),
 				},
-				// 外部パッケージとリポジトリ直下は並びを見ない
 				{
 					filename: PAGE,
 					code: sfc(
@@ -110,7 +106,6 @@ describe('order', () => {
 					),
 					errors: [{ messageId: 'order' }],
 				},
-				// 並びを丸ごと逆にすると、後ろの2本がどちらも上の util より前に来る
 				{
 					filename: PAGE,
 					code: sfc(
@@ -120,7 +115,6 @@ describe('order', () => {
 					),
 					errors: [{ messageId: 'order' }, { messageId: 'order' }],
 				},
-				// 間に挟まる外部パッケージは並びを崩さない
 				{
 					filename: COMPONENT,
 					code: sfc(
@@ -181,7 +175,6 @@ describe('order', () => {
 					code: "import { pageLink } from '~/utils/pagination'\nimport { useTocActive } from './useTocActive'",
 					errors: [{ messageId: 'order' }],
 				},
-				// 型だけの import も1本と数える
 				{
 					filename: file('app/components/article/ArticleCard.test.ts'),
 					code: "import { formatDate } from '~/utils/date'\nimport type { Props } from './ArticleCard.vue'",
