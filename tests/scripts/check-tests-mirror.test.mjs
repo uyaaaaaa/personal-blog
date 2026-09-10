@@ -134,4 +134,15 @@ describe('実装からテスト', () => {
 		write('scripts/harness-journal.mjs')
 		expect(check().status).toBe(0)
 	})
+
+	it('lint と githook から回らない npm script は起点にしない', () => {
+		write('scripts/overlay-probe.mjs')
+		write(
+			'package.json',
+			JSON.stringify({
+				scripts: { lint: 'prettier --check .', probe: 'node scripts/overlay-probe.mjs' },
+			}),
+		)
+		expect(check().status).toBe(0)
+	})
 })

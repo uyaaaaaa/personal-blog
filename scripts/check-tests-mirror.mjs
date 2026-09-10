@@ -38,13 +38,31 @@ const testsOf = (source) =>
 // scripts/ には検査でないもの（harness-journal・session-args・probe）も居る。
 // どれが検査かは回している側が持っているので、一覧を別に作らずそこから読む
 const CHECK = /node\s+(scripts\/\S+\.mjs)/g
+const DELEGATED = /npm run ([\w:-]+)/g
 
+// 起点は commit と lint で回るものだけ。全 script を見ると、回っていない検査でない
+// scripts/ にもテストを求める。委譲した先は npm run を辿って拾う
 const runners = () => {
 	const { scripts } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
-	const hooks = readdirSync(join(ROOT, HOOKS)).map((name) =>
-		readFileSync(join(ROOT, HOOKS, name), 'utf8'),
-	)
-	return [...Object.values(scripts), ...hooks]
+	const queue = [
+		scripts.lint,
+		...readdirSync(join(ROOT, HOOKS)).map((name) =>
+			readFileSync(join(ROOT, HOOKS, name), 'utf8'),
+		),
+	]
+
+	const sources = []
+	const seen = new Set()
+	while (queue.length > 0) {
+		const source = queue.pop()
+		sources.push(source)
+		for (const [, name] of source.matchAll(DELEGATED)) {
+			if (seen.has(name) || !Object.hasOwn(scripts, name)) continue
+			seen.add(name)
+			queue.push(scripts[name])
+		}
+	}
+	return sources
 }
 
 const tests = walk('').filter((path) => TEST.test(path))
