@@ -7,6 +7,9 @@ export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
 export const MOTION_URL = `${DOCS_URL}/adr/02-no-prefers-reduced-motion.md`
 export const BREAKPOINT_URL = `${DOCS_URL}/adr/15-two-breakpoints.md`
 
+export const WEB_FONT_MESSAGE =
+	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
+
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
 	'spacing',
@@ -309,6 +312,34 @@ const noCustomBreakpoint = {
 	},
 }
 
+// scheme 付きと scheme 相対（//fonts.googleapis.com）の両方
+const REMOTE_URL = /(?:https?:)?\/\//i
+
+const noWebFont = {
+	meta: {
+		type: 'problem',
+		schema: [],
+		messages: {
+			webFont: WEB_FONT_MESSAGE,
+		},
+	},
+	create(context) {
+		return {
+			Program() {
+				eachStyleBlock(context, (root, locate) => {
+					root.walkAtRules((rule) => {
+						// @import が引く先の CSS は lint が読まないので、外部を引く時点で落とす
+						const loads =
+							rule.name === 'font-face' ||
+							(rule.name === 'import' && REMOTE_URL.test(rule.params))
+						if (loads) context.report({ loc: locate(rule), messageId: 'webFont' })
+					})
+				})
+			},
+		}
+	},
+}
+
 export default {
 	rules: {
 		'no-untokenized-size': noUntokenizedSize,
@@ -316,5 +347,6 @@ export default {
 		'no-important': noImportant,
 		'no-reduced-motion': noReducedMotion,
 		'no-custom-breakpoint': noCustomBreakpoint,
+		'no-web-font': noWebFont,
 	},
 }
