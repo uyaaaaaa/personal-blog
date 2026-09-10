@@ -168,185 +168,150 @@ function eachStyleBlock(context, visit) {
 	}
 }
 
-const noUntokenizedSize = {
-	meta: {
-		type: 'problem',
-		schema: [],
+const REDUCED_MOTION = /prefers-reduced-motion/i
+const MEDIA_CONDITION = /\(([^()]*)\)/g
+const WIDTH_FEATURE = /\bwidth\b/i
+
+// 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
+const CHECKS = {
+	'no-untokenized-size': {
 		messages: {
 			untokenized: `{{literal}} は Tailwind のスケールにも theme/tokens.ts の sizes にも無い。sizes に名前を足すか、スケールの値で書く。 ${TOKEN_URL}`,
 		},
-	},
-	create(context) {
-		const check = (value, loc) => {
-			for (const [literal, , number, unit] of stripNonValues(value).matchAll(LENGTH)) {
-				if (vocabulary[unit.toLowerCase()].has(Math.abs(Number(number)))) continue
-				context.report({ loc, messageId: 'untokenized', data: { literal } })
+		find(root) {
+			const found = []
+			const check = (value, node) => {
+				for (const [literal, , number, unit] of stripNonValues(value).matchAll(LENGTH)) {
+					if (vocabulary[unit.toLowerCase()].has(Math.abs(Number(number)))) continue
+					found.push({ node, messageId: 'untokenized', data: { literal } })
+				}
 			}
-		}
-
-		return {
-			Program() {
-				eachStyleBlock(context, (root, locate) => {
-					root.walkDecls((decl) => check(decl.value, locate(decl)))
-					root.walkAtRules((rule) => check(rule.params, locate(rule)))
-				})
-			},
-		}
+			root.walkDecls((decl) => check(decl.value, decl))
+			root.walkAtRules((rule) => check(rule.params, rule))
+			return found
+		},
 	},
-}
 
-const noColorLiteral = {
-	meta: {
-		type: 'problem',
-		schema: [],
+	'no-color-literal': {
 		messages: {
 			literal: `色の直値（{{literal}}）は書かない。theme/tokens.ts に足して var(--color-*) で参照する。 ${TOKEN_URL}`,
 		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				const text = stripNonValues(decl.value).replace(CUSTOM_PROPERTY, '')
+				const matches = [
+					...text.matchAll(HEX),
+					...text.matchAll(COLOR_FUNCTION),
+					...[...text.matchAll(/\b[a-z]+\b(?!\s*\()/gi)].filter((match) =>
+						NAMED_COLORS.has(match[0].toLowerCase()),
+					),
+				]
+				for (const [literal] of matches) {
+					// var() を含む関数はトークン由来（Callout の --callout-rgb）
+					if (literal.includes('var(') || isWhiteOrBlack(literal)) continue
+					found.push({ node: decl, messageId: 'literal', data: { literal } })
+				}
+			})
+			return found
+		},
 	},
-	create(context) {
-		const check = (value, loc) => {
-			const text = stripNonValues(value).replace(CUSTOM_PROPERTY, '')
-			const found = [
-				...text.matchAll(HEX),
-				...text.matchAll(COLOR_FUNCTION),
-				...[...text.matchAll(/\b[a-z]+\b(?!\s*\()/gi)].filter((match) =>
-					NAMED_COLORS.has(match[0].toLowerCase()),
-				),
-			]
-			for (const [literal] of found) {
-				// var() を含む関数はトークン由来（Callout の --callout-rgb）
-				if (literal.includes('var(') || isWhiteOrBlack(literal)) continue
-				context.report({ loc, messageId: 'literal', data: { literal } })
-			}
-		}
 
-		return {
-			Program() {
-				eachStyleBlock(context, (root, locate) => {
-					root.walkDecls((decl) => check(decl.value, locate(decl)))
-				})
-			},
-		}
-	},
-}
-
-const noImportant = {
-	meta: {
-		type: 'problem',
-		schema: [],
+	'no-important': {
 		messages: {
 			important:
 				'!important は書かない。第三者由来のインラインスタイルを打ち消すときだけ、理由を添えた eslint-disable を <script> に置いて許す。',
 		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				if (decl.important) found.push({ node: decl, messageId: 'important' })
+			})
+			return found
+		},
 	},
-	create(context) {
-		return {
-			Program() {
-				eachStyleBlock(context, (root, locate) => {
-					root.walkDecls((decl) => {
-						if (decl.important)
-							context.report({ loc: locate(decl), messageId: 'important' })
-					})
-				})
-			},
-		}
-	},
-}
 
-const REDUCED_MOTION = /prefers-reduced-motion/i
-
-const noReducedMotion = {
-	meta: {
-		type: 'problem',
-		schema: [],
+	'no-reduced-motion': {
 		messages: {
 			reducedMotion: `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`,
 		},
+		find(root) {
+			const found = []
+			root.walkAtRules((rule) => {
+				if (REDUCED_MOTION.test(rule.params))
+					found.push({ node: rule, messageId: 'reducedMotion' })
+			})
+			return found
+		},
 	},
-	create(context) {
-		return {
-			Program() {
-				eachStyleBlock(context, (root, locate) => {
-					root.walkAtRules((rule) => {
-						if (REDUCED_MOTION.test(rule.params))
-							context.report({ loc: locate(rule), messageId: 'reducedMotion' })
-					})
-				})
-			},
-		}
-	},
-}
 
-const MEDIA_CONDITION = /\(([^()]*)\)/g
-const WIDTH_FEATURE = /\bwidth\b/i
-
-const noCustomBreakpoint = {
-	meta: {
-		type: 'problem',
-		schema: [],
+	'no-custom-breakpoint': {
 		messages: {
 			breakpoint: `{{literal}} で表示を出し分けない。ブレークポイントは ${BREAKPOINT_LABEL}の2つだけ。 ${BREAKPOINT_URL}`,
 		},
+		find(root) {
+			const found = []
+			root.walkAtRules('media', (rule) => {
+				for (const [, condition] of rule.params.matchAll(MEDIA_CONDITION)) {
+					if (!WIDTH_FEATURE.test(condition)) continue
+					for (const [literal, number, unit] of condition.matchAll(MEDIA_LENGTH)) {
+						if (breakpoints.pixels.has(toPixels(number, unit))) continue
+						found.push({ node: rule, messageId: 'breakpoint', data: { literal } })
+					}
+				}
+			})
+			return found
+		},
 	},
-	create(context) {
-		return {
-			Program() {
-				eachStyleBlock(context, (root, locate) => {
-					root.walkAtRules('media', (rule) => {
-						for (const [, condition] of rule.params.matchAll(MEDIA_CONDITION)) {
-							if (!WIDTH_FEATURE.test(condition)) continue
-							for (const [literal, number, unit] of condition.matchAll(
-								MEDIA_LENGTH,
-							)) {
-								if (breakpoints.pixels.has(toPixels(number, unit))) continue
-								context.report({
-									loc: locate(rule),
-									messageId: 'breakpoint',
-									data: { literal },
-								})
-							}
-						}
-					})
-				})
-			},
-		}
-	},
-}
 
-const noWebFont = {
-	meta: {
-		type: 'problem',
-		schema: [],
+	'no-web-font': {
 		messages: {
 			webFont: WEB_FONT_MESSAGE,
 			import: IMPORT_MESSAGE,
 		},
+		find(root) {
+			const found = []
+			root.walkAtRules((rule) => {
+				const name = rule.name.toLowerCase()
+				if (name === 'font-face') found.push({ node: rule, messageId: 'webFont' })
+				// 引く先が外部でもリポジトリ内でも lint は読まないので、一律で落とす
+				if (name === 'import') found.push({ node: rule, messageId: 'import' })
+			})
+			return found
+		},
 	},
+}
+
+const PLACEHOLDER = /\{\{(\w+)\}\}/g
+
+// ESLint を通さない CSS の入口。位置と文面まで組み立てて、判定は CHECKS に残す
+export function findings(root) {
+	return Object.values(CHECKS)
+		.flatMap((check) =>
+			check.find(root).map(({ node, messageId, data = {} }) => ({
+				line: node.source.start.line,
+				column: node.source.start.column,
+				message: check.messages[messageId].replace(PLACEHOLDER, (_, key) => data[key]),
+			})),
+		)
+		.sort((a, b) => a.line - b.line || a.column - b.column)
+}
+
+const ruleOf = (check) => ({
+	meta: { type: 'problem', schema: [], messages: check.messages },
 	create(context) {
 		return {
 			Program() {
 				eachStyleBlock(context, (root, locate) => {
-					root.walkAtRules((rule) => {
-						const name = rule.name.toLowerCase()
-						if (name === 'font-face')
-							context.report({ loc: locate(rule), messageId: 'webFont' })
-						// 引く先が外部でもリポジトリ内でも lint は読まないので、一律で落とす
-						if (name === 'import')
-							context.report({ loc: locate(rule), messageId: 'import' })
-					})
+					for (const { node, messageId, data } of check.find(root)) {
+						context.report({ loc: locate(node), messageId, data })
+					}
 				})
 			},
 		}
 	},
-}
+})
 
 export default {
-	rules: {
-		'no-untokenized-size': noUntokenizedSize,
-		'no-color-literal': noColorLiteral,
-		'no-important': noImportant,
-		'no-reduced-motion': noReducedMotion,
-		'no-custom-breakpoint': noCustomBreakpoint,
-		'no-web-font': noWebFont,
-	},
+	rules: Object.fromEntries(Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(check)])),
 }
