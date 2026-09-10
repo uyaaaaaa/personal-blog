@@ -259,6 +259,17 @@ describe('no-web-font', () => {
 					code: sfc("@import './local.css';"),
 					errors: [{ messageId: 'import' }],
 				},
+				// CSS の at-rule 名は大文字小文字を区別しない
+				{
+					filename: 'a.vue',
+					code: sfc("@FONT-FACE { src: url('/x.woff2'); }"),
+					errors: [{ messageId: 'webFont' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc("@Import './local.css';"),
+					errors: [{ messageId: 'import' }],
+				},
 			],
 		})
 	})
