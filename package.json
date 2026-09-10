@@ -8,7 +8,7 @@
 		"dev": "nuxt dev",
 		"format": "prettier --write .",
 		"generate": "nuxt generate",
-		"lint": "prettier --check . && eslint . && depcruise app --config --ignore-known && node scripts/check-frontmatter.mjs && node scripts/check-tags.mjs",
+		"lint": "prettier --check . && eslint . && depcruise app --config --ignore-known && node scripts/check-frontmatter.mjs && node scripts/check-tags.mjs && node scripts/check-css.mjs",
 		"preview": "nuxt preview",
 		"test": "vitest run",
 		"typecheck": "nuxt typecheck",

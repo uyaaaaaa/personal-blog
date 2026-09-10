@@ -10,8 +10,8 @@ export const BREAKPOINT_URL = `${DOCS_URL}/adr/15-two-breakpoints.md`
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
 
-const IMPORT_MESSAGE =
-	'<style> に @import を書かない。引いた先の CSS を lint が読めず、@font-face の置き場になる。'
+export const IMPORT_MESSAGE =
+	'@import を書かない。引いた先の CSS を lint が読めず、@font-face の置き場になる。'
 
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
