@@ -4,11 +4,11 @@
 	"private": true,
 	"scripts": {
 		"build": "nuxt build",
-		"depcruise:baseline": "depcruise app --config --output-type baseline > .dependency-cruiser-known-violations.json",
+		"depcruise:baseline": "depcruise app tests --config --output-type baseline > .dependency-cruiser-known-violations.json",
 		"dev": "nuxt dev",
 		"format": "prettier --write .",
 		"generate": "nuxt generate",
-		"lint": "prettier --check . && eslint . && depcruise app --config --ignore-known && node scripts/check-frontmatter.mjs && node scripts/check-tags.mjs",
+		"lint": "prettier --check . && eslint . && depcruise app tests --config --ignore-known && node scripts/check-frontmatter.mjs && node scripts/check-tags.mjs && node scripts/check-tests-mirror.mjs",
 		"preview": "nuxt preview",
 		"test": "vitest run",
 		"typecheck": "nuxt typecheck",

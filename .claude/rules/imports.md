@@ -1,6 +1,7 @@
 ---
 paths:
   - "app/**"
+  - "tests/**"
 ---
 
 # import と依存のルール

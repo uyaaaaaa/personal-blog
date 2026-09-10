@@ -218,12 +218,15 @@ const CALLED_LAYER_SYNTAX = [
 	},
 ]
 
+// tests/ は実装の構成をミラーするので、実装に当てている規則を同じ位置のテストにも当てる
+const withTest = (...patterns) => patterns.flatMap((pattern) => [pattern, `tests/${pattern}`])
+
 export default [
 	{
 		ignores: ['.nuxt/**', '.output/**', 'dist/**', 'node_modules/**'],
 	},
 	{
-		files: ['app/**/*.ts'],
+		files: withTest('app/**/*.ts'),
 		plugins: { imports: importLayers },
 		languageOptions: {
 			parser: tsParser,
@@ -245,7 +248,7 @@ export default [
 		},
 	},
 	{
-		files: ['app/**/*.vue'],
+		files: withTest('app/**/*.vue'),
 		plugins: { vue: pluginVue, style: styleTokens, imports: importLayers },
 		languageOptions: {
 			parser: vueParser,
@@ -276,7 +279,7 @@ export default [
 	},
 	{
 		// components/ はページの文脈（routeの読み取り・404・ページのメタ）を持たない
-		files: ['app/components/**/*.vue'],
+		files: withTest('app/components/**/*.vue'),
 		languageOptions: {
 			parser: vueParser,
 			parserOptions: {
@@ -295,7 +298,7 @@ export default [
 		},
 	},
 	{
-		files: ['app/components/**/*.ts'],
+		files: withTest('app/components/**/*.ts'),
 		rules: {
 			'no-restricted-syntax': [
 				'error',
@@ -309,7 +312,7 @@ export default [
 		},
 	},
 	{
-		files: ['app/composables/**/*.ts', 'app/utils/**/*.ts'],
+		files: withTest('app/composables/**/*.ts', 'app/utils/**/*.ts'),
 		rules: {
 			'no-restricted-syntax': ['error', ...CALLED_LAYER_SYNTAX],
 		},
@@ -326,7 +329,7 @@ export default [
 	},
 	{
 		// コンポーネントは領域のディレクトリに属する。直下のファイルは Program ごと落とす
-		files: ['app/components/*.{vue,ts}'],
+		files: withTest('app/components/*.{vue,ts}'),
 		languageOptions: {
 			parser: vueParser,
 			parserOptions: {

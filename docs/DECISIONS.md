@@ -10,7 +10,7 @@
 - [03 自作モジュールの auto-import を止める](./adr/03-no-auto-import.md)
 - [04 ディレクトリは型別のフラット構成を維持する](./adr/04-flat-directory-by-type.md)
 - [05 整形は Prettier に任せ、ESLint には持たせない](./adr/05-prettier-owns-formatting.md)
-- [06 テストは実装の隣に置く](./adr/06-tests-next-to-source.md)
+- [06 テストは `tests/` に実装の構成をミラーして置く](./adr/06-tests-mirrored-under-tests.md)
 - [07 Nuxt を起こすのはコンポーネントのテストだけにする](./adr/07-nuxt-environment-per-file.md)
 - [08 テストを2回目の使用とみなして抽出する](./adr/08-test-as-second-use.md)
 - [09 サイズにも名前を付けてトークンに置く](./adr/09-size-tokens-and-no-arbitrary-values.md)

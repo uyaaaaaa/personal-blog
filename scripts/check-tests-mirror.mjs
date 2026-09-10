@@ -1,0 +1,43 @@
+import { existsSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const ROOT = fileURLToPath(new URL('..', import.meta.url))
+const TESTS = 'tests'
+const IGNORED = new Set(['node_modules', '.git', '.nuxt', '.output', 'dist', '.verify'])
+
+const walk = (directory) =>
+	readdirSync(join(ROOT, directory), { withFileTypes: true }).flatMap((entry) => {
+		if (IGNORED.has(entry.name)) return []
+		const path = directory === '' ? entry.name : `${directory}/${entry.name}`
+		return entry.isDirectory() ? walk(path) : [path]
+	})
+
+// コンポーネントのテストだけ拡張子が実装と揃わない（Foo.test.ts に対して Foo.vue）
+const sourcesOf = (test) => {
+	const [, name, extension] = test.match(/^(.*)\.test\.([cm]?[jt]sx?)$/)
+	return extension === 'ts' ? [`${name}.ts`, `${name}.vue`] : [`${name}.${extension}`]
+}
+
+const tests = walk('').filter((path) => /\.test\.[cm]?[jt]sx?$/.test(path))
+
+const errors = []
+for (const test of tests) {
+	if (!test.startsWith(`${TESTS}/`)) {
+		errors.push(`${test}: テストは ${TESTS}/ に実装の構成をミラーして置く`)
+		continue
+	}
+
+	const sources = sourcesOf(test.slice(TESTS.length + 1))
+	if (sources.some((source) => existsSync(join(ROOT, source)))) continue
+
+	errors.push(`${test}: 対応する実装が無い（${sources.join(' / ')}）`)
+}
+
+if (errors.length > 0) {
+	console.error('テストと実装の対応が取れていない:')
+	for (const error of errors) console.error(`  ${error}`)
+	process.exit(1)
+}
+
+console.log(`✔ all tests mirror a source file (${tests.length} tests)`)
