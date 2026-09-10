@@ -4,12 +4,6 @@
 			<h1 class="error-code">{{ code }}</h1>
 			<p class="error-message">{{ message }}</p>
 			<p class="error-description">{{ description }}</p>
-			<button
-				@click="handleError"
-				class="back-button"
-			>
-				Back to Top
-			</button>
 		</div>
 	</div>
 </template>
@@ -20,8 +14,6 @@
 		message: string
 		description: string
 	}>()
-
-	const handleError = () => clearError({ redirect: '/' })
 </script>
 
 <style scoped>
@@ -64,24 +56,6 @@
 	.error-description {
 		font-size: 1rem;
 		color: var(--color-sub);
-		margin-bottom: 2rem;
 		line-height: 1.6;
-	}
-
-	.back-button {
-		background-color: var(--color-accent);
-		color: var(--color-accent-contrast);
-		border: none;
-		padding: 0.75rem 1.5rem;
-		font-size: 1rem;
-		font-weight: 500;
-		font-family: inherit;
-		border-radius: 0.375rem;
-		cursor: pointer;
-		transition: background-color 0.2s ease;
-	}
-
-	.back-button:hover {
-		background-color: var(--color-accent-hover);
 	}
 </style>

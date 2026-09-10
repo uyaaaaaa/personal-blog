@@ -1,5 +1,4 @@
 <script setup lang="ts">
-	import BackButton from '~/components/ui/BackButton.vue'
 	import { formatDate } from '~/utils/date'
 
 	interface Props {
@@ -63,12 +62,6 @@
 			>
 				{{ pending ? 'Retrying...' : 'Retry' }}
 			</button>
-
-			<BackButton
-				to="/article"
-				label="Back to Articles"
-				class="mt-1"
-			/>
 		</div>
 
 		<section
