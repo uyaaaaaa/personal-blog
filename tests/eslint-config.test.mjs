@@ -7,11 +7,18 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const eslint = new ESLint({ cwd: ROOT })
 
 const WEB_FONT = /Web フォントを読み込まない/
+const THEME_BRANCH = /dark: で色を分岐しない|prefers-color-scheme で分岐しない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => WEB_FONT.test(message.message)).length
+}
+
+// 同じく、テーマ分岐の指摘だけを数える
+const themeBranchesIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => THEME_BRANCH.test(message.message)).length
 }
 
 const config = (body) => `export default defineNuxtConfig({\n${body}\n})`
@@ -99,5 +106,71 @@ describe('Web フォントの読み込み', () => {
 		expect(await webFontsIn('app/pages/a.vue', sfc('<div class="font-mono text-sm" />'))).toBe(
 			0,
 		)
+	})
+})
+
+describe('テーマごとの分岐', () => {
+	it('色を分岐する dark: のクラスを落とす', async () => {
+		expect(
+			await themeBranchesIn('app/components/ui/a.vue', sfc('<p class="dark:text-sub" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await themeBranchesIn(
+				'app/pages/a.vue',
+				sfc('<p class="md:dark:bg-surface-subtle" />'),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await themeBranchesIn('app/pages/a.vue', sfc('<p class="dark:bg-accent/10" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await themeBranchesIn('app/pages/a.vue', sfc('<p class="dark:border-border" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await themeBranchesIn(
+				'app/pages/a.vue',
+				sfc('<p :class="{ \'dark:text-main\': on }" />', 'const on = true'),
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('Tailwind 既定の色も落とす', async () => {
+		expect(
+			await themeBranchesIn('app/pages/a.vue', sfc('<p class="dark:bg-white" />')),
+		).toBeGreaterThan(0)
+	})
+
+	it('DOM を出し分ける dark: は通す', async () => {
+		expect(await themeBranchesIn('app/pages/a.vue', sfc('<svg class="dark:hidden" />'))).toBe(0)
+		expect(
+			await themeBranchesIn('app/pages/a.vue', sfc('<svg class="hidden dark:block" />')),
+		).toBe(0)
+		expect(
+			await themeBranchesIn(
+				'app/pages/a.vue',
+				sfc('<div class="prose prose-slate dark:prose-invert" />'),
+			),
+		).toBe(0)
+	})
+
+	it('テーマを持たないクラスは通す', async () => {
+		expect(
+			await themeBranchesIn('app/pages/a.vue', sfc('<p class="bg-surface-subtle" />')),
+		).toBe(0)
+	})
+
+	it('script の prefers-color-scheme を落とす', async () => {
+		expect(
+			await themeBranchesIn(
+				'app/composables/useA.ts',
+				"export const useA = () => window.matchMedia('(prefers-color-scheme: dark)')",
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await themeBranchesIn(
+				'app/pages/a.vue',
+				sfc('<p />', "window.matchMedia('(prefers-color-scheme: dark)')"),
+			),
+		).toBeGreaterThan(0)
 	})
 })
