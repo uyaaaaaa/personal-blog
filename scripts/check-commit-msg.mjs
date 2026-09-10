@@ -8,6 +8,9 @@ const EXEMPT = /^(Merge |Revert |fixup!|squash!|amend!)/
 const PREFIX =
 	/^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^()\s]*\))?!?[:：]/i
 const JAPANESE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u
+// 言い切りの語尾。動詞の終止形（う段のひらがな）と否定の「ない」だけを通す。
+// 体言止めの語を並べても「〜のバグ」「〜のリファクタリング」に当たらず、名詞は際限なく増える
+const ASSERTIVE = /(?:ない|[うくぐすつぬぶむる])$/u
 
 const fail = (...lines) => {
 	for (const line of lines) console.error(line)
@@ -42,6 +45,10 @@ if (length < SUBJECT_MIN) {
 }
 if (!JAPANESE.test(subject)) {
 	errors.push('件名に日本語がない。日本語の言い切りで書く')
+} else if (!ASSERTIVE.test(subject.replace(/。$/u, ''))) {
+	errors.push(
+		'件名が体言止めで終わっている。「〜対応」「〜の修正」をやめ、「〜する」「〜に替える」で終える',
+	)
 }
 if (subject.endsWith('。')) {
 	errors.push('件名の末尾に句点が付いている')
