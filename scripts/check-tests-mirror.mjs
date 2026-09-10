@@ -1,9 +1,10 @@
-import { existsSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const ROOT = fileURLToPath(new URL('..', import.meta.url))
+const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
 const TESTS = 'tests'
+const HOOKS = '.githooks'
 const IGNORED = new Set(['node_modules', '.git', '.nuxt', '.output', 'dist', '.verify'])
 
 const walk = (directory) =>
@@ -30,7 +31,24 @@ const sourcesOf = (test) => {
 	]
 }
 
+const testOf = (source) => `${TESTS}/${source.replace(/\.([cm]?[jt]sx?)$/, '.test.$1')}`
+
+// scripts/ には検査でないもの（harness-journal・session-args・probe）も居る。
+// どれが検査かは回している側が持っているので、一覧を別に作らずそこから読む
+const CHECK = /node\s+(scripts\/\S+\.mjs)/g
+
+const runners = () => {
+	const { scripts } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
+	const hooks = readdirSync(join(ROOT, HOOKS)).map((name) =>
+		readFileSync(join(ROOT, HOOKS, name), 'utf8'),
+	)
+	return [scripts.lint, ...hooks]
+}
+
 const tests = walk('').filter((path) => TEST.test(path))
+const checks = [
+	...new Set(runners().flatMap((source) => [...source.matchAll(CHECK)].map(([, path]) => path))),
+]
 
 const errors = []
 for (const test of tests) {
@@ -45,10 +63,18 @@ for (const test of tests) {
 	errors.push(`${test}: 対応する実装が無い（${sources.join(' / ')}）`)
 }
 
+for (const check of checks) {
+	if (existsSync(join(ROOT, testOf(check)))) continue
+
+	errors.push(`${check}: 回している検査に対応するテストが無い（${testOf(check)}）`)
+}
+
 if (errors.length > 0) {
 	console.error('テストと実装の対応が取れていない:')
 	for (const error of errors) console.error(`  ${error}`)
 	process.exit(1)
 }
 
-console.log(`✔ all tests mirror a source file (${tests.length} tests)`)
+console.log(
+	`✔ tests and sources mirror each other (${tests.length} tests, ${checks.length} checks)`,
+)

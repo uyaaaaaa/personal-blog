@@ -1,10 +1,11 @@
 import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseFrontMatter } from 'remark-mdc'
 import { articleSchema } from '../content.schema.ts'
 
-const ARTICLE_DIR = fileURLToPath(new URL('../content/article', import.meta.url))
+const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
+const ARTICLE_DIR = join(ROOT, 'content/article')
 
 const files = readdirSync(ARTICLE_DIR, { recursive: true }).filter((name) => name.endsWith('.md'))
 
