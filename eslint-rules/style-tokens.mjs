@@ -10,6 +10,9 @@ export const BREAKPOINT_URL = `${DOCS_URL}/adr/15-two-breakpoints.md`
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
 
+const IMPORT_MESSAGE =
+	'<style> に @import を書かない。引いた先の CSS を lint が読めず、@font-face の置き場になる。'
+
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
 	'spacing',
@@ -312,15 +315,13 @@ const noCustomBreakpoint = {
 	},
 }
 
-// scheme 付きと scheme 相対（//fonts.googleapis.com）の両方
-const REMOTE_URL = /(?:https?:)?\/\//i
-
 const noWebFont = {
 	meta: {
 		type: 'problem',
 		schema: [],
 		messages: {
 			webFont: WEB_FONT_MESSAGE,
+			import: IMPORT_MESSAGE,
 		},
 	},
 	create(context) {
@@ -328,11 +329,11 @@ const noWebFont = {
 			Program() {
 				eachStyleBlock(context, (root, locate) => {
 					root.walkAtRules((rule) => {
-						// @import が引く先の CSS は lint が読まないので、外部を引く時点で落とす
-						const loads =
-							rule.name === 'font-face' ||
-							(rule.name === 'import' && REMOTE_URL.test(rule.params))
-						if (loads) context.report({ loc: locate(rule), messageId: 'webFont' })
+						if (rule.name === 'font-face')
+							context.report({ loc: locate(rule), messageId: 'webFont' })
+						// 引く先が外部でもリポジトリ内でも lint は読まないので、一律で落とす
+						if (rule.name === 'import')
+							context.report({ loc: locate(rule), messageId: 'import' })
 					})
 				})
 			},

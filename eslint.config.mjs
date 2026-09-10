@@ -28,9 +28,9 @@ const IMPORTANT_MESSAGE =
 	'!important は書かない。Tailwind の ! 修飾子と style 属性も同じ。第三者由来のインラインスタイルを打ち消すときだけ、理由を添えた eslint-disable で許す。'
 
 // フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
-// 拡張子とホスト名の区切りから見る
+// 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
 const FONT_FILE = '\\.(?:woff2?|otf|ttf|eot)\\b'
-const FONT_HOST = '\\b(?:fonts?|fontsource|typeface|typekit)\\.[a-z]'
+const FONT_HOST = '\\b(?:(?:fontsource|fonts?)(?:[./]|$)|(?:typeface|typekit)[./-])'
 const WEB_FONT_RESOURCE = `(?:${FONT_FILE}|${FONT_HOST})`
 
 const PALETTE_COLORS =
@@ -66,21 +66,14 @@ const SCROLL_SUBSCRIPTION = [
 // 読み込みの経路そのものを塞ぐ。@font-face と CSS の @import は style/no-web-font が見る
 const WEB_FONT = [
 	{
-		selector: `:matches(Literal[value=/${WEB_FONT_RESOURCE}/i], TemplateElement[value.cooked=/${WEB_FONT_RESOURCE}/i])`,
-		message: WEB_FONT_MESSAGE,
-	},
-	{
-		// フォントを読み込むモジュール（@nuxt/fonts・@fontsource/* 等）。名前で見る
-		selector: ':matches(ImportDeclaration, ImportExpression) > Literal[value=/font/i]',
-		message: WEB_FONT_MESSAGE,
-	},
-	{
-		selector: "Property[key.name='modules'] Literal[value=/font/i]",
-		message: WEB_FONT_MESSAGE,
-	},
-	{
-		// <link rel="preload" as="font">
-		selector: "Property[key.name='as'] > Literal[value='font']",
+		// 1つの selector にまとめる。分けると両方に当たる文字列が2回報告される
+		selector: [
+			`:matches(Literal[value=/${WEB_FONT_RESOURCE}/i], TemplateElement[value.cooked=/${WEB_FONT_RESOURCE}/i])`,
+			// フォントを読み込むモジュール（@nuxt/fonts 等）と、設定が並べる指定子。名前で見る
+			':matches(ImportDeclaration, ImportExpression) > Literal[value=/font/i]',
+			// typography の css は配列を持たないので当たらない
+			'Property[key.name=/^(modules|css)$/] ArrayExpression Literal[value=/font/i]',
+		].join(', '),
 		message: WEB_FONT_MESSAGE,
 	},
 	{
@@ -373,8 +366,8 @@ export default [
 		},
 	},
 	{
-		// 設定ファイルは app/ の規約の外。読み込みの経路（modules・head.link）だけを見る
-		files: ['*.config.ts', '*.config.mjs'],
+		// 設定ファイルは app/ の規約の外。読み込みの経路（modules・css・head.link）だけを見る
+		files: ['*.config.ts'],
 		languageOptions: {
 			parser: tsParser,
 			parserOptions: {

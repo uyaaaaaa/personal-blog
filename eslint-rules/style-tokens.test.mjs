@@ -236,13 +236,11 @@ describe('no-color-literal', () => {
 })
 
 describe('no-web-font', () => {
-	it('フォントを読み込む @font-face と外部の @import だけを落とす', () => {
+	it('@font-face と @import を落とす', () => {
 		tester.run('no-web-font', styleTokens.rules['no-web-font'], {
 			valid: [
 				{ filename: 'a.vue', code: sfc('.a { font-family: var(--font-mono); }') },
 				{ filename: 'a.vue', code: sfc('@media (min-width: 1024px) { .a { top: 0; } }') },
-				// 同じリポジトリの CSS は lint が読むので、外部を引かない @import は見ない
-				{ filename: 'a.vue', code: sfc("@import './local.css';") },
 			],
 			invalid: [
 				{
@@ -253,12 +251,13 @@ describe('no-web-font', () => {
 				{
 					filename: 'a.vue',
 					code: sfc("@import url('https://fonts.googleapis.com/css2?family=X');"),
-					errors: [{ messageId: 'webFont' }],
+					errors: [{ messageId: 'import' }],
 				},
+				// 引く先がリポジトリ内でも、その CSS は lint が読まない
 				{
 					filename: 'a.vue',
-					code: sfc("@import url('//fonts.googleapis.com/css2?family=X');"),
-					errors: [{ messageId: 'webFont' }],
+					code: sfc("@import './local.css';"),
+					errors: [{ messageId: 'import' }],
 				},
 			],
 		})

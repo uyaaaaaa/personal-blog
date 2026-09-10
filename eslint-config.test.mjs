@@ -42,6 +42,32 @@ describe('Web フォントの読み込み', () => {
 		).toBeGreaterThan(0)
 	})
 
+	it('パッケージから配られるフォントを落とす', async () => {
+		expect(
+			await webFontsIn(
+				'nuxt.config.ts',
+				config(
+					"\tapp: { head: { link: [{ rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/@fontsource/inter/index.css' }] } },",
+				),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await webFontsIn('nuxt.config.ts', config("\tcss: ['@fontsource/inter/index.css'],")),
+		).toBeGreaterThan(0)
+		expect(
+			await webFontsIn('nuxt.config.ts', config("\tmodules: ['@nuxtjs/fontaine'],")),
+		).toBeGreaterThan(0)
+	})
+
+	it('typography の css は通す', async () => {
+		expect(
+			await webFontsIn(
+				'tailwind.config.ts',
+				"export default { theme: { extend: { typography: { DEFAULT: { css: { code: { fontWeight: '400' } } } } } } }",
+			),
+		).toBe(0)
+	})
+
 	it('設定ファイルの既存の読み込みは通す', async () => {
 		expect(
 			await webFontsIn(
