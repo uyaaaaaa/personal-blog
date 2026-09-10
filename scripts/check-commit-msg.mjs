@@ -3,6 +3,9 @@ import { readFileSync } from 'node:fs'
 const SUBJECT_MIN = 12
 const SUBJECT_MAX = 50
 const EXEMPT = /^(Merge |Revert |fixup!|squash!|amend!)/
+// 分類の接頭辞。英字の型名に、任意のスコープと破壊的変更の印が付いた形だけを見る。
+// 日本語で始まる件名の途中のコロン（`起動指定からrun_in_background: true`）に当てない
+const PREFIX = /^[A-Za-z][A-Za-z0-9._-]*(\([^()\s]*\))?!?[:：]/
 const JAPANESE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u
 
 const fail = (...lines) => {
@@ -26,6 +29,11 @@ if (subject === '' || EXEMPT.test(subject)) process.exit(0)
 const length = [...subject].length
 const errors = []
 
+if (PREFIX.test(subject)) {
+	errors.push(
+		'件名に分類の接頭辞が付いている。回収先の CHANGELOG も semver も無く、実装と文書を同じコミットに入れる規定と衝突する',
+	)
+}
 if (length < SUBJECT_MIN) {
 	errors.push(`件名が${length}字しかない。何をどう変えたかを${SUBJECT_MIN}字以上で書く`)
 } else if (length > SUBJECT_MAX) {
