@@ -233,8 +233,9 @@ const CHECKS = {
 				}
 			}
 			root.walkDecls((decl) => check(decl.value, decl))
-			// walkDecls は at-rule を見ないので、@apply の任意値は別に歩く
-			root.walkAtRules((rule) => check(rule.params, rule))
+			// walkDecls は at-rule を見ないので、@apply の任意値は別に歩く。
+			// 他の at-rule まで見ると、@keyframes の名前が色の名前に当たる
+			root.walkAtRules('apply', (rule) => check(rule.params, rule))
 			return found
 		},
 	},

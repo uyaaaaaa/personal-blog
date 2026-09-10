@@ -191,6 +191,11 @@ describe('no-color-literal', () => {
 				},
 				{ filename: 'a.vue', code: sfc('.a { @apply bg-surface-subtle; }') },
 				{ filename: 'a.vue', code: sfc('@media (min-width: 768px) { .a { top: 0; } }') },
+				// @apply 以外の at-rule は prelude に色の名前を持たない
+				{
+					filename: 'a.vue',
+					code: sfc('@keyframes tomato-pop { to { opacity: 1; } }'),
+				},
 			],
 			invalid: [
 				{
