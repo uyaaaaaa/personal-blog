@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { decide } from './delegate-read.mjs'
+import { decide } from '~~/.claude/hooks/delegate-read.mjs'
 
 const big = () => 40000
 const small = () => 400

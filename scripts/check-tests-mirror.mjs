@@ -16,10 +16,19 @@ const walk = (directory) =>
 // vitest の既定の include に合わせる。名前を .spec. にして検査から外れる道を作らない
 const TEST = /^(.*)\.(?:test|spec)\.([cm]?[jt]sx?)$/
 
-// コンポーネントのテストだけ拡張子が実装と揃わない（Foo.test.ts に対して Foo.vue）
+// コンポーネントのテストだけ拡張子が実装と揃わない（Foo.test.ts に対して Foo.vue）。
+// 設定ファイルは vitest の既定の exclude が *.config.* ごと落とすので、テスト側は
+// eslint-config.test.mjs のようにハイフンで名乗る。実装は元の名前でも探す
 const sourcesOf = (test) => {
 	const [, name, extension] = test.match(TEST)
-	return extension === 'ts' ? [`${name}.ts`, `${name}.vue`] : [`${name}.${extension}`]
+	const names = [name, name.replace(/-config$/, '.config')]
+	return [
+		...new Set(
+			names.flatMap((it) =>
+				extension === 'ts' ? [`${it}.ts`, `${it}.vue`] : [`${it}.${extension}`],
+			),
+		),
+	]
 }
 
 const tests = walk('').filter((path) => TEST.test(path))
