@@ -31,6 +31,7 @@ describe('分類の接頭辞', () => {
 	it('日本語の言い切りの件名は通す', () => {
 		expect(rejectsPrefix('ページングの判定を純粋関数に出してテストで守る')).toBe(false)
 		expect(rejectsPrefix('起動指定からrun_in_background: trueの重複記述を消す')).toBe(false)
+		expect(rejectsPrefix('run_in_background: trueの重複記述を起動指定から消す')).toBe(false)
 		expect(rejectsPrefix('ADR 11: 検査の一覧を文書から落とす')).toBe(false)
 	})
 

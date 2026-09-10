@@ -3,9 +3,10 @@ import { readFileSync } from 'node:fs'
 const SUBJECT_MIN = 12
 const SUBJECT_MAX = 50
 const EXEMPT = /^(Merge |Revert |fixup!|squash!|amend!)/
-// 分類の接頭辞。英字の型名に、任意のスコープと破壊的変更の印が付いた形だけを見る。
-// 日本語で始まる件名の途中のコロン（`起動指定からrun_in_background: true`）に当てない
-const PREFIX = /^[A-Za-z][A-Za-z0-9._-]*(\([^()\s]*\))?!?[:：]/
+// 分類の接頭辞。型名は回収先（CHANGELOG・semver）を持つ語の閉じた列で絞る。
+// 綴りを問わずに見ると、識別子で始まる件名（`run_in_background: true…`）に当たる
+const PREFIX =
+	/^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^()\s]*\))?!?[:：]/i
 const JAPANESE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u
 
 const fail = (...lines) => {
