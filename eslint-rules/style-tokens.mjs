@@ -7,6 +7,12 @@ export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
 export const MOTION_URL = `${DOCS_URL}/adr/02-no-prefers-reduced-motion.md`
 export const BREAKPOINT_URL = `${DOCS_URL}/adr/15-two-breakpoints.md`
 
+export const WEB_FONT_MESSAGE =
+	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
+
+const IMPORT_MESSAGE =
+	'<style> に @import を書かない。引いた先の CSS を lint が読めず、@font-face の置き場になる。'
+
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
 	'spacing',
@@ -309,6 +315,32 @@ const noCustomBreakpoint = {
 	},
 }
 
+const noWebFont = {
+	meta: {
+		type: 'problem',
+		schema: [],
+		messages: {
+			webFont: WEB_FONT_MESSAGE,
+			import: IMPORT_MESSAGE,
+		},
+	},
+	create(context) {
+		return {
+			Program() {
+				eachStyleBlock(context, (root, locate) => {
+					root.walkAtRules((rule) => {
+						if (rule.name === 'font-face')
+							context.report({ loc: locate(rule), messageId: 'webFont' })
+						// 引く先が外部でもリポジトリ内でも lint は読まないので、一律で落とす
+						if (rule.name === 'import')
+							context.report({ loc: locate(rule), messageId: 'import' })
+					})
+				})
+			},
+		}
+	},
+}
+
 export default {
 	rules: {
 		'no-untokenized-size': noUntokenizedSize,
@@ -316,5 +348,6 @@ export default {
 		'no-important': noImportant,
 		'no-reduced-motion': noReducedMotion,
 		'no-custom-breakpoint': noCustomBreakpoint,
+		'no-web-font': noWebFont,
 	},
 }
