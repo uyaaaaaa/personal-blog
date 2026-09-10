@@ -189,6 +189,8 @@ describe('no-color-literal', () => {
 					filename: 'a.vue',
 					code: sfc('.a { scrollbar-color: var(--color-scrollbar) transparent; }'),
 				},
+				{ filename: 'a.vue', code: sfc('.a { @apply bg-surface-subtle; }') },
+				{ filename: 'a.vue', code: sfc('@media (min-width: 768px) { .a { top: 0; } }') },
 			],
 			invalid: [
 				{
@@ -216,6 +218,12 @@ describe('no-color-literal', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('.a { fill: var(--fallback-color, #123456); }'),
+					errors: [{ messageId: 'literal' }],
+				},
+				// 任意値はトークンの名前に無いので、テーマの分岐の検査には当たらない
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply dark:bg-[#0b0b0b]; }'),
 					errors: [{ messageId: 'literal' }],
 				},
 			],
@@ -306,6 +314,12 @@ describe('no-theme-branch', () => {
 					code: sfc('html.light .a { background-color: var(--color-surface); }'),
 					errors: [{ messageId: 'themeBranch' }],
 				},
+				// @apply は宣言ではないので、walkDecls には出てこない
+				{
+					filename: 'a.vue',
+					code: sfc('.dark .a { @apply text-main; }'),
+					errors: [{ messageId: 'themeBranch' }],
+				},
 			],
 		})
 	})
@@ -314,6 +328,7 @@ describe('no-theme-branch', () => {
 		tester.run('no-theme-branch', styleTokens.rules['no-theme-branch'], {
 			valid: [
 				{ filename: 'a.vue', code: sfc('.a { @apply text-main; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply md:px-4; }') },
 				// DOM の出し分けは template 側と同じく通す
 				{ filename: 'a.vue', code: sfc('.a { @apply dark:hidden; }') },
 				{ filename: 'a.vue', code: sfc('.a { @apply dark:box-border; }') },

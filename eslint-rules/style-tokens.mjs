@@ -241,6 +241,8 @@ const noColorLiteral = {
 			Program() {
 				eachStyleBlock(context, (root, locate) => {
 					root.walkDecls((decl) => check(decl.value, locate(decl)))
+					// walkDecls は at-rule を見ないので、@apply の任意値は別に歩く
+					root.walkAtRules((rule) => check(rule.params, locate(rule)))
 				})
 			},
 		}
@@ -384,6 +386,10 @@ const noThemeBranch = {
 							if (decl.prop.startsWith('--')) return
 							context.report({ loc: locate(decl), messageId: 'themeBranch' })
 						})
+						// 同じく、テーマのクラスの下に置いた @apply も歩く
+						rule.walkAtRules('apply', (at) =>
+							context.report({ loc: locate(at), messageId: 'themeBranch' }),
+						)
 					})
 					root.walkAtRules('media', (rule) => {
 						if (COLOR_SCHEME.test(rule.params))
