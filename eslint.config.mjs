@@ -252,7 +252,6 @@ const CALLED_LAYER_SYNTAX = [
 	},
 ]
 
-// tests/ は実装の構成をミラーするので、実装に当てている規則を同じ位置のテストにも当てる
 const withTest = (...patterns) => patterns.flatMap((pattern) => [pattern, `tests/${pattern}`])
 
 export default [

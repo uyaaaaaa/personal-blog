@@ -3,7 +3,6 @@ const RULE_URL =
 
 const DOMAINS = 'article|layout|content|error'
 
-// tests/ は実装の構成をミラーするので、層の規則は実装と同じ位置のテストにも当てる
 const WITH_TEST = '^(?:tests/)?'
 
 const upperLayers = {
