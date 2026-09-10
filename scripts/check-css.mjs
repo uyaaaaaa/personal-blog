@@ -1,10 +1,10 @@
 import { readdirSync, readFileSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import postcss from 'postcss'
 import { IMPORT_MESSAGE, WEB_FONT_MESSAGE } from '../eslint-rules/style-tokens.mjs'
 
-const ROOT = fileURLToPath(new URL('..', import.meta.url))
+const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
 const SKIP = new Set(['.git', '.nuxt', '.output', '.verify', 'dist', 'node_modules'])
 // バンドラが前処理なしで読む綴り。sass 等は依存を足す時点で差分に出る
 const STYLESHEET = /\.(css|pcss|postcss)$/i

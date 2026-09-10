@@ -329,10 +329,11 @@ const noWebFont = {
 			Program() {
 				eachStyleBlock(context, (root, locate) => {
 					root.walkAtRules((rule) => {
-						if (rule.name === 'font-face')
+						const name = rule.name.toLowerCase()
+						if (name === 'font-face')
 							context.report({ loc: locate(rule), messageId: 'webFont' })
 						// 引く先が外部でもリポジトリ内でも lint は読まないので、一律で落とす
-						if (rule.name === 'import')
+						if (name === 'import')
 							context.report({ loc: locate(rule), messageId: 'import' })
 					})
 				})
