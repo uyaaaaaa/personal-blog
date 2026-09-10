@@ -13,13 +13,16 @@ const walk = (directory) =>
 		return entry.isDirectory() ? walk(path) : [path]
 	})
 
+// vitest の既定の include に合わせる。名前を .spec. にして検査から外れる道を作らない
+const TEST = /^(.*)\.(?:test|spec)\.([cm]?[jt]sx?)$/
+
 // コンポーネントのテストだけ拡張子が実装と揃わない（Foo.test.ts に対して Foo.vue）
 const sourcesOf = (test) => {
-	const [, name, extension] = test.match(/^(.*)\.test\.([cm]?[jt]sx?)$/)
+	const [, name, extension] = test.match(TEST)
 	return extension === 'ts' ? [`${name}.ts`, `${name}.vue`] : [`${name}.${extension}`]
 }
 
-const tests = walk('').filter((path) => /\.test\.[cm]?[jt]sx?$/.test(path))
+const tests = walk('').filter((path) => TEST.test(path))
 
 const errors = []
 for (const test of tests) {

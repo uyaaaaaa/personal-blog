@@ -23,7 +23,7 @@
 
 | 線 | 意味 | 誰が守るか |
 | :--- | :--- | :--- |
-| `═▶` | 逆流させない。循環も作らない。題材を知る4領域は互いに依存せず、共有する部品は `ui/` に置く。`theme/` を直接参照するのは `app.vue` だけ | dependency-cruiser |
+| `═▶` | 逆流させない。循環も作らない。題材を知る4領域は互いに依存せず、共有する部品は `ui/` に置く。`app/` から `theme/` を直接参照するのは `app.vue` だけ | dependency-cruiser |
 | `╌▶` | 名前で解決され、`import` 文に現れない唯一の経路 | 人（→ [rules/imports.md](../.claude/rules/imports.md)、[ADR 03](./adr/03-no-auto-import.md)） |
 
 テストは `tests/` に同じ構成でミラーして置くので（→ [ADR 06](./adr/06-tests-mirrored-under-tests.md)）、上の線は実装と同じ位置のテストにも当たります。

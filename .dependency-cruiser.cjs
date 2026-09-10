@@ -60,6 +60,13 @@ module.exports = {
 			to: { path: `${WITH_TEST}app/components/`, pathNot: `${WITH_TEST}app/components/ui/` },
 		},
 		{
+			name: 'tests-only-from-tests',
+			severity: 'error',
+			comment: `tests/ を import してよいのは tests/ の中だけ。実装はテストの都合を持たない。${RULE_URL}`,
+			from: { pathNot: '^tests/' },
+			to: { path: '^tests/' },
+		},
+		{
 			name: 'theme-only-from-app-vue',
 			severity: 'error',
 			comment: `app/ から theme/tokens.ts を直接参照するのは app.vue だけ。${RULE_URL}`,
