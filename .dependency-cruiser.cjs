@@ -1,6 +1,8 @@
 const RULE_URL =
 	'https://github.com/uyaaaaaa/personal-blog/blob/main/docs/ARCHITECTURE.md#層と依存方向'
 
+const DOMAINS = 'article|layout|content|error'
+
 const upperLayers = {
 	utils: '^app/(composables|components|pages|layouts)/|^app/(app|error)\\.vue$',
 	composables: '^app/(components|pages|layouts)/|^app/(app|error)\\.vue$',
@@ -36,6 +38,20 @@ module.exports = {
 			comment: `components はページとレイアウトを import しない。${RULE_URL}`,
 			from: { path: '^app/components/' },
 			to: { path: upperLayers.components },
+		},
+		{
+			name: 'component-domains-isolated',
+			severity: 'error',
+			comment: `components の領域どうしは互いに import しない。共有する部品は ui へ出す。${RULE_URL}`,
+			from: { path: `^app/components/(${DOMAINS})/` },
+			to: { path: `^app/components/(${DOMAINS})/`, pathNot: '^app/components/$1/' },
+		},
+		{
+			name: 'ui-no-domains',
+			severity: 'error',
+			comment: `ui は題材を知らない。components の他を import しない。${RULE_URL}`,
+			from: { path: '^app/components/ui/' },
+			to: { path: '^app/components/', pathNot: '^app/components/ui/' },
 		},
 		{
 			name: 'theme-only-from-app-vue',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import BackButton from '~/components/common/BackButton.vue'
+	import BackButton from '~/components/ui/BackButton.vue'
 	import { formatDate } from '~/utils/date'
 
 	interface Props {
@@ -64,7 +64,11 @@
 				{{ pending ? 'Retrying...' : 'Retry' }}
 			</button>
 
-			<BackButton class="mt-1" />
+			<BackButton
+				to="/article"
+				label="Back to Articles"
+				class="mt-1"
+			/>
 		</div>
 
 		<section
@@ -80,7 +84,7 @@
 				>
 					<NuxtLink
 						:to="article.path"
-						class="flex flex-col gap-1 py-3 text-sm text-main transition-colors duration-200 hover:text-accent sm:flex-row sm:items-baseline sm:gap-3"
+						class="flex flex-col gap-1 py-3 text-sm text-main transition-colors duration-200 hover:text-accent md:flex-row md:items-baseline md:gap-3"
 					>
 						<span class="flex-none font-mono text-xs text-sub">{{
 							formatDate(article.date)

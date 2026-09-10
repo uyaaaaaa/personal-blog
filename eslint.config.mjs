@@ -2,7 +2,16 @@ import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
 import importLayers from './eslint-rules/import-layers.mjs'
-import styleTokens, { DOCS_URL, MOTION_URL, TOKEN_URL } from './eslint-rules/style-tokens.mjs'
+import styleTokens, {
+	BREAKPOINT_LABEL,
+	BREAKPOINT_URL,
+	BREAKPOINT_WIDTHS,
+	DOCS_URL,
+	MOTION_URL,
+	OFF_BREAKPOINT_VARIANTS,
+	TOKEN_URL,
+	WEB_FONT_MESSAGE,
+} from './eslint-rules/style-tokens.mjs'
 
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
@@ -12,14 +21,29 @@ const INVARIANT_URL = `${DOCS_URL}/ARCHITECTURE.md#不変条件`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
 
 const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`
+const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL}の2つだけ。他の境界を作らない。 ${BREAKPOINT_URL}`
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
 const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない。読み取りを useScrollFrame に渡し、アプリ全体で1本の購読に集約する。 ${INVARIANT_URL}`
 const IMPORTANT_MESSAGE =
 	'!important は書かない。Tailwind の ! 修飾子と style 属性も同じ。第三者由来のインラインスタイルを打ち消すときだけ、理由を添えた eslint-disable で許す。'
 
+// フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
+// 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
+const FONT_FILE = '\\.(?:woff2?|otf|ttf|eot)\\b'
+const FONT_HOST = '\\b(?:(?:fontsource|fonts?)(?:[./]|$)|(?:typeface|typekit)[./-])'
+const WEB_FONT_RESOURCE = `(?:${FONT_FILE}|${FONT_HOST})`
+
 const PALETTE_COLORS =
 	'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
 const PALETTE_CLASS = `(?:^|[\\s:])!?[a-z]+(?:-[a-z]+)*-(?:${PALETTE_COLORS})-(?:50|[1-9]00|950)\\b`
+// 任意値の variant（min-[600px]:）は角括弧の検査が落とす
+const BREAKPOINT_CLASS = `(?:^|[\\s:])(?:${OFF_BREAKPOINT_VARIANTS.join('|')}):`
+// 宣言（max-width: 36rem）と混ざらないよう、括弧から見る
+const WIDTHS = BREAKPOINT_WIDTHS.join('|')
+const WIDTH_BY_LENGTH = `\\((?=[^()]*width)[^()]*?(?<![\\d.])(?!(?:${WIDTHS})\\b)\\d*\\.?\\d+[a-z%]+`
+// 組み立てた文字列は長さが別のリテラルに出るので、綴りからも見る
+const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))`
+const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
 
@@ -35,6 +59,29 @@ const SCROLL_SUBSCRIPTION = [
 	{
 		selector: 'MemberExpression[property.name=/^on(scroll|resize)$/]',
 		message: SCROLL_SUBSCRIPTION_MESSAGE,
+	},
+]
+
+// 読み込みの経路そのものを塞ぐ。@font-face と CSS の @import は style/no-web-font が見る
+const WEB_FONT = [
+	{
+		// 1つの selector にまとめる。分けると両方に当たる文字列が2回報告される
+		selector: [
+			`:matches(Literal[value=/${WEB_FONT_RESOURCE}/i], TemplateElement[value.cooked=/${WEB_FONT_RESOURCE}/i])`,
+			// フォントを読み込むモジュール（@nuxt/fonts 等）と、設定が並べる指定子。名前で見る
+			':matches(ImportDeclaration, ImportExpression) > Literal[value=/font/i]',
+			// typography の css は配列を持たないので当たらない
+			'Property[key.name=/^(modules|css)$/] ArrayExpression Literal[value=/font/i]',
+		].join(', '),
+		message: WEB_FONT_MESSAGE,
+	},
+	{
+		selector: "NewExpression[callee.name='FontFace']",
+		message: WEB_FONT_MESSAGE,
+	},
+	{
+		selector: "MemberExpression[property.name='fonts']",
+		message: WEB_FONT_MESSAGE,
 	},
 ]
 
@@ -97,6 +144,14 @@ const TEMPLATE_RESTRICTIONS = [
 		message: PALETTE_MESSAGE,
 	},
 	{
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${BREAKPOINT_CLASS}/]`,
+		message: BREAKPOINT_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${BREAKPOINT_CLASS}/], TemplateElement[value.cooked=/${BREAKPOINT_CLASS}/])`,
+		message: BREAKPOINT_MESSAGE,
+	},
+	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${BANG_CLASS}/]`,
 		message: IMPORTANT_MESSAGE,
 	},
@@ -111,6 +166,15 @@ const TEMPLATE_RESTRICTIONS = [
 	{
 		selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Literal[value=/${INLINE_IMPORTANT}/i], TemplateElement[value.cooked=/${INLINE_IMPORTANT}/i])`,
 		message: IMPORTANT_MESSAGE,
+	},
+	// テンプレートに直接書く <link href>。属性を限らず、読み込む先の綴りで見る
+	{
+		selector: `VAttribute[directive=false] > VLiteral[value=/${WEB_FONT_RESOURCE}/i]`,
+		message: WEB_FONT_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true] :matches(Literal[value=/${WEB_FONT_RESOURCE}/i], TemplateElement[value.cooked=/${WEB_FONT_RESOURCE}/i])`,
+		message: WEB_FONT_MESSAGE,
 	},
 ]
 
@@ -169,7 +233,12 @@ const restrictions = {
 				':matches(Literal[value=/prefers-reduced-motion/], TemplateElement[value.cooked=/prefers-reduced-motion/])',
 			message: REDUCED_MOTION_MESSAGE,
 		},
+		{
+			selector: `:matches(Literal[value=/${BREAKPOINT_MEDIA}/i], TemplateElement[value.cooked=/${BREAKPOINT_MEDIA}/i])`,
+			message: BREAKPOINT_MESSAGE,
+		},
 		...SCROLL_SUBSCRIPTION,
+		...WEB_FONT,
 	],
 }
 
@@ -234,6 +303,8 @@ export default [
 			'style/no-color-literal': 'error',
 			'style/no-important': 'error',
 			'style/no-reduced-motion': 'error',
+			'style/no-custom-breakpoint': 'error',
+			'style/no-web-font': 'error',
 			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS],
 		},
 	},
@@ -283,6 +354,20 @@ export default [
 				'error',
 				...CALLED_LAYER_SYNTAX.filter((rule) => !SCROLL_SUBSCRIPTION.includes(rule)),
 			],
+		},
+	},
+	{
+		// 設定ファイルは app/ の規約の外。読み込みの経路（modules・css・head.link）だけを見る
+		files: ['*.config.ts'],
+		languageOptions: {
+			parser: tsParser,
+			parserOptions: {
+				ecmaVersion: 'latest',
+				sourceType: 'module',
+			},
+		},
+		rules: {
+			'no-restricted-syntax': ['error', ...WEB_FONT],
 		},
 	},
 	{

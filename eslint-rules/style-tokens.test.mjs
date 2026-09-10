@@ -98,6 +98,58 @@ describe('no-reduced-motion', () => {
 	})
 })
 
+describe('no-custom-breakpoint', () => {
+	it('md と lg の境界だけを通す', () => {
+		tester.run('no-custom-breakpoint', styleTokens.rules['no-custom-breakpoint'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('@media (min-width: 768px) { .a { top: 0; } }') },
+				{ filename: 'a.vue', code: sfc('@media (min-width: 1024px) { .a { top: 0; } }') },
+				{ filename: 'a.vue', code: sfc('@media (max-width: 48rem) { .a { top: 0; } }') },
+				{ filename: 'a.vue', code: sfc('@media (width >= 64em) { .a { top: 0; } }') },
+				{
+					filename: 'a.vue',
+					code: sfc('@media screen and (min-width: 768px) { .a { top: 0; } }'),
+				},
+				{ filename: 'a.vue', code: sfc('@media print { .a { top: 0; } }') },
+				{
+					filename: 'a.vue',
+					code: sfc('@media (min-resolution: 2dppx) { .a { top: 0; } }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { min-width: 0; max-width: 36rem; }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('@media (min-width: 640px) { .a { top: 0; } }'),
+					errors: [{ messageId: 'breakpoint' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@media (max-width: 1023px) { .a { top: 0; } }'),
+					errors: [{ messageId: 'breakpoint' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@media (width < 40rem) { .a { top: 0; } }'),
+					errors: [{ messageId: 'breakpoint' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc(
+						'@media (min-width: 640px) and (max-width: 1280px) { .a { top: 0; } }',
+					),
+					errors: [{ messageId: 'breakpoint' }, { messageId: 'breakpoint' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@media (min-width: 50vw) { .a { top: 0; } }'),
+					errors: [{ messageId: 'breakpoint' }],
+				},
+			],
+		})
+	})
+})
+
 describe('no-color-literal', () => {
 	it('トークン由来の色だけを通す', () => {
 		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
@@ -165,6 +217,35 @@ describe('no-color-literal', () => {
 					filename: 'a.vue',
 					code: sfc('.a { fill: var(--fallback-color, #123456); }'),
 					errors: [{ messageId: 'literal' }],
+				},
+			],
+		})
+	})
+})
+
+describe('no-web-font', () => {
+	it('@font-face と @import を落とす', () => {
+		tester.run('no-web-font', styleTokens.rules['no-web-font'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { font-family: var(--font-mono); }') },
+				{ filename: 'a.vue', code: sfc('@media (min-width: 1024px) { .a { top: 0; } }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc("@font-face { font-family: 'X'; src: url('/x.woff2'); }"),
+					errors: [{ messageId: 'webFont' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc("@import url('https://fonts.googleapis.com/css2?family=X');"),
+					errors: [{ messageId: 'import' }],
+				},
+				// 引く先がリポジトリ内でも、その CSS は lint が読まない
+				{
+					filename: 'a.vue',
+					code: sfc("@import './local.css';"),
+					errors: [{ messageId: 'import' }],
 				},
 			],
 		})

@@ -5,6 +5,13 @@ import { sizes } from '../theme/tokens.ts'
 export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
 export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
 export const MOTION_URL = `${DOCS_URL}/adr/02-no-prefers-reduced-motion.md`
+export const BREAKPOINT_URL = `${DOCS_URL}/adr/15-two-breakpoints.md`
+
+export const WEB_FONT_MESSAGE =
+	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
+
+const IMPORT_MESSAGE =
+	'<style> に @import を書かない。引いた先の CSS を lint が読めず、@font-face の置き場になる。'
 
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
@@ -48,8 +55,10 @@ function collectStrings(value, into) {
 }
 
 // tailwind.config.ts 自体は node が型注釈を落とせず読めないため、ここで組み直す
+const theme = resolveConfig({ content: [], theme: { extend: { ...sizes } } }).theme
+
+// 語彙は Tailwind の既定の theme に sizes を重ねて作る。sizes に名前を足せば通る
 function buildVocabulary() {
-	const theme = resolveConfig({ content: [], theme: { extend: { ...sizes } } }).theme
 	const strings = new Set()
 	for (const section of LENGTH_SECTIONS) collectStrings(theme[section], strings)
 	collectStrings(sizes, strings)
@@ -64,6 +73,39 @@ function buildVocabulary() {
 }
 
 const vocabulary = buildVocabulary()
+
+const BREAKPOINTS = ['md', 'lg']
+
+const MEDIA_LENGTH = /(\d*\.?\d+)([a-z]+)\b/gi
+// メディアクエリの em は初期フォントサイズが基準なので rem と同じ
+const PIXELS_PER = { px: 1, rem: 16, em: 16 }
+
+const toPixels = (number, unit) => Number(number) * PIXELS_PER[unit.toLowerCase()]
+
+function buildBreakpoints() {
+	const pixels = new Set()
+	const labels = []
+	for (const name of BREAKPOINTS) {
+		const value = String(theme.screens[name])
+		const [[, number, unit]] = value.matchAll(MEDIA_LENGTH)
+		pixels.add(toPixels(number, unit))
+		labels.push(`${name}（${value}）`)
+	}
+	return { pixels, label: labels.join('と ') }
+}
+
+const breakpoints = buildBreakpoints()
+
+export const BREAKPOINT_LABEL = breakpoints.label
+
+export const BREAKPOINT_WIDTHS = [...breakpoints.pixels].flatMap((px) =>
+	Object.entries(PIXELS_PER).map(([unit, scale]) => `${px / scale}${unit}`),
+)
+
+export const OFF_BREAKPOINT_VARIANTS = [
+	...Object.keys(theme.screens).filter((name) => !BREAKPOINTS.includes(name)),
+	...Object.keys(theme.screens).map((name) => `max-${name}`),
+]
 
 function offsetsOf(css) {
 	const offsets = [0]
@@ -235,11 +277,75 @@ const noReducedMotion = {
 	},
 }
 
+const MEDIA_CONDITION = /\(([^()]*)\)/g
+const WIDTH_FEATURE = /\bwidth\b/i
+
+const noCustomBreakpoint = {
+	meta: {
+		type: 'problem',
+		schema: [],
+		messages: {
+			breakpoint: `{{literal}} で表示を出し分けない。ブレークポイントは ${BREAKPOINT_LABEL}の2つだけ。 ${BREAKPOINT_URL}`,
+		},
+	},
+	create(context) {
+		return {
+			Program() {
+				eachStyleBlock(context, (root, locate) => {
+					root.walkAtRules('media', (rule) => {
+						for (const [, condition] of rule.params.matchAll(MEDIA_CONDITION)) {
+							if (!WIDTH_FEATURE.test(condition)) continue
+							for (const [literal, number, unit] of condition.matchAll(
+								MEDIA_LENGTH,
+							)) {
+								if (breakpoints.pixels.has(toPixels(number, unit))) continue
+								context.report({
+									loc: locate(rule),
+									messageId: 'breakpoint',
+									data: { literal },
+								})
+							}
+						}
+					})
+				})
+			},
+		}
+	},
+}
+
+const noWebFont = {
+	meta: {
+		type: 'problem',
+		schema: [],
+		messages: {
+			webFont: WEB_FONT_MESSAGE,
+			import: IMPORT_MESSAGE,
+		},
+	},
+	create(context) {
+		return {
+			Program() {
+				eachStyleBlock(context, (root, locate) => {
+					root.walkAtRules((rule) => {
+						if (rule.name === 'font-face')
+							context.report({ loc: locate(rule), messageId: 'webFont' })
+						// 引く先が外部でもリポジトリ内でも lint は読まないので、一律で落とす
+						if (rule.name === 'import')
+							context.report({ loc: locate(rule), messageId: 'import' })
+					})
+				})
+			},
+		}
+	},
+}
+
 export default {
 	rules: {
 		'no-untokenized-size': noUntokenizedSize,
 		'no-color-literal': noColorLiteral,
 		'no-important': noImportant,
 		'no-reduced-motion': noReducedMotion,
+		'no-custom-breakpoint': noCustomBreakpoint,
+		'no-web-font': noWebFont,
 	},
 }

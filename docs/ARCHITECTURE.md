@@ -14,7 +14,7 @@
                       ▼
               components/ ═══▶ composables/ ═══▶ utils/
                    │
-                   ├── article ─▶ common          領域間の依存はこの1本だけ
+                   ├── layout  article  content  error ═══▶ ui   4領域は互いに依存しない
                    │
                    └── content/ ╌◀── ContentRenderer ◀── @nuxt/content + remark/ ◀── content/*.md
 
@@ -23,8 +23,7 @@
 
 | 線 | 意味 | 誰が守るか |
 | :--- | :--- | :--- |
-| `═▶` | 逆流させない。循環も作らない。`theme/` を直接参照するのは `app.vue` だけ | dependency-cruiser |
-| `─▶` | `components/` の領域間の依存。`layout/` は他の領域を使わない | 人（→ [rules/structure.md](../.claude/rules/structure.md)） |
+| `═▶` | 逆流させない。循環も作らない。題材を知る4領域は互いに依存せず、共有する部品は `ui/` に置く。`theme/` を直接参照するのは `app.vue` だけ | dependency-cruiser |
 | `╌▶` | 名前で解決され、`import` 文に現れない唯一の経路 | 人（→ [rules/imports.md](../.claude/rules/imports.md)、[ADR 03](./adr/03-no-auto-import.md)） |
 
 ## 不変条件

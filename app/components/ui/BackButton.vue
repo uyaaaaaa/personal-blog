@@ -1,13 +1,10 @@
 <script setup lang="ts">
 	interface Props {
-		to?: string | object
-		label?: string
+		to: string | object
+		label: string
 	}
 
-	withDefaults(defineProps<Props>(), {
-		to: '/article',
-		label: 'Back to Articles',
-	})
+	defineProps<Props>()
 </script>
 
 <template>

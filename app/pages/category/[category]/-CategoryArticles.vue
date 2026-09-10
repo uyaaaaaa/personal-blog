@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import ArticleList from '~/components/article/ArticleList.vue'
-	import Pagination from '~/components/common/Pagination.vue'
-	import BackButton from '~/components/common/BackButton.vue'
+	import Pagination from '~/components/ui/Pagination.vue'
+	import BackButton from '~/components/ui/BackButton.vue'
 	import { usePagination } from '~/composables/usePagination'
 	import { usePageSeo } from '~/composables/usePageSeo'
 	import { isCategory, CATEGORY_LABELS } from '~/utils/category'
