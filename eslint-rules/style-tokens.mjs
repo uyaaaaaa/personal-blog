@@ -10,9 +10,6 @@ export const BREAKPOINT_URL = `${DOCS_URL}/adr/15-two-breakpoints.md`
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
 
-export const IMPORT_MESSAGE =
-	'@import を書かない。引いた先の CSS を lint が読めず、@font-face の置き場になる。'
-
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
 	'spacing',
@@ -220,7 +217,7 @@ const CHECKS = {
 	'no-important': {
 		messages: {
 			important:
-				'!important は書かない。第三者由来のインラインスタイルを打ち消すときだけ、理由を添えた eslint-disable を <script> に置いて許す。',
+				'!important は書かない。第三者由来のインラインスタイルを打ち消すときだけ、.vue の <style> に書き、理由を添えた eslint-disable を <script> に置いて許す。',
 		},
 		find(root) {
 			const found = []
@@ -267,7 +264,7 @@ const CHECKS = {
 	'no-web-font': {
 		messages: {
 			webFont: WEB_FONT_MESSAGE,
-			import: IMPORT_MESSAGE,
+			import: '@import を書かない。引いた先の CSS を lint が読めず、@font-face の置き場になる。',
 		},
 		find(root) {
 			const found = []
