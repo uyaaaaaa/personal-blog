@@ -1,6 +1,6 @@
 import postcss from 'postcss'
 import resolveConfig from 'tailwindcss/resolveConfig.js'
-import { sizes } from '../theme/tokens.ts'
+import { colors, sizes } from '../theme/tokens.ts'
 
 export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
 export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
@@ -12,6 +12,15 @@ export const WEB_FONT_MESSAGE =
 
 export const IMPORT_MESSAGE =
 	'@import を書かない。引いた先の CSS を lint が読めず、@font-face の置き場になる。'
+
+export const THEME_BRANCH_MESSAGE =
+	'テーマごとに宣言を分岐しない。差は theme/tokens.ts の darkColors が作る。.dark に書けるのはカスタムプロパティの再定義だけ。'
+
+export const COLOR_SCHEME_MESSAGE =
+	'prefers-color-scheme で分岐しない。テーマを持つのは .dark クラスで、色の差は theme/tokens.ts の darkColors が作る。'
+
+// 色を持つクラスの綴りを見るための語彙。white / black / transparent / current は Tailwind が既定で持つ
+export const COLOR_NAMES = [...Object.keys(colors), 'white', 'black', 'transparent', 'current']
 
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
@@ -340,6 +349,40 @@ const noWebFont = {
 	},
 }
 
+// `html.dark` `.dark .callout` `:is(.dark)` のいずれも綴りで拾う。`.darkroom` は後ろで外す
+const DARK_SELECTOR = /\.dark(?![\w-])/
+const COLOR_SCHEME = /prefers-color-scheme/i
+
+const noThemeBranch = {
+	meta: {
+		type: 'problem',
+		schema: [],
+		messages: {
+			themeBranch: THEME_BRANCH_MESSAGE,
+			colorScheme: COLOR_SCHEME_MESSAGE,
+		},
+	},
+	create(context) {
+		return {
+			Program() {
+				eachStyleBlock(context, (root, locate) => {
+					root.walkRules((rule) => {
+						if (!DARK_SELECTOR.test(rule.selector)) return
+						rule.walkDecls((decl) => {
+							if (decl.prop.startsWith('--')) return
+							context.report({ loc: locate(decl), messageId: 'themeBranch' })
+						})
+					})
+					root.walkAtRules('media', (rule) => {
+						if (COLOR_SCHEME.test(rule.params))
+							context.report({ loc: locate(rule), messageId: 'colorScheme' })
+					})
+				})
+			},
+		}
+	},
+}
+
 export default {
 	rules: {
 		'no-untokenized-size': noUntokenizedSize,
@@ -348,5 +391,6 @@ export default {
 		'no-reduced-motion': noReducedMotion,
 		'no-custom-breakpoint': noCustomBreakpoint,
 		'no-web-font': noWebFont,
+		'no-theme-branch': noThemeBranch,
 	},
 }
