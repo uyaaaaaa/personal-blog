@@ -234,3 +234,32 @@ describe('no-color-literal', () => {
 		})
 	})
 })
+
+describe('no-web-font', () => {
+	it('@font-face と @import を落とす', () => {
+		tester.run('no-web-font', styleTokens.rules['no-web-font'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { font-family: var(--font-mono); }') },
+				{ filename: 'a.vue', code: sfc('@media (min-width: 1024px) { .a { top: 0; } }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc("@font-face { font-family: 'X'; src: url('/x.woff2'); }"),
+					errors: [{ messageId: 'webFont' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc("@import url('https://fonts.googleapis.com/css2?family=X');"),
+					errors: [{ messageId: 'import' }],
+				},
+				// 引く先がリポジトリ内でも、その CSS は lint が読まない
+				{
+					filename: 'a.vue',
+					code: sfc("@import './local.css';"),
+					errors: [{ messageId: 'import' }],
+				},
+			],
+		})
+	})
+})

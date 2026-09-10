@@ -9,6 +9,15 @@
 						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/code-review-effort.mjs\""
 					}
 				]
+			},
+			{
+				"matcher": "Read|Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/delegate-read.mjs\""
+					}
+				]
 			}
 		]
 	}
