@@ -110,7 +110,6 @@ export default defineNuxtConfig({
 		},
 	},
 	typescript: {
-		// テストは tests/ に置くので、app/ の外に出た分を型検査に入れ直す
 		tsConfig: {
 			include: ['../tests/**/*'],
 		},
