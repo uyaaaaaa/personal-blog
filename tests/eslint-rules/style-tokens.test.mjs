@@ -262,3 +262,55 @@ describe('no-web-font', () => {
 		})
 	})
 })
+
+describe('no-theme-branch', () => {
+	it('.dark 配下はカスタムプロパティの再定義だけを通す', () => {
+		tester.run('no-theme-branch', styleTokens.rules['no-theme-branch'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.dark .a { --callout-rgb: var(--x-dark); }') },
+				{ filename: 'a.vue', code: sfc('.a { color: var(--color-main); }') },
+				// テーマの綴りを含むだけのクラス名
+				{ filename: 'a.vue', code: sfc('.darkroom { color: var(--color-main); }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.dark .a { color: var(--color-sub); }'),
+					errors: [{ messageId: 'themeBranch' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('html.dark .a { background-color: var(--color-surface); }'),
+					errors: [{ messageId: 'themeBranch' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc(':is(.dark) .a { border-color: var(--color-border); }'),
+					errors: [{ messageId: 'themeBranch' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.dark .a { --x: 0; color: var(--color-sub); opacity: 1; }'),
+					errors: [{ messageId: 'themeBranch' }, { messageId: 'themeBranch' }],
+				},
+			],
+		})
+	})
+
+	it('prefers-color-scheme で分岐する @media を落とす', () => {
+		tester.run('no-theme-branch', styleTokens.rules['no-theme-branch'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('@media (min-width: 1024px) { .a { top: 0; } }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc(
+						'@media (prefers-color-scheme: dark) { .a { color: var(--color-sub); } }',
+					),
+					errors: [{ messageId: 'colorScheme' }],
+				},
+			],
+		})
+	})
+})

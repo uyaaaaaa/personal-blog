@@ -75,6 +75,17 @@ describe('check-css', () => {
 		expect(stderr).toMatch(/prefers-reduced-motion で分岐しない/)
 	})
 
+	it('テーマごとの分岐を落とす', () => {
+		write(
+			'a.css',
+			'.dark .a {\n\tcolor: var(--color-ink);\n}\n@media (prefers-color-scheme: dark) {\n\t.a { opacity: 1; }\n}\n',
+		)
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/テーマごとに宣言を分岐しない/)
+		expect(stderr).toMatch(/prefers-color-scheme で分岐しない/)
+	})
+
 	it('CSS でないファイルと、スキップする階層は見ない', () => {
 		write('node_modules/x/a.css', "@font-face {\n\tsrc: url('/x.woff2');\n}\n")
 		write('a.txt', "@font-face {\n\tsrc: url('/x.woff2');\n}\n")

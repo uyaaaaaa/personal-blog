@@ -1,6 +1,6 @@
 import postcss from 'postcss'
 import resolveConfig from 'tailwindcss/resolveConfig.js'
-import { sizes } from '../theme/tokens.ts'
+import { colors, sizes } from '../theme/tokens.ts'
 
 export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
 export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
@@ -9,6 +9,15 @@ export const BREAKPOINT_URL = `${DOCS_URL}/adr/15-two-breakpoints.md`
 
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
+
+export const THEME_BRANCH_MESSAGE =
+	'テーマごとに宣言を分岐しない。差は theme/tokens.ts の darkColors が作る。.dark に書けるのはカスタムプロパティの再定義だけ。'
+
+export const COLOR_SCHEME_MESSAGE =
+	'prefers-color-scheme で分岐しない。テーマを持つのは .dark クラスで、色の差は theme/tokens.ts の darkColors が作る。'
+
+// 色を持つクラスの綴りを見るための語彙。white / black / transparent / current は Tailwind が既定で持つ
+export const COLOR_NAMES = [...Object.keys(colors), 'white', 'black', 'transparent', 'current']
 
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
@@ -168,6 +177,9 @@ function eachStyleBlock(context, visit) {
 const REDUCED_MOTION = /prefers-reduced-motion/i
 const MEDIA_CONDITION = /\(([^()]*)\)/g
 const WIDTH_FEATURE = /\bwidth\b/i
+// `html.dark` `.dark .callout` `:is(.dark)` のいずれも綴りで拾う。`.darkroom` は後ろで外す
+const DARK_SELECTOR = /\.dark(?![\w-])/
+const COLOR_SCHEME = /prefers-color-scheme/i
 
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
 const CHECKS = {
@@ -273,6 +285,27 @@ const CHECKS = {
 				if (name === 'font-face') found.push({ node: rule, messageId: 'webFont' })
 				// 引く先が外部でもリポジトリ内でも lint は読まないので、一律で落とす
 				if (name === 'import') found.push({ node: rule, messageId: 'import' })
+			})
+			return found
+		},
+	},
+	'no-theme-branch': {
+		messages: {
+			themeBranch: THEME_BRANCH_MESSAGE,
+			colorScheme: COLOR_SCHEME_MESSAGE,
+		},
+		find(root) {
+			const found = []
+			root.walkRules((rule) => {
+				if (!DARK_SELECTOR.test(rule.selector)) return
+				rule.walkDecls((decl) => {
+					if (decl.prop.startsWith('--')) return
+					found.push({ node: decl, messageId: 'themeBranch' })
+				})
+			})
+			root.walkAtRules('media', (rule) => {
+				if (COLOR_SCHEME.test(rule.params))
+					found.push({ node: rule, messageId: 'colorScheme' })
 			})
 			return found
 		},
