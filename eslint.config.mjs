@@ -252,12 +252,14 @@ const CALLED_LAYER_SYNTAX = [
 	},
 ]
 
+const withTest = (...patterns) => patterns.flatMap((pattern) => [pattern, `tests/${pattern}`])
+
 export default [
 	{
 		ignores: ['.nuxt/**', '.output/**', 'dist/**', 'node_modules/**'],
 	},
 	{
-		files: ['app/**/*.ts'],
+		files: withTest('app/**/*.ts'),
 		plugins: { imports: importLayers },
 		languageOptions: {
 			parser: tsParser,
@@ -279,7 +281,7 @@ export default [
 		},
 	},
 	{
-		files: ['app/**/*.vue'],
+		files: withTest('app/**/*.vue'),
 		plugins: { vue: pluginVue, style: styleTokens, imports: importLayers },
 		languageOptions: {
 			parser: vueParser,
@@ -309,7 +311,7 @@ export default [
 		},
 	},
 	{
-		files: ['app/components/**/*.vue'],
+		files: withTest('app/components/**/*.vue'),
 		languageOptions: {
 			parser: vueParser,
 			parserOptions: {
@@ -328,7 +330,7 @@ export default [
 		},
 	},
 	{
-		files: ['app/components/**/*.ts'],
+		files: withTest('app/components/**/*.ts'),
 		rules: {
 			'no-restricted-syntax': [
 				'error',
@@ -342,7 +344,7 @@ export default [
 		},
 	},
 	{
-		files: ['app/composables/**/*.ts', 'app/utils/**/*.ts'],
+		files: withTest('app/composables/**/*.ts', 'app/utils/**/*.ts'),
 		rules: {
 			'no-restricted-syntax': ['error', ...CALLED_LAYER_SYNTAX],
 		},
@@ -371,7 +373,7 @@ export default [
 		},
 	},
 	{
-		files: ['app/components/*.{vue,ts}'],
+		files: withTest('app/components/*.{vue,ts}'),
 		languageOptions: {
 			parser: vueParser,
 			parserOptions: {

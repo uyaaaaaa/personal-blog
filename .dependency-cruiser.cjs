@@ -3,10 +3,12 @@ const RULE_URL =
 
 const DOMAINS = 'article|layout|content|error'
 
+const WITH_TEST = '^(?:tests/)?'
+
 const upperLayers = {
-	utils: '^app/(composables|components|pages|layouts)/|^app/(app|error)\\.vue$',
-	composables: '^app/(components|pages|layouts)/|^app/(app|error)\\.vue$',
-	components: '^app/(pages|layouts)/|^app/(app|error)\\.vue$',
+	utils: `${WITH_TEST}app/(composables|components|pages|layouts)/|${WITH_TEST}app/(app|error)\\.vue$`,
+	composables: `${WITH_TEST}app/(components|pages|layouts)/|${WITH_TEST}app/(app|error)\\.vue$`,
+	components: `${WITH_TEST}app/(pages|layouts)/|${WITH_TEST}app/(app|error)\\.vue$`,
 }
 
 module.exports = {
@@ -22,42 +24,52 @@ module.exports = {
 			name: 'utils-no-upward',
 			severity: 'error',
 			comment: `utils は app/ 内の何も import しない。${RULE_URL}`,
-			from: { path: '^app/utils/' },
+			from: { path: `${WITH_TEST}app/utils/` },
 			to: { path: upperLayers.utils },
 		},
 		{
 			name: 'composables-no-upward',
 			severity: 'error',
 			comment: `composables はコンポーネントとページを import しない。${RULE_URL}`,
-			from: { path: '^app/composables/' },
+			from: { path: `${WITH_TEST}app/composables/` },
 			to: { path: upperLayers.composables },
 		},
 		{
 			name: 'components-no-upward',
 			severity: 'error',
 			comment: `components はページとレイアウトを import しない。${RULE_URL}`,
-			from: { path: '^app/components/' },
+			from: { path: `${WITH_TEST}app/components/` },
 			to: { path: upperLayers.components },
 		},
 		{
 			name: 'component-domains-isolated',
 			severity: 'error',
 			comment: `components の領域どうしは互いに import しない。共有する部品は ui へ出す。${RULE_URL}`,
-			from: { path: `^app/components/(${DOMAINS})/` },
-			to: { path: `^app/components/(${DOMAINS})/`, pathNot: '^app/components/$1/' },
+			from: { path: `${WITH_TEST}app/components/(${DOMAINS})/` },
+			to: {
+				path: `${WITH_TEST}app/components/(${DOMAINS})/`,
+				pathNot: `${WITH_TEST}app/components/$1/`,
+			},
 		},
 		{
 			name: 'ui-no-domains',
 			severity: 'error',
 			comment: `ui は題材を知らない。components の他を import しない。${RULE_URL}`,
-			from: { path: '^app/components/ui/' },
-			to: { path: '^app/components/', pathNot: '^app/components/ui/' },
+			from: { path: `${WITH_TEST}app/components/ui/` },
+			to: { path: `${WITH_TEST}app/components/`, pathNot: `${WITH_TEST}app/components/ui/` },
+		},
+		{
+			name: 'tests-only-from-tests',
+			severity: 'error',
+			comment: `tests/ を import してよいのは tests/ の中だけ。実装はテストの都合を持たない。${RULE_URL}`,
+			from: { pathNot: '^tests/' },
+			to: { path: '^tests/' },
 		},
 		{
 			name: 'theme-only-from-app-vue',
 			severity: 'error',
-			comment: `theme/tokens.ts を直接参照するのは app.vue だけ。${RULE_URL}`,
-			from: { pathNot: '^app/app\\.vue$' },
+			comment: `app/ から theme/tokens.ts を直接参照するのは app.vue だけ。${RULE_URL}`,
+			from: { path: `${WITH_TEST}app/`, pathNot: `${WITH_TEST}app/app\\.vue$` },
 			to: { path: '^theme/' },
 		},
 	],

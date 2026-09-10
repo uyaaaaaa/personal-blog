@@ -109,6 +109,11 @@ export default defineNuxtConfig({
 			},
 		},
 	},
+	typescript: {
+		tsConfig: {
+			include: ['../tests/**/*'],
+		},
+	},
 	features: {
 		inlineStyles: true,
 	},
