@@ -14,13 +14,21 @@ export const IMPORT_MESSAGE =
 	'@import を書かない。引いた先の CSS を lint が読めず、@font-face の置き場になる。'
 
 export const THEME_BRANCH_MESSAGE =
-	'テーマごとに宣言を分岐しない。差は theme/tokens.ts の darkColors が作る。.dark に書けるのはカスタムプロパティの再定義だけ。'
+	'テーマごとに宣言を分岐しない。差は theme/tokens.ts の darkColors が作る。.dark と .light に書けるのはカスタムプロパティの再定義だけ。'
 
 export const COLOR_SCHEME_MESSAGE =
-	'prefers-color-scheme で分岐しない。テーマを持つのは .dark クラスで、色の差は theme/tokens.ts の darkColors が作る。'
+	'prefers-color-scheme で分岐しない。テーマを持つのは .dark / .light クラスで、色の差は theme/tokens.ts の darkColors が作る。'
 
-// 色を持つクラスの綴りを見るための語彙。white / black / transparent / current は Tailwind が既定で持つ
-export const COLOR_NAMES = [...Object.keys(colors), 'white', 'black', 'transparent', 'current']
+export const THEME_CLASS_MESSAGE =
+	'dark: で色を分岐しない。テーマの差は theme/tokens.ts の darkColors が作る。dark: を書くのはテーマで DOM を出し分けるときだけ。'
+
+// 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる
+const COLOR_PREFIX =
+	'text|bg|border|divide|outline|ring|ring-offset|shadow|accent|caret|decoration|fill|stroke|placeholder|from|via|to'
+// white / black / transparent / current は Tailwind が既定で持つ
+const COLOR_NAME = [...Object.keys(colors), 'white', 'black', 'transparent', 'current'].join('|')
+// dark: の後ろにも variant が続く。辺を指す指定（border-t）は1文字
+export const THEME_COLOR_CLASS = `(?:^|[\\s:])dark:(?:[a-z-]+:)*!?(?:${COLOR_PREFIX})(?:-[a-z])?-(?:${COLOR_NAME})(?![a-z-])`
 
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
@@ -349,9 +357,12 @@ const noWebFont = {
 	},
 }
 
-// `html.dark` `.dark .callout` `:is(.dark)` のいずれも綴りで拾う。`.darkroom` は後ろで外す
-const DARK_SELECTOR = /\.dark(?![\w-])/
+// colorMode の classSuffix が空なので、テーマは html の dark / light で表れる。
+// `html.dark` `.dark .callout` `:is(.light)` のいずれも綴りで拾い、`.darkroom` は後ろで外す
+const THEME_SELECTOR = /\.(?:dark|light)(?![\w-])/
 const COLOR_SCHEME = /prefers-color-scheme/i
+// 判定を template 側と揃える。@apply は宣言でもセレクタでもないので、綴りで見る
+const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
 
 const noThemeBranch = {
 	meta: {
@@ -360,6 +371,7 @@ const noThemeBranch = {
 		messages: {
 			themeBranch: THEME_BRANCH_MESSAGE,
 			colorScheme: COLOR_SCHEME_MESSAGE,
+			themeClass: THEME_CLASS_MESSAGE,
 		},
 	},
 	create(context) {
@@ -367,7 +379,7 @@ const noThemeBranch = {
 			Program() {
 				eachStyleBlock(context, (root, locate) => {
 					root.walkRules((rule) => {
-						if (!DARK_SELECTOR.test(rule.selector)) return
+						if (!THEME_SELECTOR.test(rule.selector)) return
 						rule.walkDecls((decl) => {
 							if (decl.prop.startsWith('--')) return
 							context.report({ loc: locate(decl), messageId: 'themeBranch' })
@@ -376,6 +388,10 @@ const noThemeBranch = {
 					root.walkAtRules('media', (rule) => {
 						if (COLOR_SCHEME.test(rule.params))
 							context.report({ loc: locate(rule), messageId: 'colorScheme' })
+					})
+					root.walkAtRules('apply', (rule) => {
+						if (THEME_CLASS.test(rule.params))
+							context.report({ loc: locate(rule), messageId: 'themeClass' })
 					})
 				})
 			},

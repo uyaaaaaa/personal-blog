@@ -264,13 +264,15 @@ describe('no-web-font', () => {
 })
 
 describe('no-theme-branch', () => {
-	it('.dark 配下はカスタムプロパティの再定義だけを通す', () => {
+	it('テーマのクラス配下はカスタムプロパティの再定義だけを通す', () => {
 		tester.run('no-theme-branch', styleTokens.rules['no-theme-branch'], {
 			valid: [
 				{ filename: 'a.vue', code: sfc('.dark .a { --callout-rgb: var(--x-dark); }') },
+				{ filename: 'a.vue', code: sfc('.light .a { --callout-rgb: var(--x-light); }') },
 				{ filename: 'a.vue', code: sfc('.a { color: var(--color-main); }') },
 				// テーマの綴りを含むだけのクラス名
 				{ filename: 'a.vue', code: sfc('.darkroom { color: var(--color-main); }') },
+				{ filename: 'a.vue', code: sfc('.highlight { color: var(--color-main); }') },
 			],
 			invalid: [
 				{
@@ -292,6 +294,40 @@ describe('no-theme-branch', () => {
 					filename: 'a.vue',
 					code: sfc('.dark .a { --x: 0; color: var(--color-sub); opacity: 1; }'),
 					errors: [{ messageId: 'themeBranch' }, { messageId: 'themeBranch' }],
+				},
+				// colorMode の classSuffix が空なので、ライトも html のクラスで表れる
+				{
+					filename: 'a.vue',
+					code: sfc('.light .a { color: var(--color-sub); }'),
+					errors: [{ messageId: 'themeBranch' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('html.light .a { background-color: var(--color-surface); }'),
+					errors: [{ messageId: 'themeBranch' }],
+				},
+			],
+		})
+	})
+
+	it('色を分岐する @apply を落とす', () => {
+		tester.run('no-theme-branch', styleTokens.rules['no-theme-branch'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { @apply text-main; }') },
+				// DOM の出し分けは template 側と同じく通す
+				{ filename: 'a.vue', code: sfc('.a { @apply dark:hidden; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply dark:box-border; }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply dark:text-main; }'),
+					errors: [{ messageId: 'themeClass' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply md:dark:bg-surface-subtle; }'),
+					errors: [{ messageId: 'themeClass' }],
 				},
 			],
 		})

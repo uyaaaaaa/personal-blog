@@ -6,11 +6,12 @@ import styleTokens, {
 	BREAKPOINT_LABEL,
 	BREAKPOINT_URL,
 	BREAKPOINT_WIDTHS,
-	COLOR_NAMES,
 	COLOR_SCHEME_MESSAGE,
 	DOCS_URL,
 	MOTION_URL,
 	OFF_BREAKPOINT_VARIANTS,
+	THEME_CLASS_MESSAGE,
+	THEME_COLOR_CLASS,
 	TOKEN_URL,
 	WEB_FONT_MESSAGE,
 } from './eslint-rules/style-tokens.mjs'
@@ -22,8 +23,6 @@ const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
 const INVARIANT_URL = `${DOCS_URL}/ARCHITECTURE.md#不変条件`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
 
-const THEME_CLASS_MESSAGE =
-	'dark: で色を分岐しない。テーマの差は theme/tokens.ts の darkColors が作る。dark: を書くのはテーマで DOM を出し分けるときだけ。'
 const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`
 const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL}の2つだけ。他の境界を作らない。 ${BREAKPOINT_URL}`
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
@@ -40,8 +39,6 @@ const WEB_FONT_RESOURCE = `(?:${FONT_FILE}|${FONT_HOST})`
 const PALETTE_COLORS =
 	'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
 const PALETTE_CLASS = `(?:^|[\\s:])!?[a-z]+(?:-[a-z]+)*-(?:${PALETTE_COLORS})-(?:50|[1-9]00|950)\\b`
-// dark: の後ろにも variant が続く。色を持つクラスは、末尾がトークンか Tailwind 既定の色の名前
-const THEME_COLOR_CLASS = `(?:^|[\\s:])dark:(?:[a-z-]+:)*!?[a-z]+(?:-[a-z]+)*-(?:${COLOR_NAMES.join('|')})(?![a-z-])`
 // 任意値の variant（min-[600px]:）は角括弧の検査が落とす
 const BREAKPOINT_CLASS = `(?:^|[\\s:])(?:${OFF_BREAKPOINT_VARIANTS.join('|')}):`
 // 宣言（max-width: 36rem）と混ざらないよう、括弧から見る
