@@ -27,9 +27,9 @@ const lint = (...checks) =>
 
 const hook = (name, source) => write(`.githooks/${name}`, `#!/bin/sh\n${source}\n`)
 
-const settings = (...commands) =>
+const settings = (file, ...commands) =>
 	write(
-		'.claude/settings.json',
+		`.claude/${file}`,
 		JSON.stringify({
 			hooks: {
 				PreToolUse: [
@@ -163,7 +163,7 @@ describe('実装からテスト', () => {
 
 	it('Claude の hook にテストが無い状態を落とす', () => {
 		write('.claude/hooks/code-review-effort.mjs')
-		settings('node "$CLAUDE_PROJECT_DIR/.claude/hooks/code-review-effort.mjs"')
+		settings('settings.json', 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/code-review-effort.mjs"')
 		const { status, stderr } = check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/回している検査に対応するテストが無い/)
@@ -174,28 +174,42 @@ describe('実装からテスト', () => {
 	})
 
 	it('command のどの綴りからも hook を拾う', () => {
-		write('.claude/hooks/a.mjs')
-		write('.claude/hooks/b.mjs')
-		write('.claude/hooks/c.mjs')
+		const names = ['a', 'b', 'c', 'd', 'e']
+		for (const name of names) write(`.claude/hooks/${name}.mjs`)
 		settings(
+			'settings.json',
 			'node "${CLAUDE_PROJECT_DIR}/.claude/hooks/a.mjs"',
 			'node $CLAUDE_PROJECT_DIR/.claude/hooks/b.mjs',
-			'node .claude/hooks/c.mjs',
+			'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/c.mjs',
+			'node ./.claude/hooks/d.mjs',
+			'node .claude/hooks/e.mjs',
 		)
 		const { stderr } = check()
-		for (const name of ['a', 'b', 'c']) expect(stderr).toMatch(`.claude/hooks/${name}.mjs`)
+		for (const name of names) expect(stderr).toMatch(`.claude/hooks/${name}.mjs`)
+	})
+
+	it('settings.local.json に置いた hook も見る', () => {
+		write('.claude/hooks/code-review-effort.mjs')
+		settings('settings.local.json', 'node .claude/hooks/code-review-effort.mjs')
+		expect(check().status).toBe(1)
+
+		write('tests/.claude/hooks/code-review-effort.test.mjs')
+		expect(check().status).toBe(0)
 	})
 
 	it('hook から回らない .claude/hooks/ のファイルにはテストを求めない', () => {
 		write('.claude/hooks/state.mjs')
-		settings()
+		settings('settings.json')
 		expect(check().status).toBe(0)
 	})
 
-	it('読めない settings.json は理由の1行を出して落とす', () => {
-		write('.claude/settings.json', '{')
-		const { status, stderr } = check()
-		expect(status).toBe(1)
-		expect(stderr).toMatch(/hooks を読めない/)
+	it('読めない設定は、どちらのファイルでも理由の1行を出して落とす', () => {
+		for (const file of ['settings.json', 'settings.local.json']) {
+			write(`.claude/${file}`, '{')
+			const { status, stderr } = check()
+			expect(status).toBe(1)
+			expect(stderr).toMatch(`${file}: hooks を読めない`)
+			rmSync(join(root, '.claude', file))
+		}
 	})
 })
