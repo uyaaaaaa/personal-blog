@@ -144,7 +144,19 @@
 
 	watch(activeIndex, async () => {
 		await nextTick()
-		resultsRef.value?.querySelector('.is-active')?.scrollIntoView({ block: 'nearest' })
+
+		const container = resultsRef.value
+		const active = container?.querySelector<HTMLElement>('.is-active')
+		if (!container || !active) return
+
+		const containerRect = container.getBoundingClientRect()
+		const activeRect = active.getBoundingClientRect()
+
+		if (activeRect.top < containerRect.top) {
+			container.scrollTop += activeRect.top - containerRect.top
+		} else if (activeRect.bottom > containerRect.bottom) {
+			container.scrollTop += activeRect.bottom - containerRect.bottom
+		}
 	})
 
 	// 押した位置が外側のときだけ閉じる。入力欄からドラッグして外で離すと click は

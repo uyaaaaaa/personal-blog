@@ -1140,6 +1140,54 @@ const probes = [
 			}
 		},
 	},
+	{
+		// 選択だけ動いて器が追わないと、見えていない行を選んだまま確定して飛ぶ
+		name: 'キー-↓↑ でスクローラが選択を追う',
+		input: true,
+		scroller: true,
+		widths: [1280],
+		run: async (p) => {
+			// 高さを詰めないと、結果の件数によってはあふれず、送っても動く余地が無い
+			await p.setWidth(1280, 420)
+			await p.reload()
+			await p.setWidth(1280, 420)
+			await p.open()
+			await p.typeQuery()
+
+			const rows = await p.evaluate(`
+				const el = $vis(${JSON.stringify(config.scroller)})
+				if (!el) throw new Error('スクローラが見えていない')
+				if (el.scrollHeight <= el.clientHeight) throw new Error('中身があふれていない（送っても動く余地が無い）')
+				return el.children.length
+			`)
+
+			const seen = `
+				const el = $vis(${JSON.stringify(config.scroller)})
+				const active = el.querySelector(LINK + '.is-active')
+				if (!active) return { scrollTop: el.scrollTop, shown: false }
+				const box = el.getBoundingClientRect()
+				const row = active.getBoundingClientRect()
+				return {
+					scrollTop: el.scrollTop,
+					shown: row.top >= box.top - 1 && row.bottom <= box.bottom + 1,
+				}
+			`
+
+			for (let i = 0; i < rows - 1; i++) await p.pressKey('ArrowDown')
+			await p.evaluate('await $frames(2)')
+			const last = await p.evaluate(seen)
+
+			for (let i = 0; i < rows - 1; i++) await p.pressKey('ArrowUp')
+			await p.evaluate('await $frames(2)')
+			const first = await p.evaluate(seen)
+
+			// 先頭に戻した scrollTop は0にならない。器の上の余白は行より上にあり、送る先ではない
+			return {
+				observed: `行=${rows}件 末尾で scrollTop=${last.scrollTop}/見えている=${last.shown} 先頭で scrollTop=${first.scrollTop}/見えている=${first.shown}`,
+				ok: last.shown && first.shown && last.scrollTop > first.scrollTop,
+			}
+		},
+	},
 ]
 
 const main = async () => {

@@ -370,3 +370,40 @@ describe('no-theme-branch', () => {
 		})
 	})
 })
+
+describe('no-scroll-behavior', () => {
+	it('scroll-behavior の宣言を落とす', () => {
+		tester.run('no-scroll-behavior', styleTokens.rules['no-scroll-behavior'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { overscroll-behavior: contain; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { scroll-margin-top: var(--landing-offset); }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { @apply overscroll-contain; }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('html { scroll-behavior: smooth; }'),
+					errors: [{ messageId: 'scrollBehavior' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('html { SCROLL-BEHAVIOR: auto; }'),
+					errors: [{ messageId: 'scrollBehavior' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply scroll-smooth; }'),
+					errors: [{ messageId: 'scrollBehavior' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply md:scroll-auto; }'),
+					errors: [{ messageId: 'scrollBehavior' }],
+				},
+			],
+		})
+	})
+})
