@@ -3,6 +3,7 @@ paths:
   - "eslint.config.mjs"
   - "eslint-rules/**"
   - "scripts/check-*.mjs"
+  - "scripts/article-files.mjs"
   - ".githooks/**"
 ---
 

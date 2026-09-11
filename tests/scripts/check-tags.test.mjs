@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -16,6 +16,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	rmSync(root, { recursive: true, force: true })
+	rmSync(`${root}.md`, { force: true })
 })
 
 const write = (name, source) => {
@@ -64,6 +65,31 @@ describe('check-tags', () => {
 		const { status, stderr } = check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/項目として読めない行がある/)
+	})
+
+	it('symlink で置いた記事も見る', () => {
+		withTags('a.md', 'Nuxt Content')
+		writeFileSync(`${root}.md`, '---\ntitle: "テスト"\ntags:\n  - nuxt-content\n---\n')
+		symlinkSync(`${root}.md`, join(root, 'content/article/b.md'))
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/同じスラッグ "nuxt-content"/)
+	})
+
+	it('下の階層に置いた記事を落とす', () => {
+		mkdirSync(join(root, 'content/article/draft'))
+		withTags('draft/a.md', 'nuxt')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/直下に置く/)
+		expect(stderr).toMatch(/draft\/a\.md/)
+	})
+
+	it('記事のディレクトリが無いときは理由を出す', () => {
+		rmSync(join(root, 'content/article'), { recursive: true })
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/記事のディレクトリを読み取れない/)
 	})
 
 	it('tags を持たない記事と、フロントマターの無いファイルは見ない', () => {
