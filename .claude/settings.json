@@ -1,5 +1,16 @@
 {
 	"hooks": {
+		"SessionStart": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.mjs\"",
+						"timeout": 900
+					}
+				]
+			}
+		],
 		"PreToolUse": [
 			{
 				"matcher": "Skill",
@@ -16,6 +27,15 @@
 					{
 						"type": "command",
 						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/delegate-read.mjs\""
+					}
+				]
+			},
+			{
+				"matcher": "Bash|mcp__github__.*",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/git-guard.mjs\""
 					}
 				]
 			}
