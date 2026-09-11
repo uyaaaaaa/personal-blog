@@ -174,7 +174,7 @@ describe('実装からテスト', () => {
 	})
 
 	it('command のどの綴りからも hook を拾う', () => {
-		const names = ['a', 'b', 'c', 'd', 'e']
+		const names = ['a', 'b', 'c', 'd', 'e', 'f']
 		for (const name of names) write(`.claude/hooks/${name}.mjs`)
 		settings(
 			'settings.json',
@@ -183,6 +183,7 @@ describe('実装からテスト', () => {
 			'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/c.mjs',
 			'node ./.claude/hooks/d.mjs',
 			'node .claude/hooks/e.mjs',
+			'node --no-warnings "$CLAUDE_PROJECT_DIR/.claude/hooks/f.mjs"',
 		)
 		const { stderr } = check()
 		for (const name of names) expect(stderr).toMatch(`.claude/hooks/${name}.mjs`)

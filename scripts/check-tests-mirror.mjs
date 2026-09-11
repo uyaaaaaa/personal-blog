@@ -44,7 +44,7 @@ const bare = (source) => source.replace(/["']/g, '').replace(PROJECT_DIR, '')
 
 // scripts/ にも .claude/hooks/ にも、検査でないもの（harness-journal・session-args・probe）が
 // 居る。どれが検査かは回している側が持っているので、一覧を別に作らずそこから読む
-const CHECK = /node\s+\.?\/?((?:scripts|\.claude\/hooks)\/[^\s;&|<>()]+\.mjs)/g
+const CHECK = /node\s+(?:-\S*\s+)*\.?\/?((?:scripts|\.claude\/hooks)\/[^\s;&|<>()]+\.mjs)/g
 const DELEGATED = /npm run ([\w:-]+)/g
 
 const errors = []
