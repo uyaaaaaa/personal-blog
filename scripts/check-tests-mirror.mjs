@@ -1,9 +1,10 @@
-import { existsSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const ROOT = fileURLToPath(new URL('..', import.meta.url))
+const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
 const TESTS = 'tests'
+const HOOKS = '.githooks'
 const IGNORED = new Set(['node_modules', '.git', '.nuxt', '.output', 'dist', '.verify'])
 
 const walk = (directory) =>
@@ -30,7 +31,44 @@ const sourcesOf = (test) => {
 	]
 }
 
+// 探す側も TEST と同じ綴りを見る。方向によって通る入力が変わらないようにする
+const testsOf = (source) =>
+	['test', 'spec'].map((kind) => `${TESTS}/${source.replace(/\.([cm]?[jt]sx?)$/, `.${kind}.$1`)}`)
+
+// scripts/ には検査でないもの（harness-journal・session-args・probe）も居る。
+// どれが検査かは回している側が持っているので、一覧を別に作らずそこから読む
+const CHECK = /node\s+(scripts\/\S+\.mjs)/g
+const DELEGATED = /npm run ([\w:-]+)/g
+
+// 起点は commit と lint で回るものだけ。全 script を見ると、回っていない検査でない
+// scripts/ にもテストを求める。委譲した先は npm run を辿って拾う
+const runners = () => {
+	const { scripts } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
+	const queue = [
+		scripts.lint,
+		...readdirSync(join(ROOT, HOOKS)).map((name) =>
+			readFileSync(join(ROOT, HOOKS, name), 'utf8'),
+		),
+	]
+
+	const sources = []
+	const seen = new Set()
+	while (queue.length > 0) {
+		const source = queue.pop()
+		sources.push(source)
+		for (const [, name] of source.matchAll(DELEGATED)) {
+			if (seen.has(name) || !Object.hasOwn(scripts, name)) continue
+			seen.add(name)
+			queue.push(scripts[name])
+		}
+	}
+	return sources
+}
+
 const tests = walk('').filter((path) => TEST.test(path))
+const checks = [
+	...new Set(runners().flatMap((source) => [...source.matchAll(CHECK)].map(([, path]) => path))),
+]
 
 const errors = []
 for (const test of tests) {
@@ -45,10 +83,19 @@ for (const test of tests) {
 	errors.push(`${test}: 対応する実装が無い（${sources.join(' / ')}）`)
 }
 
+for (const check of checks) {
+	const candidates = testsOf(check)
+	if (candidates.some((test) => existsSync(join(ROOT, test)))) continue
+
+	errors.push(`${check}: 回している検査に対応するテストが無い（${candidates.join(' / ')}）`)
+}
+
 if (errors.length > 0) {
 	console.error('テストと実装の対応が取れていない:')
 	for (const error of errors) console.error(`  ${error}`)
 	process.exit(1)
 }
 
-console.log(`✔ all tests mirror a source file (${tests.length} tests)`)
+console.log(
+	`✔ tests and sources mirror each other (${tests.length} tests, ${checks.length} checks)`,
+)

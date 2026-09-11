@@ -2,8 +2,6 @@ import { readdirSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const DEFAULT_DIR = fileURLToPath(new URL('../content/article', import.meta.url))
-
 const fail = (...lines) => {
 	for (const line of lines) console.error(line)
 	process.exit(1)
@@ -11,7 +9,8 @@ const fail = (...lines) => {
 
 // 記事は /article/<スラッグ> の1階層にしか載らず、下の階層に置くと prerender が 404 で落ちる
 export const articleFiles = (given) => {
-	const dir = resolve(given ?? DEFAULT_DIR)
+	const root = resolve(given ?? fileURLToPath(new URL('..', import.meta.url)))
+	const dir = join(root, 'content/article')
 
 	let found
 	try {

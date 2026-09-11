@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
@@ -11,6 +11,7 @@ let root
 
 beforeEach(() => {
 	root = mkdtempSync(join(tmpdir(), 'check-tags-'))
+	mkdirSync(join(root, 'content/article'), { recursive: true })
 })
 
 afterEach(() => {
@@ -18,58 +19,82 @@ afterEach(() => {
 	rmSync(`${root}.md`, { force: true })
 })
 
-const frontmatter = (...tags) => `---\ntags:\n${tags.map((tag) => `  - ${tag}\n`).join('')}---\n`
+const write = (name, source) => {
+	writeFileSync(join(root, 'content/article', name), source)
+}
 
-const write = (name, ...tags) => {
-	const path = join(root, name)
-	mkdirSync(dirname(path), { recursive: true })
-	writeFileSync(path, frontmatter(...tags))
+const withTags = (name, ...tags) => {
+	write(name, `---\ntitle: "テスト"\ntags:\n${tags.map((tag) => `  - ${tag}`).join('\n')}\n---\n`)
 }
 
 const check = () => spawnSync(process.execPath, [SCRIPT, root], { encoding: 'utf8' })
 
 describe('check-tags', () => {
-	it('スラッグが重ならないタグを通す', () => {
-		write('a.md', 'Nuxt')
-		write('b.md', 'TypeScript')
+	it('スラッグが一意になるタグを通す', () => {
+		withTags('a.md', 'nuxt', 'github action', '@nuxt/content')
+		withTags('b.md', 'nuxt', 'S3')
 		expect(check().status).toBe(0)
 	})
 
-	it('同じスラッグになるタグを落とす', () => {
-		write('a.md', 'GitHub Actions')
-		write('b.md', 'github-actions')
+	it('同じスラッグになるタグを、持ち主のファイルごと落とす', () => {
+		withTags('a.md', 'Nuxt Content')
+		withTags('b.md', 'nuxt-content')
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/同じスラッグ "github-actions"/)
+		expect(stderr).toMatch(/同じスラッグ "nuxt-content"/)
+		expect(stderr).toMatch(/a\.md/)
+		expect(stderr).toMatch(/b\.md/)
 	})
 
 	it('英数字を含まないタグを落とす', () => {
-		write('a.md', '設計')
-		expect(check().status).toBe(1)
+		withTags('a.md', '日本語')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/スラッグが空になる/)
 	})
 
-	it('ディレクトリが無いときは理由を出して落とす', () => {
-		const { status, stderr } = spawnSync(process.execPath, [SCRIPT, join(root, 'none')], {
-			encoding: 'utf8',
-		})
+	it('1行で書いた tags を落とす', () => {
+		write('a.md', '---\ntitle: "テスト"\ntags: [nuxt, vue]\n---\n')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/1行1件のリストで書く/)
+	})
+
+	it('項目として読めない行を落とす', () => {
+		write('a.md', '---\ntitle: "テスト"\ntags:\n  nuxt\n---\n')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/項目として読めない行がある/)
+	})
+
+	it('symlink で置いた記事も見る', () => {
+		withTags('a.md', 'Nuxt Content')
+		writeFileSync(`${root}.md`, '---\ntitle: "テスト"\ntags:\n  - nuxt-content\n---\n')
+		symlinkSync(`${root}.md`, join(root, 'content/article/b.md'))
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/同じスラッグ "nuxt-content"/)
+	})
+
+	it('下の階層に置いた記事を落とす', () => {
+		mkdirSync(join(root, 'content/article/draft'))
+		withTags('draft/a.md', 'nuxt')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/直下に置く/)
+		expect(stderr).toMatch(/draft\/a\.md/)
+	})
+
+	it('記事のディレクトリが無いときは理由を出す', () => {
+		rmSync(join(root, 'content/article'), { recursive: true })
+		const { status, stderr } = check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/記事のディレクトリを読み取れない/)
 	})
 
-	it('symlink で置いた記事も見る', () => {
-		write('a.md', 'Nuxt')
-		writeFileSync(`${root}.md`, frontmatter('nuxt'))
-		symlinkSync(`${root}.md`, join(root, 'b.md'))
-		const { status, stderr } = check()
-		expect(status).toBe(1)
-		expect(stderr).toMatch(/同じスラッグ "nuxt"/)
-	})
-
-	it('下の階層に置いた記事を落とす', () => {
-		write('a.md', 'Nuxt')
-		write('nested/b.md', 'nuxt')
-		const { status, stderr } = check()
-		expect(status).toBe(1)
-		expect(stderr).toMatch(/nested\/b\.md/)
+	it('tags を持たない記事と、フロントマターの無いファイルは見ない', () => {
+		write('a.md', '---\ntitle: "テスト"\n---\n')
+		write('b.md', '## 見出しから始まる\n\ntags: [nuxt, vue]\n')
+		expect(check().status).toBe(0)
 	})
 })

@@ -159,6 +159,21 @@ describe('テーマごとの分岐', () => {
 		).toBe(0)
 	})
 
+	it('色を取らない接頭辞のクラスは通す', async () => {
+		expect(await themeBranchesIn('app/pages/a.vue', sfc('<p class="dark:box-border" />'))).toBe(
+			0,
+		)
+		expect(await themeBranchesIn('app/pages/a.vue', sfc('<p class="dark:align-sub" />'))).toBe(
+			0,
+		)
+	})
+
+	it('辺を指す色のクラスは落とす', async () => {
+		expect(
+			await themeBranchesIn('app/pages/a.vue', sfc('<p class="dark:border-t-border" />')),
+		).toBeGreaterThan(0)
+	})
+
 	it('script の prefers-color-scheme を落とす', async () => {
 		expect(
 			await themeBranchesIn(

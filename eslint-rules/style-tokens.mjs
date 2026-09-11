@@ -11,13 +11,21 @@ export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
 
 export const THEME_BRANCH_MESSAGE =
-	'テーマごとに宣言を分岐しない。差は theme/tokens.ts の darkColors が作る。.dark に書けるのはカスタムプロパティの再定義だけ。'
+	'テーマごとに宣言を分岐しない。差は theme/tokens.ts の darkColors が作る。.dark と .light に書けるのはカスタムプロパティの再定義だけ。'
 
 export const COLOR_SCHEME_MESSAGE =
-	'prefers-color-scheme で分岐しない。テーマを持つのは .dark クラスで、色の差は theme/tokens.ts の darkColors が作る。'
+	'prefers-color-scheme で分岐しない。テーマを持つのは .dark / .light クラスで、色の差は theme/tokens.ts の darkColors が作る。'
 
-// 色を持つクラスの綴りを見るための語彙。white / black / transparent / current は Tailwind が既定で持つ
-export const COLOR_NAMES = [...Object.keys(colors), 'white', 'black', 'transparent', 'current']
+export const THEME_CLASS_MESSAGE =
+	'dark: で色を分岐しない。テーマの差は theme/tokens.ts の darkColors が作る。dark: を書くのはテーマで DOM を出し分けるときだけ。'
+
+// 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる
+const COLOR_PREFIX =
+	'text|bg|border|divide|outline|ring|ring-offset|shadow|accent|caret|decoration|fill|stroke|placeholder|from|via|to'
+// white / black / transparent / current は Tailwind が既定で持つ
+const COLOR_NAME = [...Object.keys(colors), 'white', 'black', 'transparent', 'current'].join('|')
+// dark: の後ろにも variant が続く。辺を指す指定（border-t）は1文字
+export const THEME_COLOR_CLASS = `(?:^|[\\s:])dark:(?:[a-z-]+:)*!?(?:${COLOR_PREFIX})(?:-[a-z])?-(?:${COLOR_NAME})(?![a-z-])`
 
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
@@ -177,9 +185,11 @@ function eachStyleBlock(context, visit) {
 const REDUCED_MOTION = /prefers-reduced-motion/i
 const MEDIA_CONDITION = /\(([^()]*)\)/g
 const WIDTH_FEATURE = /\bwidth\b/i
-// `html.dark` `.dark .callout` `:is(.dark)` のいずれも綴りで拾う。`.darkroom` は後ろで外す
-const DARK_SELECTOR = /\.dark(?![\w-])/
+// colorMode の classSuffix が空なので、テーマは html の dark / light で表れる。
+// `html.dark` `.dark .callout` `:is(.light)` のいずれも綴りで拾い、`.darkroom` は後ろで外す
+const THEME_SELECTOR = /\.(?:dark|light)(?![\w-])/
 const COLOR_SCHEME = /prefers-color-scheme/i
+const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
 
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
 const CHECKS = {
@@ -207,8 +217,8 @@ const CHECKS = {
 		},
 		find(root) {
 			const found = []
-			root.walkDecls((decl) => {
-				const text = stripNonValues(decl.value).replace(CUSTOM_PROPERTY, '')
+			const check = (value, node) => {
+				const text = stripNonValues(value).replace(CUSTOM_PROPERTY, '')
 				const matches = [
 					...text.matchAll(HEX),
 					...text.matchAll(COLOR_FUNCTION),
@@ -219,9 +229,13 @@ const CHECKS = {
 				for (const [literal] of matches) {
 					// var() を含む関数はトークン由来（Callout の --callout-rgb）
 					if (literal.includes('var(') || isWhiteOrBlack(literal)) continue
-					found.push({ node: decl, messageId: 'literal', data: { literal } })
+					found.push({ node, messageId: 'literal', data: { literal } })
 				}
-			})
+			}
+			root.walkDecls((decl) => check(decl.value, decl))
+			// walkDecls は at-rule を見ないので、@apply の任意値は別に歩く。
+			// 他の at-rule まで見ると、@keyframes の名前が色の名前に当たる
+			root.walkAtRules('apply', (rule) => check(rule.params, rule))
 			return found
 		},
 	},
@@ -293,19 +307,29 @@ const CHECKS = {
 		messages: {
 			themeBranch: THEME_BRANCH_MESSAGE,
 			colorScheme: COLOR_SCHEME_MESSAGE,
+			themeClass: THEME_CLASS_MESSAGE,
 		},
 		find(root) {
 			const found = []
 			root.walkRules((rule) => {
-				if (!DARK_SELECTOR.test(rule.selector)) return
+				if (!THEME_SELECTOR.test(rule.selector)) return
 				rule.walkDecls((decl) => {
 					if (decl.prop.startsWith('--')) return
 					found.push({ node: decl, messageId: 'themeBranch' })
 				})
+				// 同じく、テーマのクラスの下に置いた @apply も歩く
+				rule.walkAtRules('apply', (at) =>
+					found.push({ node: at, messageId: 'themeBranch' }),
+				)
 			})
 			root.walkAtRules('media', (rule) => {
 				if (COLOR_SCHEME.test(rule.params))
 					found.push({ node: rule, messageId: 'colorScheme' })
+			})
+			// クラスの判定は template 側と同じものを使う
+			root.walkAtRules('apply', (rule) => {
+				if (THEME_CLASS.test(rule.params))
+					found.push({ node: rule, messageId: 'themeClass' })
 			})
 			return found
 		},
