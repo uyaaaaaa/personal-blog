@@ -13,6 +13,7 @@ import styleTokens, {
 	OFF_BREAKPOINT_VARIANTS,
 	SCROLL_BEHAVIOR_CLASS,
 	SCROLL_BEHAVIOR_MESSAGE,
+	SCROLL_BEHAVIOR_PROPERTY,
 	THEME_CLASS_MESSAGE,
 	THEME_COLOR_CLASS,
 	TOKEN_URL,
@@ -86,8 +87,12 @@ const PAGE_SCROLL = [
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 	{
-		selector:
-			':matches(Literal[value=/scroll-behavior/i], TemplateElement[value.cooked=/scroll-behavior/i])',
+		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_PROPERTY}/i], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_PROPERTY}/i])`,
+		message: SCROLL_BEHAVIOR_MESSAGE,
+	},
+	// 設定が html に配るクラス。テンプレートの静的な class は VLiteral なので別に見る
+	{
+		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_CLASS}/], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_CLASS}/])`,
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 ]
@@ -219,12 +224,13 @@ const TEMPLATE_RESTRICTIONS = [
 		message: IMPORTANT_MESSAGE,
 	},
 	...PAGE_SCROLL,
+	// 静的な属性値は VLiteral で、式の Literal を見る PAGE_SCROLL に当たらない
 	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${SCROLL_BEHAVIOR_CLASS}/]`,
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 	{
-		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${SCROLL_BEHAVIOR_CLASS}/], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_CLASS}/])`,
+		selector: `VAttribute[directive=false][key.name='style'] > VLiteral[value=/${SCROLL_BEHAVIOR_PROPERTY}/i]`,
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 	// テンプレートに直接書く <link href>。属性を限らず、読み込む先の綴りで見る
@@ -436,7 +442,8 @@ export default [
 		},
 	},
 	{
-		// 設定ファイルは app/ の規約の外。読み込みの経路（modules・css・head.link）だけを見る
+		// 設定ファイルは app/ の規約の外。読み込みの経路（modules・css・head.link）と、
+		// head が html に配る着地位置の指定だけを見る
 		files: ['*.config.ts'],
 		languageOptions: {
 			parser: tsParser,
@@ -446,7 +453,7 @@ export default [
 			},
 		},
 		rules: {
-			'no-restricted-syntax': ['error', ...WEB_FONT],
+			'no-restricted-syntax': ['error', ...WEB_FONT, ...PAGE_SCROLL],
 		},
 	},
 	{

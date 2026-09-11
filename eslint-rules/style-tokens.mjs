@@ -22,7 +22,8 @@ export const THEME_CLASS_MESSAGE =
 
 export const SCROLL_BEHAVIOR_MESSAGE = `scroll-behavior は宣言しない。ページ遷移とブラウザバックの位置復元までアニメーションする。滑らかに送るのは useScrollTo が呼び出しごとに指定する。 ${INVARIANT_URL}`
 
-// overscroll-behavior と綴りが重なるので、前が区切りか終端のものだけを見る
+// overscroll-behavior / overscroll-contain と綴りが重なるので、前が区切りか終端のものだけを見る
+export const SCROLL_BEHAVIOR_PROPERTY = '(?<![a-z-])scroll-behavior'
 export const SCROLL_BEHAVIOR_CLASS = '(?:^|[\\s:])(?:[a-z-]+:)*!?scroll-(?:smooth|auto)(?![a-z-])'
 
 // 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる

@@ -282,6 +282,27 @@ describe('ページ内ジャンプの着地位置', () => {
 		).toBeGreaterThan(0)
 	})
 
+	it('静的な style 属性の宣言を落とす', async () => {
+		expect(
+			await landingsIn('app/pages/a.vue', sfc('<div style="scroll-behavior: smooth" />')),
+		).toBeGreaterThan(0)
+	})
+
+	it('設定ファイルが html に配る指定を落とす', async () => {
+		expect(
+			await landingsIn(
+				'nuxt.config.ts',
+				config("\tapp: { head: { htmlAttrs: { class: 'scroll-smooth' } } },"),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn(
+				'nuxt.config.ts',
+				config("\tapp: { head: { htmlAttrs: { style: 'scroll-behavior: smooth' } } },"),
+			),
+		).toBeGreaterThan(0)
+	})
+
 	it('集約先は通す', async () => {
 		expect(
 			await landingsIn(
@@ -310,5 +331,17 @@ describe('ページ内ジャンプの着地位置', () => {
 		expect(await landingsIn('app/pages/a.vue', sfc('<div class="overscroll-contain" />'))).toBe(
 			0,
 		)
+		expect(
+			await landingsIn(
+				'app/pages/a.vue',
+				sfc('<div style="overscroll-behavior: contain" />'),
+			),
+		).toBe(0)
+		expect(
+			await landingsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('overscroll-behavior', 'contain')",
+			),
+		).toBe(0)
 	})
 })
