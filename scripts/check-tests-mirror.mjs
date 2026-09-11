@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url'
 const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
 const TESTS = 'tests'
 const HOOKS = '.githooks'
-// Claude は両方を読む。片方だけ見ると、もう片方が抜け道になる
 const SETTINGS = ['.claude/settings.json', '.claude/settings.local.json']
 const IGNORED = new Set(['node_modules', '.git', '.nuxt', '.output', 'dist', '.verify'])
 
@@ -37,20 +36,14 @@ const sourcesOf = (test) => {
 const testsOf = (source) =>
 	['test', 'spec'].map((kind) => `${TESTS}/${source.replace(/\.([cm]?[jt]sx?)$/, `.${kind}.$1`)}`)
 
-// command はシェルの1行。引用符と $CLAUDE_PROJECT_DIR は先に剥がし、残ったパスだけを見る。
-// 綴りを並べて拾うと、並べ落とした綴り（変数の外で閉じる引用符）が抜け道になる
 const PROJECT_DIR = /\$(?:CLAUDE_PROJECT_DIR\b|\{CLAUDE_PROJECT_DIR\})/g
 const bare = (source) => source.replace(/["']/g, '').replace(PROJECT_DIR, '')
 
-// scripts/ にも .claude/hooks/ にも、検査でないもの（harness-journal・session-args・probe）が
-// 居る。どれが検査かは回している側が持っているので、一覧を別に作らずそこから読む
 const CHECK = /node\s+(?:-\S*\s+)*\.?\/?((?:scripts|\.claude\/hooks)\/[^\s;&|<>()]+\.mjs)/g
 const DELEGATED = /npm run ([\w:-]+)/g
 
 const errors = []
 
-// Claude が回す hook。イベント名・matcher の並びは設定側の都合なので、形を決め打ちせず
-// hooks の下から command だけを集める
 const hookCommands = () =>
 	SETTINGS.filter((path) => existsSync(join(ROOT, path))).flatMap((path) => {
 		try {
@@ -66,8 +59,6 @@ const hookCommands = () =>
 		}
 	})
 
-// 起点は commit と lint と Claude の hook で回るものだけ。全 script を見ると、回っていない
-// 検査でない scripts/ にもテストを求める。委譲した先は npm run を辿って拾う
 const runners = () => {
 	const { scripts } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
 	const queue = [

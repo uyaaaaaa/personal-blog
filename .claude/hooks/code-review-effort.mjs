@@ -42,7 +42,5 @@ if (process.argv[1]?.endsWith('code-review-effort.mjs')) {
 				}),
 			)
 		}
-	} catch {
-		// 握りつぶす
-	}
+	} catch {}
 }
