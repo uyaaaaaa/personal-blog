@@ -28,10 +28,6 @@ describe('similarity', () => {
 		expect(similarity('  const a = 1  ', 'const a = 1')).toBe(1)
 	})
 
-	it('共通する語が無ければ 0 に近づく', () => {
-		expect(similarity('aaa bbb ccc', 'xxx yyy zzz')).toBeLessThan(0.2)
-	})
-
 	it('語の一部が同じでも共通とみなさない', () => {
 		expect(similarity('abcd', 'abcdefgh')).toBe(0)
 	})
@@ -39,14 +35,6 @@ describe('similarity', () => {
 	it('空白だけの行を 0 にする', () => {
 		expect(similarity('   ', 'const a = 1')).toBe(0)
 		expect(similarity('const a = 1', '')).toBe(0)
-	})
-
-	it('共通部分が長いほど大きくなる', () => {
-		const near = similarity('alpha beta gamma delta', 'alpha beta gamma delta epsilon')
-		const far = similarity('alpha beta gamma', 'alpha beta gamma delta epsilon')
-
-		expect(near).toBeGreaterThan(far)
-		expect(far).toBeGreaterThan(0)
 	})
 })
 

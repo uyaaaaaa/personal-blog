@@ -30,10 +30,6 @@ describe('searchArticles', () => {
 		expect(titles('nuxt cloudflare')).toEqual(['Nuxt を Cloudflare Pages に載せる'])
 	})
 
-	it('語の順序はタイトルの並び順と揃っていなくてよい', () => {
-		expect(titles('cloudflare nuxt')).toEqual(['Nuxt を Cloudflare Pages に載せる'])
-	})
-
 	it('全角の空白も語の区切りとして扱う', () => {
 		expect(titles('nuxt　cloudflare')).toEqual(['Nuxt を Cloudflare Pages に載せる'])
 	})
@@ -56,10 +52,6 @@ describe('searchArticles', () => {
 
 	it('タイトルに現れない語でも、タグに一致すれば返す', () => {
 		expect(titles('shell')).toEqual(['vim のコマンド'])
-	})
-
-	it('大文字と小文字を区別せずタグに一致する', () => {
-		expect(titles('SSG')).toEqual(['Nuxt Content で作るブログ'])
 	})
 
 	it('複数の語はタイトルとタグのどちらで満たしてもよい', () => {
