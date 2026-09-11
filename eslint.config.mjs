@@ -80,10 +80,11 @@ const PAGE_SCROLL = [
 		selector: "CallExpression[callee.property.name='scrollIntoView']",
 		message: LANDING_MESSAGE,
 	},
-	// 宣言を JS から書く経路と、着地位置を JS が決める router の options
+	// 宣言を JS から書く経路と、着地位置を JS が決める router の options。
+	// Type 付きは Nuxt 既定の router.options が hash ジャンプと位置復元の behavior に渡す
 	{
 		selector:
-			":matches(MemberExpression[property.name='scrollBehavior'], Property[key.name='scrollBehavior'], Property[key.value='scrollBehavior'])",
+			':matches(MemberExpression[property.name=/^scrollBehavior(Type)?$/], Property[key.name=/^scrollBehavior(Type)?$/], Property[key.value=/^scrollBehavior(Type)?$/])',
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 	{

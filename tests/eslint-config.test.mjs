@@ -265,6 +265,19 @@ describe('ページ内ジャンプの着地位置', () => {
 				'export default { scrollBehavior: () => ({ top: 0 }) }',
 			),
 		).toBeGreaterThan(0)
+		// Nuxt 既定の router.options が hash ジャンプと位置復元の behavior に渡す
+		expect(
+			await landingsIn(
+				'app/router.options.ts',
+				"export default { scrollBehaviorType: 'smooth' }",
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn(
+				'nuxt.config.ts',
+				config("\trouter: { options: { scrollBehaviorType: 'smooth' } },"),
+			),
+		).toBeGreaterThan(0)
 	})
 
 	it('テンプレートのクラスと式を落とす', async () => {
