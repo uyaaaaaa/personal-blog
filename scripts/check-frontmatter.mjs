@@ -1,16 +1,22 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { parseFrontMatter } from 'remark-mdc'
 import { articleSchema } from '../content.schema.ts'
+import { articleFiles, NESTED } from './article-files.mjs'
 
-const ARTICLE_DIR = fileURLToPath(new URL('../content/article', import.meta.url))
+const fail = (...lines) => {
+	for (const line of lines) console.error(line)
+	process.exit(1)
+}
 
-const files = readdirSync(ARTICLE_DIR, { recursive: true }).filter((name) => name.endsWith('.md'))
+const { dir, files, nested } = articleFiles(process.argv[2])
+if (nested.length > 0) {
+	fail(NESTED, ...nested.map((path) => `  ${path}`))
+}
 
 const errors = []
 for (const name of files) {
-	const { data } = parseFrontMatter(readFileSync(join(ARTICLE_DIR, name), 'utf8'))
+	const { data } = parseFrontMatter(readFileSync(join(dir, name), 'utf8'))
 	const result = articleSchema.safeParse(data)
 	if (result.success) continue
 
@@ -21,9 +27,10 @@ for (const name of files) {
 }
 
 if (errors.length > 0) {
-	console.error('フロントマターがスキーマ（content.schema.ts）に合わない:')
-	for (const error of errors) console.error(`  ${error}`)
-	process.exit(1)
+	fail(
+		'フロントマターがスキーマ（content.schema.ts）に合わない:',
+		...errors.map((error) => `  ${error}`),
+	)
 }
 
 console.log(`✔ all frontmatter matches the schema (${files.length} articles)`)

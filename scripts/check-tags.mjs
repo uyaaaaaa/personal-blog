@@ -1,9 +1,7 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { tagToSlug } from '../app/utils/tag.ts'
-
-const ARTICLE_DIR = fileURLToPath(new URL('../content/article', import.meta.url))
+import { articleFiles, NESTED } from './article-files.mjs'
 
 const readFrontmatter = (source) => {
 	const matched = source.match(/^---\r?\n([\s\S]*?)\r?\n---/)
@@ -37,10 +35,15 @@ const fail = (...lines) => {
 	process.exit(1)
 }
 
+const { dir, files, nested } = articleFiles(process.argv[2])
+if (nested.length > 0) {
+	fail(NESTED, ...nested.map((path) => `  ${path}`))
+}
+
 const owners = new Map()
 try {
-	for (const name of readdirSync(ARTICLE_DIR).filter((name) => name.endsWith('.md'))) {
-		const frontmatter = readFrontmatter(readFileSync(join(ARTICLE_DIR, name), 'utf8'))
+	for (const name of files) {
+		const frontmatter = readFrontmatter(readFileSync(join(dir, name), 'utf8'))
 		if (frontmatter === null) continue
 		for (const tag of readTags(frontmatter, name)) {
 			if (!owners.has(tag)) owners.set(tag, name)
