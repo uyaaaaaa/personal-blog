@@ -57,6 +57,7 @@
 	import { useScrollTo } from '~/composables/useScrollTo'
 	import { useTocActive } from '~/composables/useTocActive'
 	import { useIsDesktop } from '~/composables/useIsDesktop'
+	import { deltaToCenterIfHidden } from '~/utils/scroll'
 
 	const props = defineProps<{
 		links: any[]
@@ -77,18 +78,13 @@
 		await nextTick()
 
 		const container = navRef.value
-		if (!container || container.scrollHeight <= container.clientHeight) return
+		const link = container?.querySelector<HTMLElement>(`a[href="#${CSS.escape(id)}"]`)
+		if (!container || !link) return
 
-		const link = container.querySelector<HTMLElement>(`a[href="#${CSS.escape(id)}"]`)
-		if (!link) return
-
-		const containerRect = container.getBoundingClientRect()
-		const linkRect = link.getBoundingClientRect()
-
-		if (linkRect.top < containerRect.top || linkRect.bottom > containerRect.bottom) {
-			container.scrollTop +=
-				linkRect.top - containerRect.top - containerRect.height / 2 + linkRect.height / 2
-		}
+		container.scrollTop += deltaToCenterIfHidden(
+			container.getBoundingClientRect(),
+			link.getBoundingClientRect(),
+		)
 	})
 </script>
 

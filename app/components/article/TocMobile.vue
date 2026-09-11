@@ -99,6 +99,7 @@
 	import { useTocActive } from '~/composables/useTocActive'
 	import { useIsDesktop } from '~/composables/useIsDesktop'
 	import { useScrollFrame } from '~/composables/useScrollFrame'
+	import { deltaToCenter } from '~/utils/scroll'
 
 	const props = defineProps<{
 		links: any[]
@@ -119,17 +120,15 @@
 		await nextTick()
 
 		const container = dropdownRef.value
-		if (!container || container.scrollHeight <= container.clientHeight) return
-
-		const link = container.querySelector<HTMLElement>(
+		const link = container?.querySelector<HTMLElement>(
 			`a[href="#${CSS.escape(activeId.value)}"]`,
 		)
-		if (!link) return
+		if (!container || !link) return
 
-		const containerRect = container.getBoundingClientRect()
-		const linkRect = link.getBoundingClientRect()
-		container.scrollTop +=
-			linkRect.top - containerRect.top - containerRect.height / 2 + linkRect.height / 2
+		container.scrollTop += deltaToCenter(
+			container.getBoundingClientRect(),
+			link.getBoundingClientRect(),
+		)
 	})
 	const isSticky = ref(false)
 
