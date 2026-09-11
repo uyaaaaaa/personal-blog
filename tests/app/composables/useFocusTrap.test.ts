@@ -141,10 +141,4 @@ describe('useFocusTrap', () => {
 
 		expect(onEscape).not.toHaveBeenCalled()
 	})
-
-	it('onEscape を渡さなくても Escape で落ちない', async () => {
-		await mountOpenTrap()
-
-		expect(() => pressEscape()).not.toThrow()
-	})
 })

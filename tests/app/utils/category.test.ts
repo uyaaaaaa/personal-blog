@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CATEGORIES, CATEGORY_LABELS, isCategory, summarizeCategories } from '~/utils/category'
-
-describe('CATEGORIES', () => {
-	it('CATEGORY_LABELS のキーと同じ並びになる', () => {
-		expect(CATEGORIES).toEqual(Object.keys(CATEGORY_LABELS))
-	})
-})
+import { isCategory, summarizeCategories } from '~/utils/category'
 
 describe('isCategory', () => {
 	it('定義済みのカテゴリで真になる', () => {

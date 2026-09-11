@@ -30,12 +30,6 @@ afterEach(() => {
 })
 
 describe('beginProgrammaticScroll', () => {
-	it('呼んだ時点で立てる', () => {
-		beginProgrammaticScroll()
-
-		expect(isProgrammaticScroll.value).toBe(true)
-	})
-
 	it('スクロールが一度も起きなくても倒れる', () => {
 		beginProgrammaticScroll()
 

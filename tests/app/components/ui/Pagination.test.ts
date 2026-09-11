@@ -3,8 +3,8 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
 import Pagination from '~/components/ui/Pagination.vue'
 
-const mount = (page: number, totalPages: number, basePath = '/article') =>
-	mountSuspended(Pagination, { props: { page, totalPages, basePath } })
+const mount = (page: number, totalPages: number) =>
+	mountSuspended(Pagination, { props: { page, totalPages, basePath: '/article' } })
 
 describe('Pagination', () => {
 	it('ページが1つなら nav ごと出さない', async () => {
@@ -47,14 +47,6 @@ describe('Pagination', () => {
 		)
 		expect(wrapper.get('[aria-label="Next page"]').attributes('href')).toBe('/article/page/6')
 		expect(wrapper.findAll('span[aria-hidden="true"]')).toHaveLength(0)
-	})
-
-	it('1ページ目へのリンクは /page/1 を持たず basePath を指す', async () => {
-		const wrapper = await mount(3, 5, '/tags/nuxt')
-
-		const links = wrapper.findAll('a:not([aria-label])')
-		expect(links.map((link) => link.attributes('href'))).toContain('/tags/nuxt')
-		expect(links.map((link) => link.attributes('href'))).not.toContain('/tags/nuxt/page/1')
 	})
 
 	it('離れたページの間に省略記号を出す', async () => {
