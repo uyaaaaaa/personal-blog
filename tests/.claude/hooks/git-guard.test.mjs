@@ -27,8 +27,13 @@ describe('decide', () => {
 	it('hooksPath の差し替えと取り外しだけを止め、読みと設定し直しは通す', () => {
 		expect(decide(bash('git config core.hooksPath /dev/null'), ask)).toMatch('core.hooksPath')
 		expect(decide(bash('git config --unset core.hooksPath'), ask)).toMatch('core.hooksPath')
+		expect(decide(bash('git config --remove-section core'), ask)).toMatch('core.hooksPath')
+		expect(decide(bash('git --config-env=core.hooksPath=X commit'), ask)).toMatch(
+			'core.hooksPath',
+		)
 		expect(decide(bash('git config --get core.hooksPath'), ask)).toBeNull()
 		expect(decide(bash('git config core.hooksPath .githooks'), ask)).toBeNull()
+		expect(decide(bash('git config --remove-section branch.old'), ask)).toBeNull()
 	})
 
 	it('フックが有効になっていないセッションの commit を止める', () => {
@@ -68,6 +73,14 @@ describe('decide', () => {
 		expect(decide(bash('git push origin claude/nope'), ask)).toMatch('ブランチ名')
 		expect(decide(bash('git checkout -b claude/issue-291-8ci6iu'), ask)).toBeNull()
 		expect(decide(bash('git switch -c claude/git-guard-a1b2c3'), ask)).toBeNull()
+	})
+
+	it('長い綴りの作成も短いほうと同じ判定に載せる', () => {
+		expect(decide(bash('git switch --create main'), ask)).toMatch('main')
+		expect(decide(bash('git switch --force-create fix-291'), ask)).toMatch('ブランチ名')
+		expect(decide(bash('git switch --orphan fix-291'), ask)).toMatch('ブランチ名')
+		expect(decide(bash('git switch --create claude/git-guard-a1b2c3'), ask)).toBeNull()
+		expect(decide(bash('git switch main'), ask)).toBeNull()
 	})
 
 	it('ブランチを作らない git は通す', () => {

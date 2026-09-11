@@ -58,15 +58,18 @@ const segments = (command) => {
 	return found
 }
 
-// サブコマンドより前に置ける git 自身のオプション。値を取るものは次のトークンが値
+// サブコマンドより前に置ける git 自身のオプション。値を取るものは次のトークンか、= の後ろが値
 const VALUED = new Set(['-c', '--config-env', '-C', '--git-dir', '--work-tree', '--namespace'])
+const ATTACHED = /^(--[a-z-]+)=([\s\S]*)$/
 
 const parse = (tokens) => {
 	const values = []
 	let at = 1
 	while (at < tokens.length && tokens[at].startsWith('-')) {
-		if (VALUED.has(tokens[at])) values.push(tokens[at + 1] ?? '')
-		at += VALUED.has(tokens[at]) ? 2 : 1
+		const attached = ATTACHED.exec(tokens[at])
+		if (attached && VALUED.has(attached[1])) values.push(attached[2])
+		else if (VALUED.has(tokens[at])) values.push(tokens[at + 1] ?? '')
+		at += !attached && VALUED.has(tokens[at]) ? 2 : 1
 	}
 	return { values, subcommand: tokens[at] ?? '', args: tokens.slice(at + 1) }
 }
@@ -77,7 +80,7 @@ const FORCE = /^(?:-[a-zA-Z]*f[a-zA-Z]*|--force(?:-with-lease|-if-includes)?(?:=
 const PUSH_VALUED = new Set(['-o', '--push-option', '--repo', '--receive-pack', '--exec'])
 const NEW_BRANCH = {
 	checkout: /^(?:-[bB]|--orphan)$/,
-	switch: /^(?:-[cC]|--orphan)$/,
+	switch: /^(?:-[cC]|--create|--force-create|--orphan)$/,
 	worktree: /^-[bB]$/,
 }
 const RENAME = /^(?:-[mMcC]|--move|--copy)$/
@@ -156,6 +159,10 @@ const git = (segment, ask) => {
 	}
 
 	if (subcommand === 'config') {
+		// core の節ごと消せば hooksPath も消える
+		if (args.includes('--remove-section') && args.some((arg) => /^core$/i.test(arg))) {
+			return `core.hooksPath を外すと commit-msg も pre-commit も走らない`
+		}
 		const at = args.findIndex((arg) => /^core\.hooksPath$/i.test(arg))
 		if (at === -1) return null
 		if (args.some((arg) => arg.startsWith('--unset'))) {
