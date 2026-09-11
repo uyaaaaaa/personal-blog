@@ -20,16 +20,34 @@ const TOOLS = {
 	enable_pr_auto_merge: 'マージするかは書き手が判断する',
 }
 
-// & と ; と | で切り、クォートの中は割らない。git で始まる区間だけを見る
-const TOKEN = /\d*(?:>>|<<|[<>])&?\d*|&&|\|\||[;|&\n]|"(?:[^"\\]|\\.)*"|'[^']*'|[^\s;|&\n"']+/g
-const SEPARATOR = new Set(['&&', '||', ';', '|', '&', '\n'])
+// & と ; と | と括弧で切り、クォートの中は割らない。git で始まる区間だけを見る
+const TOKEN =
+	/\d*(?:>>|<<-?|[<>])&?\d*|&&|\|\||[;|&\n(){}]|"(?:[^"\\]|\\.)*"|'[^']*'|[^\s;|&\n(){}"']+/g
+const SEPARATOR = new Set(['&&', '||', ';', '|', '&', '\n', '(', ')', '{', '}'])
 const unquote = (token) => token.replace(/^"([\s\S]*)"$/, '$1').replace(/^'([\s\S]*)'$/, '$1')
 
 // リダイレクトの向き先は git の引数ではない。演算子だけの綴りなら次のトークンも落とす
 const REDIRECT = /^\d*[<>]+/
 
+// heredoc の本体はシェルに渡す文字列で、コマンドではない
+const HEREDOC = /<<-?\s*(["']?)([A-Za-z_][A-Za-z0-9_]*)\1/g
+
+const withoutHeredocs = (command) => {
+	const kept = []
+	const ends = []
+	for (const line of command.split('\n')) {
+		if (ends.length > 0) {
+			if (line.trim() === ends[0]) ends.shift()
+			continue
+		}
+		kept.push(line)
+		for (const [, , tag] of line.matchAll(HEREDOC)) ends.push(tag)
+	}
+	return kept.join('\n')
+}
+
 const segments = (command) => {
-	const tokens = [...command.matchAll(TOKEN)].map(([token]) => token)
+	const tokens = [...withoutHeredocs(command).matchAll(TOKEN)].map(([token]) => token)
 	const found = [[]]
 	for (let at = 0; at < tokens.length; at += 1) {
 		const token = tokens[at]
@@ -63,6 +81,11 @@ const NEW_BRANCH = {
 	worktree: /^-[bB]$/,
 }
 const RENAME = /^(?:-[mMcC]|--move|--copy)$/
+// これ以外のオプションが付いた `git branch` は、一覧・削除・上流の設定でブランチを作らない
+const BRANCH_CREATE = /^(?:-f|--force|-t|--track|--no-track|-q|--quiet)$/
+const REBASING = /^(?:-[a-zA-Z]*r[a-zA-Z]*|--rebase(?:=(?!false).*)?)$/
+// 前置きの環境変数とパスは綴りが変わるだけで、走るのは git
+const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/
 
 const shown = (name) => (name === '' ? '（不明）' : name)
 
@@ -107,14 +130,25 @@ const created = (args, flag) => {
 	return at === -1 ? null : named(args[at + 1] ?? '')
 }
 
-const renamed = (args) => {
-	if (args.some((arg) => arg.startsWith('-') && !RENAME.test(arg))) return null
-	const name = args.filter((arg) => !arg.startsWith('-')).pop()
-	return name === undefined ? null : named(name)
+// 改名は新しい名前が最後、作成は名前が最初で、続くのは起点
+const branched = (args) => {
+	const flags = args.filter((arg) => arg.startsWith('-'))
+	const positional = args.filter((arg) => !arg.startsWith('-'))
+	if (positional.length === 0) return null
+	if (flags.some((flag) => RENAME.test(flag))) return named(positional.at(-1))
+	return flags.every((flag) => BRANCH_CREATE.test(flag)) ? named(positional[0]) : null
 }
 
-const git = (tokens, ask) => {
-	if (tokens[0] !== 'git') return null
+const invoked = (tokens) => {
+	let at = 0
+	while (at < tokens.length && (ASSIGNMENT.test(tokens[at]) || tokens[at] === 'env')) at += 1
+	const name = tokens[at]?.replace(/^.*\//, '')
+	return name === 'git' ? tokens.slice(at) : null
+}
+
+const git = (segment, ask) => {
+	const tokens = invoked(segment)
+	if (tokens === null) return null
 	const { values, subcommand, args } = parse(tokens)
 
 	if (values.some((value) => /^core\.hooksPath=/i.test(value))) {
@@ -146,9 +180,13 @@ const git = (tokens, ask) => {
 		return null
 	}
 
-	if (subcommand === 'rebase') return `rebase は履歴を書き換える。${TRUNK} をマージして解消する`
+	const rebase = `rebase は履歴を書き換える。${TRUNK} をマージして解消する`
+	if (subcommand === 'rebase') return rebase
+	if (subcommand === 'pull' && args.some((arg) => REBASING.test(arg))) return rebase
+	if (values.some((value) => /^pull\.rebase=(?!false)/i.test(value))) return rebase
+
 	if (subcommand === 'push') return pushed(args, ask)
-	if (subcommand === 'branch') return renamed(args)
+	if (subcommand === 'branch') return branched(args)
 	if (Object.hasOwn(NEW_BRANCH, subcommand)) return created(args, NEW_BRANCH[subcommand])
 	return null
 }

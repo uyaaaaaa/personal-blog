@@ -94,6 +94,45 @@ describe('decide', () => {
 		expect(decide(bash('git commit -m "--no-verify を止める検査を足す"'), ask)).toBeNull()
 	})
 
+	it('heredoc の本体はコマンドとして読まない', () => {
+		const doc = ['cat > doc.md <<EOF', 'git commit --no-verify で飛ばさない', 'EOF'].join('\n')
+		expect(decide(bash(doc), ask)).toBeNull()
+
+		const quoted = ["cat > doc.md <<'EOF'", 'git push origin main', 'EOF'].join('\n')
+		expect(decide(bash(quoted), ask)).toBeNull()
+
+		// 本体を閉じた後の git は読む
+		const after = ['cat > doc.md <<EOF', 'x', 'EOF', 'git push origin main'].join('\n')
+		expect(decide(bash(after), ask)).toMatch('main')
+	})
+
+	it('綴りを変えた git も同じ判定に載せる', () => {
+		expect(decide(bash('(git push origin main)'), ask)).toMatch('main')
+		expect(decide(bash('GIT_PAGER=cat git push origin main'), ask)).toMatch('main')
+		expect(decide(bash('/usr/bin/git commit --no-verify -m "x"'), ask)).toMatch('--no-verify')
+		expect(decide(bash('env GIT_PAGER=cat git rebase origin/main'), ask)).toMatch('rebase')
+		expect(decide(bash('$(git rev-parse HEAD)'), ask)).toBeNull()
+	})
+
+	it('rebase は pull の側からも止める', () => {
+		expect(decide(bash('git pull --rebase origin main'), ask)).toMatch('rebase')
+		expect(decide(bash('git pull -r'), ask)).toMatch('rebase')
+		expect(decide(bash('git -c pull.rebase=true pull'), ask)).toMatch('rebase')
+		expect(decide(bash('git pull origin main'), ask)).toBeNull()
+		expect(decide(bash('git pull --no-rebase origin main'), ask)).toBeNull()
+		expect(decide(bash('git -c pull.rebase=false pull'), ask)).toBeNull()
+	})
+
+	it('git branch は作成の名前と改名の先を見分ける', () => {
+		expect(decide(bash('git branch claude/new-a1b2c3 origin/main'), ask)).toBeNull()
+		expect(decide(bash('git branch -f main origin/other'), ask)).toMatch('main')
+		expect(decide(bash('git branch fix-291 origin/main'), ask)).toMatch('ブランチ名 fix-291')
+		expect(decide(bash('git branch -m claude/old-a1b2c3 claude/new-a1b2c3'), ask)).toBeNull()
+		expect(decide(bash('git branch -m claude/old-a1b2c3 fix-291'), ask)).toMatch('fix-291')
+		expect(decide(bash('git branch --contains HEAD'), ask)).toBeNull()
+		expect(decide(bash('git branch -u origin/main'), ask)).toBeNull()
+	})
+
 	it('GitHub 側でコミットとマージを作るツールを止める', () => {
 		expect(decide(mcp('push_files'), ask)).toMatch('commit-msg')
 		expect(decide(mcp('create_or_update_file'), ask)).toMatch('commit-msg')
