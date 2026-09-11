@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -15,6 +15,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	rmSync(root, { recursive: true, force: true })
+	rmSync(`${root}.md`, { force: true })
 })
 
 const ARTICLE = [
@@ -48,6 +49,14 @@ describe('check-frontmatter', () => {
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/unknown/)
 		expect(stderr).toMatch(/category/)
+	})
+
+	it('symlink で置いた記事も見る', () => {
+		writeFileSync(`${root}.md`, ARTICLE.replace('category: blog', 'unknown: "x"'))
+		symlinkSync(`${root}.md`, join(root, 'b.md'))
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/unknown/)
 	})
 
 	it('下の階層に置いた記事を落とす', () => {

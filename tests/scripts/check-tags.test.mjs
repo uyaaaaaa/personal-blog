@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -15,12 +15,15 @@ beforeEach(() => {
 
 afterEach(() => {
 	rmSync(root, { recursive: true, force: true })
+	rmSync(`${root}.md`, { force: true })
 })
+
+const frontmatter = (...tags) => `---\ntags:\n${tags.map((tag) => `  - ${tag}\n`).join('')}---\n`
 
 const write = (name, ...tags) => {
 	const path = join(root, name)
 	mkdirSync(dirname(path), { recursive: true })
-	writeFileSync(path, `---\ntags:\n${tags.map((tag) => `  - ${tag}\n`).join('')}---\n`)
+	writeFileSync(path, frontmatter(...tags))
 }
 
 const check = () => spawnSync(process.execPath, [SCRIPT, root], { encoding: 'utf8' })
@@ -51,6 +54,15 @@ describe('check-tags', () => {
 		})
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/記事のディレクトリを読み取れない/)
+	})
+
+	it('symlink で置いた記事も見る', () => {
+		write('a.md', 'Nuxt')
+		writeFileSync(`${root}.md`, frontmatter('nuxt'))
+		symlinkSync(`${root}.md`, join(root, 'b.md'))
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/同じスラッグ "nuxt"/)
 	})
 
 	it('下の階層に置いた記事を落とす', () => {

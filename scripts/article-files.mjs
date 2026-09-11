@@ -15,8 +15,9 @@ export const articleFiles = (given) => {
 
 	let found
 	try {
+		// Nuxt は article/**/*.md で symlink も拾う。dirent では isFile() が false になる
 		found = readdirSync(dir, { recursive: true, withFileTypes: true }).filter(
-			(entry) => entry.isFile() && entry.name.endsWith('.md'),
+			(entry) => (entry.isFile() || entry.isSymbolicLink()) && entry.name.endsWith('.md'),
 		)
 	} catch (error) {
 		fail('記事のディレクトリを読み取れない:', `  ${error.message}`)
