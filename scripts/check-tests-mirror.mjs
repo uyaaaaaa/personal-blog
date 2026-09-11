@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
 const TESTS = 'tests'
 const HOOKS = '.githooks'
+const SETTINGS = ['.claude/settings.json', '.claude/settings.local.json']
 const IGNORED = new Set(['node_modules', '.git', '.nuxt', '.output', 'dist', '.verify'])
 
 const walk = (directory) =>
@@ -35,13 +36,29 @@ const sourcesOf = (test) => {
 const testsOf = (source) =>
 	['test', 'spec'].map((kind) => `${TESTS}/${source.replace(/\.([cm]?[jt]sx?)$/, `.${kind}.$1`)}`)
 
-// scripts/ には検査でないもの（harness-journal・session-args・probe）も居る。
-// どれが検査かは回している側が持っているので、一覧を別に作らずそこから読む
-const CHECK = /node\s+(scripts\/\S+\.mjs)/g
+const PROJECT_DIR = /\$(?:CLAUDE_PROJECT_DIR\b|\{CLAUDE_PROJECT_DIR\})/g
+const bare = (source) => source.replace(/["']/g, '').replace(PROJECT_DIR, '')
+
+const CHECK = /node\s+(?:-\S*\s+)*\.?\/?((?:scripts|\.claude\/hooks)\/[^\s;&|<>()]+\.mjs)/g
 const DELEGATED = /npm run ([\w:-]+)/g
 
-// 起点は commit と lint で回るものだけ。全 script を見ると、回っていない検査でない
-// scripts/ にもテストを求める。委譲した先は npm run を辿って拾う
+const errors = []
+
+const hookCommands = () =>
+	SETTINGS.filter((path) => existsSync(join(ROOT, path))).flatMap((path) => {
+		try {
+			const { hooks = {} } = JSON.parse(readFileSync(join(ROOT, path), 'utf8'))
+			return Object.values(hooks)
+				.flat()
+				.flatMap((matcher) => matcher.hooks ?? [])
+				.map((hook) => hook.command)
+				.filter((command) => typeof command === 'string')
+		} catch (error) {
+			errors.push(`${path}: hooks を読めない（${error.message}）`)
+			return []
+		}
+	})
+
 const runners = () => {
 	const { scripts } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
 	const queue = [
@@ -49,6 +66,7 @@ const runners = () => {
 		...readdirSync(join(ROOT, HOOKS)).map((name) =>
 			readFileSync(join(ROOT, HOOKS, name), 'utf8'),
 		),
+		...hookCommands(),
 	]
 
 	const sources = []
@@ -67,10 +85,11 @@ const runners = () => {
 
 const tests = walk('').filter((path) => TEST.test(path))
 const checks = [
-	...new Set(runners().flatMap((source) => [...source.matchAll(CHECK)].map(([, path]) => path))),
+	...new Set(
+		runners().flatMap((source) => [...bare(source).matchAll(CHECK)].map(([, path]) => path)),
+	),
 ]
 
-const errors = []
 for (const test of tests) {
 	if (!test.startsWith(`${TESTS}/`)) {
 		errors.push(`${test}: テストは ${TESTS}/ に実装の構成をミラーして置く`)
