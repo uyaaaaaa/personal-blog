@@ -5,17 +5,8 @@ import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
-const ROOT = process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
 const HOOKS_PATH = '.githooks'
 const INSTALL_TIMEOUT = 15 * 60 * 1000
-
-const run = (command, args, timeout) =>
-	execFileSync(command, args, {
-		cwd: ROOT,
-		encoding: 'utf8',
-		stdio: ['ignore', 'pipe', 'pipe'],
-		timeout,
-	})
 
 const why = (error) =>
 	String(error.stderr || error.stdout || error.message)
@@ -23,24 +14,43 @@ const why = (error) =>
 		.split('\n')
 		.at(-1)
 
-const done = []
+export const setup = ({ has, run }) => {
+	const done = []
 
-try {
-	run('git', ['config', 'core.hooksPath', HOOKS_PATH])
-	done.push(`core.hooksPath=${HOOKS_PATH}`)
-} catch (error) {
-	done.push(`core.hooksPath を設定できない（${why(error)}）`)
-}
-
-if (existsSync(join(ROOT, 'node_modules'))) {
-	done.push('node_modules あり')
-} else {
 	try {
-		run('npm', ['ci'], INSTALL_TIMEOUT)
-		done.push('npm ci 済み')
+		run('git', ['config', 'core.hooksPath', HOOKS_PATH])
+		done.push(`core.hooksPath=${HOOKS_PATH}`)
 	} catch (error) {
-		done.push(`npm ci が落ち、pre-commit の lint が走らない（${why(error)}）`)
+		done.push(`core.hooksPath を設定できない（${why(error)}）`)
 	}
+
+	if (has('node_modules')) {
+		done.push('node_modules あり')
+	} else {
+		try {
+			run('npm', ['ci'], INSTALL_TIMEOUT)
+			done.push('npm ci 済み')
+		} catch (error) {
+			done.push(`npm ci が落ち、pre-commit の lint が走らない（${why(error)}）`)
+		}
+	}
+
+	return done.join('、')
 }
 
-process.stdout.write(`${done.join('、')}\n`)
+// テストから import したときは走らせない
+if (process.argv[1]?.endsWith('session-start.mjs')) {
+	const root = process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
+	process.stdout.write(
+		`${setup({
+			has: (path) => existsSync(join(root, path)),
+			run: (command, args, timeout) =>
+				execFileSync(command, args, {
+					cwd: root,
+					encoding: 'utf8',
+					stdio: ['ignore', 'pipe', 'pipe'],
+					timeout,
+				}),
+		})}\n`,
+	)
+}
