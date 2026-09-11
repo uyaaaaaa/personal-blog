@@ -45,6 +45,14 @@ describe('check-tags', () => {
 		expect(check().status).toBe(1)
 	})
 
+	it('ディレクトリが無いときは理由を出して落とす', () => {
+		const { status, stderr } = spawnSync(process.execPath, [SCRIPT, join(root, 'none')], {
+			encoding: 'utf8',
+		})
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/記事のディレクトリを読み取れない/)
+	})
+
 	it('下の階層に置いた記事を落とす', () => {
 		write('a.md', 'Nuxt')
 		write('nested/b.md', 'nuxt')

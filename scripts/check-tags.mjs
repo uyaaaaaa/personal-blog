@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tagToSlug } from '../app/utils/tag.ts'
-import { articleFiles, NESTED } from './article-files.mjs'
+import { articleFiles } from './article-files.mjs'
 
 const readFrontmatter = (source) => {
 	const matched = source.match(/^---\r?\n([\s\S]*?)\r?\n---/)
@@ -35,10 +35,7 @@ const fail = (...lines) => {
 	process.exit(1)
 }
 
-const { dir, files, nested } = articleFiles(process.argv[2])
-if (nested.length > 0) {
-	fail(NESTED, ...nested.map((path) => `  ${path}`))
-}
+const { dir, files } = articleFiles(process.argv[2])
 
 const owners = new Map()
 try {

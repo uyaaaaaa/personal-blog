@@ -2,17 +2,14 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parseFrontMatter } from 'remark-mdc'
 import { articleSchema } from '../content.schema.ts'
-import { articleFiles, NESTED } from './article-files.mjs'
+import { articleFiles } from './article-files.mjs'
 
 const fail = (...lines) => {
 	for (const line of lines) console.error(line)
 	process.exit(1)
 }
 
-const { dir, files, nested } = articleFiles(process.argv[2])
-if (nested.length > 0) {
-	fail(NESTED, ...nested.map((path) => `  ${path}`))
-}
+const { dir, files } = articleFiles(process.argv[2])
 
 const errors = []
 for (const name of files) {
