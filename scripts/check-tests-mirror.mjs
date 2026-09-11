@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
 const TESTS = 'tests'
 const HOOKS = '.githooks'
+const SETTINGS = '.claude/settings.json'
 const IGNORED = new Set(['node_modules', '.git', '.nuxt', '.output', 'dist', '.verify'])
 
 const walk = (directory) =>
@@ -35,13 +36,34 @@ const sourcesOf = (test) => {
 const testsOf = (source) =>
 	['test', 'spec'].map((kind) => `${TESTS}/${source.replace(/\.([cm]?[jt]sx?)$/, `.${kind}.$1`)}`)
 
-// scripts/ には検査でないもの（harness-journal・session-args・probe）も居る。
-// どれが検査かは回している側が持っているので、一覧を別に作らずそこから読む
-const CHECK = /node\s+(scripts\/\S+\.mjs)/g
+// scripts/ にも .claude/hooks/ にも、検査でないもの（harness-journal・session-args・probe）が
+// 居る。どれが検査かは回している側が持っているので、一覧を別に作らずそこから読む。
+// hook の command は $CLAUDE_PROJECT_DIR からのパスで、引用符が付く
+const CHECK =
+	/node\s+"?(?:\$(?:CLAUDE_PROJECT_DIR|\{CLAUDE_PROJECT_DIR\})\/)?((?:scripts|\.claude\/hooks)\/[^\s"']+\.mjs)/g
 const DELEGATED = /npm run ([\w:-]+)/g
 
-// 起点は commit と lint で回るものだけ。全 script を見ると、回っていない検査でない
-// scripts/ にもテストを求める。委譲した先は npm run を辿って拾う
+const errors = []
+
+// Claude が回す hook。イベント名・matcher の並びは設定側の都合なので、形を決め打ちせず
+// hooks の下から command だけを集める
+const hookCommands = () => {
+	if (!existsSync(join(ROOT, SETTINGS))) return []
+	try {
+		const { hooks = {} } = JSON.parse(readFileSync(join(ROOT, SETTINGS), 'utf8'))
+		return Object.values(hooks)
+			.flat()
+			.flatMap((matcher) => matcher.hooks ?? [])
+			.map((hook) => hook.command)
+			.filter((command) => typeof command === 'string')
+	} catch (error) {
+		errors.push(`${SETTINGS}: hooks を読めない（${error.message}）`)
+		return []
+	}
+}
+
+// 起点は commit と lint と Claude の hook で回るものだけ。全 script を見ると、回っていない
+// 検査でない scripts/ にもテストを求める。委譲した先は npm run を辿って拾う
 const runners = () => {
 	const { scripts } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
 	const queue = [
@@ -49,6 +71,7 @@ const runners = () => {
 		...readdirSync(join(ROOT, HOOKS)).map((name) =>
 			readFileSync(join(ROOT, HOOKS, name), 'utf8'),
 		),
+		...hookCommands(),
 	]
 
 	const sources = []
@@ -70,7 +93,6 @@ const checks = [
 	...new Set(runners().flatMap((source) => [...source.matchAll(CHECK)].map(([, path]) => path))),
 ]
 
-const errors = []
 for (const test of tests) {
 	if (!test.startsWith(`${TESTS}/`)) {
 		errors.push(`${test}: テストは ${TESTS}/ に実装の構成をミラーして置く`)

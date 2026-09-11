@@ -5,6 +5,7 @@ paths:
   - "scripts/check-*.mjs"
   - "scripts/article-files.mjs"
   - ".githooks/**"
+  - ".claude/hooks/**"
 ---
 
 # 検査を足すときのルール
