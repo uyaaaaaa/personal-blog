@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tagToSlug } from '../app/utils/tag.ts'
-import { articleFiles } from './article-files.mjs'
+import { articleFiles, fail } from './article-files.mjs'
 
 const readFrontmatter = (source) => {
 	const matched = source.match(/^---\r?\n([\s\S]*?)\r?\n---/)
@@ -28,11 +28,6 @@ const readTags = (frontmatter, file) => {
 		tags.push(item[1].trim().replace(/^(['"])(.*)\1$/, '$2'))
 	}
 	return tags
-}
-
-const fail = (...lines) => {
-	for (const line of lines) console.error(line)
-	process.exit(1)
 }
 
 const { dir, files } = articleFiles(process.argv[2])

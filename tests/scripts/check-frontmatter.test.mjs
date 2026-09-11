@@ -77,6 +77,14 @@ describe('check-frontmatter', () => {
 		expect(stderr).toMatch(/a\.md/)
 	})
 
+	it('実体の無い symlink は理由を出して落とす', () => {
+		symlinkSync(`${root}.md`, join(root, 'content/article/a.md'))
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/記事を読み取れない/)
+		expect(stderr).not.toMatch(/at readFileSync/)
+	})
+
 	it('下の階層に置いた記事を、スキーマに合っていても落とす', () => {
 		write('draft/a.md', ...article())
 		const { status, stderr } = check()

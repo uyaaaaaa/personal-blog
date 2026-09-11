@@ -2,7 +2,7 @@ import { readdirSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const fail = (...lines) => {
+export const fail = (...lines) => {
 	for (const line of lines) console.error(line)
 	process.exit(1)
 }
