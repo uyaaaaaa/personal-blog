@@ -12,17 +12,17 @@ let root
 // hook は呼び出しごとに別プロセスで起きる。跨いで持てることを同じ形で測る
 const inAnotherProcess = (source) =>
 	execFileSync(process.execPath, ['--input-type=module', '-e', source], {
-		env: { ...process.env, CLAUDE_PROJECT_DIR: root },
+		env: { ...process.env, CLAUDE_HOOK_STATE_DIR: root },
 		encoding: 'utf8',
 	})
 
 beforeEach(() => {
 	root = mkdtempSync(join(tmpdir(), 'hook-state-'))
-	process.env.CLAUDE_PROJECT_DIR = root
+	process.env.CLAUDE_HOOK_STATE_DIR = root
 })
 
 afterEach(() => {
-	delete process.env.CLAUDE_PROJECT_DIR
+	delete process.env.CLAUDE_HOOK_STATE_DIR
 	rmSync(root, { recursive: true, force: true })
 })
 
@@ -37,10 +37,16 @@ describe('state', () => {
 	})
 
 	it('サブエージェントの状態を本体と分ける', () => {
-		state('pr').write({ number: 290 })
-		state('pr', { agent_id: 'a/1' }).write({ number: 1 })
+		const input = { session_id: 's1' }
+		state('pr', input).write({ number: 290 })
+		state('pr', { ...input, agent_id: 'a/1' }).write({ number: 1 })
 
-		expect(state('pr').read()).toEqual({ number: 290 })
-		expect(state('pr', { agent_id: 'a/1' }).read()).toEqual({ number: 1 })
+		expect(state('pr', input).read()).toEqual({ number: 290 })
+		expect(state('pr', { ...input, agent_id: 'a/1' }).read()).toEqual({ number: 1 })
+	})
+
+	it('前のセッションが書いた状態は読まない', () => {
+		state('pr', { session_id: 's1' }).write({ number: 290 })
+		expect(state('pr', { session_id: 's2' }).read()).toBeNull()
 	})
 })
