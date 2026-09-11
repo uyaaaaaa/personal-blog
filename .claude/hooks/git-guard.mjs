@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// commit-msg / pre-commit を通らずに変更が入る経路と、書き手に属する判断を、ツール呼び出しの
-// 入口で止める。検査の本体は .githooks/ と scripts/ にあり、ここは迂回路を塞ぐだけ。
 import { execFileSync } from 'node:child_process'
 
 const SHAPE = 'claude/<主題>-<英数字4〜6>'
@@ -20,16 +18,12 @@ const TOOLS = {
 	enable_pr_auto_merge: 'マージするかは書き手が判断する',
 }
 
-// & と ; と | と括弧で切り、クォートの中は割らない。git で始まる区間だけを見る
 const TOKEN =
 	/\d*(?:>>|<<-?|[<>])&?\d*|&&|\|\||[;|&\n(){}]|"(?:[^"\\]|\\.)*"|'[^']*'|[^\s;|&\n(){}"']+/g
 const SEPARATOR = new Set(['&&', '||', ';', '|', '&', '\n', '(', ')', '{', '}'])
 const unquote = (token) => token.replace(/^"([\s\S]*)"$/, '$1').replace(/^'([\s\S]*)'$/, '$1')
 
-// リダイレクトの向き先は git の引数ではない。演算子だけの綴りなら次のトークンも落とす
 const REDIRECT = /^\d*[<>]+/
-
-// heredoc の本体はシェルに渡す文字列で、コマンドではない
 const HEREDOC = /<<-?\s*(["']?)([A-Za-z_][A-Za-z0-9_]*)\1/g
 
 const withoutHeredocs = (command) => {
@@ -58,7 +52,6 @@ const segments = (command) => {
 	return found
 }
 
-// サブコマンドより前に置ける git 自身のオプション。値を取るものは次のトークンか、= の後ろが値
 const VALUED = new Set(['-c', '--config-env', '-C', '--git-dir', '--work-tree', '--namespace'])
 const ATTACHED = /^(--[a-z-]+)=([\s\S]*)$/
 
@@ -74,7 +67,6 @@ const parse = (tokens) => {
 	return { values, subcommand: tokens[at] ?? '', args: tokens.slice(at + 1) }
 }
 
-// 短いオプションは束ねられる（-nv）。長いほうは綴りが1つしかない
 const NO_VERIFY = /^(?:--no-verify|-[a-zA-Z]*n[a-zA-Z]*)$/
 const FORCE = /^(?:-[a-zA-Z]*f[a-zA-Z]*|--force(?:-with-lease|-if-includes)?(?:=.*)?)$/
 const PUSH_VALUED = new Set(['-o', '--push-option', '--repo', '--receive-pack', '--exec'])
@@ -84,10 +76,8 @@ const NEW_BRANCH = {
 	worktree: /^-[bB]$/,
 }
 const RENAME = /^(?:-[mMcC]|--move|--copy)$/
-// これ以外のオプションが付いた `git branch` は、一覧・削除・上流の設定でブランチを作らない
 const BRANCH_CREATE = /^(?:-f|--force|-t|--track|--no-track|-q|--quiet)$/
 const REBASING = /^(?:-[a-zA-Z]*r[a-zA-Z]*|--rebase(?:=(?!false).*)?)$/
-// 前置きの環境変数とパスは綴りが変わるだけで、走るのは git
 const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/
 
 const shown = (name) => (name === '' ? '（不明）' : name)
@@ -120,7 +110,7 @@ const pushed = (args, git) => {
 
 		const reason = named(target)
 		if (reason) return reason
-		// マージ済みのブランチを main から作り直す経路だけは残す
+		// ハーネスはマージ済みのブランチを main から作り直す。その push だけは通す
 		if (force && !git.merged(remote, target)) {
 			return `force push は他の checkout を壊す。${remote}/${target} は ${TRUNK} に入りきっていない`
 		}
@@ -133,7 +123,6 @@ const created = (args, flag) => {
 	return at === -1 ? null : named(args[at + 1] ?? '')
 }
 
-// 改名は新しい名前が最後、作成は名前が最初で、続くのは起点
 const branched = (args) => {
 	const flags = args.filter((arg) => arg.startsWith('-'))
 	const positional = args.filter((arg) => !arg.startsWith('-'))
@@ -159,7 +148,6 @@ const git = (segment, ask) => {
 	}
 
 	if (subcommand === 'config') {
-		// core の節ごと消せば hooksPath も消える
 		if (args.includes('--remove-section') && args.some((arg) => /^core$/i.test(arg))) {
 			return `core.hooksPath を外すと commit-msg も pre-commit も走らない`
 		}
@@ -168,7 +156,6 @@ const git = (segment, ask) => {
 		if (args.some((arg) => arg.startsWith('--unset'))) {
 			return `core.hooksPath を外すと commit-msg も pre-commit も走らない`
 		}
-		// 読むだけの --get には値が続かない
 		const value = args[at + 1]
 		return value === undefined || value === HOOKS_PATH
 			? null
@@ -277,7 +264,5 @@ if (process.argv[1]?.endsWith('git-guard.mjs')) {
 				}),
 			)
 		}
-	} catch {
-		// 握りつぶす
-	}
+	} catch {}
 }

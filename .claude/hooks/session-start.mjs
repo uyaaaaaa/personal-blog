@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// フックを有効にするのは npm install の prepare なので、install 前のセッションでは commit-msg も
-// pre-commit も走らない。セッションの頭で hooksPath と依存を揃え、最初の commit から検査を通す。
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
