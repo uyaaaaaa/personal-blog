@@ -1,9 +1,10 @@
 import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { tagToSlug } from '../app/utils/tag.ts'
 
-const ARTICLE_DIR = fileURLToPath(new URL('../content/article', import.meta.url))
+const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
+const ARTICLE_DIR = join(ROOT, 'content/article')
 
 const readFrontmatter = (source) => {
 	const matched = source.match(/^---\r?\n([\s\S]*?)\r?\n---/)
