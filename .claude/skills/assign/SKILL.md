@@ -18,7 +18,7 @@ description: "このリポジトリの GitHub issue を1本、着手から PR �
 - **触る範囲の方針を先に読む。** UI は `docs/DESIGN_GUIDELINE.md`、構造は `docs/ARCHITECTURE.md` の該当節
 - **再現してから直す。** 実データで条件が揃わないなら、条件を作って再現する
 
-ブランチは `claude/issue-<番号>-<英数字4〜6>` を最新の `main` から切る。
+ブランチは最新の `main` から切る。
 
 ## 2. 直す
 
@@ -70,14 +70,13 @@ description: "このリポジトリの GitHub issue を1本、着手から PR �
 | :--- | :--- |
 | CI の赤、lint、自明な不具合 | 直して push。理由は PR に1行 |
 | レビューの指摘 | `address` に従う |
-| コンフリクト | `main` をマージして解消。rebase と force push はしない |
+| コンフリクト | `main` をマージして解消 |
 
 - **指摘が尽きるまで繰り返す。** 往復の打ち切りはレビュー側が持つ
 
 ### 終わり
 
 - **受けた指摘を台帳に書き留める。** `node scripts/harness-journal.mjs append <PR番号>` に、指摘の要旨と直し方を標準入力で渡す。**指摘が0件なら書かない**（→ `codify`）
-- **マージしない。** CI が緑で `Approve` でも、マージは書き手が判断する
 - **判定・CI・実測を報告して終える。** issue は書き手のマージで `Closes` が閉じる
 
 ### 見届けられないとき
