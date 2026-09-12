@@ -17,7 +17,7 @@
 | 角丸 | 7（タイル版のみ） |
 | 地 | `#1A1A1A` |
 | マーク | `#FFFFFF` |
-| アクセント | `#8B5CF6`（`theme/tokens.ts` の `accent` と同値） |
+| アクセント | `#8B5CF6`（意匠として確定済み。UI の `accent` とは別物で、追従させない） |
 | ストローク | `u` = 3.2 / スラッシュ = 3.0（16px 表示で潰れない下限） |
 
 形状には 2 つのバリエーションがある。
@@ -47,9 +47,9 @@
 
 ラスタ画像（`.ico` / `.png`）は `public/favicon.svg` から生成している。
 形を変える場合は SVG を編集したうえで、全ラスタを描き直すこと。
-`theme-color` は追従ヘッダーの背景（ライトは白 / ダークは `#121212`）に合わせ、
-`app/app.vue` が `theme/tokens.ts` のトークンを参照してテーマごとに出し分けている。
-ヘッダーの配色を変える場合は `app/app.vue` と `site.webmanifest` の両方を更新する。
+`theme-color` は地に合わせ、`app/app.vue` が `theme/tokens.ts` の `bg` を
+テーマごとに出し分けている。`site.webmanifest` はトークンを読めないので直値を持つ。
+地の色を変える場合は webmanifest も同じ値に更新する。
 
 ## OGP 画像
 
