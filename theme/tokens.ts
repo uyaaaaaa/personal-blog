@@ -93,6 +93,7 @@ export const sizes = {
 		'toc-dropdown': '60vh',
 	},
 	maxWidth: {
+		'search-trigger': '200px',
 		column: '680px',
 		article: '960px',
 		container: '1200px',
@@ -102,6 +103,7 @@ export const sizes = {
 	},
 	spacing: {
 		'toc-guide': '3px',
+		'logo-mark': '26px',
 		'below-header': '74px',
 		'landing-offset': '88px',
 		'landing-offset-lg': '96px',

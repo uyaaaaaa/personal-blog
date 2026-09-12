@@ -488,8 +488,8 @@
 		padding: 0;
 		border: none;
 		background: none;
-		font-family: inherit;
-		font-size: 1rem;
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
 		font-weight: 500;
 		color: var(--color-main);
 		cursor: pointer;

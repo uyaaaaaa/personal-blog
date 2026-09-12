@@ -119,7 +119,7 @@
 
 	const emptyMessage = computed(() =>
 		query.value.trim() === ''
-			? 'Type to search articles by title or tag.'
+			? 'Type to search articles by title or tag. ↑↓ to move, ⏎ to open, esc to close'
 			: 'No articles found.',
 	)
 

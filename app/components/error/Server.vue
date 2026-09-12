@@ -1,8 +1,8 @@
 <template>
 	<ErrorView
 		:code="statusCode"
-		message="An Error Occurred"
-		description="We're sorry, but something went wrong. Please try again later."
+		message="Something went wrong"
+		description="The page could not be served. Please try again in a moment."
 	/>
 </template>
 
