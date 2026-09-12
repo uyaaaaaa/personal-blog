@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { opened, unfinished } from '~~/.claude/hooks/stop-guard.mjs'
 
-const shot = (name, at = 1) => ({ name, at })
+const shot = (name, at = 1, bytes = 100) => ({ name, at, bytes })
 
 describe('opened', () => {
 	it('証跡の PNG を開いたときだけ、その名前を返す', () => {
@@ -25,6 +25,11 @@ describe('unfinished', () => {
 			unfinished({ shots: [shot('a.png'), shot('b.png')], seen: ['a.png@1'] }),
 		).toMatchObject({ kind: 'png', reason: expect.stringContaining('b.png') })
 		expect(unfinished({ shots: [shot('a.png')], seen: ['a.png@1'] })).toBeNull()
+	})
+
+	it('撮れていない PNG は、開くのではなく撮り直させる', () => {
+		expect(unfinished({ shots: [shot('a.png', 1, 0)] })).toMatchObject({ kind: 'empty' })
+		expect(unfinished({ shots: [shot('a.png', 1, 0)], blocked: ['empty'] })).toBeNull()
 	})
 
 	it('撮り直した PNG は開いた扱いにしない', () => {

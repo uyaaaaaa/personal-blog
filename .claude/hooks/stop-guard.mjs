@@ -20,7 +20,16 @@ export const stamp = ({ name, at }) => `${name}@${at}`
 
 export const unfinished = ({ shots = [], seen = [], dirty = false, ahead = 0, blocked = [] }) => {
 	// 同じ理由で二度は止めない。直せない状況では終われなくなる
-	const unread = shots.filter((shot) => !seen.includes(stamp(shot)))
+	// 0 バイトの PNG は Read が落ちるので、開けとは言わない
+	const empty = shots.filter(({ bytes }) => bytes === 0)
+	if (empty.length > 0 && !blocked.includes('empty')) {
+		return {
+			kind: 'empty',
+			reason: `撮れていない PNG がある: ${empty.map(({ name }) => name).join(' ')}。撮り直す`,
+		}
+	}
+
+	const unread = shots.filter((shot) => shot.bytes !== 0 && !seen.includes(stamp(shot)))
 	if (unread.length > 0 && !blocked.includes('png')) {
 		return {
 			kind: 'png',
@@ -56,9 +65,10 @@ const git = (...args) => {
 	}
 }
 
-const when = (name) => {
+const found = (name) => {
 	try {
-		return statSync(join(root, EVIDENCE, name)).mtimeMs
+		const { mtimeMs, size } = statSync(join(root, EVIDENCE, name))
+		return { name, at: mtimeMs, bytes: size }
 	} catch {
 		return null
 	}
@@ -69,7 +79,8 @@ const shots = () => {
 		return readdirSync(join(root, EVIDENCE))
 			.filter((name) => name.endsWith('.png'))
 			.sort()
-			.map((name) => ({ name, at: when(name) }))
+			.map(found)
+			.filter((shot) => shot !== null)
 	} catch {
 		return []
 	}
