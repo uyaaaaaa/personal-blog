@@ -493,7 +493,7 @@
 		font-weight: 500;
 		color: var(--color-main);
 		cursor: pointer;
-		transition: color 0.2s;
+		transition: color 0.15s;
 	}
 
 	.explore-trigger:hover,

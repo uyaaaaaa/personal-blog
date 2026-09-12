@@ -21,7 +21,12 @@
 		font-family: var(--font-sans);
 		background-color: var(--color-bg);
 		color: var(--color-main);
-		line-height: 1.6;
+		line-height: 1.5;
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
 	}
 
 	*,
@@ -33,7 +38,7 @@
 	a {
 		text-decoration: none;
 		color: inherit;
-		transition: color 0.2s ease;
+		transition: color 0.15s ease;
 	}
 
 	a:hover {

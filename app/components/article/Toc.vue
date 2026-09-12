@@ -3,7 +3,7 @@
 		<h4 class="mb-4 flex-shrink-0 font-bold text-main">目次</h4>
 		<nav
 			ref="navRef"
-			class="toc-nav min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pr-2"
+			class="toc-nav min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pl-1 pr-2"
 		>
 			<ul class="relative space-y-2">
 				<div
@@ -18,7 +18,7 @@
 					<a
 						:href="`#${link.id}`"
 						@click.prevent="scrollTo(link.id)"
-						class="block break-words border-l-2 py-1 pl-4 text-sm transition-colors duration-200 hover:border-accent hover:text-accent focus:border-accent focus:text-accent focus:outline-none"
+						class="block break-words border-l-2 py-1 pl-4 text-sm transition-colors hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
 						:class="
 							activeId === link.id
 								? 'border-accent font-medium text-accent'
@@ -38,7 +38,7 @@
 							<a
 								:href="`#${child.id}`"
 								@click.prevent="scrollTo(child.id)"
-								class="block break-words py-1 pl-4 text-xs transition-colors duration-200 hover:text-accent focus:text-accent focus:outline-none"
+								class="block break-words py-1 pl-4 text-xs transition-colors hover:text-accent focus:text-accent"
 								:class="
 									activeId === child.id ? 'font-medium text-accent' : 'text-sub'
 								"

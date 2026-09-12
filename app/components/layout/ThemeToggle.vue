@@ -211,7 +211,7 @@
 		background: none;
 		color: var(--color-sub);
 		cursor: pointer;
-		transition: color 0.2s;
+		transition: color 0.15s;
 	}
 
 	.theme-trigger:hover,

@@ -60,7 +60,7 @@
 
 				<div class="mt-1">
 					<span
-						class="inline-flex items-center gap-2 font-mono text-xs tracking-wider text-sub transition-colors duration-200 group-hover:text-main"
+						class="inline-flex items-center gap-2 font-mono text-xs tracking-wider text-sub transition-colors group-hover:text-main"
 					>
 						more
 						<svg

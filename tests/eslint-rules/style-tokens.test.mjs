@@ -53,7 +53,7 @@ describe('no-untokenized-size', () => {
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { max-width: var(--fallback, 13px); }'),
+					code: sfc('.a { max-width: var(--fallback, 17px); }'),
 					errors: [{ messageId: 'untokenized' }],
 				},
 			],
