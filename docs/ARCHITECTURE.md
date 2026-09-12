@@ -57,7 +57,7 @@
 | ファイルをまたぐ突き合わせ | `scripts/` の検査 |
 | ESLint が読まないファイル（記事の Markdown） | `scripts/` の検査 |
 | ブラウザでの操作 | `scripts/` の probe（lint では回さない） |
-| エージェントのツール呼び出し | `.claude/hooks/` の PreToolUse（→ [ADR 18](./adr/18-git-routes-closed-at-tool-entry.md)） |
-| エージェントが手順を最後まで行ったか | `.claude/hooks/` の PostToolUse と Stop（→ [ADR 19](./adr/19-pr-conditions-closed-at-creation-and-stop.md)） |
+| エージェントのツール呼び出し | `.claude/hooks/` の PreToolUse |
+| エージェントが手順を最後まで行ったか | `.claude/hooks/` の PostToolUse と Stop |
 
 commit のたびに回すのは lint だけにし、テストと型検査と build は PR で受ける。lint で落とせるようになったルールは `.claude/rules/` から消す。
