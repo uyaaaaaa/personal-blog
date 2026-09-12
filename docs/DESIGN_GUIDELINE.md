@@ -43,7 +43,7 @@
 | コードの構文色 | Shiki のテーマが持つ。上書きすると構文色の情報源が2つに割れる |
 | 記事本文の体裁 | `@tailwindcss/typography` が持つ。差分だけを整える |
 | Callout の配色 | Obsidian のテーマ由来。執筆環境でそのまま書けることを優先する |
-| ロゴマーク | 意匠として確定済み（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
+| ロゴマーク | 意匠として確定済み。紫は UI の `accent` と別物で、追従させない（→ [ICON_GUIDELINE.md](./ICON_GUIDELINE.md)） |
 
 ---
 
