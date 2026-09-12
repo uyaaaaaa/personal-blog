@@ -60,7 +60,6 @@ export const fontFamily = {
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 }
 
-// 目次の列が留まる位置。留まる高さもここから引く
 const TOC_TOP = '100px'
 
 export const sizes = {
