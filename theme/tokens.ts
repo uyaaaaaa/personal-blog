@@ -90,7 +90,6 @@ export const sizes = {
 	},
 	maxHeight: {
 		'sticky-column': 'calc(100vh - 6rem)',
-		'toc-dropdown': '60vh',
 	},
 	maxWidth: {
 		'search-trigger': '200px',
@@ -102,18 +101,13 @@ export const sizes = {
 		'card-title': '2.6em',
 	},
 	spacing: {
-		'toc-guide': '3px',
 		'logo-mark': '26px',
-		'below-header-sm': '62px',
-		'below-header': '70px',
 		'landing-offset-sm': '76px',
 		'landing-offset': '84px',
 		'landing-offset-lg': '92px',
 		'toc-top': '100px',
-		'toc-hidden': '120px',
 		'hero-media': '230px',
 		'shelf-card': '264px',
-		sidebar: '300px',
 		'menu-panel': '960px',
 	},
 }

@@ -1,11 +1,10 @@
 <script setup lang="ts">
-	import Sidebar from '~/components/article/Sidebar.vue'
 	import Toc from '~/components/article/Toc.vue'
-	import TocMobile from '~/components/article/TocMobile.vue'
+	import TocInline from '~/components/article/TocInline.vue'
 	import ArticleFallback from '~/components/article/ArticleFallback.vue'
 	import ScrollToTopButton from '~/components/ui/ScrollToTopButton.vue'
-	import { beginProgrammaticScroll } from '~/composables/useProgrammaticScroll'
 	import { usePageSeo } from '~/composables/usePageSeo'
+	import { CATEGORY_LABELS, isCategory } from '~/utils/category'
 	import { formatDate } from '~/utils/date'
 
 	const route = useRoute()
@@ -81,80 +80,57 @@
 		tags: () => page.value?.tags,
 	})
 
-	const FOOTNOTE_LINK_SELECTOR = 'a[data-footnote-ref], a[data-footnote-backref]'
-
-	// pointerdownで目次バーの退避を先行させ、キーボード操作を拾うためにclickでも呼ぶ
-	const handleFootnoteJump = (event: Event) => {
-		const target = event.target as HTMLElement | null
-		if (!target?.closest(FOOTNOTE_LINK_SELECTOR)) return
-
-		beginProgrammaticScroll()
-	}
+	const categoryLabel = computed(() => {
+		const category = page.value?.category
+		return category && isCategory(category) ? CATEGORY_LABELS[category] : category
+	})
 </script>
 
 <template>
 	<div
 		v-if="page"
-		class="mx-auto w-full max-w-container lg:flex lg:justify-center lg:gap-12"
+		class="mx-auto w-full max-w-column lg:grid lg:max-w-article lg:grid-cols-article lg:gap-14"
 	>
-		<main class="mx-auto min-w-0 max-w-column lg:mx-0 lg:flex-1">
+		<main class="min-w-0">
 			<article class="space-y-8">
 				<header class="space-y-4 border-b border-border pb-8">
-					<div class="flex flex-col gap-2.5 font-mono text-sm text-sub">
-						<div
-							v-if="page.date || page.category"
-							class="flex items-center gap-3"
+					<div
+						class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-sub"
+					>
+						<time
+							v-if="page.date"
+							:datetime="page.date"
+							>{{ formatDate(page.date) }}</time
 						>
-							<span v-if="page.date">{{ formatDate(page.date) }}</span>
-							<div
-								v-if="page.category"
-								class="ml-auto rounded-full bg-accent/10 px-2 py-0.5 text-xs uppercase text-accent"
-							>
-								{{ page.category }}
-							</div>
-						</div>
-						<div
-							v-if="page.tags?.length"
-							class="flex flex-wrap gap-x-3 gap-y-2"
+						<span
+							v-if="categoryLabel"
+							class="text-accent"
+							>{{ categoryLabel }}</span
 						>
-							<span
-								v-for="tag in page.tags"
-								:key="tag"
-								class="text-accent"
-								>#{{ tag }}</span
-							>
-						</div>
+						<span
+							v-for="tag in page.tags"
+							:key="tag"
+							class="transition-colors hover:text-accent"
+							>#{{ tag }}</span
+						>
 					</div>
 
-					<h1 class="text-3xl font-bold leading-tight text-main md:text-4xl">
+					<h1 class="text-title-sm font-bold text-main md:text-title">
 						{{ page.title }}
 					</h1>
-
-					<p
-						v-if="page.description"
-						class="text-lg leading-relaxed text-sub"
-					>
-						{{ page.description }}
-					</p>
 				</header>
 
-				<TocMobile :links="tocLinks" />
+				<TocInline :links="tocLinks" />
 
-				<div
-					class="prose prose-slate max-w-none dark:prose-invert lg:prose-wide"
-					@pointerdown="handleFootnoteJump"
-					@click="handleFootnoteJump"
-				>
+				<div class="prose prose-slate max-w-none dark:prose-invert lg:prose-wide">
 					<ContentRenderer :value="page" />
 				</div>
 			</article>
 		</main>
 
-		<Sidebar class="hidden lg:block">
-			<template #toc>
-				<Toc :links="tocLinks" />
-			</template>
-		</Sidebar>
+		<aside class="hidden lg:block">
+			<Toc :links="tocLinks" />
+		</aside>
 
 		<ScrollToTopButton />
 	</div>
@@ -176,12 +152,13 @@
 <style>
 	.prose a {
 		color: var(--color-accent);
-		text-decoration: none;
+		text-decoration: underline;
+		text-decoration-color: rgb(var(--color-accent-rgb) / 0.4);
 		overflow-wrap: break-word;
 	}
 
 	.prose a:hover {
-		text-decoration: underline;
+		text-decoration-color: var(--color-accent);
 	}
 
 	.prose h4 a {

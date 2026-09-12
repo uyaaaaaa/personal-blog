@@ -1,27 +1,30 @@
 <template>
-	<div class="toc-container flex min-h-0 flex-col">
-		<h4 class="mb-4 flex-shrink-0 font-bold text-main">目次</h4>
-		<nav
-			ref="navRef"
-			class="toc-nav min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pl-1 pr-2"
+	<nav
+		aria-labelledby="toc-heading"
+		class="sticky top-toc-top flex max-h-sticky-column min-h-0 flex-col"
+	>
+		<h2
+			id="toc-heading"
+			class="flex-shrink-0 font-mono text-2xs tracking-marker text-sub"
 		>
-			<ul class="relative space-y-2">
-				<div
-					class="absolute bottom-2 left-toc-guide top-2 -z-10 w-0.5 bg-surface-muted"
-				></div>
-
+			CONTENTS
+		</h2>
+		<div
+			ref="navRef"
+			class="toc-scroll mt-4 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain"
+		>
+			<ul class="space-y-2 border-l border-border">
 				<li
 					v-for="link in links"
 					:key="link.id"
-					class="toc-item"
 				>
 					<a
 						:href="`#${link.id}`"
 						@click.prevent="scrollTo(link.id)"
-						class="block break-words border-l-2 py-1 pl-4 text-sm transition-colors hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
+						class="-ml-px block break-words border-l-2 py-1 pl-4 text-sm transition-colors hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
 						:class="
 							activeId === link.id
-								? 'border-accent font-medium text-accent'
+								? 'border-accent font-medium text-main'
 								: 'border-transparent text-sub'
 						"
 					>
@@ -29,7 +32,7 @@
 					</a>
 					<ul
 						v-if="link.children && link.children.length > 0"
-						class="ml-2 mt-2 space-y-2"
+						class="mt-2 space-y-2"
 					>
 						<li
 							v-for="child in link.children"
@@ -38,9 +41,11 @@
 							<a
 								:href="`#${child.id}`"
 								@click.prevent="scrollTo(child.id)"
-								class="block break-words py-1 pl-4 text-xs transition-colors hover:text-accent focus:text-accent"
+								class="-ml-px block break-words border-l-2 py-1 pl-8 text-xs transition-colors hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
 								:class="
-									activeId === child.id ? 'font-medium text-accent' : 'text-sub'
+									activeId === child.id
+										? 'border-accent font-medium text-main'
+										: 'border-transparent text-sub'
 								"
 							>
 								{{ child.text }}
@@ -49,8 +54,8 @@
 					</ul>
 				</li>
 			</ul>
-		</nav>
-	</div>
+		</div>
+	</nav>
 </template>
 
 <script setup lang="ts">
@@ -89,21 +94,21 @@
 </script>
 
 <style scoped>
-	.toc-nav {
+	.toc-scroll {
 		scrollbar-width: thin;
 		scrollbar-color: var(--color-scrollbar) transparent;
 	}
 
-	.toc-nav::-webkit-scrollbar {
+	.toc-scroll::-webkit-scrollbar {
 		width: 4px;
 	}
 
-	.toc-nav::-webkit-scrollbar-thumb {
+	.toc-scroll::-webkit-scrollbar-thumb {
 		background-color: var(--color-scrollbar);
 		border-radius: 9999px;
 	}
 
-	.toc-nav::-webkit-scrollbar-track {
+	.toc-scroll::-webkit-scrollbar-track {
 		background: transparent;
 	}
 </style>

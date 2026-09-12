@@ -10,10 +10,8 @@ export const deltaToReveal = (container: Box, item: Box): number => {
 	return 0
 }
 
-export const deltaToCenter = (container: Box, item: Box): number => {
-	return item.top - container.top - container.height / 2 + item.height / 2
-}
-
 export const deltaToCenterIfHidden = (container: Box, item: Box): number => {
-	return deltaToReveal(container, item) === 0 ? 0 : deltaToCenter(container, item)
+	if (deltaToReveal(container, item) === 0) return 0
+
+	return item.top - container.top - container.height / 2 + item.height / 2
 }
