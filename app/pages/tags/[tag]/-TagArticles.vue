@@ -12,7 +12,7 @@
 		queryCollection('article')
 			.where('published', '=', true)
 			.order('date', 'DESC')
-			.select('path', 'title', 'date', 'emoji', 'tags')
+			.select('path', 'title', 'date', 'tags')
 			.all(),
 	)
 
@@ -34,10 +34,13 @@
 		throw createError({ statusCode: 404, statusMessage: 'Tag not found', fatal: true })
 	}
 
-	const { page, totalPages, pagedItems, basePath } = usePagination(filteredArticles, {
-		pageParam: () => route.params.page,
-		path: () => route.path,
-	})
+	const { page, totalPages, pagedItems, startNumber, basePath } = usePagination(
+		filteredArticles,
+		{
+			pageParam: () => route.params.page,
+			path: () => route.path,
+		},
+	)
 
 	usePageSeo({
 		path: () => route.path,
@@ -51,19 +54,17 @@
 
 <template>
 	<div class="mx-auto w-full max-w-column space-y-8">
-		<header class="border-b border-border pb-8">
-			<h1 class="mb-2 text-3xl font-bold text-main">
-				<span class="font-mono text-accent">#</span> {{ tagName }}
-			</h1>
-			<p class="text-sub">
-				{{ filteredArticles.length }} article{{
-					filteredArticles.length === 1 ? '' : 's'
-				}}
-				tagged with "{{ tagName }}".
-			</p>
-		</header>
+		<h1 class="text-3xl font-bold text-main">
+			<span class="font-mono text-accent">#</span> {{ tagName }}
+			<span class="font-mono text-base font-normal text-sub">{{
+				filteredArticles.length
+			}}</span>
+		</h1>
 
-		<ArticleList :articles="pagedItems" />
+		<ArticleList
+			:articles="pagedItems"
+			:start-number="startNumber"
+		/>
 
 		<Pagination
 			:page="page"

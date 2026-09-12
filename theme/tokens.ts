@@ -68,6 +68,7 @@ export const sizes = {
 	fontSize: {
 		'2xs': '11px',
 		code: ['13px', '1.7'],
+		'list-title': ['16px', '1.4'],
 		'title-sm': ['23px', '1.35'],
 		heading: ['24px', '1.3'],
 		'hero-sm': ['26px', '1.3'],
