@@ -60,6 +60,9 @@ export const fontFamily = {
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 }
 
+// 目次の列が留まる位置。留まる高さもここから引く
+const TOC_TOP = '100px'
+
 export const sizes = {
 	borderRadius: {
 		kbd: '3px',
@@ -89,7 +92,7 @@ export const sizes = {
 		marker: '0.12em',
 	},
 	maxHeight: {
-		'sticky-column': 'calc(100vh - 6rem)',
+		'sticky-column': `calc(100vh - ${TOC_TOP})`,
 	},
 	maxWidth: {
 		'search-trigger': '200px',
@@ -105,7 +108,7 @@ export const sizes = {
 		'landing-offset-sm': '76px',
 		'landing-offset': '84px',
 		'landing-offset-lg': '92px',
-		'toc-top': '100px',
+		'toc-top': TOC_TOP,
 		'hero-media': '230px',
 		'shelf-card': '264px',
 		'menu-panel': '960px',
