@@ -38,6 +38,36 @@
 						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/git-guard.mjs\""
 					}
 				]
+			},
+			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/verify-guard.mjs\""
+					}
+				]
+			}
+		],
+		"PostToolUse": [
+			{
+				"matcher": "Read",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-guard.mjs\""
+					}
+				]
+			}
+		],
+		"Stop": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-guard.mjs\""
+					}
+				]
 			}
 		]
 	}
