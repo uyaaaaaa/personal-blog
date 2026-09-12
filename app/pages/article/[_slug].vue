@@ -97,7 +97,7 @@
 		v-if="page"
 		class="mx-auto flex w-full max-w-container flex-col gap-12 lg:flex-row lg:justify-center"
 	>
-		<main class="min-w-0 max-w-column flex-1">
+		<main class="mx-auto min-w-0 max-w-column flex-1 lg:mx-0">
 			<article class="space-y-8">
 				<header class="space-y-4 border-b border-border pb-8">
 					<div class="flex flex-col gap-2.5 font-mono text-sm text-sub">
