@@ -5,6 +5,8 @@ export interface ShelfArticle {
 	category?: string
 }
 
+export type ShelfLimits = Record<Category, number>
+
 export interface Shelf<T extends ShelfArticle> {
 	category: Category
 	title: string
@@ -16,7 +18,7 @@ export interface Shelf<T extends ShelfArticle> {
 export const buildShelves = <T extends ShelfArticle>(
 	articles: T[],
 	heroPath: string | undefined,
-	limit: number,
+	limits: ShelfLimits,
 ): Shelf<T>[] => {
 	return CATEGORIES.map((category) => {
 		const inCategory = articles.filter((article) => article.category === category)
@@ -24,7 +26,9 @@ export const buildShelves = <T extends ShelfArticle>(
 			category,
 			title: CATEGORY_LABELS[category],
 			total: inCategory.length,
-			articles: inCategory.filter((article) => article.path !== heroPath).slice(0, limit),
+			articles: inCategory
+				.filter((article) => article.path !== heroPath)
+				.slice(0, limits[category]),
 		}
 	}).filter((shelf) => shelf.articles.length > 0)
 }

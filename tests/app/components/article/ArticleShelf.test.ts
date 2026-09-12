@@ -13,10 +13,10 @@ const articles = (count: number) =>
 const mount = (count: number, total: number) =>
 	mountSuspended(ArticleShelf, {
 		props: {
-			title: 'Backend',
+			title: 'Blog',
 			articles: articles(count),
 			total,
-			viewAllPath: '/category/backend',
+			viewAllPath: '/category/blog',
 		},
 	})
 
@@ -25,43 +25,27 @@ const viewAll = (wrapper: Awaited<ReturnType<typeof mount>>) =>
 
 describe('ArticleShelf', () => {
 	it('見出しも View All と同じ導線にする', async () => {
-		const wrapper = await mount(6, 10)
+		const wrapper = await mount(5, 8)
 
-		expect(wrapper.get('h2 a').attributes('href')).toBe('/category/backend')
-		expect(wrapper.get('h2 a').text()).toBe('Backend')
+		expect(wrapper.get('h2 a').attributes('href')).toBe('/category/blog')
+		expect(wrapper.get('h2 a').text()).toBe('Blog')
 	})
 
-	it('渡した件数が総数に届いていなければ両方の幅で出す', async () => {
-		const wrapper = await mount(6, 10)
+	it('渡した記事を連番の行にして、渡した順に並べる', async () => {
+		const wrapper = await mount(3, 3)
 
-		expect(viewAll(wrapper)?.classes()).toContain('flex')
-		expect(viewAll(wrapper)?.classes()).not.toContain('hidden')
+		expect(wrapper.findAll('li h2').map((row) => row.text())).toEqual([
+			'記事0',
+			'記事1',
+			'記事2',
+		])
 	})
 
-	it('モバイルで全件見えていてもデスクトップで隠れる分があればデスクトップだけに出す', async () => {
-		const wrapper = await mount(6, 6)
-
-		expect(viewAll(wrapper)?.classes()).toEqual(expect.arrayContaining(['hidden', 'lg:flex']))
+	it('総数に届いていなければ View All を出す', async () => {
+		expect(viewAll(await mount(5, 8))?.attributes('href')).toBe('/category/blog')
 	})
 
-	it('どちらの幅でも全件見えていれば出さない', async () => {
-		const wrapper = await mount(4, 4)
-
-		expect(viewAll(wrapper)).toBeUndefined()
-	})
-
-	it('デスクトップの上限より少ない棚でも、総数に届いていなければ出す', async () => {
-		const wrapper = await mount(2, 3)
-
-		expect(viewAll(wrapper)?.classes()).toContain('flex')
-	})
-
-	it('5枚目以降のカードはデスクトップで落とす', async () => {
-		const wrapper = await mount(6, 10)
-
-		const cards = wrapper.findAll('.article-card')
-		expect(cards).toHaveLength(6)
-		expect(cards.slice(0, 4).every((card) => !card.classes().includes('lg:hidden'))).toBe(true)
-		expect(cards.slice(4).every((card) => card.classes().includes('lg:hidden'))).toBe(true)
+	it('全件見えていれば View All を出さない', async () => {
+		expect(viewAll(await mount(5, 5))).toBeUndefined()
 	})
 })
