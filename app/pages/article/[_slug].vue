@@ -141,7 +141,7 @@
 				<TocMobile :links="tocLinks" />
 
 				<div
-					class="prose prose-slate max-w-none dark:prose-invert"
+					class="prose prose-slate max-w-none dark:prose-invert lg:prose-lg"
 					@pointerdown="handleFootnoteJump"
 					@click="handleFootnoteJump"
 				>

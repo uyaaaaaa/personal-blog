@@ -36,6 +36,9 @@ export default <Config>{
 			typography: {
 				DEFAULT: {
 					css: {
+						fontSize: '15.5px',
+						lineHeight: '1.85',
+						h2: { fontSize: '22px', lineHeight: '1.4' },
 						'code::before': { content: 'none' },
 						'code::after': { content: 'none' },
 						figure: {
@@ -43,6 +46,7 @@ export default <Config>{
 							marginBottom: '1.5em',
 						},
 						code: {
+							fontSize: '13.5px',
 							backgroundColor: 'var(--color-surface-subtle)',
 							border: '1px solid var(--color-border)',
 							color: 'inherit',
@@ -53,6 +57,14 @@ export default <Config>{
 							paddingLeft: '0.375rem',
 							paddingRight: '0.375rem',
 						},
+					},
+				},
+				lg: {
+					css: {
+						fontSize: '17px',
+						lineHeight: '1.9',
+						h2: { fontSize: '22px', lineHeight: '1.4' },
+						code: { fontSize: '15px' },
 					},
 				},
 			},

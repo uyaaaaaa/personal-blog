@@ -60,16 +60,39 @@ export const fontFamily = {
 
 export const sizes = {
 	borderRadius: {
+		kbd: '3px',
 		card: '10px',
 	},
 	fontSize: {
+		'2xs': '11px',
+		code: ['13px', '1.7'],
+		'title-sm': ['23px', '1.35'],
+		heading: ['24px', '1.3'],
+		'hero-sm': ['26px', '1.3'],
 		emoji: '28px',
+		title: ['32px', '1.35'],
+		hero: ['38px', '1.25'],
+	},
+	gridTemplateColumns: {
+		article: 'minmax(0, 680px) 224px',
+		list: '36px 1fr 110px',
+		'list-sm': '30px 1fr',
+		pickup: '96px 1fr',
+	},
+	height: {
+		'header-sm': '52px',
+		header: '60px',
+	},
+	letterSpacing: {
+		marker: '0.12em',
 	},
 	maxHeight: {
 		'sticky-column': 'calc(100vh - 6rem)',
 		'toc-dropdown': '60vh',
 	},
 	maxWidth: {
+		column: '680px',
+		article: '960px',
 		container: '1200px',
 	},
 	minHeight: {
@@ -80,6 +103,7 @@ export const sizes = {
 		'below-header': '74px',
 		'landing-offset': '88px',
 		'landing-offset-lg': '96px',
+		'toc-top': '100px',
 		'toc-hidden': '120px',
 		'hero-media': '230px',
 		'shelf-card': '264px',

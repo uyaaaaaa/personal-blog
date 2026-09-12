@@ -18,7 +18,7 @@
 					<a
 						:href="`#${link.id}`"
 						@click.prevent="scrollTo(link.id)"
-						class="block break-words border-l-2 py-1 pl-4 text-sm transition-colors duration-200 hover:border-accent hover:text-accent focus:border-accent focus:text-accent focus:outline-none"
+						class="block break-words border-l-2 py-1 pl-4 text-sm transition-colors duration-200 hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
 						:class="
 							activeId === link.id
 								? 'border-accent font-medium text-accent'
@@ -38,7 +38,7 @@
 							<a
 								:href="`#${child.id}`"
 								@click.prevent="scrollTo(child.id)"
-								class="block break-words py-1 pl-4 text-xs transition-colors duration-200 hover:text-accent focus:text-accent focus:outline-none"
+								class="block break-words py-1 pl-4 text-xs transition-colors duration-200 hover:text-accent focus:text-accent"
 								:class="
 									activeId === child.id ? 'font-medium text-accent' : 'text-sub'
 								"
