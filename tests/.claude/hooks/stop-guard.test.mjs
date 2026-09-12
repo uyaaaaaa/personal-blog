@@ -8,7 +8,7 @@ import { opened, unfinished } from '~~/.claude/hooks/stop-guard.mjs'
 
 const HOOK = fileURLToPath(new URL('../../../.claude/hooks/stop-guard.mjs', import.meta.url))
 
-const shot = (name, at = 1, bytes = 100) => ({ name, at, bytes })
+const shot = (name, mtime = 1, bytes = 100) => ({ name, mtime, bytes })
 
 describe('opened', () => {
 	it('証跡の PNG を開いたときだけ、その名前を返す', () => {
