@@ -6,6 +6,7 @@
 	import { usePageSeo } from '~/composables/usePageSeo'
 	import { CATEGORY_LABELS, isCategory } from '~/utils/category'
 	import { formatDate } from '~/utils/date'
+	import { tagToSlug } from '~/utils/tag'
 
 	const route = useRoute()
 
@@ -107,11 +108,12 @@
 							class="text-accent"
 							>{{ categoryLabel }}</span
 						>
-						<span
+						<NuxtLink
 							v-for="tag in page.tags"
 							:key="tag"
+							:to="`/tags/${tagToSlug(tag)}`"
 							class="transition-colors hover:text-accent"
-							>#{{ tag }}</span
+							>#{{ tag }}</NuxtLink
 						>
 					</div>
 
