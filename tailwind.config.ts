@@ -59,11 +59,10 @@ export default <Config>{
 						},
 					},
 				},
-				lg: {
+				wide: {
 					css: {
 						fontSize: '17px',
 						lineHeight: '1.9',
-						h2: { fontSize: '22px', lineHeight: '1.4' },
 						code: { fontSize: '15px' },
 					},
 				},

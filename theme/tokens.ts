@@ -56,7 +56,7 @@ export const fontFamily = {
 		'sans-serif',
 	],
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-} as const
+}
 
 export const sizes = {
 	borderRadius: {
@@ -72,7 +72,7 @@ export const sizes = {
 		emoji: '28px',
 		title: ['32px', '1.35'],
 		hero: ['38px', '1.25'],
-	},
+	} as Record<string, string | [string, string]>,
 	gridTemplateColumns: {
 		article: 'minmax(0, 680px) 224px',
 		list: '36px 1fr 110px',
