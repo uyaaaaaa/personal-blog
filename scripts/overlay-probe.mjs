@@ -18,7 +18,7 @@ const NO_ACTIVE = 'なし'
 const OPEN_TIMEOUT = 4000
 const TRANSITION = 400
 
-const OVERLAYS = {
+export const OVERLAYS = {
 	search: {
 		trigger: 'header button[aria-haspopup="dialog"]',
 		shortcut: 'K',
@@ -1254,4 +1254,5 @@ const main = async () => {
 	process.exit(failed > 0 ? 1 : 0)
 }
 
-await main()
+// テストと pr-guard から import したときは走らせない
+if (process.argv[1]?.endsWith('overlay-probe.mjs')) await main()
