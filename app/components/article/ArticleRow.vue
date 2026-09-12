@@ -7,11 +7,12 @@
 		>
 			<span class="font-mono text-sm tabular-nums text-sub">{{ sequence }}</span>
 
-			<h2
+			<component
+				:is="`h${headingLevel}`"
 				class="text-list-title font-medium text-main transition-colors group-hover:text-accent"
 			>
 				{{ title }}
-			</h2>
+			</component>
 
 			<div
 				class="col-start-2 mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 lg:col-start-3 lg:row-start-1 lg:mt-0 lg:justify-end"
@@ -41,11 +42,13 @@
 		path: string
 		date?: string
 		tags?: string[]
+		headingLevel?: 2 | 3
 	}
 
 	const props = withDefaults(defineProps<Props>(), {
 		date: '',
 		tags: () => [],
+		headingLevel: 2,
 	})
 
 	const sequence = computed(() => String(props.number).padStart(2, '0'))

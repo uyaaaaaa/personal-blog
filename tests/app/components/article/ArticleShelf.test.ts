@@ -10,12 +10,13 @@ const articles = (count: number) =>
 		date: '2026-01-02',
 	}))
 
-const mount = (count: number, total: number) =>
+const mount = (count: number, total: number, startNumber = 1) =>
 	mountSuspended(ArticleShelf, {
 		props: {
 			title: 'Blog',
 			articles: articles(count),
 			total,
+			startNumber,
 			viewAllPath: '/category/blog',
 		},
 	})
@@ -31,13 +32,25 @@ describe('ArticleShelf', () => {
 		expect(wrapper.get('h2 a').text()).toBe('Blog')
 	})
 
-	it('渡した記事を連番の行にして、渡した順に並べる', async () => {
+	it('記事の見出しは棚の見出しの下の階層にし、渡した順に並べる', async () => {
 		const wrapper = await mount(3, 3)
 
-		expect(wrapper.findAll('li h2').map((row) => row.text())).toEqual([
+		expect(wrapper.findAll('li h3').map((row) => row.text())).toEqual([
 			'記事0',
 			'記事1',
 			'記事2',
+		])
+		expect(wrapper.findAll('li h2')).toHaveLength(0)
+	})
+
+	it('連番は渡された番号から振る', async () => {
+		const wrapper = await mount(2, 8, 2)
+
+		expect(wrapper.findAll('li .tabular-nums').map((cell) => cell.text())).toEqual([
+			'02',
+			'2026.01.02',
+			'03',
+			'2026.01.02',
 		])
 	})
 

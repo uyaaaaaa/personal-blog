@@ -61,6 +61,15 @@ describe('buildShelves', () => {
 		expect(shelves.map((shelf) => shelf.articles.length)).toEqual([3, 2])
 	})
 
+	it('ヒーローを外した棚の連番は、カテゴリページに合わせて2から始める', () => {
+		const shelves = buildShelves([...blog(3), article('/a', 'book')], '/article/b0', LIMITS)
+
+		expect(shelves.map((shelf) => [shelf.category, shelf.startNumber])).toEqual([
+			['blog', 2],
+			['book', 1],
+		])
+	})
+
 	it('ヒーローが無いときは何も外さない', () => {
 		const shelves = buildShelves(blog(3), undefined, LIMITS)
 

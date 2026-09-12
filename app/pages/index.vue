@@ -11,6 +11,7 @@
 			:title="shelf.title"
 			:articles="shelf.articles"
 			:total="shelf.total"
+			:start-number="shelf.startNumber"
 			:view-all-path="`/category/${shelf.category}`"
 		/>
 	</div>

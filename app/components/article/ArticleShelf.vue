@@ -18,7 +18,8 @@
 
 		<ArticleList
 			:articles="articles"
-			:start-number="1"
+			:start-number="startNumber"
+			:heading-level="3"
 		/>
 	</section>
 </template>
@@ -37,6 +38,7 @@
 		title: string
 		articles: Article[]
 		total: number
+		startNumber: number
 		viewAllPath: string
 	}>()
 

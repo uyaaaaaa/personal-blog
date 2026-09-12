@@ -21,6 +21,13 @@ describe('ArticleRow', () => {
 		expect(wrapper.get('h2').text()).toBe('Nuxt Content 3 に移行する')
 	})
 
+	it('見出しの階層は置かれる側から受け取り、既定は h2', async () => {
+		expect((await mount({})).find('h2').exists()).toBe(true)
+		expect((await mount({ headingLevel: 3 })).get('h3').text()).toBe(
+			'Nuxt Content 3 に移行する',
+		)
+	})
+
 	it('連番は2桁までゼロ埋めし、それを超えたら桁を落とさない', async () => {
 		expect((await mount({ number: 1 })).text()).toContain('01')
 		expect((await mount({ number: 10 })).text()).toContain('10')

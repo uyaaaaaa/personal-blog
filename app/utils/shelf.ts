@@ -11,6 +11,7 @@ export interface Shelf<T extends ShelfArticle> {
 	category: Category
 	title: string
 	total: number
+	startNumber: number
 	articles: T[]
 }
 
@@ -22,13 +23,14 @@ export const buildShelves = <T extends ShelfArticle>(
 ): Shelf<T>[] => {
 	return CATEGORIES.map((category) => {
 		const inCategory = articles.filter((article) => article.category === category)
+		const withoutHero = inCategory.filter((article) => article.path !== heroPath)
+		const removedHero = inCategory.length - withoutHero.length
 		return {
 			category,
 			title: CATEGORY_LABELS[category],
 			total: inCategory.length,
-			articles: inCategory
-				.filter((article) => article.path !== heroPath)
-				.slice(0, limits[category]),
+			startNumber: removedHero + 1,
+			articles: withoutHero.slice(0, limits[category]),
 		}
 	}).filter((shelf) => shelf.articles.length > 0)
 }
