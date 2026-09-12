@@ -40,6 +40,15 @@
 				]
 			},
 			{
+				"matcher": "Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/verify-guard.mjs\""
+					}
+				]
+			},
+			{
 				"matcher": "mcp__github__(create|update)_pull_request",
 				"hooks": [
 					{
@@ -51,6 +60,15 @@
 			}
 		],
 		"PostToolUse": [
+			{
+				"matcher": "Read",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-guard.mjs\""
+					}
+				]
+			},
 			{
 				"matcher": "mcp__.*__(create_pull_request|subscribe_pr_activity|set_session_title|create_session)",
 				"hooks": [
@@ -64,6 +82,10 @@
 		"Stop": [
 			{
 				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-guard.mjs\""
+					},
 					{
 						"type": "command",
 						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pr-followup.mjs\""

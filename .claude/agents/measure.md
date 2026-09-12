@@ -22,8 +22,6 @@ model: sonnet
 npm run lint > .verify/lint.log 2>&1; echo $?
 ```
 
-**`.verify/` を消さない。** 作り直すのは投げた側。消すと、並行して測っている別の証跡まで消える。
-
 ## 貼り返す形
 
 指示された項目ごとに、3つ。
