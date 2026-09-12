@@ -23,3 +23,4 @@
 - [16 `components/` の共有部品は題材を知らないものだけを `ui/` に置く](./adr/16-ui-knows-no-domain.md)
 - [17 スタイルの判定は1つだけ持ち、ESLint と `scripts/` の両方から通す](./adr/17-one-style-judgment-two-runners.md)
 - [18 記事の識別を文字だけにし、`emoji` / `image` はスキーマに残す](./adr/18-text-only-article-identity.md)
+- [19 `accent` は状態に加えて数と記号の目印にも使い、状態の合図は色に限らない](./adr/19-accent-for-state-and-marker.md)
