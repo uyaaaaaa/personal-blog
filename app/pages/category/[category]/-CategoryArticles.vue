@@ -19,7 +19,7 @@
 			.where('published', '=', true)
 			.where('category', '=', category)
 			.order('date', 'DESC')
-			.select('path', 'title', 'date', 'emoji', 'tags')
+			.select('path', 'title', 'date', 'tags')
 			.all(),
 	)
 
@@ -27,7 +27,7 @@
 		throw createError({ statusCode: 404, statusMessage: 'Category not found', fatal: true })
 	}
 
-	const { page, totalPages, pagedItems, basePath } = usePagination(
+	const { page, totalPages, pagedItems, startNumber, basePath } = usePagination(
 		computed(() => articles.value ?? []),
 		{ pageParam: () => route.params.page, path: () => route.path },
 	)
@@ -41,15 +41,15 @@
 
 <template>
 	<div class="mx-auto w-full max-w-column space-y-8">
-		<header class="border-b border-border pb-8">
-			<h1 class="mb-2 text-3xl font-bold text-main">{{ label }}</h1>
-			<p class="text-sub">
-				{{ articles?.length }} article{{ articles?.length === 1 ? '' : 's' }} in
-				{{ label }}.
-			</p>
-		</header>
+		<div class="flex items-baseline gap-4">
+			<h1 class="text-3xl font-bold text-main">{{ label }}</h1>
+			<span class="font-mono text-base text-sub">{{ articles?.length ?? 0 }}</span>
+		</div>
 
-		<ArticleList :articles="pagedItems" />
+		<ArticleList
+			:articles="pagedItems"
+			:start-number="startNumber"
+		/>
 
 		<Pagination
 			:page="page"

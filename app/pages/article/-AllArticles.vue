@@ -10,11 +10,11 @@
 		queryCollection('article')
 			.where('published', '=', true)
 			.order('date', 'DESC')
-			.select('path', 'title', 'date', 'emoji', 'tags')
+			.select('path', 'title', 'date', 'tags')
 			.all(),
 	)
 
-	const { page, totalPages, pagedItems, basePath } = usePagination(
+	const { page, totalPages, pagedItems, startNumber, basePath } = usePagination(
 		computed(() => articles.value ?? []),
 		{ pageParam: () => route.params.page, path: () => route.path },
 	)
@@ -28,12 +28,15 @@
 
 <template>
 	<div class="mx-auto w-full max-w-column space-y-8">
-		<header class="border-b border-border pb-8">
-			<h1 class="mb-2 text-3xl font-bold text-main">Articles</h1>
-			<p class="text-sub">All tech articles and book reviews.</p>
-		</header>
+		<div class="flex items-baseline gap-4">
+			<h1 class="text-3xl font-bold text-main">Articles</h1>
+			<span class="font-mono text-base text-sub">{{ articles?.length ?? 0 }}</span>
+		</div>
 
-		<ArticleList :articles="pagedItems" />
+		<ArticleList
+			:articles="pagedItems"
+			:start-number="startNumber"
+		/>
 
 		<Pagination
 			:page="page"

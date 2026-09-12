@@ -21,11 +21,13 @@ export const usePagination = <T>(
 		throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
 	}
 
-	const pagedItems = computed(() =>
-		items.value.slice((page.value - 1) * perPage, page.value * perPage),
-	)
+	const skipped = computed(() => (page.value - 1) * perPage)
+
+	const pagedItems = computed(() => items.value.slice(skipped.value, page.value * perPage))
+
+	const startNumber = computed(() => skipped.value + 1)
 
 	const basePath = computed(() => stripPagePath(toValue(location.path)))
 
-	return { page, totalPages, pagedItems, basePath }
+	return { page, totalPages, pagedItems, startNumber, basePath }
 }

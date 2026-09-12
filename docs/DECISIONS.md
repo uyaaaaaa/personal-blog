@@ -22,3 +22,4 @@
 - [15 ブレークポイントは md と lg の2つに限り、ESLint で落とす](./adr/15-two-breakpoints.md)
 - [16 `components/` の共有部品は題材を知らないものだけを `ui/` に置く](./adr/16-ui-knows-no-domain.md)
 - [17 スタイルの判定は1つだけ持ち、ESLint と `scripts/` の両方から通す](./adr/17-one-style-judgment-two-runners.md)
+- [18 記事の識別を文字だけにし、`emoji` / `image` はスキーマに残す](./adr/18-text-only-article-identity.md)

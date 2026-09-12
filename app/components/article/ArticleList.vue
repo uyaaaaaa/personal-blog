@@ -1,29 +1,29 @@
 <template>
-	<div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
-		<ArticleCard
-			v-for="article in articles"
+	<ul class="border-t border-border-strong">
+		<ArticleRow
+			v-for="(article, offset) in articles"
 			:key="article.path"
+			:number="startNumber + offset"
 			:title="article.title"
 			:path="article.path"
 			:date="article.date"
-			:emoji="article.emoji"
 			:tags="article.tags"
 		/>
-	</div>
+	</ul>
 </template>
 
 <script setup lang="ts">
-	import ArticleCard from '~/components/article/ArticleCard.vue'
+	import ArticleRow from '~/components/article/ArticleRow.vue'
 
 	interface Article {
 		path: string
 		title: string
 		date: string
-		emoji?: string
 		tags?: string[]
 	}
 
 	defineProps<{
 		articles: Article[]
+		startNumber: number
 	}>()
 </script>
