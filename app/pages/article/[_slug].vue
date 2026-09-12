@@ -195,12 +195,18 @@
 	}
 
 	.prose {
-		--landing-offset: 88px;
+		--landing-offset: 76px;
+	}
+
+	@media (min-width: 768px) {
+		.prose {
+			--landing-offset: 84px;
+		}
 	}
 
 	@media (min-width: 1024px) {
 		.prose {
-			--landing-offset: 96px;
+			--landing-offset: 92px;
 		}
 	}
 

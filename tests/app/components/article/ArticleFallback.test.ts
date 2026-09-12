@@ -17,6 +17,7 @@ mockNuxtImport('queryCollection', () => () => {
 		where: () => builder,
 		order: () => builder,
 		limit: () => builder,
+		select: () => builder,
 		all: async () => recent(),
 	}
 	return builder

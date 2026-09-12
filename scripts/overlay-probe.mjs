@@ -417,7 +417,12 @@ const start = async () => {
 			)
 			if (opened) {
 				await evaluate('return $settled(TRAP)')
-				return
+				// 閉じる側の visibility は遷移の間 visible のまま残る。ホバーで開いた直後の
+				// click は閉じる側に倒すので、遷移が終わってから確かめ直して押し直す
+				const stayed = await evaluate(
+					`return getComputedStyle(document.querySelector(OVERLAY)).visibility === 'visible'`,
+				)
+				if (stayed) return
 			}
 		}
 		throw new Error('被せた UI が開かない')
@@ -998,15 +1003,18 @@ const probes = [
 			await p.setTouch(true)
 			await p.reload()
 			await p.setWidth(width)
-			// 指は上に運ぶので、要るのは下に残っている余地。下がった量では測れない
-			const scrolled = await p.evaluate(`
-				const max = document.documentElement.scrollHeight - window.innerHeight
-				window.scrollTo(0, Math.floor(Math.min(300, max / 2)))
-				await $frames(2)
-				return { down: window.scrollY, room: max - window.scrollY }
+			// 指は上に運ぶので、要るのは下に残っている余地。下がった量では測れない。
+			// 決め打ちで下げると、ページの丈が数十px縮むだけで余地が尽きる
+			const offset = await p.evaluate(`
+				return Math.floor((document.documentElement.scrollHeight - window.innerHeight) / 2)
 			`)
-			sent(`背後のページを ${scrolled.down}px 下げる`)
-			if (scrolled.room <= 0) throw new Error('背後のページに下がる余地が無い')
+			sent(`背後のページを ${offset}px 下げる`)
+			const room = await p.evaluate(`
+				window.scrollTo(0, ${offset})
+				await $frames(2)
+				return document.documentElement.scrollHeight - window.innerHeight - window.scrollY
+			`)
+			if (room <= 0) throw new Error('背後のページに下がる余地が無い')
 			await p.open()
 			await p.reveal()
 			await p.watchTouchMoves()
@@ -1018,7 +1026,7 @@ const probes = [
 			const cancelable = observed.moves.filter((move) => move.cancelable)
 			return {
 				width,
-				observed: `残りの余地=${scrolled.room}px touchmove=${observed.moves.length}件（cancelable=${cancelable.length}件）うち止めた=${cancelable.filter((m) => m.prevented).length}件 scrollY=${before}→${observed.scrollY} overlay="${observed.overlay}"`,
+				observed: `残りの余地=${room}px touchmove=${observed.moves.length}件（cancelable=${cancelable.length}件）うち止めた=${cancelable.filter((m) => m.prevented).length}件 scrollY=${before}→${observed.scrollY} overlay="${observed.overlay}"`,
 				ok:
 					cancelable.length > 0 &&
 					cancelable.every((move) => move.prevented) &&

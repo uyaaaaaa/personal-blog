@@ -93,6 +93,7 @@ export const sizes = {
 		'toc-dropdown': '60vh',
 	},
 	maxWidth: {
+		'search-trigger': '200px',
 		column: '680px',
 		article: '960px',
 		container: '1200px',
@@ -102,9 +103,12 @@ export const sizes = {
 	},
 	spacing: {
 		'toc-guide': '3px',
-		'below-header': '74px',
-		'landing-offset': '88px',
-		'landing-offset-lg': '96px',
+		'logo-mark': '26px',
+		'below-header-sm': '62px',
+		'below-header': '70px',
+		'landing-offset-sm': '76px',
+		'landing-offset': '84px',
+		'landing-offset-lg': '92px',
 		'toc-top': '100px',
 		'toc-hidden': '120px',
 		'hero-media': '230px',
