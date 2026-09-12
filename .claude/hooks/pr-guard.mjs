@@ -9,7 +9,6 @@ const EVIDENCE = '.verify'
 const PROBE = 'scripts/overlay-probe.mjs'
 const OVERLAY_LOG = /^overlay-.+\.log$/
 
-// CI が打つもの。ここを足すときは .github/workflows/ と揃える
 const CHECKS = [
 	['lint', ['run', 'lint']],
 	['test', ['test']],
@@ -47,7 +46,6 @@ export const unsigned = (body) => {
 const CLASS = /^\.([a-z][\w-]*)$/
 const UI = 'app/'
 
-// 被せた UI の綴りは probe が正。読み取りではなく import で引くので、改名すれば壊れて分かる
 const names = [
 	...new Set(
 		Object.values(OVERLAYS)
