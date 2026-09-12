@@ -141,13 +141,14 @@
 	)
 	const containerRef = ref<HTMLElement | null>(null)
 
-	const STICKY_TOP = 74
-
 	const updateSticky = () => {
 		const el = containerRef.value
 		if (!el) return
 
-		isSticky.value = el.getBoundingClientRect().top <= STICKY_TOP + 1
+		// 留まる位置は CSS が持つ。判定に数値を写すと、寸法を変えたとき片方だけ残る
+		const stickyTop = parseFloat(getComputedStyle(el).top)
+
+		isSticky.value = el.getBoundingClientRect().top <= stickyTop + 1
 	}
 
 	useScrollFrame(updateSticky, isMobile)
