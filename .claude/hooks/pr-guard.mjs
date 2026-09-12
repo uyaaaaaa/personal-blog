@@ -2,6 +2,7 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { OVERLAYS } from '../../scripts/overlay-probe.mjs'
 
 const TRUNK = 'main'
 const EVIDENCE = '.verify'
@@ -26,9 +27,9 @@ const tail = (log) =>
 		.slice(-TAIL)
 		.join('\n')
 
-// 行頭の飾り（Markdown の強調・絵文字）だけを跨ぐ。本文の途中に綴りが出ても落とさない
+// 跨ぐのは実際に付く飾りだけ。* は Markdown の箇条書きの印でもあり、本文の行に当たる
 const SIGNATURE =
-	/^[\s_*🤖]*Generated (?:with|by) \[Claude Code\]|^\s*https:\/\/claude\.ai\/code\/session_|^\s*Co-Authored-By:.*Claude|^\s*Claude-Session:/u
+	/^[\s_🤖]*Generated (?:with|by) \[Claude Code\]|^\s*https:\/\/claude\.ai\/code\/session_|^\s*Co-Authored-By:.*Claude|^\s*Claude-Session:/u
 const FILLER = /^\s*(?:[-*_]{3,})?\s*$/
 
 export const unsigned = (body) => {
@@ -43,17 +44,20 @@ export const unsigned = (body) => {
 	return lines.slice(0, top).join('\n').trimEnd()
 }
 
-const CLASS = /'\.([a-z][\w-]*)'/g
-const OVERLAYS = /^const OVERLAYS = \{$([\s\S]*?)^\}$/m
+const CLASS = /^\.([a-z][\w-]*)$/
 const UI = 'app/'
 
-// 被せた UI の綴りは probe が正。ここに一覧を持つと probe と別々に古くなる
+// 被せた UI の綴りは probe が正。読み取りではなく import で引くので、改名すれば壊れて分かる
+const names = [
+	...new Set(
+		Object.values(OVERLAYS)
+			.flatMap((overlay) => Object.values(overlay))
+			.map((value) => (typeof value === 'string' ? CLASS.exec(value)?.[1] : null))
+			.filter(Boolean),
+	),
+]
+
 const overlaid = (ask, base) => {
-	const probe = ask.text(PROBE)
-	// probe の他の箇所には is-active のような、被せた UI に限らない綴りが混ざる
-	const table = OVERLAYS.exec(probe ?? '')
-	if (table === null) return false
-	const names = [...new Set([...table[1].matchAll(CLASS)].map(([, name]) => name))]
 	if (names.length === 0) return false
 
 	const found = new RegExp(`(?<![\\w-])(?:${names.join('|')})(?![\\w-])`)
