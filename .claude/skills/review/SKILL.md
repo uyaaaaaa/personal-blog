@@ -39,10 +39,10 @@ effort は `medium` を渡す。生成物・ルーティング・データ取得
 
 | グレード | 付けるとき | saved reply の本文 |
 | :--- | :--- | :--- |
-| `must` | 壊れる・生成物が変わる・方針に反する。直さないとマージできない | `![must](https://img.shields.io/badge/must-d73a4a)` |
-| `suggestion` | 直せば良くなる具体案がある。採否は書き手が決める | `![suggestion](https://img.shields.io/badge/suggestion-fbca04)` |
-| `imo` | 自分ならこうする、という別案。採らなくてよい | `![imo](https://img.shields.io/badge/imo-0075ca)` |
-| `nits` | 命名・表記の細かい点。直さなくても動く | `![nits](https://img.shields.io/badge/nits-cfd3d7)` |
+| `must` | 壊れる・生成物が変わる・方針に反する。直さないとマージできない | `![must-badge](https://img.shields.io/badge/review-must-red)` |
+| `suggestion` | 直せば良くなる具体案がある。採否は書き手が決める | `![suggestion-badge](https://img.shields.io/badge/review-suggestion-blueviolet)` |
+| `imo` | 自分ならこうする、という別案。採らなくてよい | `![imo-badge](https://img.shields.io/badge/review-imo-orange)` |
+| `nits` | 命名・表記の細かい点。直さなくても動く | `![nits-badge](https://img.shields.io/badge/review-nits-lightgrey)` |
 
 **グレードはこの4本の saved reply でだけ表す。** GitHub の Settings → Saved replies に、グレード名をタイトル・右列を本文として登録しておき、コメントの先頭はそこから挿入する。手で書くのは見出しから下だけ。
 
@@ -50,6 +50,7 @@ effort は `medium` を渡す。生成物・ルーティング・データ取得
 - **`nits` に整形・import 順・型を入れない**（→ 2 で捨てる側）
 - グレードが2つ付くなら指摘が2つ入っている。2コメントに割る
 - 本文は右列のまま。色・文言・URL を変えず、ここに無いグレードを足さない
+- **URL は `badge/review-<グレード>-<色>` の3区切り。** 2区切りだと色名がそのままラベルとして描かれる
 
 ## 4. 判定する
 
@@ -79,7 +80,8 @@ effort は `medium` を渡す。生成物・ルーティング・データ取得
 ### インラインコメント（1件1論点）
 
 ```md
-![must](https://img.shields.io/badge/must-d73a4a) **静的生成の HTML では閉じたままになる**
+![must-badge](https://img.shields.io/badge/review-must-red)
+**静的生成の HTML では閉じたままになる**
 
 `onMounted` 後にしか開閉が決まらないため、初期状態がビルド時に焼き付く。
 CSS で出し分けるか、初期値を props で受ける。
@@ -87,7 +89,8 @@ CSS で出し分けるか、初期値を props で受ける。
 
 | | 決まり |
 | :--- | :--- |
-| 1行目 | グレードの saved reply 1つ + 見出し。**何が起きるか**を言い切る。「〜すべき」ではなく「〜になる」 |
+| 1行目 | グレードの saved reply 1つだけ。見出しは次の行に置く |
+| 2行目 | 見出し。**何が起きるか**を言い切る。「〜すべき」ではなく「〜になる」 |
 | 本文 | 3行以内。1行40字目安。理由 → 代案の順 |
 | 合計 | 見出し・本文・コード片を合わせて6行以内 |
 | 論点 | 1コメント1つ |
@@ -97,9 +100,16 @@ CSS で出し分けるか、初期値を props で受ける。
 
 ## 6. 出す
 
-- 投稿は GitHub MCP のレビューツール。pending review を作る → コメントを足す → submit の順
+- **投稿は `Review` ワークフローに渡す。** 自分のトークンで直接 submit しない。GitHub は PR の作者による `APPROVE` と `REQUEST_CHANGES` を拒むので、判定が黙って COMMENT に落ちる
+
+```sh
+gh workflow run review.yml -f pr=<番号> -f review="$(cat review.json)"
+```
+
+- `review.json` は `/pulls/{n}/reviews` に渡す形そのまま。`event` は 4 の判定に対応させる（`Approve` → `APPROVE` / `Request changes` → `REQUEST_CHANGES` / `Comment` → `COMMENT`）
+- **走らせたら結果を見る。** `gh run list --workflow=review.yml --limit 1` が成功していなければ投稿できていない。失敗したまま報告しない
 - API からは saved reply を挿入できない。3 の表の本文を1文字も変えずに先頭へ写す
-- サマリはレビュー本体の本文に置く。インラインは該当行に付ける
+- サマリは `body`、インラインは `comments` に `path` と `line` を付けて並べる
 - 作業ツリーのレビュー（PR が無い）は投稿せず、同じ型で会話に返す
 - **投稿したら、判定と件数だけを報告して終わり**
 

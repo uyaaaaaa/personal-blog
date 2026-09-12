@@ -1,0 +1,31 @@
+name: Review
+
+on:
+    workflow_dispatch:
+        inputs:
+            pr:
+                description: PR の番号
+                required: true
+            review:
+                description: event / body / comments を持つ JSON
+                required: true
+
+jobs:
+    submit:
+        runs-on: ubuntu-latest
+        permissions: {}
+        steps:
+            - uses: actions/create-github-app-token@v3
+              id: token
+              with:
+                  client-id: ${{ secrets.REVIEW_APP_CLIENT_ID }}
+                  private-key: ${{ secrets.REVIEW_APP_KEY }}
+
+            - run: |
+                  printf '%s' "$REVIEW" > review.json
+                  gh api --method POST "repos/$REPO/pulls/$PR/reviews" --input review.json
+              env:
+                  GH_TOKEN: ${{ steps.token.outputs.token }}
+                  REPO: ${{ github.repository }}
+                  PR: ${{ inputs.pr }}
+                  REVIEW: ${{ inputs.review }}
