@@ -1,6 +1,6 @@
 # サイズにも名前を付けてトークンに置く
 
-`theme/tokens.ts` に `sizes` を足し、`tailwind.config.ts` が `theme.extend` へ展開する。Tailwind のスケールに無い値は `w-sidebar` `rounded-card` のような名前のクラスで書き、角括弧を含む任意値（`w-[264px]`）は `npm run lint` が落とす。
+`theme/tokens.ts` に `sizes` を足し、`tailwind.config.ts` が `theme.extend` へ展開する。Tailwind のスケールに無い値は `max-w-article` `rounded-card` のような名前のクラスで書き、角括弧を含む任意値（`w-[264px]`）は `npm run lint` が落とす。
 
 - **検討した案**
   - **任意値を許す**: 値がコンポーネントに散り、同じ幅を2箇所で別々に持つ状態を止められない。

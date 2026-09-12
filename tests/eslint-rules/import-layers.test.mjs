@@ -161,7 +161,7 @@ describe('order', () => {
 					code: "import { countTags } from '~/utils/tag'",
 				},
 				{
-					filename: file('app/composables/useScrollDirection.ts'),
+					filename: file('app/composables/useTocActive.ts'),
 					code: "import { useScrollFrame } from './useScrollFrame'\nimport { tagToSlug } from '~/utils/tag'",
 				},
 				{

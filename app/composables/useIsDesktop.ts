@@ -1,4 +1,4 @@
-// Tailwindのlgブレークポイント。Sidebar・TocMobile・ScrollToTopButtonの lg: と同じ幅で切り替える
+// Tailwindのlgブレークポイント。Toc・TocInline・ScrollToTopButtonの lg: と同じ幅で切り替える
 const DESKTOP_QUERY = '(min-width: 1024px)'
 
 const isDesktop = ref(false)

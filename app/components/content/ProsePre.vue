@@ -4,7 +4,7 @@
 		inheritAttrs: false,
 	})
 
-	defineProps<{
+	const props = defineProps<{
 		code?: string
 		language?: string | null
 		filename?: string | null
@@ -12,18 +12,30 @@
 		meta?: string | null
 		class?: string | null
 	}>()
+
+	// Shiki が言語なしと同じに扱う綴り（isPlainLang）。Nuxt Content は綴りの無いフェンスにも text を入れる
+	const PLAIN_LANGUAGES = ['plaintext', 'txt', 'text', 'plain']
+
+	const label = computed(() =>
+		props.language && !PLAIN_LANGUAGES.includes(props.language) ? props.language : null,
+	)
 </script>
 
 <template>
 	<figure class="code-block">
 		<figcaption
-			v-if="filename"
+			v-if="filename || label"
 			class="code-block-label"
 		>
-			{{ filename }}
+			<span v-if="filename">{{ filename }}</span>
+			<span
+				v-if="label"
+				class="code-block-language"
+				>{{ label }}</span
+			>
 		</figcaption>
 		<pre
-			:class="$props.class"
+			:class="['text-code', $props.class]"
 			v-bind="$attrs"
 		><slot /></pre>
 	</figure>
@@ -39,6 +51,8 @@
 	}
 
 	.code-block-label {
+		display: flex;
+		gap: 0.5rem;
 		margin: 0;
 		padding: 0.375rem var(--code-block-padding-x);
 		border-bottom: 1px solid var(--color-border);
@@ -49,6 +63,10 @@
 		overflow-wrap: anywhere;
 	}
 
+	.code-block-language {
+		margin-left: auto;
+	}
+
 	pre {
 		margin: 0;
 		padding: 0.75rem var(--code-block-padding-x);
@@ -57,6 +75,8 @@
 	}
 
 	pre :deep(code) {
+		/* typography の段が code のサイズを持つので、コードブロックの中では pre の指定を継がせる */
+		font-size: inherit;
 		display: block;
 		width: max-content;
 		min-width: 100%;
