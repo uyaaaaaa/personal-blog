@@ -1,5 +1,12 @@
+import { execFileSync } from 'node:child_process'
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { opened, unfinished } from '~~/.claude/hooks/stop-guard.mjs'
+
+const HOOK = fileURLToPath(new URL('../../../.claude/hooks/stop-guard.mjs', import.meta.url))
 
 const shot = (name, at = 1, bytes = 100) => ({ name, at, bytes })
 
@@ -54,5 +61,34 @@ describe('unfinished', () => {
 		expect(
 			unfinished({ shots, dirty: true, ahead: 1, blocked: ['png', 'commit', 'push'] }),
 		).toBeNull()
+	})
+})
+
+describe('フックとして打つ', () => {
+	const fire = (input, root, store) =>
+		execFileSync('node', [HOOK], {
+			input: JSON.stringify(input),
+			encoding: 'utf8',
+			env: { ...process.env, CLAUDE_PROJECT_DIR: root, CLAUDE_HOOK_STATE_DIR: store },
+		})
+
+	it('開いた PNG を覚えていて、次の Stop で止めない', () => {
+		const base = mkdtempSync(join(tmpdir(), 'stop-guard-'))
+		const root = join(base, 'project')
+		const store = join(base, 'state')
+		mkdirSync(join(root, '.verify'), { recursive: true })
+		writeFileSync(join(root, '.verify', 'index-375-dark.png'), 'x')
+
+		const read = {
+			session_id: 'one',
+			hook_event_name: 'PostToolUse',
+			tool_name: 'Read',
+			tool_input: { file_path: '.verify/index-375-dark.png' },
+		}
+		expect(fire(read, root, store)).toBe('')
+		expect(fire({ session_id: 'one', hook_event_name: 'Stop' }, root, store)).toBe('')
+		expect(fire({ session_id: 'two', hook_event_name: 'Stop' }, root, store)).toMatch(
+			'index-375-dark.png',
+		)
 	})
 })

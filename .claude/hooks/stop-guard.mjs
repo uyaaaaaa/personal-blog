@@ -65,7 +65,7 @@ const git = (...args) => {
 	}
 }
 
-const found = (name) => {
+const shotOf = (name) => {
 	try {
 		const { mtimeMs, size } = statSync(join(root, EVIDENCE, name))
 		return { name, at: mtimeMs, bytes: size }
@@ -79,7 +79,7 @@ const shots = () => {
 		return readdirSync(join(root, EVIDENCE))
 			.filter((name) => name.endsWith('.png'))
 			.sort()
-			.map(found)
+			.map(shotOf)
 			.filter((shot) => shot !== null)
 	} catch {
 		return []
@@ -108,27 +108,20 @@ if (process.argv[1]?.endsWith('stop-guard.mjs')) {
 			const kept = { seen: [], blocked: [], ...store.read() }
 
 			if (input.hook_event_name === 'Stop') {
-				const found = unfinished({
+				const left = unfinished({
 					...kept,
 					shots: shots(),
 					dirty: git('status', '--porcelain') !== '',
 					ahead: ahead(),
 				})
-				if (found) {
-					store.write({ ...kept, blocked: [...kept.blocked, found.kind] })
-					process.stdout.write(
-						JSON.stringify({ decision: 'block', reason: found.reason }),
-					)
+				if (left) {
+					store.write({ ...kept, blocked: [...kept.blocked, left.kind] })
+					process.stdout.write(JSON.stringify({ decision: 'block', reason: left.reason }))
 				}
 			} else {
 				const name = opened(input)
-				const at = name === null ? null : when(name)
-				if (at !== null) {
-					store.write({
-						...kept,
-						seen: [...new Set([...kept.seen, stamp({ name, at })])],
-					})
-				}
+				const shot = name === null ? null : shotOf(name)
+				if (shot) store.write({ ...kept, seen: [...new Set([...kept.seen, stamp(shot)])] })
 			}
 		}
 	} catch {}
