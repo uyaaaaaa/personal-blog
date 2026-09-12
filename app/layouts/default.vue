@@ -1,7 +1,7 @@
 <template>
 	<div class="layout-container">
 		<Header :location="route.fullPath" />
-		<main class="main-content container">
+		<main class="flex-1 px-5 pb-16 pt-7 md:px-10 md:pb-24 md:pt-14">
 			<slot />
 		</main>
 		<Footer />
@@ -57,12 +57,5 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
-	}
-
-	.main-content {
-		flex: 1;
-		padding-top: 2rem;
-		padding-bottom: 4rem;
-		width: 100%;
 	}
 </style>

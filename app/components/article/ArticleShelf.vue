@@ -31,7 +31,7 @@
 		</div>
 
 		<div
-			class="-mx-4 flex snap-x snap-mandatory scroll-pl-4 gap-4 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:snap-none lg:grid-cols-4 lg:gap-6 lg:overflow-x-visible lg:px-0 lg:pb-0"
+			class="-mx-5 flex snap-x snap-mandatory scroll-pl-5 gap-4 overflow-x-auto px-5 pb-2 md:mx-0 md:scroll-pl-0 md:px-0 lg:grid lg:snap-none lg:grid-cols-4 lg:gap-6 lg:overflow-x-visible lg:pb-0"
 		>
 			<ArticleCard
 				v-for="(article, index) in articles"
