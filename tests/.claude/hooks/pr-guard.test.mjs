@@ -50,6 +50,12 @@ describe('decide', () => {
 		expect(denied(create(), { touched: () => [PROBE_PATH] })).toBeNull()
 	})
 
+	it('差分は PR の base から取る', () => {
+		const touched = vi.fn(() => [])
+		denied(create({ base: 'release' }), { touched })
+		expect(touched).toHaveBeenCalledWith('release')
+	})
+
 	it('CI が打つものを通し、落ちたら出力を添えて止める', () => {
 		const check = vi.fn((name) => ({ code: name === 'test' ? 1 : 0, log: 'x\n1 failed' }))
 		expect(denied(create(), { check })).toMatch('1 failed')

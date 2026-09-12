@@ -46,7 +46,7 @@ const CLASS = /'\.([a-z][\w-]*)'/g
 const UI = 'app/'
 
 // 被せた UI の綴りは probe が正。ここに一覧を持つと probe と別々に古くなる
-const overlaid = (ask) => {
+const overlaid = (ask, base) => {
 	const probe = ask.text(PROBE)
 	if (probe === null) return false
 	const names = [...new Set([...probe.matchAll(CLASS)].map(([, name]) => name))]
@@ -54,7 +54,7 @@ const overlaid = (ask) => {
 
 	const found = new RegExp(`(?<![\\w-])(?:${names.join('|')})(?![\\w-])`)
 	return ask
-		.touched()
+		.touched(base)
 		.filter((path) => path.startsWith(UI))
 		.some((path) => found.test(ask.text(path) ?? ''))
 }
@@ -78,7 +78,7 @@ const blocking = (args, ask) => {
 	if (evidence.length === 0) {
 		return `実測の証跡が ${EVIDENCE}/ に無い。verify スキルに従って測る`
 	}
-	if (overlaid(ask) && !evidence.some((name) => OVERLAY_LOG.test(name))) {
+	if (overlaid(ask, args.base ?? TRUNK) && !evidence.some((name) => OVERLAY_LOG.test(name))) {
 		return `被せた UI を触っているのに ${EVIDENCE}/overlay-*.log が無い。node ${PROBE} <対象> を打つ`
 	}
 
@@ -138,10 +138,14 @@ const ASK = {
 		const ahead = git('rev-list', '--count', `refs/remotes/origin/${branch}..HEAD`)
 		return ahead === '0' ? '' : `origin/${branch} より ${ahead} コミット先`
 	},
-	touched: () =>
-		git('diff', '--name-only', `refs/remotes/origin/${TRUNK}...HEAD`)
-			.split('\n')
-			.filter(Boolean),
+	touched: (base) => {
+		// 手元の origin/<base> はセッションが始まった時点のもので、古いと差分が膨らむ
+		const at =
+			run('git', ['fetch', '--quiet', 'origin', base]).code === 0
+				? 'FETCH_HEAD'
+				: `refs/remotes/origin/${base}`
+		return git('diff', '--name-only', `${at}...HEAD`).split('\n').filter(Boolean)
+	},
 	text: (path) => {
 		try {
 			return readFileSync(join(root(), path), 'utf8')
