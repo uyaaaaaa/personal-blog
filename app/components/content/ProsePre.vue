@@ -13,8 +13,12 @@
 		class?: string | null
 	}>()
 
-	// Nuxt Content は言語を書かないフェンスにも text を入れる
-	const label = computed(() => (props.language === 'text' ? null : props.language))
+	// 言語を指さない綴り。Nuxt Content は言語を書かないフェンスにも text を入れる
+	const PLAIN_LANGUAGES = ['text', 'txt', 'plaintext']
+
+	const label = computed(() =>
+		props.language && !PLAIN_LANGUAGES.includes(props.language) ? props.language : null,
+	)
 </script>
 
 <template>
