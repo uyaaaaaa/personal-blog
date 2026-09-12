@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // 開いていない PNG と push していない変更を残したまま、セッションを終わらせない。
 import { execFileSync } from 'node:child_process'
-import { readdirSync } from 'node:fs'
+import { readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { state } from './state.mjs'
 
@@ -15,19 +15,28 @@ export const opened = ({ tool_name: tool, tool_input: input } = {}) => {
 	return (typeof path === 'string' && SHOT.exec(path)?.[1]) || null
 }
 
+// 撮り直すと名前は同じまま中身が変わる。開いたかは更新時刻まで見て数える
+export const stamp = ({ name, at }) => `${name}@${at}`
+
 export const unfinished = ({ shots = [], seen = [], dirty = false, ahead = 0, blocked = [] }) => {
 	// 同じ理由で二度は止めない。直せない状況では終われなくなる
-	const unread = shots.filter((shot) => !seen.includes(shot))
+	const unread = shots.filter((shot) => !seen.includes(stamp(shot)))
 	if (unread.length > 0 && !blocked.includes('png')) {
 		return {
 			kind: 'png',
-			reason: `撮った PNG を開いていない: ${unread.join(' ')}。置いただけでは確認にならない`,
+			reason: `撮った PNG を開いていない: ${unread.map(({ name }) => name).join(' ')}。置いただけでは確認にならない`,
 		}
 	}
-	if ((dirty || ahead > 0) && !blocked.includes('push')) {
+	if (dirty && !blocked.includes('commit')) {
+		return {
+			kind: 'commit',
+			reason: 'コミットしていない変更がある。コンテナが消えると失われる',
+		}
+	}
+	if (ahead > 0 && !blocked.includes('push')) {
 		return {
 			kind: 'push',
-			reason: `${dirty ? 'コミットしていない変更' : `push していないコミットが ${ahead} 件`}がある。コンテナが消えると失われる`,
+			reason: `push していないコミットが ${ahead} 件ある。コンテナが消えると失われる`,
 		}
 	}
 	return null
@@ -47,11 +56,20 @@ const git = (...args) => {
 	}
 }
 
+const when = (name) => {
+	try {
+		return statSync(join(root, EVIDENCE, name)).mtimeMs
+	} catch {
+		return null
+	}
+}
+
 const shots = () => {
 	try {
 		return readdirSync(join(root, EVIDENCE))
 			.filter((name) => name.endsWith('.png'))
 			.sort()
+			.map((name) => ({ name, at: when(name) }))
 	} catch {
 		return []
 	}
@@ -92,8 +110,14 @@ if (process.argv[1]?.endsWith('stop-guard.mjs')) {
 					)
 				}
 			} else {
-				const shot = opened(input)
-				if (shot) store.write({ ...kept, seen: [...new Set([...kept.seen, shot])] })
+				const name = opened(input)
+				const at = name === null ? null : when(name)
+				if (at !== null) {
+					store.write({
+						...kept,
+						seen: [...new Set([...kept.seen, stamp({ name, at })])],
+					})
+				}
 			}
 		}
 	} catch {}

@@ -23,3 +23,4 @@
 - [16 `components/` の共有部品は題材を知らないものだけを `ui/` に置く](./adr/16-ui-knows-no-domain.md)
 - [17 スタイルの判定は1つだけ持ち、ESLint と `scripts/` の両方から通す](./adr/17-one-style-judgment-two-runners.md)
 - [18 エージェントの Git の経路は、散文ではなくツール呼び出しの入口で塞ぐ](./adr/18-git-routes-closed-at-tool-entry.md)
+- [19 実測の証跡が無いまま進む経路を、ツールの入口とセッションの終わりで塞ぐ](./adr/19-evidence-gated-at-tool-and-session-end.md)

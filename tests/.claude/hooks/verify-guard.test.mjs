@@ -23,6 +23,17 @@ describe('decide', () => {
 		expect(decide(bash('npm run build && cat .verify/lint.log'), idle)).toMatch('証跡')
 	})
 
+	it('引用とヒアドキュメントの本文はコマンドとして読まない', () => {
+		expect(decide(bash('git commit -m "まず npm test を通す"'), idle)).toBeNull()
+		expect(decide(bash('cat > x.md <<EOF\nnpm test は CI が打つ\nEOF'), idle)).toBeNull()
+		expect(decide(bash('echo npm test'), idle)).toBeNull()
+	})
+
+	it('npm のオプションを跨いでスクリプト名を見る', () => {
+		expect(decide(bash('npm run -s lint'), idle)).toMatch('証跡が残らない')
+		expect(decide(bash('npm run lint -- --fix > .verify/lint.log 2>&1'), idle)).toBeNull()
+	})
+
 	it('dev が動いている間は、証跡に落としていても止める', () => {
 		expect(decide(bash('npm run build > .verify/build.log 2>&1'), serving)).toMatch('dev')
 	})
