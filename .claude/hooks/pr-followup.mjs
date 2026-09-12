@@ -7,8 +7,6 @@ const suffix = (name) => (name.startsWith('mcp__') ? name.replace(/^mcp__.*?__/,
 
 const matches = (value, pattern) => typeof value === 'string' && pattern.test(value)
 
-// assign の「5. 見届ける」。ツール名は MCP サーバ名を挟むので、末尾だけを見る。
-// 番号に触れただけの呼び出しで埋まらないよう、その手段の形まで見る
 const STEPS = [
 	{
 		key: 'subscribe',
@@ -112,7 +110,6 @@ const read = async () => {
 if (process.argv[1]?.endsWith('pr-followup.mjs')) {
 	try {
 		const input = JSON.parse((await read()) || '{}')
-		// サブエージェントの購読もセッションの見届けとして数える
 		const reason = decide(input, state('pr-followup', { session_id: input.session_id }))
 		if (reason) process.stdout.write(JSON.stringify({ decision: 'block', reason }))
 	} catch {}
