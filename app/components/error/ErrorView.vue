@@ -1,61 +1,66 @@
 <template>
-	<div class="error-container">
-		<div class="error-content">
-			<h1 class="error-code">{{ code }}</h1>
-			<p class="error-message">{{ message }}</p>
-			<p class="error-description">{{ description }}</p>
-		</div>
+	<div class="mx-auto max-w-column py-16">
+		<p class="flex gap-2 font-mono text-sm tracking-marker">
+			<span aria-hidden="true">■</span>
+			<span class="text-accent">{{ code }}</span>
+		</p>
+		<h1 class="mt-4 text-heading font-bold text-main">{{ message }}</h1>
+		<p class="mt-3 text-sm text-sub">{{ description }}</p>
+
+		<nav class="mt-8 flex flex-col items-start gap-2">
+			<NuxtLink
+				to="/"
+				class="font-mono text-sm font-medium text-accent hover:underline"
+				>Home →</NuxtLink
+			>
+			<NuxtLink
+				to="/article"
+				class="font-mono text-sm font-medium text-accent hover:underline"
+				>All articles →</NuxtLink
+			>
+		</nav>
+
+		<section
+			v-if="recentArticles?.length"
+			class="mt-12"
+		>
+			<h2 class="mb-3 font-mono text-xs tracking-marker text-sub">LATEST</h2>
+			<ul class="flex flex-col border-t border-border">
+				<li
+					v-for="article in recentArticles"
+					:key="article.path"
+					class="border-b border-border"
+				>
+					<NuxtLink
+						:to="article.path"
+						class="flex flex-col gap-1 py-3 text-sm text-main transition-colors hover:text-accent md:flex-row md:items-baseline md:gap-4"
+						prefetch-on="interaction"
+					>
+						<time
+							class="flex-none font-mono text-xs text-sub"
+							:datetime="article.date"
+							>{{ formatDate(article.date) }}</time
+						>
+						<span>{{ article.title }}</span>
+					</NuxtLink>
+				</li>
+			</ul>
+		</section>
 	</div>
 </template>
 
 <script setup lang="ts">
+	import { useLatestArticles } from '~/composables/useLatestArticles'
+	import { formatDate } from '~/utils/date'
+
+	const RECENT_LIMIT = 3
+
 	defineProps<{
 		code: number | string
 		message: string
 		description: string
 	}>()
+
+	// 静的生成の 404 / 500 は SPA の殻から描かれる。待って取るとエラーの文面ごと遅れる
+	const { data: recentArticles } = useLatestArticles(RECENT_LIMIT, { lazy: true })
 </script>
-
-<style scoped>
-	.error-container {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		min-height: 60vh;
-		color: var(--color-main);
-		font-family: var(--font-sans);
-		text-align: center;
-		padding: 1rem;
-	}
-
-	.error-content {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		max-width: 36rem;
-	}
-
-	.error-code {
-		font-size: 8rem;
-		font-weight: 700;
-		font-family: var(--font-mono);
-		margin: 0;
-		line-height: 1;
-		letter-spacing: -0.05em;
-	}
-
-	.error-message {
-		font-size: 2rem;
-		font-weight: 600;
-		margin: 1rem 0 0.5rem;
-	}
-
-	.error-description {
-		font-size: 1rem;
-		color: var(--color-sub);
-		line-height: 1.6;
-	}
-</style>

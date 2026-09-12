@@ -417,7 +417,12 @@ const start = async () => {
 			)
 			if (opened) {
 				await evaluate('return $settled(TRAP)')
-				return
+				// 閉じる側の visibility は遷移の間 visible のまま残る。ホバーで開いた直後の
+				// click は閉じる側に倒すので、遷移が終わってから確かめ直して押し直す
+				const stayed = await evaluate(
+					`return getComputedStyle(document.querySelector(OVERLAY)).visibility === 'visible'`,
+				)
+				if (stayed) return
 			}
 		}
 		throw new Error('被せた UI が開かない')
@@ -998,10 +1003,14 @@ const probes = [
 			await p.setTouch(true)
 			await p.reload()
 			await p.setWidth(width)
-			// 指は上に運ぶので、要るのは下に残っている余地。下がった量では測れない
-			sent('背後のページを 300px 下げる')
+			// 指は上に運ぶので、要るのは下に残っている余地。下がった量では測れない。
+			// 決め打ちで下げると、ページの丈が数十px縮むだけで余地が尽きる
+			const offset = await p.evaluate(`
+				return Math.floor((document.documentElement.scrollHeight - window.innerHeight) / 2)
+			`)
+			sent(`背後のページを ${offset}px 下げる`)
 			const room = await p.evaluate(`
-				window.scrollTo(0, 300)
+				window.scrollTo(0, ${offset})
 				await $frames(2)
 				return document.documentElement.scrollHeight - window.innerHeight - window.scrollY
 			`)

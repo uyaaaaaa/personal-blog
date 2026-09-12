@@ -1,5 +1,5 @@
 <template>
-	<header class="global-header">
+	<header class="global-header h-header-sm md:h-header">
 		<div class="header-inner container">
 			<NuxtLink
 				to="/"
@@ -7,10 +7,8 @@
 				@click="closeMenu"
 			>
 				<svg
-					class="logo-mark"
+					class="logo-mark h-6 w-6 md:h-logo-mark md:w-logo-mark"
 					viewBox="0 0 32 32"
-					width="26"
-					height="26"
 					aria-hidden="true"
 					focusable="false"
 				>
@@ -47,7 +45,7 @@
 				<span>Tech Blog</span>
 			</NuxtLink>
 
-			<div class="mx-8 hidden max-w-md flex-1 md:flex">
+			<div class="mx-8 hidden max-w-search-trigger flex-1 md:flex">
 				<button
 					ref="desktopSearchRef"
 					type="button"
@@ -84,13 +82,13 @@
 						<span class="text-sm">Search...</span>
 					</span>
 					<span
-						class="rounded border border-border bg-surface px-1.5 py-0.5 text-xs text-sub"
-						>Cmd+K</span
+						class="rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-xs text-sub"
+						>⌘K</span
 					>
 				</button>
 			</div>
 
-			<div class="flex items-stretch gap-3 self-stretch md:gap-5">
+			<div class="flex items-stretch gap-1 self-stretch md:gap-5">
 				<button
 					ref="mobileSearchRef"
 					type="button"
@@ -231,7 +229,6 @@
 		background-color: var(--color-header-bg);
 		backdrop-filter: blur(10px);
 		border-bottom: 1px solid var(--color-border);
-		height: 4rem;
 		display: flex;
 		align-items: center;
 	}
@@ -249,7 +246,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		font-weight: 700;
-		font-size: 1.25rem;
+		font-size: 1.125rem;
 		font-family: var(--font-mono);
 		letter-spacing: -0.025em;
 	}
