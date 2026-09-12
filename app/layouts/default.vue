@@ -2,9 +2,7 @@
 	<div class="layout-container">
 		<Header :location="route.fullPath" />
 		<main class="flex-1 px-5 pb-16 pt-7 md:px-10 md:pb-24 md:pt-14">
-			<div class="mx-auto w-full max-w-column">
-				<slot />
-			</div>
+			<slot />
 		</main>
 		<Footer />
 	</div>

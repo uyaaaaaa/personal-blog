@@ -1,5 +1,5 @@
 <template>
-	<div class="space-y-16">
+	<div class="mx-auto w-full max-w-column space-y-16">
 		<Hero
 			v-if="heroArticle"
 			:article="heroArticle"

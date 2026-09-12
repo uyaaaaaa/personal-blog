@@ -27,7 +27,7 @@
 </script>
 
 <template>
-	<div class="space-y-8">
+	<div class="mx-auto w-full max-w-column space-y-8">
 		<header class="border-b border-border pb-8">
 			<h1 class="mb-2 text-3xl font-bold text-main">Articles</h1>
 			<p class="text-sub">All tech articles and book reviews.</p>

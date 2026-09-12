@@ -95,9 +95,9 @@
 <template>
 	<div
 		v-if="page"
-		class="flex flex-col gap-12 lg:flex-row"
+		class="mx-auto flex w-full max-w-container flex-col gap-12 lg:flex-row lg:justify-center"
 	>
-		<main class="min-w-0 max-w-3xl flex-1">
+		<main class="min-w-0 max-w-column flex-1">
 			<article class="space-y-8">
 				<header class="space-y-4 border-b border-border pb-8">
 					<div class="flex flex-col gap-2.5 font-mono text-sm text-sub">
