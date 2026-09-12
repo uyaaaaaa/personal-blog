@@ -54,12 +54,12 @@
 
 <template>
 	<div class="mx-auto w-full max-w-column space-y-8">
-		<h1 class="text-3xl font-bold text-main">
-			<span class="font-mono text-accent">#</span> {{ tagName }}
-			<span class="font-mono text-base font-normal text-sub">{{
-				filteredArticles.length
-			}}</span>
-		</h1>
+		<div class="flex items-baseline gap-4">
+			<h1 class="text-3xl font-bold text-main">
+				<span class="font-mono text-accent">#</span> {{ tagName }}
+			</h1>
+			<span class="font-mono text-base text-sub">{{ filteredArticles.length }}</span>
+		</div>
 
 		<ArticleList
 			:articles="pagedItems"
