@@ -13,11 +13,11 @@
 		],
 		"PreToolUse": [
 			{
-				"matcher": "Skill",
+				"matcher": "Skill|mcp__github__add_comment_to_pending_review|mcp__github__pull_request_review_write",
 				"hooks": [
 					{
 						"type": "command",
-						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/code-review-effort.mjs\""
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/review-guard.mjs\""
 					}
 				]
 			},
@@ -75,6 +75,15 @@
 					{
 						"type": "command",
 						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pr-followup.mjs\""
+					}
+				]
+			},
+			{
+				"matcher": "mcp__github__add_comment_to_pending_review|mcp__github__pull_request_review_write",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/review-guard.mjs\""
 					}
 				]
 			}
