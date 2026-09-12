@@ -91,6 +91,11 @@ describe('code-review の呼び出し', () => {
 		expect(decide(skill('medium'), ask({ evidence: ['test.log', 'lint.log'] }))).toBeNull()
 	})
 
+	it('名前に測ったものを含むだけのファイルは証跡にしない', () => {
+		const evidence = ['latest.png', 'lint.log']
+		expect(decide(skill('medium'), ask({ evidence }))?.reason).toMatch(/test/)
+	})
+
 	it('他のスキルは見ない', () => {
 		expect(decide({ ...skill(), tool_input: { skill: 'review' } }, ask())).toBeNull()
 	})
@@ -140,17 +145,28 @@ describe('submit の判定', () => {
 		).toBeNull()
 	})
 
-	it('件数と食い違う判定を落とす', () => {
+	it('件数より緩い判定を落とす', () => {
 		const held = { grades: { must: 1 }, submits: 0 }
 		expect(decide(submit('COMMENT', '**判定: Comment**'), ask({ held }))?.reason).toMatch(
 			/Request changes/,
 		)
 
-		const soft = { grades: { imo: 2 }, submits: 0 }
-		expect(decide(submit('COMMENT', '**判定: Comment**'), ask({ held: soft }))?.reason).toMatch(
-			/Approve/,
+		const soft = { grades: { suggestion: 1 }, submits: 0 }
+		expect(decide(submit('APPROVE', '**判定: Approve**'), ask({ held: soft }))?.reason).toMatch(
+			/Comment/,
 		)
-		expect(decide(submit('APPROVE', '**判定: Approve**'), ask({ held: soft }))).toBeNull()
+	})
+
+	it('数えた件数より厳しい判定は通す', () => {
+		const held = { grades: {}, submits: 1 }
+		expect(
+			decide(submit('COMMENT', '**判定: Request changes** — 未対応 2件'), ask({ held })),
+		).toBeNull()
+	})
+
+	it('自分の PR で REQUEST_CHANGES を返せない submit を通す', () => {
+		const held = { grades: { must: 1 }, submits: 0 }
+		expect(decide(submit('COMMENT', '**判定: Request changes**'), ask({ held }))).toBeNull()
 	})
 
 	it('判定を書いていないサマリを落とす', () => {
@@ -158,8 +174,11 @@ describe('submit の判定', () => {
 		expect(decide(submit('COMMENT', '直せば良くなる'), ask({ held }))?.reason).toMatch(/先頭行/)
 	})
 
-	it('4回目の submit を落とす', () => {
-		const held = { grades: {}, submits: 3 }
+	it('3回の出し直しを通し、その次を落とす', () => {
+		const passing = { grades: {}, submits: 3 }
+		expect(decide(submit('APPROVE', '**判定: Approve**'), ask({ held: passing }))).toBeNull()
+
+		const held = { grades: {}, submits: 4 }
 		expect(decide(submit('APPROVE', '**判定: Approve**'), ask({ held }))?.reason).toMatch(/3回/)
 	})
 

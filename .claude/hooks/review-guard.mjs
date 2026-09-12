@@ -97,9 +97,7 @@ const skilled = (input, it, ask) => {
 	const { skill, args } = input.tool_input ?? {}
 	if (skill !== 'code-review') return null
 
-	const missing = it.required.filter(
-		(name) => !ask.evidence().some((file) => file.includes(name)),
-	)
+	const missing = it.required.filter((name) => !ask.evidence().includes(`${name}.log`))
 	if (missing.length > 0) {
 		return {
 			reason: `${missing.join(' と ')} の証跡が ${EVIDENCE}/ に無い。通してから呼ぶ（→ verify）`,
@@ -153,6 +151,10 @@ const commented = (input, it, ask) => {
 
 const SUBMITTING = new Set(['create', 'submit_pending'])
 
+// 表は厳しい順に並ぶ。前の回から持ち越した未対応は数えられないので、
+// 数えた件数より緩い側に倒した判定だけを落とす
+const looser = (judgments, one, than) => judgments.indexOf(one) > judgments.indexOf(than)
+
 const submitted = (input, it, ask) => {
 	const { method, event, body, ...where } = input.tool_input ?? {}
 	if (!SUBMITTING.has(method) || typeof event !== 'string') return null
@@ -160,25 +162,25 @@ const submitted = (input, it, ask) => {
 	const seen = ask.state(key(where), input).read()
 	if (seen === null) return null
 
-	if ((seen.submits ?? 0) >= it.rounds) {
+	if ((seen.submits ?? 0) > it.rounds) {
 		return {
-			reason: `この PR に${it.rounds}回出している。残った論点を1コメントにまとめ、判断を書き手に渡す`,
+			reason: `この PR に${it.rounds}回出し直している。残った論点を1コメントにまとめ、判断を書き手に渡す`,
 		}
 	}
 
 	const want = judged(it.judgments, seen.grades ?? {})
-	if (eventOf(want.name) !== event) {
-		const counts = Object.entries(seen.grades ?? {})
-			.map(([name, count]) => `${name} ${count}`)
-			.join(' / ')
+	const head = String(body ?? '').split('\n')[0]
+	const written = it.judgments.find(({ name }) => head.includes(name))
+	if (!written) return { reason: `サマリの先頭行に判定（${want.name}）を置く` }
+
+	const counts = Object.entries(seen.grades ?? {})
+		.map(([name, count]) => `${name} ${count}`)
+		.join(' / ')
+	const softest = it.judgments.find(({ needs }) => needs.length === 0)
+	// 自分の PR には REQUEST_CHANGES を返せないので、event は最も緩いものだけ見る
+	const approving = event === eventOf(softest.name) && want !== softest
+	if (approving || looser(it.judgments, written, want)) {
 		return { reason: `件数（${counts || '0件'}）に対する判定は ${want.name}` }
-	}
-	if (
-		!String(body ?? '')
-			.split('\n')[0]
-			.includes(want.name)
-	) {
-		return { reason: `サマリの先頭行に判定（${want.name}）を置く` }
 	}
 	return null
 }
