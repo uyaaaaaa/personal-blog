@@ -13,8 +13,8 @@
 		class?: string | null
 	}>()
 
-	// 言語を指さない綴り。Nuxt Content は言語を書かないフェンスにも text を入れる
-	const PLAIN_LANGUAGES = ['text', 'txt', 'plaintext']
+	// Shiki が言語なしと同じに扱う綴り（isPlainLang）。Nuxt Content は綴りの無いフェンスにも text を入れる
+	const PLAIN_LANGUAGES = ['plaintext', 'txt', 'text', 'plain']
 
 	const label = computed(() =>
 		props.language && !PLAIN_LANGUAGES.includes(props.language) ? props.language : null,
