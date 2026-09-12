@@ -26,8 +26,9 @@ const tail = (log) =>
 		.slice(-TAIL)
 		.join('\n')
 
+// 行頭の飾り（Markdown の強調・絵文字）だけを跨ぐ。本文の途中に綴りが出ても落とさない
 const SIGNATURE =
-	/Generated (?:with|by) \[Claude Code\]|^\s*https:\/\/claude\.ai\/code\/session_|^\s*Co-Authored-By:.*Claude|^\s*Claude-Session:/
+	/^[\s_*🤖]*Generated (?:with|by) \[Claude Code\]|^\s*https:\/\/claude\.ai\/code\/session_|^\s*Co-Authored-By:.*Claude|^\s*Claude-Session:/u
 const FILLER = /^\s*(?:[-*_]{3,})?\s*$/
 
 export const unsigned = (body) => {
@@ -43,13 +44,16 @@ export const unsigned = (body) => {
 }
 
 const CLASS = /'\.([a-z][\w-]*)'/g
+const OVERLAYS = /^const OVERLAYS = \{$([\s\S]*?)^\}$/m
 const UI = 'app/'
 
 // 被せた UI の綴りは probe が正。ここに一覧を持つと probe と別々に古くなる
 const overlaid = (ask, base) => {
 	const probe = ask.text(PROBE)
-	if (probe === null) return false
-	const names = [...new Set([...probe.matchAll(CLASS)].map(([, name]) => name))]
+	// probe の他の箇所には is-active のような、被せた UI に限らない綴りが混ざる
+	const table = OVERLAYS.exec(probe ?? '')
+	if (table === null) return false
+	const names = [...new Set([...table[1].matchAll(CLASS)].map(([, name]) => name))]
 	if (names.length === 0) return false
 
 	const found = new RegExp(`(?<![\\w-])(?:${names.join('|')})(?![\\w-])`)
@@ -61,7 +65,8 @@ const overlaid = (ask, base) => {
 
 const blocking = (args, ask) => {
 	const branch = ask.head()
-	if (branch === TRUNK || branch === 'HEAD' || branch === '') {
+	if (branch === '') return 'HEAD のブランチ名を読めない'
+	if (branch === TRUNK || branch === 'HEAD') {
 		return `${TRUNK} から PR は出せない。claude/<主題>-<英数字4〜6> のブランチに移す`
 	}
 	if (typeof args.head === 'string' && args.head !== branch) {
@@ -69,6 +74,7 @@ const blocking = (args, ask) => {
 	}
 
 	const dirty = ask.dirty()
+	if (dirty === null) return 'git status を読めない'
 	if (dirty !== '') return `コミットしていない変更が残っている:\n${dirty}`
 
 	const unpushed = ask.unpushed(branch)
@@ -127,15 +133,23 @@ const run = (command, argv) => {
 	}
 }
 
-const git = (...argv) => run('git', argv).log.trim()
+// 失敗した git の出力を値として返さない。空の結果と区別が付かなくなる
+const git = (...argv) => {
+	const { code, log } = run('git', argv)
+	return code === 0 ? log.trim() : null
+}
 
 const ASK = {
-	head: () => git('rev-parse', '--abbrev-ref', 'HEAD'),
-	dirty: () => run('git', ['status', '--short']).log.trimEnd(),
+	head: () => git('rev-parse', '--abbrev-ref', 'HEAD') ?? '',
+	dirty: () => {
+		const { code, log } = run('git', ['status', '--short'])
+		return code === 0 ? log.trimEnd() : null
+	},
 	unpushed: (branch) => {
-		const remote = git('rev-parse', `refs/remotes/origin/${branch}`)
-		if (remote === '') return `origin/${branch} が無い`
-		const ahead = git('rev-list', '--count', `refs/remotes/origin/${branch}..HEAD`)
+		const at = `refs/remotes/origin/${branch}`
+		if (git('rev-parse', '--verify', '--quiet', at) === null) return `origin/${branch} が無い`
+		const ahead = git('rev-list', '--count', `${at}..HEAD`)
+		if (ahead === null) return `origin/${branch} との差を数えられない`
 		return ahead === '0' ? '' : `origin/${branch} より ${ahead} コミット先`
 	},
 	touched: (base) => {
@@ -144,7 +158,7 @@ const ASK = {
 			run('git', ['fetch', '--quiet', 'origin', base]).code === 0
 				? 'FETCH_HEAD'
 				: `refs/remotes/origin/${base}`
-		return git('diff', '--name-only', `${at}...HEAD`).split('\n').filter(Boolean)
+		return (git('diff', '--name-only', `${at}...HEAD`) ?? '').split('\n').filter(Boolean)
 	},
 	text: (path) => {
 		try {

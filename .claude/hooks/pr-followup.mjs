@@ -1,37 +1,36 @@
 #!/usr/bin/env node
 import { state } from './state.mjs'
 
-// assign の「5. 見届ける」。ツール名は MCP サーバ名を挟むので、末尾だけを見る
-const STEPS = [
-	{
-		key: 'subscribe',
-		tool: 'subscribe_pr_activity',
-		field: 'pullNumber',
-		how: 'PR のイベントを購読する',
-	},
-	{
-		key: 'title',
-		tool: 'set_session_title',
-		field: 'title',
-		how: 'セッション名を PR #N に変える',
-	},
-	{
-		key: 'review',
-		tool: 'create_session',
-		field: 'prompt',
-		how: 'レビュー用のセッションを起こす（node scripts/session-args.mjs review N）',
-	},
-]
-
 const PULL = /\/pull\/(\d+)/
 
 const suffix = (name) => (name.startsWith('mcp__') ? name.replace(/^mcp__.*?__/, '') : name)
 
-const mentions = (value, number) =>
-	typeof value === 'string' && new RegExp(`(?<!\\d)${number}(?!\\d)`).test(value)
+const matches = (value, pattern) => typeof value === 'string' && pattern.test(value)
 
-const about = ({ field }, args, number) =>
-	typeof args[field] === 'number' ? args[field] === number : mentions(args[field], number)
+// assign の「5. 見届ける」。ツール名は MCP サーバ名を挟むので、末尾だけを見る。
+// 番号に触れただけの呼び出しで埋まらないよう、その手段の形まで見る
+const STEPS = [
+	{
+		key: 'subscribe',
+		tool: 'subscribe_pr_activity',
+		how: 'PR のイベントを購読する',
+		at: (args, number) => args.pullNumber === number,
+	},
+	{
+		key: 'title',
+		tool: 'set_session_title',
+		how: 'セッション名を PR #N に変える',
+		at: (args, number) => matches(args.title, new RegExp(`#\\s*${number}(?!\\d)`)),
+	},
+	{
+		key: 'review',
+		tool: 'create_session',
+		how: 'レビュー用のセッションを起こす（node scripts/session-args.mjs review N）',
+		at: (args, number) =>
+			matches(args.prompt, /review/) &&
+			matches(args.prompt, new RegExp(`/pull/${number}(?!\\d)`)),
+	},
+]
 
 const opened = (response) => {
 	const found = PULL.exec(
@@ -56,7 +55,7 @@ const recorded = (input, kept) => {
 	const next = { ...kept }
 	let changed = false
 	for (const [number, pull] of Object.entries(kept)) {
-		if (pull.done.includes(step.key) || !about(step, args, Number(number))) continue
+		if (pull.done.includes(step.key) || !step.at(args, Number(number))) continue
 		next[number] = { ...pull, done: [...pull.done, step.key] }
 		changed = true
 	}

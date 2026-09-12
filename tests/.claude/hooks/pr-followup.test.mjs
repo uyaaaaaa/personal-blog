@@ -74,6 +74,16 @@ describe('decide', () => {
 		expect(stop()).toBeNull()
 	})
 
+	it('番号に触れただけの呼び出しは数えない', () => {
+		decide(opened(), store)
+		decide(called('create_session', { prompt: 'PR #292 の CI を直す' }), store)
+		decide(called('set_session_title', { title: '292 を見る' }), store)
+
+		const reason = stop()
+		expect(reason).toMatch('レビュー用のセッション')
+		expect(reason).toMatch('セッション名')
+	})
+
 	it('別の PR に向けた呼び出しは数えない', () => {
 		decide(opened(292), store)
 		for (const other of [subscribed(300), titled(300), reviewed(300)]) decide(other, store)
