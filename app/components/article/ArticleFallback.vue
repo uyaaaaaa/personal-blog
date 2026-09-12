@@ -56,7 +56,7 @@
 			<button
 				v-if="variant === 'error'"
 				type="button"
-				class="mt-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-contrast transition-colors duration-200 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-accent"
+				class="mt-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-contrast transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-accent"
 				:disabled="pending"
 				@click="emit('retry')"
 			>
@@ -77,7 +77,7 @@
 				>
 					<NuxtLink
 						:to="article.path"
-						class="flex flex-col gap-1 py-3 text-sm text-main transition-colors duration-200 hover:text-accent md:flex-row md:items-baseline md:gap-3"
+						class="flex flex-col gap-1 py-3 text-sm text-main transition-colors hover:text-accent md:flex-row md:items-baseline md:gap-3"
 					>
 						<span class="flex-none font-mono text-xs text-sub">{{
 							formatDate(article.date)

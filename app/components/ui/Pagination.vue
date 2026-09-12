@@ -133,8 +133,8 @@
 		font-family: var(--font-mono);
 		font-size: 0.875rem;
 		transition:
-			border-color 0.2s ease,
-			color 0.2s ease;
+			border-color 0.15s ease,
+			color 0.15s ease;
 	}
 
 	a.page-item:hover {
