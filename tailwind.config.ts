@@ -39,6 +39,7 @@ export default <Config>{
 						fontSize: '15.5px',
 						lineHeight: '1.85',
 						h2: { fontSize: '22px', lineHeight: '1.4' },
+						h3: { fontSize: '19.375px' },
 						'code::before': { content: 'none' },
 						'code::after': { content: 'none' },
 						figure: {
