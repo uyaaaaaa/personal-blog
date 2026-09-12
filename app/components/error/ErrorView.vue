@@ -1,6 +1,9 @@
 <template>
 	<div class="mx-auto max-w-column py-16">
-		<p class="font-mono text-sm tracking-marker text-accent">■ {{ code }}</p>
+		<p class="flex gap-2 font-mono text-sm tracking-marker">
+			<span aria-hidden="true">■</span>
+			<span class="text-accent">{{ code }}</span>
+		</p>
 		<h1 class="mt-4 text-heading font-bold text-main">{{ message }}</h1>
 		<p class="mt-3 text-sm text-sub">{{ description }}</p>
 
@@ -47,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+	import { useLatestArticles } from '~/composables/useLatestArticles'
 	import { formatDate } from '~/utils/date'
 
 	const RECENT_LIMIT = 3
@@ -58,15 +62,5 @@
 	}>()
 
 	// 静的生成の 404 / 500 は SPA の殻から描かれる。待って取るとエラーの文面ごと遅れる
-	const { data: recentArticles } = useLazyAsyncData(
-		'error-view-recent',
-		() =>
-			queryCollection('article')
-				.where('published', '=', true)
-				.order('date', 'DESC')
-				.limit(RECENT_LIMIT)
-				.select('path', 'title', 'date')
-				.all(),
-		{ default: () => [] },
-	)
+	const { data: recentArticles } = useLatestArticles(RECENT_LIMIT, { lazy: true })
 </script>

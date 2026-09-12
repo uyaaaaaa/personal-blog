@@ -83,6 +83,13 @@
 					</NuxtLink>
 				</li>
 			</ul>
+
+			<p
+				v-if="results.length > 0"
+				class="search-keys hidden md:block"
+			>
+				↑↓ to move, ⏎ to open, esc to close
+			</p>
 		</div>
 	</div>
 </template>
@@ -119,7 +126,7 @@
 
 	const emptyMessage = computed(() =>
 		query.value.trim() === ''
-			? 'Type to search articles by title or tag. ↑↓ to move, ⏎ to open, esc to close'
+			? 'Type to search articles by title or tag.'
 			: 'No articles found.',
 	)
 
@@ -189,7 +196,8 @@
 	const isComposingKey = (event: KeyboardEvent) => event.isComposing || composing
 
 	// Tailwind の md。ヘッダーが検索の入口を PC 用と SP 用に出し分けるのと同じ幅で、
-	// テンプレートが選択中の縦線を出すのもここから。ずれると見えない選択にキーが効く
+	// テンプレートが選択中の縦線とキーの案内を出すのもここから。ずれると見えない選択に
+	// キーが効き、効かないキーを名乗る
 	const KEYBOARD_SELECT_QUERY = '(min-width: 768px)'
 
 	const canSelectByKey = () => window.matchMedia(KEYBOARD_SELECT_QUERY).matches
@@ -359,6 +367,17 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	/* 出し分けはTailwindの md: に統一しているため、displayはここで指定しない */
+	.search-keys {
+		flex: none;
+		margin: 0;
+		padding: 0.5rem 1rem;
+		border-top: 1px solid var(--color-border);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--color-sub);
 	}
 
 	.search-result-date {

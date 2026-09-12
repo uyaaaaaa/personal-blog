@@ -1,5 +1,8 @@
 <script setup lang="ts">
+	import { useLatestArticles } from '~/composables/useLatestArticles'
 	import { formatDate } from '~/utils/date'
+
+	const RECENT_LIMIT = 3
 
 	interface Props {
 		variant: 'error' | 'not-found'
@@ -23,16 +26,10 @@
 	)
 
 	// 取得失敗時は同じ経路が不調なため、回遊導線は出さない
-	const { data: recentArticles } = useLazyAsyncData(
-		'article-fallback-recent',
-		() =>
-			queryCollection('article')
-				.where('published', '=', true)
-				.order('date', 'DESC')
-				.limit(3)
-				.all(),
-		{ immediate: props.variant === 'not-found', default: () => [] },
-	)
+	const { data: recentArticles } = useLatestArticles(RECENT_LIMIT, {
+		lazy: true,
+		immediate: props.variant === 'not-found',
+	})
 </script>
 
 <template>

@@ -1,7 +1,7 @@
 <template>
 	<div
 		ref="containerRef"
-		class="sticky top-below-header z-40 lg:hidden"
+		class="sticky top-below-header-sm z-40 md:top-below-header lg:hidden"
 		:class="{ 'pointer-events-none': !isVisible }"
 	>
 		<div

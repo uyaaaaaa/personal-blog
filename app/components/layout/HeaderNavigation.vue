@@ -122,7 +122,7 @@
 					class="mobile-drawer"
 					@click.stop
 				>
-					<div class="drawer-header">
+					<div class="drawer-header h-header-sm">
 						<button
 							type="button"
 							class="drawer-close"
@@ -401,6 +401,7 @@
 	import { useArticleTags } from '~/composables/useArticleTags'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useHoverPanel } from '~/composables/useHoverPanel'
+	import { useLatestArticles } from '~/composables/useLatestArticles'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 	import { formatRelativeDate } from '~/utils/date'
 
@@ -438,14 +439,7 @@
 	const { data: tags } = useArticleTags()
 	const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 
-	const { data: latestArticles } = useAsyncData('header-latest-articles', () =>
-		queryCollection('article')
-			.where('published', '=', true)
-			.order('date', 'DESC')
-			.limit(LATEST_ARTICLES_LIMIT)
-			.select('path', 'title', 'date')
-			.all(),
-	)
+	const { data: latestArticles } = useLatestArticles(LATEST_ARTICLES_LIMIT)
 
 	const now = ref<number | null>(null)
 
@@ -679,7 +673,6 @@
 		display: flex;
 		justify-content: flex-end;
 		align-items: center;
-		height: 4rem;
 		margin: 0 -0.75rem 0.5rem;
 		padding: 0 0.5rem;
 		background-color: var(--color-surface);
