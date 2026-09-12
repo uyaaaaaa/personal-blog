@@ -1,4 +1,3 @@
-// 器と中の項目の矩形から、器をどれだけ動かすかを出す。器の取得・いつ動かすかは呼び出し側が持つ
 export interface Box {
 	top: number
 	bottom: number

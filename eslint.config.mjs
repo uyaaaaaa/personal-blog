@@ -57,9 +57,10 @@ const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> Ex
 
 const LANDING_MESSAGE = `ページ内ジャンプの着地位置は CSS が持つ。JS でオフセットを足さず、ページ全体を動かす呼び出しは useScrollTo に集約する。 ${INVARIANT_URL}`
 
-// ページ全体を動かす受け手。要素を指す綴りは、そのページのスクロール要素を指す3つだけ
 const PAGE_SCROLLER = '/^(documentElement|body|scrollingElement)$/'
 const SCROLL_METHOD = '/^scroll(To|By)?$/'
+// Type 付きは Nuxt の router option。hash ジャンプと位置復元の behavior になる
+const SCROLL_BEHAVIOR_KEY = '/^scrollBehavior(Type)?$/'
 
 // 集約先の useScrollTo だけが例外。除くために、この配列の同一性で識別する
 const PAGE_SCROLL = [
@@ -75,23 +76,18 @@ const PAGE_SCROLL = [
 		selector: `AssignmentExpression[left.object.property.name=${PAGE_SCROLLER}][left.property.name=/^scroll(Top|Left)$/]`,
 		message: LANDING_MESSAGE,
 	},
-	// 器の中の項目送りは器の scrollTop が動かす。これはページごと動く
 	{
 		selector: "CallExpression[callee.property.name='scrollIntoView']",
 		message: LANDING_MESSAGE,
 	},
-	// 宣言を JS から書く経路と、着地位置を JS が決める router の options。
-	// Type 付きは Nuxt 既定の router.options が hash ジャンプと位置復元の behavior に渡す
 	{
-		selector:
-			':matches(MemberExpression[property.name=/^scrollBehavior(Type)?$/], Property[key.name=/^scrollBehavior(Type)?$/], Property[key.value=/^scrollBehavior(Type)?$/])',
+		selector: `:matches(MemberExpression[property.name=${SCROLL_BEHAVIOR_KEY}], Property[key.name=${SCROLL_BEHAVIOR_KEY}], Property[key.value=${SCROLL_BEHAVIOR_KEY}])`,
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 	{
 		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_PROPERTY}/i], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_PROPERTY}/i])`,
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
-	// 設定が html に配るクラス。テンプレートの静的な class は VLiteral なので別に見る
 	{
 		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_CLASS}/], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_CLASS}/])`,
 		message: SCROLL_BEHAVIOR_MESSAGE,
@@ -225,7 +221,6 @@ const TEMPLATE_RESTRICTIONS = [
 		message: IMPORTANT_MESSAGE,
 	},
 	...PAGE_SCROLL,
-	// 静的な属性値は VLiteral で、式の Literal を見る PAGE_SCROLL に当たらない
 	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${SCROLL_BEHAVIOR_CLASS}/]`,
 		message: SCROLL_BEHAVIOR_MESSAGE,
@@ -443,8 +438,7 @@ export default [
 		},
 	},
 	{
-		// 設定ファイルは app/ の規約の外。読み込みの経路（modules・css・head.link）と、
-		// head が html に配る着地位置の指定だけを見る
+		// 設定ファイルは app/ の規約の外
 		files: ['*.config.ts'],
 		languageOptions: {
 			parser: tsParser,

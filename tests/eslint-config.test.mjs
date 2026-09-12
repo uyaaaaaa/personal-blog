@@ -265,7 +265,6 @@ describe('ページ内ジャンプの着地位置', () => {
 				'export default { scrollBehavior: () => ({ top: 0 }) }',
 			),
 		).toBeGreaterThan(0)
-		// Nuxt 既定の router.options が hash ジャンプと位置復元の behavior に渡す
 		expect(
 			await landingsIn(
 				'app/router.options.ts',
