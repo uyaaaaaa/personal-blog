@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process'
+import { REDIRECT, SEPARATOR, invoked, tokens, unquote } from './command.mjs'
 
 const SHAPE = 'claude/<主題>-<英数字4〜6>'
 const BRANCH = /^claude\/[a-z0-9]+(?:-[a-z0-9]+)*-[a-z0-9]{4,6}$/
@@ -18,33 +19,11 @@ const TOOLS = {
 	enable_pr_auto_merge: 'マージするかは書き手が判断する',
 }
 
-const TOKEN =
-	/\d*(?:>>|<<-?|[<>])&?\d*|&&|\|\||[;|&\n(){}]|"(?:[^"\\]|\\.)*"|'[^']*'|[^\s;|&\n(){}"']+/g
-const SEPARATOR = new Set(['&&', '||', ';', '|', '&', '\n', '(', ')', '{', '}'])
-const unquote = (token) => token.replace(/^"([\s\S]*)"$/, '$1').replace(/^'([\s\S]*)'$/, '$1')
-
-const REDIRECT = /^\d*[<>]+/
-const HEREDOC = /<<-?\s*(["']?)([A-Za-z_][A-Za-z0-9_]*)\1/g
-
-const withoutHeredocs = (command) => {
-	const kept = []
-	const ends = []
-	for (const line of command.split('\n')) {
-		if (ends.length > 0) {
-			if (line.trim() === ends[0]) ends.shift()
-			continue
-		}
-		kept.push(line)
-		for (const [, , tag] of line.matchAll(HEREDOC)) ends.push(tag)
-	}
-	return kept.join('\n')
-}
-
 const segments = (command) => {
-	const tokens = [...withoutHeredocs(command).matchAll(TOKEN)].map(([token]) => token)
 	const found = [[]]
-	for (let at = 0; at < tokens.length; at += 1) {
-		const token = tokens[at]
+	const all = tokens(command)
+	for (let at = 0; at < all.length; at += 1) {
+		const token = all[at]
 		if (SEPARATOR.has(token)) found.push([])
 		else if (REDIRECT.test(token)) at += /^\d*[<>]+$/.test(token) ? 1 : 0
 		else found.at(-1).push(unquote(token))
@@ -55,16 +34,16 @@ const segments = (command) => {
 const VALUED = new Set(['-c', '--config-env', '-C', '--git-dir', '--work-tree', '--namespace'])
 const ATTACHED = /^(--[a-z-]+)=([\s\S]*)$/
 
-const parse = (tokens) => {
+const parse = (found) => {
 	const values = []
 	let at = 1
-	while (at < tokens.length && tokens[at].startsWith('-')) {
-		const attached = ATTACHED.exec(tokens[at])
+	while (at < found.length && found[at].startsWith('-')) {
+		const attached = ATTACHED.exec(found[at])
 		if (attached && VALUED.has(attached[1])) values.push(attached[2])
-		else if (VALUED.has(tokens[at])) values.push(tokens[at + 1] ?? '')
-		at += !attached && VALUED.has(tokens[at]) ? 2 : 1
+		else if (VALUED.has(found[at])) values.push(found[at + 1] ?? '')
+		at += !attached && VALUED.has(found[at]) ? 2 : 1
 	}
-	return { values, subcommand: tokens[at] ?? '', args: tokens.slice(at + 1) }
+	return { values, subcommand: found[at] ?? '', args: found.slice(at + 1) }
 }
 
 const NO_VERIFY = /^(?:--no-verify|-[a-zA-Z]*n[a-zA-Z]*)$/
@@ -78,7 +57,6 @@ const NEW_BRANCH = {
 const RENAME = /^(?:-[mMcC]|--move|--copy)$/
 const BRANCH_CREATE = /^(?:-f|--force|-t|--track|--no-track|-q|--quiet)$/
 const REBASING = /^(?:-[a-zA-Z]*r[a-zA-Z]*|--rebase(?:=(?!false).*)?)$/
-const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/
 
 const shown = (name) => (name === '' ? '（不明）' : name)
 
@@ -131,17 +109,10 @@ const branched = (args) => {
 	return flags.every((flag) => BRANCH_CREATE.test(flag)) ? named(positional[0]) : null
 }
 
-const invoked = (tokens) => {
-	let at = 0
-	while (at < tokens.length && (ASSIGNMENT.test(tokens[at]) || tokens[at] === 'env')) at += 1
-	const name = tokens[at]?.replace(/^.*\//, '')
-	return name === 'git' ? tokens.slice(at) : null
-}
-
 const git = (segment, ask) => {
-	const tokens = invoked(segment)
-	if (tokens === null) return null
-	const { values, subcommand, args } = parse(tokens)
+	const found = invoked(segment, 'git')
+	if (found === null) return null
+	const { values, subcommand, args } = parse(found)
 
 	if (values.some((value) => /^core\.hooksPath=/i.test(value))) {
 		return `core.hooksPath の差し替えは commit-msg と pre-commit を外す`
@@ -234,8 +205,8 @@ export const decide = (input, ask = ASK) => {
 	const command = input.tool_input?.command
 	if (typeof command !== 'string') return null
 
-	for (const tokens of segments(command)) {
-		const reason = git(tokens, ask)
+	for (const segment of segments(command)) {
+		const reason = git(segment, ask)
 		if (reason) return reason
 	}
 	return null
