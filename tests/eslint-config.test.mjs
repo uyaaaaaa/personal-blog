@@ -8,6 +8,7 @@ const eslint = new ESLint({ cwd: ROOT })
 
 const WEB_FONT = /Web フォントを読み込まない/
 const THEME_BRANCH = /dark: で色を分岐しない|prefers-color-scheme で分岐しない/
+const LANDING = /着地位置は CSS が持つ|scroll-behavior は宣言しない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -19,6 +20,12 @@ const webFontsIn = async (relative, code) => {
 const themeBranchesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => THEME_BRANCH.test(message.message)).length
+}
+
+// 同じく、着地位置の指摘だけを数える
+const landingsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => LANDING.test(message.message)).length
 }
 
 const config = (body) => `export default defineNuxtConfig({\n${body}\n})`
@@ -187,5 +194,166 @@ describe('テーマごとの分岐', () => {
 				sfc('<p />', "window.matchMedia('(prefers-color-scheme: dark)')"),
 			),
 		).toBeGreaterThan(0)
+	})
+})
+
+describe('ページ内ジャンプの着地位置', () => {
+	it('ページ全体を動かす呼び出しを落とす', async () => {
+		expect(
+			await landingsIn(
+				'app/components/ui/a.vue',
+				sfc('<div />', 'window.scrollTo({ top: 0 })'),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn(
+				'app/composables/useA.ts',
+				'export const useA = () => window.scroll(0, 0)',
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn(
+				'app/composables/useA.ts',
+				'export const useA = () => document.documentElement.scrollTo({ top: 0 })',
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('スクロール位置への代入を落とす', async () => {
+		expect(
+			await landingsIn(
+				'app/composables/useA.ts',
+				'export const useA = (n: number) => (document.documentElement.scrollTop -= n)',
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn(
+				'app/composables/useA.ts',
+				'export const useA = () => (document.body.scrollTop = 0)',
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('集約先の外の scrollIntoView を落とす', async () => {
+		expect(
+			await landingsIn(
+				'app/components/layout/a.vue',
+				sfc(
+					'<div />',
+					"document.querySelector('.a')?.scrollIntoView({ block: 'nearest' })",
+				),
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('CSS の宣言を JS から書く経路を落とす', async () => {
+		expect(
+			await landingsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => (el.style.scrollBehavior = 'smooth')",
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('scroll-behavior', 'smooth')",
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn(
+				'app/router.options.ts',
+				'export default { scrollBehavior: () => ({ top: 0 }) }',
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn(
+				'app/router.options.ts',
+				"export default { scrollBehaviorType: 'smooth' }",
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn(
+				'nuxt.config.ts',
+				config("\trouter: { options: { scrollBehaviorType: 'smooth' } },"),
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('テンプレートのクラスと式を落とす', async () => {
+		expect(
+			await landingsIn('app/pages/a.vue', sfc('<div class="scroll-smooth" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn('app/pages/a.vue', sfc('<div class="md:scroll-auto" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn(
+				'app/pages/a.vue',
+				sfc('<button @click="window.scrollTo({ top: 0 })" />'),
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('静的な style 属性の宣言を落とす', async () => {
+		expect(
+			await landingsIn('app/pages/a.vue', sfc('<div style="scroll-behavior: smooth" />')),
+		).toBeGreaterThan(0)
+	})
+
+	it('設定ファイルが html に配る指定を落とす', async () => {
+		expect(
+			await landingsIn(
+				'nuxt.config.ts',
+				config("\tapp: { head: { htmlAttrs: { class: 'scroll-smooth' } } },"),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await landingsIn(
+				'nuxt.config.ts',
+				config("\tapp: { head: { htmlAttrs: { style: 'scroll-behavior: smooth' } } },"),
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('集約先は通す', async () => {
+		expect(
+			await landingsIn(
+				'app/composables/useScrollTo.ts',
+				"export const useScrollTo = () => {\n\tdocument.getElementById('a')?.scrollIntoView({ behavior: 'smooth' })\n\twindow.scrollTo({ top: 0, behavior: 'smooth' })\n}",
+			),
+		).toBe(0)
+	})
+
+	it('器の中の項目送りとスクロール位置の読み取りは通す', async () => {
+		expect(
+			await landingsIn(
+				'app/components/layout/a.vue',
+				sfc(
+					'<div />',
+					'const container = ref<HTMLElement | null>(null)\nif (container.value) container.value.scrollTop += 8',
+				),
+			),
+		).toBe(0)
+		expect(
+			await landingsIn('app/components/ui/a.vue', sfc('<div />', 'const y = window.scrollY')),
+		).toBe(0)
+	})
+
+	it('綴りの重なる overscroll は通す', async () => {
+		expect(await landingsIn('app/pages/a.vue', sfc('<div class="overscroll-contain" />'))).toBe(
+			0,
+		)
+		expect(
+			await landingsIn(
+				'app/pages/a.vue',
+				sfc('<div style="overscroll-behavior: contain" />'),
+			),
+		).toBe(0)
+		expect(
+			await landingsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('overscroll-behavior', 'contain')",
+			),
+		).toBe(0)
 	})
 })

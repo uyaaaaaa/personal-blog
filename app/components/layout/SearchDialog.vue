@@ -92,6 +92,7 @@
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 	import { formatDate } from '~/utils/date'
 	import { searchArticles } from '~/utils/search'
+	import { deltaToReveal } from '~/utils/scroll'
 
 	const props = defineProps<{
 		isOpen: boolean
@@ -144,7 +145,15 @@
 
 	watch(activeIndex, async () => {
 		await nextTick()
-		resultsRef.value?.querySelector('.is-active')?.scrollIntoView({ block: 'nearest' })
+
+		const container = resultsRef.value
+		const active = container?.querySelector<HTMLElement>('.is-active')
+		if (!container || !active) return
+
+		container.scrollTop += deltaToReveal(
+			container.getBoundingClientRect(),
+			active.getBoundingClientRect(),
+		)
 	})
 
 	// 押した位置が外側のときだけ閉じる。入力欄からドラッグして外で離すと click は

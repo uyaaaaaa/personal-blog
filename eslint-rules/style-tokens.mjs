@@ -6,6 +6,7 @@ export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/doc
 export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
 export const MOTION_URL = `${DOCS_URL}/adr/02-no-prefers-reduced-motion.md`
 export const BREAKPOINT_URL = `${DOCS_URL}/adr/15-two-breakpoints.md`
+export const INVARIANT_URL = `${DOCS_URL}/ARCHITECTURE.md#不変条件`
 
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
@@ -18,6 +19,12 @@ export const COLOR_SCHEME_MESSAGE =
 
 export const THEME_CLASS_MESSAGE =
 	'dark: で色を分岐しない。テーマの差は theme/tokens.ts の darkColors が作る。dark: を書くのはテーマで DOM を出し分けるときだけ。'
+
+export const SCROLL_BEHAVIOR_MESSAGE = `scroll-behavior は宣言しない。ページ遷移とブラウザバックの位置復元までアニメーションする。滑らかに送るのは useScrollTo が呼び出しごとに指定する。 ${INVARIANT_URL}`
+
+// overscroll-behavior / overscroll-contain と綴りが重なるので、前が区切りか終端のものだけを見る
+export const SCROLL_BEHAVIOR_PROPERTY = '(?<![a-z-])scroll-behavior'
+export const SCROLL_BEHAVIOR_CLASS = '(?:^|[\\s:])(?:[a-z-]+:)*!?scroll-(?:smooth|auto)(?![a-z-])'
 
 // 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる
 const COLOR_PREFIX =
@@ -190,6 +197,7 @@ const WIDTH_FEATURE = /\bwidth\b/i
 const THEME_SELECTOR = /\.(?:dark|light)(?![\w-])/
 const COLOR_SCHEME = /prefers-color-scheme/i
 const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
+const SCROLL_BEHAVIOR = new RegExp(SCROLL_BEHAVIOR_CLASS)
 
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
 const CHECKS = {
@@ -330,6 +338,24 @@ const CHECKS = {
 			root.walkAtRules('apply', (rule) => {
 				if (THEME_CLASS.test(rule.params))
 					found.push({ node: rule, messageId: 'themeClass' })
+			})
+			return found
+		},
+	},
+
+	'no-scroll-behavior': {
+		messages: {
+			scrollBehavior: SCROLL_BEHAVIOR_MESSAGE,
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				if (decl.prop.toLowerCase() === 'scroll-behavior')
+					found.push({ node: decl, messageId: 'scrollBehavior' })
+			})
+			root.walkAtRules('apply', (rule) => {
+				if (SCROLL_BEHAVIOR.test(rule.params))
+					found.push({ node: rule, messageId: 'scrollBehavior' })
 			})
 			return found
 		},

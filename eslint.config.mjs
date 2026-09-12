@@ -8,8 +8,12 @@ import styleTokens, {
 	BREAKPOINT_WIDTHS,
 	COLOR_SCHEME_MESSAGE,
 	DOCS_URL,
+	INVARIANT_URL,
 	MOTION_URL,
 	OFF_BREAKPOINT_VARIANTS,
+	SCROLL_BEHAVIOR_CLASS,
+	SCROLL_BEHAVIOR_MESSAGE,
+	SCROLL_BEHAVIOR_PROPERTY,
 	THEME_CLASS_MESSAGE,
 	THEME_COLOR_CLASS,
 	TOKEN_URL,
@@ -20,7 +24,6 @@ const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズ
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
 
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
-const INVARIANT_URL = `${DOCS_URL}/ARCHITECTURE.md#不変条件`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
 
 const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`
@@ -51,6 +54,45 @@ const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
 
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
+
+const LANDING_MESSAGE = `ページ内ジャンプの着地位置は CSS が持つ。JS でオフセットを足さず、ページ全体を動かす呼び出しは useScrollTo に集約する。 ${INVARIANT_URL}`
+
+const PAGE_SCROLLER = '/^(documentElement|body|scrollingElement)$/'
+const SCROLL_METHOD = '/^scroll(To|By)?$/'
+// Type 付きは Nuxt の router option。hash ジャンプと位置復元の behavior になる
+const SCROLL_BEHAVIOR_KEY = '/^scrollBehavior(Type)?$/'
+
+// 集約先の useScrollTo だけが例外。除くために、この配列の同一性で識別する
+const PAGE_SCROLL = [
+	{
+		selector: `CallExpression[callee.object.name=/^(window|globalThis|self)$/][callee.property.name=${SCROLL_METHOD}]`,
+		message: LANDING_MESSAGE,
+	},
+	{
+		selector: `CallExpression[callee.object.property.name=${PAGE_SCROLLER}][callee.property.name=${SCROLL_METHOD}]`,
+		message: LANDING_MESSAGE,
+	},
+	{
+		selector: `AssignmentExpression[left.object.property.name=${PAGE_SCROLLER}][left.property.name=/^scroll(Top|Left)$/]`,
+		message: LANDING_MESSAGE,
+	},
+	{
+		selector: "CallExpression[callee.property.name='scrollIntoView']",
+		message: LANDING_MESSAGE,
+	},
+	{
+		selector: `:matches(MemberExpression[property.name=${SCROLL_BEHAVIOR_KEY}], Property[key.name=${SCROLL_BEHAVIOR_KEY}], Property[key.value=${SCROLL_BEHAVIOR_KEY}])`,
+		message: SCROLL_BEHAVIOR_MESSAGE,
+	},
+	{
+		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_PROPERTY}/i], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_PROPERTY}/i])`,
+		message: SCROLL_BEHAVIOR_MESSAGE,
+	},
+	{
+		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_CLASS}/], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_CLASS}/])`,
+		message: SCROLL_BEHAVIOR_MESSAGE,
+	},
+]
 
 // 集約先の useScrollFrame だけが例外。除くために、この配列の同一性で識別する
 const SCROLL_SUBSCRIPTION = [
@@ -178,6 +220,15 @@ const TEMPLATE_RESTRICTIONS = [
 		selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Literal[value=/${INLINE_IMPORTANT}/i], TemplateElement[value.cooked=/${INLINE_IMPORTANT}/i])`,
 		message: IMPORTANT_MESSAGE,
 	},
+	...PAGE_SCROLL,
+	{
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${SCROLL_BEHAVIOR_CLASS}/]`,
+		message: SCROLL_BEHAVIOR_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=false][key.name='style'] > VLiteral[value=/${SCROLL_BEHAVIOR_PROPERTY}/i]`,
+		message: SCROLL_BEHAVIOR_MESSAGE,
+	},
 	// テンプレートに直接書く <link href>。属性を限らず、読み込む先の綴りで見る
 	{
 		selector: `VAttribute[directive=false] > VLiteral[value=/${WEB_FONT_RESOURCE}/i]`,
@@ -254,6 +305,7 @@ const restrictions = {
 			message: BREAKPOINT_MESSAGE,
 		},
 		...SCROLL_SUBSCRIPTION,
+		...PAGE_SCROLL,
 		...WEB_FONT,
 	],
 }
@@ -324,6 +376,7 @@ export default [
 			'style/no-custom-breakpoint': 'error',
 			'style/no-web-font': 'error',
 			'style/no-theme-branch': 'error',
+			'style/no-scroll-behavior': 'error',
 			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS],
 		},
 	},
@@ -376,7 +429,16 @@ export default [
 		},
 	},
 	{
-		// 設定ファイルは app/ の規約の外。読み込みの経路（modules・css・head.link）だけを見る
+		files: ['app/composables/useScrollTo.ts'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				...CALLED_LAYER_SYNTAX.filter((rule) => !PAGE_SCROLL.includes(rule)),
+			],
+		},
+	},
+	{
+		// 設定ファイルは app/ の規約の外
 		files: ['*.config.ts'],
 		languageOptions: {
 			parser: tsParser,
@@ -386,7 +448,7 @@ export default [
 			},
 		},
 		rules: {
-			'no-restricted-syntax': ['error', ...WEB_FONT],
+			'no-restricted-syntax': ['error', ...WEB_FONT, ...PAGE_SCROLL],
 		},
 	},
 	{

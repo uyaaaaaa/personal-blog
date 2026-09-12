@@ -35,6 +35,8 @@
 
   scroll / resize ──▶ useScrollFrame（全体で1本）──▶ 購読側
 
+  ページを動かす ──▶ useScrollTo（全体で1本）──▶ 着地位置は CSS が決める
+
   theme/tokens.ts ──▶ tailwind.config.ts ──▶ CSS 変数 / Tailwind theme
 
   ビルド時 ──▶ 全ページを静的生成
