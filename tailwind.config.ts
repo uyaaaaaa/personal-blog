@@ -38,8 +38,8 @@ export default <Config>{
 					css: {
 						fontSize: '15.5px',
 						lineHeight: '1.85',
-						h2: { fontSize: '22px', lineHeight: '1.4' },
-						h3: { fontSize: '19.375px' },
+						h2: { fontSize: '1.44em', lineHeight: '1.4' },
+						h3: { fontSize: '1.2em' },
 						'code::before': { content: 'none' },
 						'code::after': { content: 'none' },
 						figure: {

@@ -60,6 +60,8 @@ export const fontFamily = {
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 }
 
+const TOC_TOP = '100px'
+
 export const sizes = {
 	borderRadius: {
 		kbd: '3px',
@@ -90,8 +92,7 @@ export const sizes = {
 		marker: '0.12em',
 	},
 	maxHeight: {
-		'sticky-column': 'calc(100vh - 6rem)',
-		'toc-dropdown': '60vh',
+		'sticky-column': `calc(100vh - ${TOC_TOP})`,
 	},
 	maxWidth: {
 		'search-trigger': '200px',
@@ -103,18 +104,13 @@ export const sizes = {
 		'card-title': '2.6em',
 	},
 	spacing: {
-		'toc-guide': '3px',
 		'logo-mark': '26px',
-		'below-header-sm': '62px',
-		'below-header': '70px',
 		'landing-offset-sm': '76px',
 		'landing-offset': '84px',
 		'landing-offset-lg': '92px',
-		'toc-top': '100px',
-		'toc-hidden': '120px',
+		'toc-top': TOC_TOP,
 		'hero-media': '230px',
 		'shelf-card': '264px',
-		sidebar: '300px',
 		'menu-panel': '960px',
 	},
 }
