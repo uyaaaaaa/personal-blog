@@ -55,8 +55,8 @@
 <template>
 	<div class="mx-auto w-full max-w-column space-y-8">
 		<div class="flex items-baseline gap-4">
-			<h1 class="text-3xl font-bold text-main">
-				<span class="font-mono text-accent">#</span> {{ tagName }}
+			<h1 class="font-mono text-heading font-bold text-main">
+				<span class="text-accent">#</span>{{ tagName }}
 			</h1>
 			<span class="font-mono text-base text-sub">{{ filteredArticles.length }}</span>
 		</div>

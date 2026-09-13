@@ -42,7 +42,7 @@
 <template>
 	<div class="mx-auto w-full max-w-column space-y-8">
 		<div class="flex items-baseline gap-4">
-			<h1 class="text-3xl font-bold text-main">{{ label }}</h1>
+			<h1 class="text-heading font-bold text-main">{{ label }}</h1>
 			<span class="font-mono text-base text-sub">{{ articles?.length ?? 0 }}</span>
 		</div>
 
