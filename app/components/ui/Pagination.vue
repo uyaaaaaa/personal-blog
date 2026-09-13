@@ -126,25 +126,20 @@
 		min-width: 2.25rem;
 		height: 2.25rem;
 		padding: 0 0.5rem;
-		border: 1px solid var(--color-border);
-		border-radius: 0.25rem;
-		background-color: var(--color-surface);
 		color: var(--color-main);
 		font-family: var(--font-mono);
 		font-size: 0.875rem;
-		transition:
-			border-color 0.15s ease,
-			color 0.15s ease;
+		transition: color 0.15s ease;
 	}
 
 	a.page-item:hover {
-		border-color: var(--color-accent);
 		color: var(--color-accent);
 	}
 
 	.page-item-current {
-		border-color: var(--color-accent);
 		color: var(--color-accent);
+		text-decoration: underline;
+		text-underline-offset: 0.25rem;
 	}
 
 	.page-item-disabled {

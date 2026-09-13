@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isCategory, summarizeCategories } from '~/utils/category'
+import { categoryFilterItems, isCategory, summarizeCategories } from '~/utils/category'
 
 describe('isCategory', () => {
 	it('定義済みのカテゴリで真になる', () => {
@@ -48,5 +48,36 @@ describe('summarizeCategories', () => {
 
 	it('記事が無ければ空にする', () => {
 		expect(summarizeCategories([])).toEqual([])
+	})
+})
+
+describe('categoryFilterItems', () => {
+	const categories = [
+		{ slug: 'blog', label: 'Blog', count: 19 },
+		{ slug: 'book', label: 'Books', count: 1 },
+	] as const
+
+	it('先頭の All が全件を持ち、各カテゴリが自分のパスを持つ', () => {
+		expect(categoryFilterItems([...categories], 'blog')).toEqual([
+			{ key: 'all', label: 'All', count: 20, path: '/article', current: false },
+			{ key: 'blog', label: 'Blog', count: 19, path: '/category/blog', current: true },
+			{ key: 'book', label: 'Books', count: 1, path: '/category/book', current: false },
+		])
+	})
+
+	it('current が null なら All だけが現在地になる', () => {
+		expect(
+			categoryFilterItems([...categories], null).map((item) => [item.key, item.current]),
+		).toEqual([
+			['all', true],
+			['blog', false],
+			['book', false],
+		])
+	})
+
+	it('カテゴリが無くても All を 0 件で出す', () => {
+		expect(categoryFilterItems([], null)).toEqual([
+			{ key: 'all', label: 'All', count: 0, path: '/article', current: true },
+		])
 	})
 })

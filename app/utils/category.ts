@@ -29,3 +29,31 @@ export const summarizeCategories = (articles: { category?: string }[]): Category
 		count: counts.get(slug) ?? 0,
 	})).filter((category) => category.count > 0)
 }
+
+export interface CategoryFilterItem {
+	key: string
+	label: string
+	count: number
+	path: string
+	current: boolean
+}
+
+export const categoryFilterItems = (
+	categories: CategorySummary[],
+	current: Category | null,
+): CategoryFilterItem[] => [
+	{
+		key: 'all',
+		label: 'All',
+		count: categories.reduce((total, category) => total + category.count, 0),
+		path: '/article',
+		current: current === null,
+	},
+	...categories.map((category) => ({
+		key: category.slug,
+		label: category.label,
+		count: category.count,
+		path: `/category/${category.slug}`,
+		current: current === category.slug,
+	})),
+]
