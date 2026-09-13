@@ -228,6 +228,20 @@ describe('submit の判定', () => {
 		expect(decide(submit('APPROVE'), ask({ held }))?.reason).toMatch(/先頭行/)
 	})
 
+	it('body を持たない呼び出しに空の body を足さない', () => {
+		const bodiless = (method, event) => ({
+			hook_event_name: 'PreToolUse',
+			tool_name: 'mcp__github__pull_request_review_write',
+			tool_input: { ...WHERE, method, ...(event !== undefined && { event }) },
+		})
+		const held = { grades: {}, submits: 0 }
+		expect(decide(bodiless('delete_pending'), ask({ held }))).toBeNull()
+		expect(decide(bodiless('resolve_thread'), ask({ held }))).toBeNull()
+		expect(decide(bodiless('submit_pending', 'APPROVE'), ask({ held }))?.reason).toMatch(
+			/先頭行/,
+		)
+	})
+
 	it('数えていない PR の submit は通す', () => {
 		expect(decide(submit('APPROVE'), ask())).toBeNull()
 		expect(decide(submit('COMMENT'), ask())).toBeNull()

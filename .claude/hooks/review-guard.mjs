@@ -303,12 +303,13 @@ export const decide = (input, ask = ASK) => {
 	if (tool === 'Skill') return skilled(input, it, ask)
 
 	const { body, ...where } = input.tool_input ?? {}
-	if (typeof body !== 'string' && tool !== REVIEW_TOOL) return null
+	const written = typeof body === 'string'
+	if (!written && tool !== REVIEW_TOOL) return null
 
-	const text = respelled(typeof body === 'string' ? body : '', it.grades)
+	const text = respelled(written ? body : '', it.grades)
 	const reason = JUDGED[tool](text, it, ask.state(key(where), input).read(), input)
 	if (reason) return { reason }
-	return text === body ? null : { updatedInput: { ...input.tool_input, body: text } }
+	return written && text !== body ? { updatedInput: { ...input.tool_input, body: text } } : null
 }
 
 const read = async () => {
