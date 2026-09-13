@@ -1,11 +1,11 @@
 <template>
 	<section
-		class="border-b border-t-2 border-b-border-strong border-t-accent py-8 md:grid md:grid-cols-pickup md:gap-x-6"
+		class="border-b border-t-2 border-border-strong py-8 md:grid md:grid-cols-pickup md:gap-x-6"
 	>
 		<div
 			class="flex items-baseline gap-3 font-mono text-xs tracking-marker md:flex-col md:gap-1.5"
 		>
-			<p class="flex gap-2 text-accent">
+			<p class="flex gap-2 text-sub">
 				<span aria-hidden="true">■</span>
 				<span>PICKUP</span>
 			</p>

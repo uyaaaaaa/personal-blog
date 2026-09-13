@@ -3,7 +3,7 @@
 		class="menu-panel-layer"
 		:class="{ 'is-open': isOpen }"
 	>
-		<div class="menu-panel-anchor container">
+		<div class="menu-panel-anchor mx-auto max-w-container px-4">
 			<div
 				class="menu-panel w-menu-panel shadow-lg"
 				v-bind="$attrs"

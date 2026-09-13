@@ -1,6 +1,6 @@
 <template>
 	<header class="global-header h-header-sm md:h-header">
-		<div class="header-inner container">
+		<div class="header-inner mx-auto max-w-container px-4">
 			<NuxtLink
 				to="/"
 				class="logo"
