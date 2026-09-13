@@ -12,6 +12,8 @@ const tester = new RuleTester({
 
 const sfc = (css) => `<template><div class="a" /></template>\n<style scoped>${css}</style>`
 
+const attribute = (spelling) => `<template><div ${spelling} /></template>`
+
 describe('no-untokenized-size', () => {
 	it('語彙にある長さだけを通す', () => {
 		tester.run('no-untokenized-size', styleTokens.rules['no-untokenized-size'], {
@@ -229,6 +231,131 @@ describe('no-color-literal', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('.a { @apply dark:bg-[#0b0b0b]; }'),
+					errors: [{ messageId: 'literal' }],
+				},
+			],
+		})
+	})
+})
+
+describe('no-color-literal', () => {
+	it('style 属性の色も宣言と同じ判定で落とす', () => {
+		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
+			valid: [
+				{ filename: 'a.vue', code: attribute('style="color: var(--color-main)"') },
+				{ filename: 'a.vue', code: attribute(':style="{ color: \'var(--color-main)\' }"') },
+				{ filename: 'a.vue', code: attribute(':style="{ opacity }"') },
+				{
+					filename: 'a.vue',
+					code: attribute(':style="{ \'--callout-rgb-light\': config.rgb }"'),
+				},
+				{ filename: 'a.vue', code: attribute('style="color: rgba(0, 0, 0, 0.5)"') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: attribute('style="color: #ff0000"'),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute(':style="{ backgroundColor: \'tomato\' }"'),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute(":style=\"{ color: open ? '#ff0000' : '#00ff00' }\""),
+					errors: [{ messageId: 'literal' }, { messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute(':style="{ ...{ color: \'#ff0000\' } }"'),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute(':style="{ [name]: \'#ff0000\' }"'),
+					errors: [{ messageId: 'literal' }],
+				},
+			],
+		})
+	})
+})
+
+describe('no-font-literal', () => {
+	it('トークン由来の書体だけを通す', () => {
+		tester.run('no-font-literal', styleTokens.rules['no-font-literal'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { font-family: var(--font-mono); }') },
+				{ filename: 'a.vue', code: sfc('.a { font-family: inherit; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { font: italic bold 1rem/1.5 var(--font-sans); }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { font-weight: 600; font-size: 1rem; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply font-mono md:font-sans; }') },
+				{ filename: 'a.vue', code: sfc(".a { font-feature-settings: 'tnum'; }") },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc(".a { font-family: 'Comic Sans MS'; }"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { font-family: Georgia, serif; }'),
+					errors: [{ messageId: 'literal' }, { messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { font-family: var(--font-mono), monospace; }'),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { FONT: bold 1rem Georgia; }'),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply font-serif; }'),
+					errors: [{ messageId: 'fontClass' }],
+				},
+			],
+		})
+	})
+
+	it('style 属性の書体も宣言と同じ判定で落とす', () => {
+		tester.run('no-font-literal', styleTokens.rules['no-font-literal'], {
+			valid: [
+				{ filename: 'a.vue', code: attribute('style="font-family: var(--font-mono)"') },
+				{
+					filename: 'a.vue',
+					code: attribute(':style="{ fontFamily: \'var(--font-mono)\' }"'),
+				},
+				{ filename: 'a.vue', code: attribute(':style="{ opacity }"') },
+				{ filename: 'a.vue', code: attribute('style="font-weight: 600"') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: attribute('style="font-family: \'Comic Sans MS\'"'),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute(':style="{ fontFamily: \'Comic Sans MS\' }"'),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute(":style=\"{ 'font-family': open ? 'Georgia' : 'Verdana' }\""),
+					errors: [{ messageId: 'literal' }, { messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute(':style="`font-family: ${name}; font-family: Georgia`"'),
 					errors: [{ messageId: 'literal' }],
 				},
 			],

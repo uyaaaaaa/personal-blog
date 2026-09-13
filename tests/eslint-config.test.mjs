@@ -11,6 +11,7 @@ const THEME_BRANCH = /dark: で色を分岐しない|prefers-color-scheme で分
 const LANDING = /着地位置は CSS が持つ|scroll-behavior は宣言しない/
 const OUTLINE = /フォーカスの輪郭を消さない/
 const IMPORTANT = /!important は書かない/
+const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前のクラス/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -40,6 +41,12 @@ const outlinesIn = async (relative, code) => {
 const importantsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => IMPORTANT.test(message.message)).length
+}
+
+// 同じく、色と書体の指摘だけを数える
+const singleSourcesIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => SINGLE_SOURCE.test(message.message)).length
 }
 
 // 並びの指摘は綴りが eslint-plugin-vue のものなので、ルール名で数える
@@ -536,6 +543,59 @@ describe('フォーカスの輪郭', () => {
 				sfc('<input style="padding: 0; outline: 2px solid red" />'),
 			),
 		).toBe(0)
+	})
+})
+
+describe('色と書体の単一情報源', () => {
+	it('style 属性に書いた色と書体を落とす', async () => {
+		expect(
+			await singleSourcesIn('app/pages/a.vue', sfc('<p style="color: #ff0000" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await singleSourcesIn(
+				'app/pages/a.vue',
+				sfc(`<p style="font-family: 'Comic Sans MS'" />`),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await singleSourcesIn(
+				'app/pages/a.vue',
+				sfc(`<p :style="{ color: '#ff0000', fontFamily: 'Comic Sans MS' }" />`),
+			),
+		).toBe(2)
+	})
+
+	it('トークンを引く style 属性は通す', async () => {
+		expect(
+			await singleSourcesIn(
+				'app/pages/a.vue',
+				sfc('<p style="color: var(--color-main); font-family: var(--font-mono)" />'),
+			),
+		).toBe(0)
+		expect(
+			await singleSourcesIn(
+				'app/pages/a.vue',
+				sfc(`<p :style="{ '--callout-rgb-light': rgb }" />`, `const rgb = '124, 58, 237'`),
+			),
+		).toBe(0)
+	})
+
+	it('トークンに無い family のクラスを落とす', async () => {
+		expect(
+			await singleSourcesIn('app/pages/a.vue', sfc('<p class="font-serif" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await singleSourcesIn('app/pages/a.vue', sfc(`<p :class="['md:font-serif']" />`)),
+		).toBeGreaterThan(0)
+		expect(await singleSourcesIn('app/pages/a.vue', sfc('<p class="font-mono" />'))).toBe(0)
+		expect(await singleSourcesIn('app/pages/a.vue', sfc('<p class="font-medium" />'))).toBe(0)
+	})
+
+	it('<style> と .css と同じ判定で見る', async () => {
+		const style = `<style scoped>.a { font-family: 'Comic Sans MS'; }</style>`
+		expect(
+			await singleSourcesIn('app/pages/a.vue', `${sfc('<p class="a" />')}\n${style}`),
+		).toBeGreaterThan(0)
 	})
 })
 

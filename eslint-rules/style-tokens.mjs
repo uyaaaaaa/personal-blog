@@ -1,6 +1,6 @@
 import postcss from 'postcss'
 import resolveConfig from 'tailwindcss/resolveConfig.js'
-import { colors, sizes } from '../theme/tokens.ts'
+import { colors, fontFamily, sizes } from '../theme/tokens.ts'
 
 export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
 export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
@@ -91,6 +91,32 @@ const NAMED_COLORS = new Set(
 	),
 )
 
+// 書体の名前でない語。font の一括指定が family の前に並べる語と、値を持たない CSS 全体のキーワード。
+// システムフォントの語（menu 等）は、トークンを通らない書体の指定なので入れない
+const FONT_KEYWORDS = new Set(
+	'inherit initial unset revert revert-layer var normal italic oblique small-caps bold bolder lighter ultra-condensed extra-condensed condensed semi-condensed semi-expanded expanded extra-expanded ultra-expanded xx-small x-small small medium large x-large xx-large xxx-large larger smaller'.split(
+		' ',
+	),
+)
+
+const FONT_PROPERTY = /^font(?:-family)?$/i
+// style 属性は宣言の並びなので、綴りから font の宣言を取り出す
+const FONT_DECLARATION = /(?<![\w-])font(?:-family)?\s*:([^;]*)/gi
+// 引用符で囲った名前と、区切りから始まる語。数に続く単位（1.5rem の rem）は語ではない
+const FONT_WORD = /'[^']*'|"[^"]*"|(?<![\w-])-?[a-zA-Z][\w-]*/g
+
+// カンマで割った family ごとに、キーワードでない語だけを名前として返す
+function fontLiterals(value) {
+	const found = []
+	for (const family of value.replace(CUSTOM_PROPERTY, '').split(',')) {
+		const literals = [...family.matchAll(FONT_WORD)]
+			.map(([word]) => word)
+			.filter((word) => !FONT_KEYWORDS.has(word.toLowerCase()))
+		if (literals.length > 0) found.push(literals.join(' '))
+	}
+	return found
+}
+
 function collectStrings(value, into) {
 	if (typeof value === 'string') into.add(value)
 	else if (Array.isArray(value)) for (const item of value) collectStrings(item, into)
@@ -146,6 +172,13 @@ export const BREAKPOINT_WIDTHS = [...breakpoints.pixels].flatMap((px) =>
 	Object.entries(PIXELS_PER).map(([unit, scale]) => `${px / scale}${unit}`),
 )
 
+// tokens の fontFamily が theme を上書きするので、残るのは Tailwind の既定の family だけ
+const OFF_TOKEN_FONTS = Object.keys(theme.fontFamily).filter((name) => !(name in fontFamily))
+
+export const FONT_CLASS_MESSAGE = `${OFF_TOKEN_FONTS.map((name) => `font-${name}`).join(' / ')} は使わない。文字は theme/tokens.ts の fontFamily が持つ名前のクラスで書く。 ${TOKEN_URL}`
+
+export const OFF_TOKEN_FONT_CLASS = `(?:^|[\\s:])(?:[a-z-]+:)*!?font-(?:${OFF_TOKEN_FONTS.join('|')})(?![\\w-])`
+
 export const OFF_BREAKPOINT_VARIANTS = [
 	...Object.keys(theme.screens).filter((name) => !BREAKPOINTS.includes(name)),
 	...Object.keys(theme.screens).map((name) => `max-${name}`),
@@ -185,6 +218,22 @@ function isWhiteOrBlack(literal) {
 	)
 }
 
+// 判定は宣言の値でも style 属性の全文でも同じものを使う
+function colorLiterals(value) {
+	const text = stripNonValues(value).replace(CUSTOM_PROPERTY, '')
+	const matches = [
+		...text.matchAll(HEX),
+		...text.matchAll(COLOR_FUNCTION),
+		...[...text.matchAll(/\b[a-z]+\b(?!\s*\()/gi)].filter((match) =>
+			NAMED_COLORS.has(match[0].toLowerCase()),
+		),
+	]
+	// var() を含む関数はトークン由来（Callout の --callout-rgb）
+	return matches
+		.map(([literal]) => literal)
+		.filter((literal) => !literal.includes('var(') && !isWhiteOrBlack(literal))
+}
+
 function eachStyleBlock(context, visit) {
 	const services = context.sourceCode.parserServices ?? context.parserServices
 	const document = services?.getDocumentFragment?.()
@@ -212,6 +261,71 @@ function eachStyleBlock(context, visit) {
 	}
 }
 
+function* elements(node) {
+	if (node.type !== 'VElement') return
+	yield node
+	for (const child of node.children) yield* elements(child)
+}
+
+const kebab = (name) => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+
+function propertyName(property) {
+	if (property.type !== 'Property') return null
+	if (property.key.type === 'Identifier' && !property.computed) return kebab(property.key.name)
+	if (property.key.type === 'Literal' && typeof property.key.value === 'string')
+		return kebab(property.key.value)
+	return null
+}
+
+// parent は木を遡るので外す
+const children = (node) =>
+	Object.entries(node).flatMap(([key, value]) =>
+		key === 'parent' ? [] : Array.isArray(value) ? value : [value],
+	)
+
+// :style は宣言そのものを持たないので、キーと文字列から宣言を組み直す。
+// 条件式やテンプレート文字列の中の文字列も、そのキーの値として読む
+function* declarations(node, property = '') {
+	if (!node || typeof node.type !== 'string') return
+	const declare = (text) => (property ? `${property}: ${text}` : text)
+	if (node.type === 'ObjectExpression') {
+		for (const entry of node.properties) {
+			// 名乗らないキー（[key] や ...styles）の値も、宣言の綴りを持たない値として読む
+			const target = entry.type === 'SpreadElement' ? entry.argument : entry.value
+			yield* declarations(target, propertyName(entry) ?? '')
+		}
+	} else if (node.type === 'Literal') {
+		if (typeof node.value === 'string') yield { text: declare(node.value), node }
+	} else if (node.type === 'TemplateLiteral') {
+		for (const quasi of node.quasis) yield { text: declare(quasi.value.cooked), node: quasi }
+	} else {
+		for (const child of children(node)) yield* declarations(child, property)
+	}
+}
+
+// style 属性は宣言の並びなので、<style> と同じ判定に通す。
+// テンプレートに eslint-disable は届かない（→ ADR 20）ので、例外は <style> に移すことになる
+function eachStyleAttribute(context, visit) {
+	const services = context.sourceCode.parserServices ?? context.parserServices
+	const document = services?.getDocumentFragment?.()
+	if (!document) return
+
+	for (const root of document.children) {
+		for (const element of elements(root)) {
+			for (const attribute of element.startTag.attributes) {
+				const { key, value } = attribute
+				if (!value) continue
+				if (!attribute.directive) {
+					if (key.name === 'style') visit(value.value, value)
+					continue
+				}
+				if (key.name.name !== 'bind' || key.argument?.name !== 'style') continue
+				for (const { text, node } of declarations(value.expression)) visit(text, node)
+			}
+		}
+	}
+}
+
 const REDUCED_MOTION = /prefers-reduced-motion/i
 const MEDIA_CONDITION = /\(([^()]*)\)/g
 const WIDTH_FEATURE = /\bwidth\b/i
@@ -227,6 +341,7 @@ const OUTLINE_RESET_PROPERTY = /^(?:all|outline(?:-style)?)$/i
 const NO_OUTLINE_VALUE = new RegExp(OUTLINE_REMOVAL_VALUE, 'i')
 const RESET_OUTLINE_VALUE = new RegExp(OUTLINE_RESET_VALUE, 'i')
 const OUTLINE_REMOVAL = new RegExp(OUTLINE_REMOVAL_CLASS)
+const OFF_TOKEN_FONT = new RegExp(OFF_TOKEN_FONT_CLASS)
 
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
 const CHECKS = {
@@ -255,24 +370,46 @@ const CHECKS = {
 		find(root) {
 			const found = []
 			const check = (value, node) => {
-				const text = stripNonValues(value).replace(CUSTOM_PROPERTY, '')
-				const matches = [
-					...text.matchAll(HEX),
-					...text.matchAll(COLOR_FUNCTION),
-					...[...text.matchAll(/\b[a-z]+\b(?!\s*\()/gi)].filter((match) =>
-						NAMED_COLORS.has(match[0].toLowerCase()),
-					),
-				]
-				for (const [literal] of matches) {
-					// var() を含む関数はトークン由来（Callout の --callout-rgb）
-					if (literal.includes('var(') || isWhiteOrBlack(literal)) continue
+				for (const literal of colorLiterals(value))
 					found.push({ node, messageId: 'literal', data: { literal } })
-				}
 			}
 			root.walkDecls((decl) => check(decl.value, decl))
 			// walkDecls は at-rule を見ないので、@apply の任意値は別に歩く。
 			// 他の at-rule まで見ると、@keyframes の名前が色の名前に当たる
 			root.walkAtRules('apply', (rule) => check(rule.params, rule))
+			return found
+		},
+		fromAttribute(text) {
+			return colorLiterals(text).map((literal) => ({
+				messageId: 'literal',
+				data: { literal },
+			}))
+		},
+	},
+
+	'no-font-literal': {
+		messages: {
+			literal: `書体の名前（{{literal}}）は書かない。文字は theme/tokens.ts の fontFamily が並べるものだけで組み、var(--font-*) で参照する。 ${TOKEN_URL}`,
+			fontClass: FONT_CLASS_MESSAGE,
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				if (!FONT_PROPERTY.test(decl.prop)) return
+				for (const literal of fontLiterals(decl.value))
+					found.push({ node: decl, messageId: 'literal', data: { literal } })
+			})
+			root.walkAtRules('apply', (rule) => {
+				if (OFF_TOKEN_FONT.test(rule.params))
+					found.push({ node: rule, messageId: 'fontClass' })
+			})
+			return found
+		},
+		fromAttribute(text) {
+			const found = []
+			for (const [, value] of text.matchAll(FONT_DECLARATION))
+				for (const literal of fontLiterals(value))
+					found.push({ messageId: 'literal', data: { literal } })
 			return found
 		},
 	},
@@ -433,6 +570,12 @@ const ruleOf = (check) => ({
 				eachStyleBlock(context, (root, locate) => {
 					for (const { node, messageId, data } of check.find(root)) {
 						context.report({ loc: locate(node), messageId, data })
+					}
+				})
+				if (!check.fromAttribute) return
+				eachStyleAttribute(context, (text, node) => {
+					for (const found of check.fromAttribute(text)) {
+						context.report({ loc: node.loc, ...found })
 					}
 				})
 			},
