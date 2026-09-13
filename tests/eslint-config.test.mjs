@@ -390,6 +390,39 @@ describe('フォーカスの輪郭', () => {
 		).toBeGreaterThan(0)
 	})
 
+	it('オブジェクトで書いた :style も同じ値の見方で落とす', async () => {
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(`<input :style="{ outline: '2px solid transparent' }" />`),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(`<input :style="{ outline: '0 solid red' }" />`),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input :style="{ outline: `none` }" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(
+					`<input :style="{ outline: on ? 'none' : '2px solid red' }" />`,
+					'const on = true',
+				),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(`<input :style="{ outline: '2px solid currentColor' }" />`),
+			),
+		).toBe(0)
+	})
+
 	it('宣言と同じ判定で style 属性を見る', async () => {
 		expect(
 			await outlinesIn(
@@ -409,6 +442,9 @@ describe('フォーカスの輪郭', () => {
 				sfc('<input style="outline: 2px solid rgb(0 0 0)" />'),
 			),
 		).toBe(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input style="outline: unset" />')),
+		).toBeGreaterThan(0)
 	})
 
 	it('輪郭を出す指定と、綴りの重なる指定は通す', async () => {

@@ -410,6 +410,21 @@ describe('no-outline-removal', () => {
 				},
 				{
 					filename: 'a.vue',
+					code: sfc('.a { outline: unset; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: initial; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: 0 solid currentColor; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
 					code: sfc('.a { outline-color: transparent; }'),
 					errors: [{ messageId: 'outlineRemoval' }],
 				},

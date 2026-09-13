@@ -32,10 +32,11 @@ export const OUTLINE_REMOVAL_MESSAGE =
 // outline-offset-0 と綴りが重なるので、後ろが区切りか終端のものだけを見る
 export const OUTLINE_REMOVAL_CLASS =
 	'(?:^|[\\s:])(?:[a-z-]+:)*!?outline-(?:none|0|transparent)(?![\\w-])'
-// 輪郭が消える値。線を持たない語か透明な色が1つでも入る。`0.5rem` の 0 は語ではなく、
+// 輪郭が消える値。線を持たない語か透明な色が1つでも入る。unset と initial は
+// outline-style を初期値の none に戻す。`0.5rem` の 0 は語ではなく、
 // 関数の中（`rgb(0 0 0)`）も色の一部なので数えない
 export const OUTLINE_REMOVAL_VALUE =
-	'(?<![\\w.%-])(?:none|0[a-z%]*|transparent)(?![\\w.%-])(?![^()]*\\))'
+	'(?<![\\w.%-])(?:none|unset|initial|0[a-z%]*|transparent)(?![\\w.%-])(?![^()]*\\))'
 // カスタムプロパティ（--outline）と綴りが重なるので、前が区切りか終端のものだけを見る
 export const OUTLINE_REMOVAL_PROPERTY = `(?<![\\w-])outline(?:-(?:style|width|color))?\\s*:[^;]*${OUTLINE_REMOVAL_VALUE}`
 
