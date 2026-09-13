@@ -371,6 +371,91 @@ describe('no-theme-branch', () => {
 	})
 })
 
+describe('no-outline-removal', () => {
+	it('フォーカスの輪郭を消す宣言とクラスを落とす', () => {
+		tester.run('no-outline-removal', styleTokens.rules['no-outline-removal'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { outline: 2px solid var(--color-accent); }') },
+				{ filename: 'a.vue', code: sfc('.a { outline: 0.5rem solid currentColor; }') },
+				{ filename: 'a.vue', code: sfc('.a { outline: 2px solid rgb(0 0 0); }') },
+				{ filename: 'a.vue', code: sfc('.a { outline-offset: 2px; }') },
+				{ filename: 'a.vue', code: sfc('.a { outline-color: initial; }') },
+				{ filename: 'a.vue', code: sfc('.a { outline: 2px solid #0ff; }') },
+				{ filename: 'a.vue', code: sfc('.a { outline-width: initial; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply outline-offset-0; }') },
+				{ filename: 'a.vue', code: sfc('.a { border: none; }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: none; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a:focus-visible { OUTLINE: 0; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline-style: none; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline-width: 0px; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: 2px solid transparent; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: unset; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: initial; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline-style: initial; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { all: unset; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: 0 solid currentColor; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline-color: transparent; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply outline-none; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply focus-visible:outline-0; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+			],
+		})
+	})
+})
+
 describe('no-scroll-behavior', () => {
 	it('scroll-behavior の宣言を落とす', () => {
 		tester.run('no-scroll-behavior', styleTokens.rules['no-scroll-behavior'], {
