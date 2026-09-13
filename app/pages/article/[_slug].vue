@@ -92,7 +92,7 @@
 		v-if="page"
 		class="mx-auto w-full max-w-column lg:grid lg:max-w-article lg:grid-cols-article lg:gap-14"
 	>
-		<main class="min-w-0">
+		<div class="min-w-0">
 			<article class="space-y-8">
 				<header class="space-y-4 border-b border-border pb-8">
 					<div
@@ -128,7 +128,7 @@
 					<ContentRenderer :value="page" />
 				</div>
 			</article>
-		</main>
+		</div>
 
 		<aside class="hidden lg:block">
 			<Toc :links="tocLinks" />
