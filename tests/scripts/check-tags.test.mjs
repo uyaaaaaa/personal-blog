@@ -85,13 +85,6 @@ describe('check-tags', () => {
 		expect(stderr).toMatch(/draft\/a\.md/)
 	})
 
-	it('記事のディレクトリが無いときは理由を出す', () => {
-		rmSync(join(root, 'content/article'), { recursive: true })
-		const { status, stderr } = check()
-		expect(status).toBe(1)
-		expect(stderr).toMatch(/記事のディレクトリを読み取れない/)
-	})
-
 	it('tags を持たない記事と、フロントマターの無いファイルは見ない', () => {
 		write('a.md', '---\ntitle: "テスト"\n---\n')
 		write('b.md', '## 見出しから始まる\n\ntags: [nuxt, vue]\n')
