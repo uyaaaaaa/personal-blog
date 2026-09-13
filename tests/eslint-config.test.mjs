@@ -9,6 +9,7 @@ const eslint = new ESLint({ cwd: ROOT })
 const WEB_FONT = /Web フォントを読み込まない/
 const THEME_BRANCH = /dark: で色を分岐しない|prefers-color-scheme で分岐しない/
 const LANDING = /着地位置は CSS が持つ|scroll-behavior は宣言しない/
+const IMPORTANT = /!important は書かない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -28,10 +29,17 @@ const landingsIn = async (relative, code) => {
 	return result.messages.filter((message) => LANDING.test(message.message)).length
 }
 
+// 同じく、!important の指摘だけを数える
+const importantsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => IMPORTANT.test(message.message)).length
+}
+
 const config = (body) => `export default defineNuxtConfig({\n${body}\n})`
 
-const sfc = (template, script = '') =>
-	`<template>${template}</template>\n<script setup lang="ts">${script}</script>`
+const sfc = (template, script = '', style = '') =>
+	`<template>${template}</template>\n<script setup lang="ts">${script}</script>` +
+	(style ? `\n<style scoped>${style}</style>` : '')
 
 describe('Web フォントの読み込み', () => {
 	it('設定ファイルの modules と head.link を落とす', async () => {
@@ -355,5 +363,33 @@ describe('ページ内ジャンプの着地位置', () => {
 				"export const useA = (el: HTMLElement) => el.style.setProperty('overscroll-behavior', 'contain')",
 			),
 		).toBe(0)
+	})
+})
+
+describe('制限の抑制', () => {
+	it('案内どおり <style> に書いて <script> で抑制すると消える', async () => {
+		const style = '.a { margin: 0 !important; }'
+		expect(await importantsIn('app/pages/a.vue', sfc('<div />', '', style))).toBeGreaterThan(0)
+		expect(
+			await importantsIn(
+				'app/pages/a.vue',
+				sfc('<div />', '/* eslint-disable style/no-important -- 第三者由来 */', style),
+			),
+		).toBe(0)
+	})
+
+	it('テンプレートは抑制できない', async () => {
+		expect(
+			await importantsIn(
+				'app/pages/a.vue',
+				sfc('<!-- eslint-disable vue/no-restricted-syntax -->\n<div class="!mt-0" />'),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await importantsIn(
+				'app/pages/a.vue',
+				sfc('<div class="!mt-0" />', '/* eslint-disable vue/no-restricted-syntax */'),
+			),
+		).toBeGreaterThan(0)
 	})
 })

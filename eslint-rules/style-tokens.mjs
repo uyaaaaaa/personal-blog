@@ -7,6 +7,10 @@ export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
 export const MOTION_URL = `${DOCS_URL}/adr/02-no-prefers-reduced-motion.md`
 export const BREAKPOINT_URL = `${DOCS_URL}/adr/15-two-breakpoints.md`
 export const INVARIANT_URL = `${DOCS_URL}/ARCHITECTURE.md#不変条件`
+export const SUPPRESSION_URL = `${DOCS_URL}/adr/20-no-template-lint-escape.md`
+
+// eslint-disable が届く先は書いた場所より下だけ。テンプレートは <script> より上にあり、.css は ESLint が読まない
+export const STYLE_EXCEPTION = `例外は .vue の <style> に書き、理由を添えた eslint-disable を <script> に置く。テンプレートと .css には eslint-disable が届かない。 ${SUPPRESSION_URL}`
 
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
@@ -250,8 +254,7 @@ const CHECKS = {
 
 	'no-important': {
 		messages: {
-			important:
-				'!important は書かない。第三者由来のインラインスタイルを打ち消すときだけ、.vue の <style> に書き、理由を添えた eslint-disable を <script> に置いて許す。',
+			important: `!important は書かない。第三者由来のインラインスタイルを打ち消すときだけ許す。${STYLE_EXCEPTION}`,
 		},
 		find(root) {
 			const found = []

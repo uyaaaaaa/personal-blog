@@ -14,6 +14,7 @@ import styleTokens, {
 	SCROLL_BEHAVIOR_CLASS,
 	SCROLL_BEHAVIOR_MESSAGE,
 	SCROLL_BEHAVIOR_PROPERTY,
+	STYLE_EXCEPTION,
 	THEME_CLASS_MESSAGE,
 	THEME_COLOR_CLASS,
 	TOKEN_URL,
@@ -30,8 +31,7 @@ const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モ�
 const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL}の2つだけ。他の境界を作らない。 ${BREAKPOINT_URL}`
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
 const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない。読み取りを useScrollFrame に渡し、アプリ全体で1本の購読に集約する。 ${INVARIANT_URL}`
-const IMPORTANT_MESSAGE =
-	'!important は書かない。Tailwind の ! 修飾子と style 属性も同じ。第三者由来のインラインスタイルを打ち消すときだけ、理由を添えた eslint-disable で許す。'
+const IMPORTANT_MESSAGE = `!important は書かない。Tailwind の ! 修飾子と style 属性も同じ。第三者由来のインラインスタイルを打ち消すときだけ許す。${STYLE_EXCEPTION}`
 
 // フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
 // 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
