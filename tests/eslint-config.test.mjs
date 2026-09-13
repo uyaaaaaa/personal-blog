@@ -416,9 +416,39 @@ describe('フォーカスの輪郭', () => {
 			),
 		).toBeGreaterThan(0)
 		expect(
+			await outlinesIn('app/pages/a.vue', sfc(`<input :style="{ outline: 'unset' }" />`)),
+		).toBeGreaterThan(0)
+		expect(
 			await outlinesIn(
 				'app/pages/a.vue',
 				sfc(`<input :style="{ outline: '2px solid currentColor' }" />`),
+			),
+		).toBe(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(`<input :style="{ outlineColor: 'initial' }" />`),
+			),
+		).toBe(0)
+	})
+
+	it('値そのものでない 0 は通す', async () => {
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(
+					`<input :style="{ outline: index === 0 ? '2px solid red' : '3px solid blue' }" />`,
+					'const index = 1',
+				),
+			),
+		).toBe(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(
+					`<input :style="{ outline: outlines[0] }" />`,
+					`const outlines = ['2px solid red']`,
+				),
 			),
 		).toBe(0)
 	})

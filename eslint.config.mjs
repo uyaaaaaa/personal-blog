@@ -14,6 +14,7 @@ import styleTokens, {
 	OUTLINE_REMOVAL_CLASS,
 	OUTLINE_REMOVAL_PROPERTY,
 	OUTLINE_REMOVAL_VALUE,
+	OUTLINE_RESET_VALUE,
 	SCROLL_BEHAVIOR_CLASS,
 	SCROLL_BEHAVIOR_MESSAGE,
 	SCROLL_BEHAVIOR_PROPERTY,
@@ -57,14 +58,14 @@ const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))
 const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
-// :style のオブジェクトはキーと値に割れるので、綴りでは当たらない。
-// 数値の 0 は esquery の正規表現が文字列にしか当たらないので、値として別に見る
+// :style のオブジェクトはキーと値に割れるので、綴りでは当たらない
 const OUTLINE_KEY = '/^outline(?:-?(?:style|width|color))?$/i'
-const OUTLINE_VALUE_NODES = [
-	`Literal[value=/${OUTLINE_REMOVAL_VALUE}/i]`,
-	`TemplateElement[value.cooked=/${OUTLINE_REMOVAL_VALUE}/i]`,
-	'Literal[value=0]',
-].join(', ')
+const OUTLINE_STYLE_KEY = '/^outline(?:-?style)?$/i'
+const styleObject = (key) =>
+	`VAttribute[directive=true][key.argument.name='style'] :matches(Property[key.name=${key}], Property[key.value=${key}])`
+// 値は条件式やテンプレート文字列の中にも入るので、子孫まで見る
+const outlineValue = (value) =>
+	`:matches(Literal[value=/${value}/i], TemplateElement[value.cooked=/${value}/i])`
 
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
 
@@ -250,7 +251,17 @@ const TEMPLATE_RESTRICTIONS = [
 		message: OUTLINE_MESSAGE,
 	},
 	{
-		selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Property[key.name=${OUTLINE_KEY}], Property[key.value=${OUTLINE_KEY}]) :matches(${OUTLINE_VALUE_NODES})`,
+		selector: `${styleObject(OUTLINE_KEY)} ${outlineValue(OUTLINE_REMOVAL_VALUE)}`,
+		message: OUTLINE_MESSAGE,
+	},
+	{
+		selector: `${styleObject(OUTLINE_STYLE_KEY)} ${outlineValue(OUTLINE_RESET_VALUE)}`,
+		message: OUTLINE_MESSAGE,
+	},
+	// 数値の 0 は esquery の正規表現が文字列にしか当たらないので別に見る。
+	// 添字や条件の 0 まで拾わないよう、値そのものだけを見る
+	{
+		selector: `${styleObject(OUTLINE_KEY)} > Literal[value=0]`,
 		message: OUTLINE_MESSAGE,
 	},
 	...PAGE_SCROLL,

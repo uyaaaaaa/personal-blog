@@ -379,6 +379,8 @@ describe('no-outline-removal', () => {
 				{ filename: 'a.vue', code: sfc('.a { outline: 0.5rem solid currentColor; }') },
 				{ filename: 'a.vue', code: sfc('.a { outline: 2px solid rgb(0 0 0); }') },
 				{ filename: 'a.vue', code: sfc('.a { outline-offset: 2px; }') },
+				{ filename: 'a.vue', code: sfc('.a { outline-color: initial; }') },
+				{ filename: 'a.vue', code: sfc('.a { outline-width: initial; }') },
 				{ filename: 'a.vue', code: sfc('.a { @apply outline-offset-0; }') },
 				{ filename: 'a.vue', code: sfc('.a { border: none; }') },
 			],
@@ -416,6 +418,11 @@ describe('no-outline-removal', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('.a { outline: initial; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline-style: initial; }'),
 					errors: [{ messageId: 'outlineRemoval' }],
 				},
 				{
