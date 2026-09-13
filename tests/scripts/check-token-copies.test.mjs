@@ -145,6 +145,53 @@ describe('check-token-copies', () => {
 		expect(check().status).toBe(0)
 	})
 
+	it('コメントの中の theme を正本にしない', () => {
+		all({ tokens: { dark: LIGHT_FOREGROUND } })
+		writeFileSync(
+			join(root, 'nuxt.config.ts'),
+			`export default defineNuxtConfig({\n` +
+				`\tcontent: { build: { markdown: { highlight: {\n` +
+				`\t\t// theme: { default: 'github-light', dark: 'github-light' }\n` +
+				`\t\ttheme: ${THEMES}, langs: [] } } } },\n` +
+				`})\n`,
+		)
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/github-dark の editor\.foreground は #e1e4e8/)
+	})
+
+	it('綴りの中の theme を正本にしない', () => {
+		all({ tokens: { dark: LIGHT_FOREGROUND } })
+		writeFileSync(
+			join(root, 'nuxt.config.ts'),
+			`export default defineNuxtConfig({\n` +
+				`\tcontent: { build: { markdown: { highlight: {\n` +
+				`\t\tnote: "theme: { default: 'github-light', dark: 'github-light' }",\n` +
+				`\t\ttheme: ${THEMES}, langs: [] } } } },\n` +
+				`})\n`,
+		)
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/github-dark の editor\.foreground は #e1e4e8/)
+	})
+
+	it('コメントアウトされた明暗の項目を拾わない', () => {
+		all({ tokens: { dark: LIGHT_FOREGROUND } })
+		writeFileSync(
+			join(root, 'nuxt.config.ts'),
+			`export default defineNuxtConfig({\n` +
+				`\tcontent: { build: { markdown: { highlight: { theme: {\n` +
+				`\t\tdefault: 'github-light',\n` +
+				`\t\tdark: 'github-dark',\n` +
+				`\t\t// dark: 'github-light',\n` +
+				`\t} , langs: [] } } } },\n` +
+				`})\n`,
+		)
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/github-dark の editor\.foreground は #e1e4e8/)
+	})
+
 	it('正本に値が無ければ、どの写しのものか分かる理由を出す', () => {
 		all()
 		writeFileSync(join(root, 'theme/tokens.ts'), `export const colors = {} as const\n`)
