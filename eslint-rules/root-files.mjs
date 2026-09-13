@@ -9,6 +9,11 @@ const ENTITY_MODULE = /(?:^|\/)-[^/]+\.vue$/
 // テンプレートの名前は PascalCase でも kebab-case でも同じ実体を指す
 const asName = (name) => name.toLowerCase().replaceAll('-', '')
 
+// Vue が要素ではなくコンポーネントとして解決する綴りだけを実体に数える。
+// 大文字始まりか、ハイフンを含む名前（ネイティブのタグ名にハイフンは無い）
+const componentName = (rawName) =>
+	/^[A-Z]/.test(rawName) || rawName.includes('-') ? asName(rawName) : null
+
 const isBlank = (node) => node.type === 'VText' && node.value.trim() === ''
 
 const isEntityModule = (source) =>
@@ -55,7 +60,11 @@ const renderOnly = {
 			let rendered = false
 			for (const child of template.children) {
 				if (isBlank(child)) continue
-				if (child.type !== 'VElement' || rendered || !entities.has(asName(child.rawName))) {
+				if (
+					child.type !== 'VElement' ||
+					rendered ||
+					!entities.has(componentName(child.rawName))
+				) {
 					context.report({ loc: child.loc, messageId: 'markup' })
 					continue
 				}

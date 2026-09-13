@@ -20,6 +20,7 @@ const sfc = (template, script = '', style = '') =>
 	`<template>\n${template}\n</template>\n\n<script setup lang="ts">\n${script}\n</script>\n${style}`
 
 const IMPORT_ENTITY = "import AllArticles from './-AllArticles.vue'"
+const IMPORT_NATIVE_NAME = "import Main from './-Main.vue'"
 const IMPORT_ENTITY_ABSOLUTE = "import AllArticles from '~/pages/article/-AllArticles.vue'"
 
 const ROOT_FILE = file('app/pages/article/index.vue')
@@ -36,6 +37,7 @@ describe('render-only', () => {
 					code: sfc('\t<AllArticles />', `\t${IMPORT_ENTITY_ABSOLUTE}`),
 				},
 				{ filename: ROOT_FILE, code: sfc('\t<all-articles />', `\t${IMPORT_ENTITY}`) },
+				{ filename: ROOT_FILE, code: sfc('\t<Main />', `\t${IMPORT_NATIVE_NAME}`) },
 			],
 			invalid: [],
 		})
@@ -104,6 +106,11 @@ describe('render-only', () => {
 				{
 					filename: ROOT_FILE,
 					code: sfc('\t<AllArticles />\n\t<AllArticles />', `\t${IMPORT_ENTITY}`),
+					errors: [{ messageId: 'markup' }],
+				},
+				{
+					filename: ROOT_FILE,
+					code: sfc('\t<main />', `\t${IMPORT_NATIVE_NAME}`),
 					errors: [{ messageId: 'markup' }],
 				},
 			],
