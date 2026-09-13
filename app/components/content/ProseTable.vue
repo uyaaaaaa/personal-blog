@@ -1,9 +1,3 @@
-<script setup lang="ts">
-	defineOptions({
-		name: 'ProseTable',
-	})
-</script>
-
 <template>
 	<div class="prose-table-scroll">
 		<table>
@@ -11,6 +5,12 @@
 		</table>
 	</div>
 </template>
+
+<script setup lang="ts">
+	defineOptions({
+		name: 'ProseTable',
+	})
+</script>
 
 <style scoped>
 	/* @tailwindcss/typography は pre と違い table にスクロール領域を与えないため、ここで持たせる */

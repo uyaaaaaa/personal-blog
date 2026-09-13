@@ -1,3 +1,67 @@
+<template>
+	<div
+		v-if="page"
+		class="mx-auto w-full max-w-column lg:grid lg:max-w-article lg:grid-cols-article lg:gap-14"
+	>
+		<div class="min-w-0">
+			<article class="space-y-8">
+				<header class="space-y-4 border-b border-border pb-8">
+					<div
+						class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-sub"
+					>
+						<time
+							v-if="page.date"
+							:datetime="page.date"
+							>{{ formatDate(page.date) }}</time
+						>
+						<span
+							v-if="categoryLabel"
+							class="text-accent"
+							>{{ categoryLabel }}</span
+						>
+						<NuxtLink
+							v-for="tag in page.tags"
+							:key="tag"
+							:to="`/tags/${tagToSlug(tag)}`"
+							class="transition-colors hover:text-accent"
+							>#{{ tag }}</NuxtLink
+						>
+					</div>
+
+					<h1 class="text-title-sm font-bold text-main md:text-title">
+						{{ page.title }}
+					</h1>
+				</header>
+
+				<TocInline :links="tocLinks" />
+
+				<div class="prose prose-slate max-w-none dark:prose-invert lg:prose-wide">
+					<ContentRenderer :value="page" />
+				</div>
+			</article>
+		</div>
+
+		<aside class="hidden lg:block">
+			<Toc :links="tocLinks" />
+		</aside>
+
+		<ScrollToTopButton />
+	</div>
+
+	<ArticleFallback
+		v-else-if="showError"
+		variant="error"
+		:pending="retrying"
+		@retry="retry()"
+	/>
+
+	<ArticleFallback
+		v-else-if="isNotFound"
+		variant="not-found"
+		:path="articlePath"
+	/>
+</template>
+
 <script setup lang="ts">
 	import Toc from '~/components/article/Toc.vue'
 	import TocInline from '~/components/article/TocInline.vue'
@@ -86,70 +150,6 @@
 		return category && isCategory(category) ? CATEGORY_LABELS[category] : category
 	})
 </script>
-
-<template>
-	<div
-		v-if="page"
-		class="mx-auto w-full max-w-column lg:grid lg:max-w-article lg:grid-cols-article lg:gap-14"
-	>
-		<div class="min-w-0">
-			<article class="space-y-8">
-				<header class="space-y-4 border-b border-border pb-8">
-					<div
-						class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-sub"
-					>
-						<time
-							v-if="page.date"
-							:datetime="page.date"
-							>{{ formatDate(page.date) }}</time
-						>
-						<span
-							v-if="categoryLabel"
-							class="text-accent"
-							>{{ categoryLabel }}</span
-						>
-						<NuxtLink
-							v-for="tag in page.tags"
-							:key="tag"
-							:to="`/tags/${tagToSlug(tag)}`"
-							class="transition-colors hover:text-accent"
-							>#{{ tag }}</NuxtLink
-						>
-					</div>
-
-					<h1 class="text-title-sm font-bold text-main md:text-title">
-						{{ page.title }}
-					</h1>
-				</header>
-
-				<TocInline :links="tocLinks" />
-
-				<div class="prose prose-slate max-w-none dark:prose-invert lg:prose-wide">
-					<ContentRenderer :value="page" />
-				</div>
-			</article>
-		</div>
-
-		<aside class="hidden lg:block">
-			<Toc :links="tocLinks" />
-		</aside>
-
-		<ScrollToTopButton />
-	</div>
-
-	<ArticleFallback
-		v-else-if="showError"
-		variant="error"
-		:pending="retrying"
-		@retry="retry()"
-	/>
-
-	<ArticleFallback
-		v-else-if="isNotFound"
-		variant="not-found"
-		:path="articlePath"
-	/>
-</template>
 
 <style>
 	.prose a {

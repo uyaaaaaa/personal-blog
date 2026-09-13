@@ -1,19 +1,3 @@
-<script setup lang="ts">
-	import { pageLink, paginationItems } from '~/utils/pagination'
-
-	const props = defineProps<{
-		page: number
-		totalPages: number
-		basePath: string
-	}>()
-
-	const WINDOW_RADIUS = 1
-
-	const items = computed(() => paginationItems(props.page, props.totalPages, WINDOW_RADIUS))
-
-	const linkFor = (target: number) => pageLink(props.basePath, target)
-</script>
-
 <template>
 	<nav
 		v-if="totalPages > 1"
@@ -117,6 +101,22 @@
 		</span>
 	</nav>
 </template>
+
+<script setup lang="ts">
+	import { pageLink, paginationItems } from '~/utils/pagination'
+
+	const props = defineProps<{
+		page: number
+		totalPages: number
+		basePath: string
+	}>()
+
+	const WINDOW_RADIUS = 1
+
+	const items = computed(() => paginationItems(props.page, props.totalPages, WINDOW_RADIUS))
+
+	const linkFor = (target: number) => pageLink(props.basePath, target)
+</script>
 
 <style scoped>
 	.page-item {

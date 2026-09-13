@@ -1,3 +1,23 @@
+<template>
+	<figure class="code-block">
+		<figcaption
+			v-if="filename || label"
+			class="code-block-label"
+		>
+			<span v-if="filename">{{ filename }}</span>
+			<span
+				v-if="label"
+				class="code-block-language"
+				>{{ label }}</span
+			>
+		</figcaption>
+		<pre
+			:class="['text-code', $props.class]"
+			v-bind="$attrs"
+		><slot /></pre>
+	</figure>
+</template>
+
 <script setup lang="ts">
 	defineOptions({
 		name: 'ProsePre',
@@ -20,26 +40,6 @@
 		props.language && !PLAIN_LANGUAGES.includes(props.language) ? props.language : null,
 	)
 </script>
-
-<template>
-	<figure class="code-block">
-		<figcaption
-			v-if="filename || label"
-			class="code-block-label"
-		>
-			<span v-if="filename">{{ filename }}</span>
-			<span
-				v-if="label"
-				class="code-block-language"
-				>{{ label }}</span
-			>
-		</figcaption>
-		<pre
-			:class="['text-code', $props.class]"
-			v-bind="$attrs"
-		><slot /></pre>
-	</figure>
-</template>
 
 <style scoped>
 	.code-block {

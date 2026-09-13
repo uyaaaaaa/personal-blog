@@ -10,6 +10,7 @@ const WEB_FONT = /Web フォントを読み込まない/
 const THEME_BRANCH = /dark: で色を分岐しない|prefers-color-scheme で分岐しない/
 const LANDING = /着地位置は CSS が持つ|scroll-behavior は宣言しない/
 const OUTLINE = /フォーカスの輪郭を消さない/
+const IMPORTANT = /!important は書かない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -33,6 +34,18 @@ const landingsIn = async (relative, code) => {
 const outlinesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => OUTLINE.test(message.message)).length
+}
+
+// 同じく、!important の指摘だけを数える
+const importantsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => IMPORTANT.test(message.message)).length
+}
+
+// 並びの指摘は綴りが eslint-plugin-vue のものなので、ルール名で数える
+const blockOrdersIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => message.ruleId === 'vue/block-order').length
 }
 
 const config = (body) => `export default defineNuxtConfig({\n${body}\n})`
@@ -523,5 +536,48 @@ describe('フォーカスの輪郭', () => {
 				sfc('<input style="padding: 0; outline: 2px solid red" />'),
 			),
 		).toBe(0)
+	})
+})
+
+describe('制限の抑制', () => {
+	const template = '<template><div /></template>'
+	const script = (body = '') => `<script setup lang="ts">${body}</script>`
+	const style = '<style scoped>.a { margin: 0 !important; }</style>'
+
+	it('案内どおり <style> に書いて <script> で抑制すると消える', async () => {
+		expect(
+			await importantsIn('app/pages/a.vue', `${template}\n${script()}\n${style}`),
+		).toBeGreaterThan(0)
+		expect(
+			await importantsIn(
+				'app/pages/a.vue',
+				`${template}\n${script('/* eslint-disable style/no-important -- 第三者由来 */')}\n${style}`,
+			),
+		).toBe(0)
+	})
+
+	it('テンプレートは抑制できない', async () => {
+		expect(
+			await importantsIn(
+				'app/pages/a.vue',
+				sfc('<!-- eslint-disable vue/no-restricted-syntax --><div class="!mt-0" />'),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await importantsIn(
+				'app/pages/a.vue',
+				sfc('<div class="!mt-0" />', '/* eslint-disable vue/no-restricted-syntax */'),
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('抑制の届く先を変える並びを落とす', async () => {
+		expect(
+			await blockOrdersIn('app/pages/a.vue', `${script()}\n${template}\n${style}`),
+		).toBeGreaterThan(0)
+		expect(
+			await blockOrdersIn('app/pages/a.vue', `${template}\n${style}\n${script()}`),
+		).toBeGreaterThan(0)
+		expect(await blockOrdersIn('app/pages/a.vue', `${template}\n${script()}\n${style}`)).toBe(0)
 	})
 })
