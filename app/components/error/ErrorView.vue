@@ -1,6 +1,6 @@
 <template>
 	<div class="mx-auto max-w-column py-16">
-		<p class="flex gap-2 font-mono text-sm tracking-marker">
+		<p class="flex gap-2 font-mono text-sm tracking-marker text-sub">
 			<span aria-hidden="true">■</span>
 			<span class="text-accent">{{ code }}</span>
 		</p>

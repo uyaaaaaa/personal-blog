@@ -74,7 +74,6 @@ export const sizes = {
 		'title-sm': ['23px', '1.35'],
 		heading: ['24px', '1.3'],
 		'hero-sm': ['26px', '1.3'],
-		emoji: '28px',
 		title: ['32px', '1.35'],
 		hero: ['38px', '1.25'],
 	} as Record<string, string | [string, string]>,
@@ -100,17 +99,12 @@ export const sizes = {
 		article: '960px',
 		container: '1200px',
 	},
-	minHeight: {
-		'card-title': '2.6em',
-	},
 	spacing: {
 		'logo-mark': '26px',
 		'landing-offset-sm': '76px',
 		'landing-offset': '84px',
 		'landing-offset-lg': '92px',
 		'toc-top': TOC_TOP,
-		'hero-media': '230px',
-		'shelf-card': '264px',
 		'menu-panel': '960px',
 	},
 }
