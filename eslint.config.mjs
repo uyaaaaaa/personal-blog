@@ -11,6 +11,10 @@ import styleTokens, {
 	INVARIANT_URL,
 	MOTION_URL,
 	OFF_BREAKPOINT_VARIANTS,
+	OUTLINE_REMOVAL_CLASS,
+	OUTLINE_REMOVAL_PROPERTY,
+	OUTLINE_REMOVAL_VALUE,
+	OUTLINE_RESET_VALUE,
 	SCROLL_BEHAVIOR_CLASS,
 	SCROLL_BEHAVIOR_MESSAGE,
 	SCROLL_BEHAVIOR_PROPERTY,
@@ -32,6 +36,7 @@ const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
 const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない。読み取りを useScrollFrame に渡し、アプリ全体で1本の購読に集約する。 ${INVARIANT_URL}`
 const IMPORTANT_MESSAGE = `!important は書かない。Tailwind の ! 修飾子と style 属性も同じ。第三者由来のインラインスタイルを打ち消すときだけ許す。${STYLE_EXCEPTION}`
+const OUTLINE_MESSAGE = `フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。Tailwind の outline-none / outline-0 と style 属性も同じ。同じ要素に別の見える指標があるときだけ許す。${STYLE_EXCEPTION}`
 
 // フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
 // 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
@@ -52,6 +57,15 @@ const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))
 const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
+// :style のオブジェクトはキーと値に割れるので、綴りでは当たらない
+const OUTLINE_KEY = '/^outline(?:-?(?:style|width|color))?$/i'
+const OUTLINE_RESET_KEY = '/^(?:all|outline(?:-?style)?)$/i'
+const styleObject = (key) =>
+	`VAttribute[directive=true][key.argument.name='style'] :matches(Property[key.name=${key}], Property[key.value=${key}])`
+// 値は条件式やテンプレート文字列の中にも入るので子孫まで見る。
+// 比較の被演算子（`kind === 'none'`）は値ではないので外す
+const outlineValue = (value) =>
+	`:matches(Literal[value=/${value}/i], TemplateElement[value.cooked=/${value}/i]):not(BinaryExpression > *)`
 
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
 
@@ -220,6 +234,36 @@ const TEMPLATE_RESTRICTIONS = [
 		selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Literal[value=/${INLINE_IMPORTANT}/i], TemplateElement[value.cooked=/${INLINE_IMPORTANT}/i])`,
 		message: IMPORTANT_MESSAGE,
 	},
+	{
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${OUTLINE_REMOVAL_CLASS}/]`,
+		message: OUTLINE_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${OUTLINE_REMOVAL_CLASS}/], TemplateElement[value.cooked=/${OUTLINE_REMOVAL_CLASS}/])`,
+		message: OUTLINE_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=false][key.name='style'] > VLiteral[value=/${OUTLINE_REMOVAL_PROPERTY}/i]`,
+		message: OUTLINE_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Literal[value=/${OUTLINE_REMOVAL_PROPERTY}/i], TemplateElement[value.cooked=/${OUTLINE_REMOVAL_PROPERTY}/i])`,
+		message: OUTLINE_MESSAGE,
+	},
+	{
+		selector: `${styleObject(OUTLINE_KEY)} ${outlineValue(OUTLINE_REMOVAL_VALUE)}`,
+		message: OUTLINE_MESSAGE,
+	},
+	{
+		selector: `${styleObject(OUTLINE_RESET_KEY)} ${outlineValue(OUTLINE_RESET_VALUE)}`,
+		message: OUTLINE_MESSAGE,
+	},
+	// 数値の 0 は esquery の正規表現が文字列にしか当たらないので別に見る。
+	// 添字や条件の 0 まで拾わないよう値そのものだけを見て、文字列の '0' は上の綴りに任せる
+	{
+		selector: `${styleObject(OUTLINE_KEY)} > Literal[value=0][value=type(number)]`,
+		message: OUTLINE_MESSAGE,
+	},
 	...PAGE_SCROLL,
 	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${SCROLL_BEHAVIOR_CLASS}/]`,
@@ -376,6 +420,7 @@ export default [
 			'style/no-custom-breakpoint': 'error',
 			'style/no-web-font': 'error',
 			'style/no-theme-branch': 'error',
+			'style/no-outline-removal': 'error',
 			'style/no-scroll-behavior': 'error',
 			// 並びが eslint-disable の届く先を決めるので、見た目ではなく抑制のために固定する
 			'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],

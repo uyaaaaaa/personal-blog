@@ -9,6 +9,7 @@ const eslint = new ESLint({ cwd: ROOT })
 const WEB_FONT = /Web フォントを読み込まない/
 const THEME_BRANCH = /dark: で色を分岐しない|prefers-color-scheme で分岐しない/
 const LANDING = /着地位置は CSS が持つ|scroll-behavior は宣言しない/
+const OUTLINE = /フォーカスの輪郭を消さない/
 const IMPORTANT = /!important は書かない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
@@ -27,6 +28,12 @@ const themeBranchesIn = async (relative, code) => {
 const landingsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => LANDING.test(message.message)).length
+}
+
+// 同じく、フォーカスの輪郭の指摘だけを数える
+const outlinesIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => OUTLINE.test(message.message)).length
 }
 
 // 同じく、!important の指摘だけを数える
@@ -366,6 +373,167 @@ describe('ページ内ジャンプの着地位置', () => {
 			await landingsIn(
 				'app/composables/useA.ts',
 				"export const useA = (el: HTMLElement) => el.style.setProperty('overscroll-behavior', 'contain')",
+			),
+		).toBe(0)
+	})
+})
+
+describe('フォーカスの輪郭', () => {
+	it('テンプレートのクラスを落とす', async () => {
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input class="outline-none" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input class="focus-visible:outline-0" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input :class="[\'outline-none\']" />')),
+		).toBeGreaterThan(0)
+	})
+
+	it('style 属性の宣言を落とす', async () => {
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input style="outline: none" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input :style="{ outlineWidth: 0 }" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input :style="{ outline: \'none\' }" />')),
+		).toBeGreaterThan(0)
+	})
+
+	it('オブジェクトで書いた :style も同じ値の見方で落とす', async () => {
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(`<input :style="{ outline: '2px solid transparent' }" />`),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(`<input :style="{ outline: '0 solid red' }" />`),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input :style="{ outline: `none` }" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(
+					`<input :style="{ outline: on ? 'none' : '2px solid red' }" />`,
+					'const on = true',
+				),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc(`<input :style="{ outline: 'unset' }" />`)),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(`<input :style="{ outline: '2px solid currentColor' }" />`),
+			),
+		).toBe(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(`<input :style="{ outlineColor: 'initial' }" />`),
+			),
+		).toBe(0)
+	})
+
+	it('値でない語と、色の中の 0 は通す', async () => {
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input style="outline: 2px solid #0ff" />')),
+		).toBe(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(
+					`<input :style="{ outlineColor: kind === 'none' ? 'red' : 'blue' }" />`,
+					`const kind = 'x'`,
+				),
+			),
+		).toBe(0)
+	})
+
+	it('同じ指摘を2件出さない', async () => {
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc(`<input :style="{ outlineWidth: '0' }" />`)),
+		).toBe(1)
+	})
+
+	it('all でまとめて初期値に戻す指定も落とす', async () => {
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input style="all: unset" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc(`<input :style="{ all: 'unset' }" />`)),
+		).toBeGreaterThan(0)
+	})
+
+	it('値そのものでない 0 は通す', async () => {
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(
+					`<input :style="{ outline: index === 0 ? '2px solid red' : '3px solid blue' }" />`,
+					'const index = 1',
+				),
+			),
+		).toBe(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(
+					`<input :style="{ outline: outlines[0] }" />`,
+					`const outlines = ['2px solid red']`,
+				),
+			),
+		).toBe(0)
+	})
+
+	it('宣言と同じ判定で style 属性を見る', async () => {
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc('<input style="outline: 2px solid transparent" />'),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc('<input style="outline: 0.5rem solid currentColor" />'),
+			),
+		).toBe(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc('<input style="outline: 2px solid rgb(0 0 0)" />'),
+			),
+		).toBe(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input style="outline: unset" />')),
+		).toBeGreaterThan(0)
+	})
+
+	it('輪郭を出す指定と、綴りの重なる指定は通す', async () => {
+		expect(await outlinesIn('app/pages/a.vue', sfc('<input class="outline-offset-0" />'))).toBe(
+			0,
+		)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc('<input style="outline: 2px solid currentColor" />'),
+			),
+		).toBe(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc('<input style="padding: 0; outline: 2px solid red" />'),
 			),
 		).toBe(0)
 	})

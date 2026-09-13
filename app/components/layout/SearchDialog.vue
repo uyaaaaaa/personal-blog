@@ -315,7 +315,6 @@
 		font-family: inherit;
 		font-size: 1rem;
 		color: var(--color-main);
-		outline: none;
 	}
 
 	.search-input::placeholder {
