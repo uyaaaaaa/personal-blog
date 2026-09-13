@@ -134,7 +134,7 @@ describe('check-token-copies', () => {
 		expect(stderr).toMatch(/highlight\.theme が無い/)
 	})
 
-	it('括弧を持つ綴りでは highlight のブロックを閉じない', () => {
+	it('括弧を持つ綴りが混ざっていても正本を読む', () => {
 		all()
 		writeFileSync(
 			join(root, 'nuxt.config.ts'),
@@ -190,6 +190,27 @@ describe('check-token-copies', () => {
 		const { status, stderr } = check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/github-dark の editor\.foreground は #e1e4e8/)
+	})
+
+	it('正規表現リテラルを持つ設定でも正本を読む', () => {
+		all()
+		writeFileSync(
+			join(root, 'nuxt.config.ts'),
+			`export default defineNuxtConfig({\n` +
+				`\tcontent: { build: { markdown: { highlight: {\n` +
+				`\t\tignore: [/['"]/],\n` +
+				`\t\ttheme: ${THEMES}, langs: [] } } } },\n` +
+				`})\n`,
+		)
+		expect(check().status).toBe(0)
+	})
+
+	it('設定が既定のエクスポートを持たなければ理由を出す', () => {
+		all()
+		writeFileSync(join(root, 'nuxt.config.ts'), `export const config = {}\n`)
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/content が無い/)
 	})
 
 	it('正本に値が無ければ、どの写しのものか分かる理由を出す', () => {

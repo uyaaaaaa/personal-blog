@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import ts from 'typescript'
 
 const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
 const TOKENS = 'theme/tokens.ts'
@@ -37,72 +38,50 @@ const json = (path) => {
 }
 
 // Shiki のテーマは nuxt.config.ts が選ぶ。設定は defineNuxtConfig と拡張子の無い import を持ち、
-// Nuxt の外では import できないので綴りから読む
-const SKIPPED = /\/\/[^\n]*|\/\*[\s\S]*?\*\/|(['"`])(?:\\[\s\S]|(?!\1)[\s\S])*?\1/y
-const QUOTED = /^(['"])((?:\\.|(?!\1).)*)\1/
-
-// コメントと綴りの中は設定ではない。キーの探索も括弧の対応も、その外の位置だけを見る
-const scan = (source, visit) => {
-	for (let at = 0; at < source.length; at += 1) {
-		SKIPPED.lastIndex = at
-		const skipped = SKIPPED.exec(source)
-		if (skipped) {
-			at += skipped[0].length - 1
-			continue
-		}
-		const found = visit(at)
-		if (found !== undefined) return found
-	}
-	return null
-}
-
-const after = (source, name) => {
-	const pattern = new RegExp(`(?:^|[{,;\\s])${name}\\s*:\\s*`, 'y')
-	return scan(source, (at) => {
-		pattern.lastIndex = at
-		const found = pattern.exec(source)
-		return found ? at + found[0].length : undefined
-	})
-}
-
-const closing = (source) => {
-	let depth = 0
-	return scan(source, (at) => {
-		if (source[at] === '{') depth += 1
-		else if (source[at] === '}' && (depth -= 1) === 0) return source.slice(1, at)
-		return undefined
-	})
-}
-
-// 値そのものだけを返す。ブロックの外まで探して別の場所の同名のキーを拾わないようにする
-const valueOf = (source, name) => {
-	const at = after(source, name)
-	if (at === null) return null
-	const rest = source.slice(at)
-	const quoted = QUOTED.exec(rest)
-	if (quoted) return { name: quoted[2] }
-	return rest.startsWith('{') ? { block: closing(rest) } : null
-}
+// Nuxt の外では import できないので、構文木から値だけを読む
+const THEME_PATH = ['content', 'build', 'markdown', 'highlight', 'theme']
 
 const unreadable = (what) => fail(`${CONFIG} から Shiki のテーマを読み取れない:`, `  ${what}`)
 
-const highlightThemes = (source) => {
-	const highlight = valueOf(source, 'highlight')
-	if (highlight?.block == null) unreadable('highlight のブロックが無い')
+const named = (node) => (ts.isIdentifier(node) || ts.isStringLiteralLike(node) ? node.text : null)
 
-	const theme = valueOf(highlight.block, 'theme')
-	if (theme === null) unreadable('highlight.theme が無い')
-	if (theme.name !== undefined) return { default: theme.name, dark: theme.name }
-	if (theme.block === null) unreadable('highlight.theme のブロックが閉じていない')
+const valueOf = (node, name) =>
+	ts.isObjectLiteralExpression(node)
+		? node.properties.find(
+				(property) => ts.isPropertyAssignment(property) && named(property.name) === name,
+			)?.initializer
+		: undefined
 
-	return {
-		default: valueOf(theme.block, 'default')?.name,
-		dark: valueOf(theme.block, 'dark')?.name,
-	}
+// defineNuxtConfig(...) でも素のオブジェクトでも、設定の実体まで降りる
+const configObject = (source) => {
+	const exported = source.statements.find(ts.isExportAssignment)?.expression
+	if (exported === undefined) return undefined
+	return ts.isCallExpression(exported) ? exported.arguments[0] : exported
 }
 
-const foreground = async (name) => {
-	if (name === undefined) unreadable('highlight.theme に綴りが無い')
+const themeNode = (source) => {
+	let node = configObject(ts.createSourceFile(CONFIG, source, ts.ScriptTarget.Latest, true))
+	for (const [at, name] of THEME_PATH.entries()) {
+		if (node === undefined) unreadable(`${THEME_PATH.slice(0, at + 1).join('.')} が無い`)
+		node = valueOf(node, name)
+	}
+	if (node === undefined) unreadable(`${THEME_PATH.join('.')} が無い`)
+	return node
+}
+
+const highlightThemes = (source) => {
+	const node = themeNode(source)
+	if (ts.isStringLiteralLike(node)) return { default: node.text, dark: node.text }
+
+	const spelling = (name) => {
+		const chosen = valueOf(node, name)
+		return chosen !== undefined && ts.isStringLiteralLike(chosen) ? chosen.text : undefined
+	}
+	return { default: spelling('default'), dark: spelling('dark') }
+}
+
+const foreground = async (name, chosen) => {
+	if (name === undefined) unreadable(`${THEME_PATH.join('.')}.${chosen} に綴りが無い`)
 
 	let theme
 	try {
@@ -135,7 +114,7 @@ const bg = (name) => ({
 const codeText = async (name, palette, chosen) => ({
 	where: `${TOKENS} の ${name}['code-text']`,
 	actual: palette?.['code-text'],
-	expected: await foreground(themes[chosen]),
+	expected: await foreground(themes[chosen], chosen),
 	source: `Shiki のテーマ ${themes[chosen]} の editor.foreground`,
 })
 
