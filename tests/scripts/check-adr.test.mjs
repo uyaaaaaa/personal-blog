@@ -66,11 +66,17 @@ describe('番号', () => {
 		expect(stderr).toMatch(/番号 02 が2つある/)
 	})
 
-	it('NN- で始まらないファイル名を落とす', () => {
+	it('NN- で始まらない .md を落とす', () => {
 		adr('third.md', '三つ目の判断')
 		const { status, stderr } = check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/ファイル名が NN-<英語スラッグ>\.md ではない/)
+	})
+
+	// 1つ落ちると pre-commit が回す lint ごと止まり、以後どのコミットも通らなくなる
+	it('.md ではないファイルを見ない', () => {
+		write('docs/adr/.DS_Store', '')
+		expect(check().status).toBe(0)
 	})
 })
 
@@ -90,7 +96,6 @@ describe('書き方', () => {
 	})
 
 	it('1行目が見出しでない ADR を落とす', () => {
-		adr('02-second.md', '次の判断')
 		write(
 			'docs/adr/02-second.md',
 			[
@@ -116,22 +121,35 @@ describe('索引', () => {
 		expect(stderr).toMatch(/02-second\.md の行が無い/)
 	})
 
-	it('ADR の無い行を落とす', () => {
+	// 位置で突き合わせると、余った1行から後ろの実在する ADR まで「無い」と報告される
+	it('余った行だけを名指しし、実在する ADR は落とさない', () => {
 		index(
 			row('01', '最初の判断', '01-first.md'),
-			row('02', '次の判断', '02-second.md'),
 			row('03', '消した判断', '03-removed.md'),
+			row('02', '次の判断', '02-second.md'),
 		)
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/03-removed\.md を指す行があるが、その ADR が無い/)
+		expect(stderr).toMatch(/2行目の 03-removed\.md に当たる ADR が無い/)
+		expect(stderr).not.toMatch(/02-second\.md の行が無い/)
 	})
 
 	it('番号の順に並んでいない索引を落とす', () => {
 		index(row('02', '次の判断', '02-second.md'), row('01', '最初の判断', '01-first.md'))
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/1行目は 02-second\.md を指している/)
+		expect(stderr).toMatch(/行は番号の順に並べる/)
+	})
+
+	it('同じ ADR を2度引く索引を落とす', () => {
+		index(
+			row('01', '最初の判断', '01-first.md'),
+			row('02', '次の判断', '02-second.md'),
+			row('02', '次の判断', '02-second.md'),
+		)
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/02-second\.md の行が2つある/)
 	})
 
 	it('本文と違う見出しの行を落とす', () => {
@@ -146,5 +164,33 @@ describe('索引', () => {
 		const { status, stderr } = check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/行の番号が 03/)
+	})
+})
+
+describe('リンク', () => {
+	it('索引の外から切れたリンクを落とす', () => {
+		write('docs/DESIGN_GUIDELINE.md', '色の判断は [ADR 03](./adr/03-removed.md) が持つ。\n')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/docs\/DESIGN_GUIDELINE\.md:1: \.\/adr\/03-removed\.md の先が無い/)
+	})
+
+	it('深い場所からの相対リンクも辿る', () => {
+		write('.claude/rules/docs.md', '[ADR 03](../../docs/adr/03-removed.md)\n')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/\.claude\/rules\/docs\.md:1: .* の先が無い/)
+	})
+
+	it('生きたリンクと、ADR を指す外部 URL を通す', () => {
+		write(
+			'docs/ARCHITECTURE.md',
+			[
+				'[ADR 01](./adr/01-first.md) と [見出し](./adr/02-second.md#次の判断)。',
+				'[issue](https://github.com/uyaaaaaa/personal-blog/blob/main/docs/adr/03-removed.md)',
+				'',
+			].join('\n'),
+		)
+		expect(check().status).toBe(0)
 	})
 })
