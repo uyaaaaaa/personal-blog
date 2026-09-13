@@ -20,7 +20,7 @@
 			>
 				<NuxtLink
 					:to="item.path"
-					:aria-current="item.current ? 'page' : undefined"
+					:aria-current="item.current ? 'true' : undefined"
 					class="flex items-baseline gap-2 rounded-full border px-3 py-1.5 font-mono text-sm transition-colors"
 					:class="
 						item.current

@@ -37,10 +37,10 @@ describe('CategoryFilter', () => {
 		])
 	})
 
-	it('現在地のリンクだけが aria-current="page" を持つ', async () => {
+	it('現在地のリンクだけが現在項目になる', async () => {
 		const wrapper = await mount('book')
 
-		const current = wrapper.findAll('[aria-current="page"]')
+		const current = wrapper.findAll('[aria-current]')
 		expect(current).toHaveLength(1)
 		expect(current[0]?.attributes('href')).toBe('/category/book')
 	})
@@ -48,7 +48,14 @@ describe('CategoryFilter', () => {
 	it('current が null なら All が現在地になる', async () => {
 		const wrapper = await mount(null)
 
-		expect(wrapper.get('[aria-current="page"]').attributes('href')).toBe('/article')
+		expect(wrapper.get('[aria-current]').attributes('href')).toBe('/article')
+	})
+
+	// ページ送りが同じ文書で aria-current="page" を出す。集合の中の現在項目は 'true'
+	it('現在項目は page ではなく true で示す', async () => {
+		const wrapper = await mount('blog')
+
+		expect(wrapper.get('[aria-current]').attributes('aria-current')).toBe('true')
 	})
 
 	it('タブではなくリンクの並びとして出す', async () => {
