@@ -210,7 +210,33 @@ describe('check-token-copies', () => {
 		writeFileSync(join(root, 'nuxt.config.ts'), `export const config = {}\n`)
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/content が無い/)
+		expect(stderr).toMatch(/既定のエクスポートが無い/)
+	})
+
+	it('無いキーをそのものの名前で言う', () => {
+		all()
+		writeFileSync(
+			join(root, 'nuxt.config.ts'),
+			`export default defineNuxtConfig({ app: {} })\n`,
+		)
+		expect(check().stderr).toMatch(/^\s+content が無い$/m)
+
+		writeFileSync(
+			join(root, 'nuxt.config.ts'),
+			`export default defineNuxtConfig({ content: { build: { markdown: {} } } })\n`,
+		)
+		expect(check().stderr).toMatch(/^\s+content\.build\.markdown\.highlight が無い$/m)
+	})
+
+	it('dark を持たないテーマの指定を、綴り1本と同じに扱う', () => {
+		all({ tokens: { dark: LIGHT_FOREGROUND } })
+		writeFileSync(
+			join(root, 'nuxt.config.ts'),
+			`export default defineNuxtConfig({\n` +
+				`\tcontent: { build: { markdown: { highlight: { theme: { default: 'github-light' } } } } },\n` +
+				`})\n`,
+		)
+		expect(check().status).toBe(0)
 	})
 
 	it('正本に値が無ければ、どの写しのものか分かる理由を出す', () => {

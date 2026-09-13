@@ -61,14 +61,17 @@ const configObject = (source) => {
 
 const themeNode = (source) => {
 	let node = configObject(ts.createSourceFile(CONFIG, source, ts.ScriptTarget.Latest, true))
+	if (node === undefined) unreadable('既定のエクスポートが無い')
+
 	for (const [at, name] of THEME_PATH.entries()) {
-		if (node === undefined) unreadable(`${THEME_PATH.slice(0, at + 1).join('.')} が無い`)
-		node = valueOf(node, name)
+		const next = valueOf(node, name)
+		if (next === undefined) unreadable(`${THEME_PATH.slice(0, at + 1).join('.')} が無い`)
+		node = next
 	}
-	if (node === undefined) unreadable(`${THEME_PATH.join('.')} が無い`)
 	return node
 }
 
+// @nuxtjs/mdc は綴り1本を { default } に畳む。dark を持たない形も同じ入力として通す
 const highlightThemes = (source) => {
 	const node = themeNode(source)
 	if (ts.isStringLiteralLike(node)) return { default: node.text, dark: node.text }
@@ -77,7 +80,8 @@ const highlightThemes = (source) => {
 		const chosen = valueOf(node, name)
 		return chosen !== undefined && ts.isStringLiteralLike(chosen) ? chosen.text : undefined
 	}
-	return { default: spelling('default'), dark: spelling('dark') }
+	const chosen = spelling('default')
+	return { default: chosen, dark: spelling('dark') ?? chosen }
 }
 
 const foreground = async (name, chosen) => {
