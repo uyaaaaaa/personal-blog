@@ -9,13 +9,17 @@ const SKIP = new Set(['.git', '.nuxt', '.output', '.verify', 'dist', 'node_modul
 const SOURCE = /\.(vue|[cm]?[jt]sx?)$/i
 
 // ESLint がディレクティブと見るのは、コメントの先頭がこの綴りのものだけ。
-// ファイル全体に効く eslint-disable はブロックコメントでしか効かない
-const DIRECTIVE = /^eslint-disable(?:-next-line|-line)?(?![\w-])/
-const LINE_DIRECTIVE = /^eslint-disable-(?:next-line|line)(?![\w-])/
+// ファイル全体に効く eslint-disable と、重さを書き換える eslint はブロックコメントでしか効かない
+const DISABLE = /^eslint-disable(?:-next-line|-line)?(?![\w-])/
+const LINE_DISABLE = /^eslint-disable-(?:next-line|line)(?![\w-])/
+const CONFIG = /^eslint(?![\w-])/
 const DESCRIPTION = '--'
 
-const honored = (comment) =>
-	(comment.type === 'Block' ? DIRECTIVE : LINE_DIRECTIVE).test(comment.value.trim())
+const disables = (comment) =>
+	(comment.type === 'Block' ? DISABLE : LINE_DISABLE).test(comment.value.trim())
+
+// 重さの書き換えは位置に依らずファイル全体に効くので、並びを固定しても届く先が変わらない
+const configures = (comment) => comment.type === 'Block' && CONFIG.test(comment.value.trim())
 
 function* sources(directory) {
 	for (const entry of readdirSync(directory, { withFileTypes: true })) {
@@ -41,7 +45,7 @@ const commentsOf = (code, file) =>
 		: tsParser.parseForESLint(code, parserOptions).ast.comments
 
 const reasonsAgainst = (value) => {
-	const body = value.trim().replace(DIRECTIVE, '')
+	const body = value.trim().replace(DISABLE, '')
 	const [rules, ...description] = body.split(DESCRIPTION)
 	const reasons = []
 	if (rules.trim() === '')
@@ -62,16 +66,21 @@ for (const file of [...sources(ROOT)]) {
 		continue
 	}
 	for (const comment of comments ?? []) {
-		if (!honored(comment)) continue
+		const line = comment.loc.start.line
+		if (configures(comment))
+			errors.push(
+				`${where}:${line}: ルールの重さをここで変えない。eslint.config.mjs で決める`,
+			)
+		if (!disables(comment)) continue
 		for (const reason of reasonsAgainst(comment.value))
-			errors.push(`${where}:${comment.loc.start.line}: ${reason}`)
+			errors.push(`${where}:${line}: ${reason}`)
 	}
 }
 
 if (errors.length > 0) {
-	console.error('eslint-disable にルール名と理由が無い:')
+	console.error('ESLint の抑制が、ルール名と理由を書いた eslint-disable になっていない:')
 	for (const error of errors) console.error(`  ${error}`)
 	process.exit(1)
 }
 
-console.log('✔ every eslint-disable names its rules and its reason')
+console.log('✔ every eslint suppression is a disable that names its rules and its reason')
