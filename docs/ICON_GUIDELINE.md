@@ -47,9 +47,6 @@
 
 ラスタ画像（`.ico` / `.png`）は `public/favicon.svg` から生成している。
 形を変える場合は SVG を編集したうえで、全ラスタを描き直すこと。
-`theme-color` は地に合わせ、`app/app.vue` が `theme/tokens.ts` の `bg` を
-テーマごとに出し分けている。`site.webmanifest` はトークンを読めないので直値を持つ。
-地の色を変える場合は webmanifest も同じ値に更新する。
 
 ## OGP 画像
 
