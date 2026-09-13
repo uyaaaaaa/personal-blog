@@ -376,6 +376,8 @@ describe('no-outline-removal', () => {
 		tester.run('no-outline-removal', styleTokens.rules['no-outline-removal'], {
 			valid: [
 				{ filename: 'a.vue', code: sfc('.a { outline: 2px solid var(--color-accent); }') },
+				{ filename: 'a.vue', code: sfc('.a { outline: 0.5rem solid currentColor; }') },
+				{ filename: 'a.vue', code: sfc('.a { outline: 2px solid rgb(0 0 0); }') },
 				{ filename: 'a.vue', code: sfc('.a { outline-offset: 2px; }') },
 				{ filename: 'a.vue', code: sfc('.a { @apply outline-offset-0; }') },
 				{ filename: 'a.vue', code: sfc('.a { border: none; }') },
@@ -399,6 +401,16 @@ describe('no-outline-removal', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('.a { outline-width: 0px; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: 2px solid transparent; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline-color: transparent; }'),
 					errors: [{ messageId: 'outlineRemoval' }],
 				},
 				{

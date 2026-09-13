@@ -390,6 +390,27 @@ describe('フォーカスの輪郭', () => {
 		).toBeGreaterThan(0)
 	})
 
+	it('宣言と同じ判定で style 属性を見る', async () => {
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc('<input style="outline: 2px solid transparent" />'),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc('<input style="outline: 0.5rem solid currentColor" />'),
+			),
+		).toBe(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc('<input style="outline: 2px solid rgb(0 0 0)" />'),
+			),
+		).toBe(0)
+	})
+
 	it('輪郭を出す指定と、綴りの重なる指定は通す', async () => {
 		expect(await outlinesIn('app/pages/a.vue', sfc('<input class="outline-offset-0" />'))).toBe(
 			0,
@@ -398,6 +419,12 @@ describe('フォーカスの輪郭', () => {
 			await outlinesIn(
 				'app/pages/a.vue',
 				sfc('<input style="outline: 2px solid currentColor" />'),
+			),
+		).toBe(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc('<input style="padding: 0; outline: 2px solid red" />'),
 			),
 		).toBe(0)
 	})

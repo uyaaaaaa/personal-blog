@@ -30,10 +30,14 @@ export const OUTLINE_REMOVAL_MESSAGE =
 	'フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。同じ要素に別の見える指標があるときだけ、.vue の <style> に書き、理由を添えた eslint-disable を <script> に置いて許す。'
 
 // outline-offset-0 と綴りが重なるので、後ろが区切りか終端のものだけを見る
-export const OUTLINE_REMOVAL_CLASS = '(?:^|[\\s:])(?:[a-z-]+:)*!?outline-(?:none|0)(?![\\w-])'
+export const OUTLINE_REMOVAL_CLASS =
+	'(?:^|[\\s:])(?:[a-z-]+:)*!?outline-(?:none|0|transparent)(?![\\w-])'
+// 輪郭が消える値。線を持たない語か透明な色が1つでも入る。`0.5rem` の 0 は語ではなく、
+// 関数の中（`rgb(0 0 0)`）も色の一部なので数えない
+export const OUTLINE_REMOVAL_VALUE =
+	'(?<![\\w.%-])(?:none|0[a-z%]*|transparent)(?![\\w.%-])(?![^()]*\\))'
 // カスタムプロパティ（--outline）と綴りが重なるので、前が区切りか終端のものだけを見る
-export const OUTLINE_REMOVAL_PROPERTY =
-	'(?<![\\w-])outline(?:-(?:style|width))?\\s*:\\s*(?:none|0[a-z%]*)(?![\\w-])'
+export const OUTLINE_REMOVAL_PROPERTY = `(?<![\\w-])outline(?:-(?:style|width|color))?\\s*:[^;]*${OUTLINE_REMOVAL_VALUE}`
 
 // 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる
 const COLOR_PREFIX =
@@ -207,9 +211,9 @@ const THEME_SELECTOR = /\.(?:dark|light)(?![\w-])/
 const COLOR_SCHEME = /prefers-color-scheme/i
 const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
 const SCROLL_BEHAVIOR = new RegExp(SCROLL_BEHAVIOR_CLASS)
-const OUTLINE_PROPERTY = /^outline(?:-(?:style|width))?$/i
-// 輪郭が消えるのは none と 0 だけで組まれた値。`outline: 0 none` のように並ぶこともある
-const NO_OUTLINE_VALUE = /^(?:(?:none|0[a-z%]*)\s*)+$/i
+const OUTLINE_PROPERTY = /^outline(?:-(?:style|width|color))?$/i
+// 宣言と style 属性で判定が割れないよう、値は綴りも同じものを使う
+const NO_OUTLINE_VALUE = new RegExp(OUTLINE_REMOVAL_VALUE, 'i')
 const OUTLINE_REMOVAL = new RegExp(OUTLINE_REMOVAL_CLASS)
 
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う

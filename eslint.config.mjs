@@ -58,8 +58,8 @@ const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
 // :style のオブジェクトはキーと値に割れるので、綴りでは当たらない。
 // 数値の 0 は esquery の正規表現が文字列にしか当たらないので、値として別に見る
-const OUTLINE_KEY = '/^outline(?:-?(?:style|width))?$/i'
-const NO_OUTLINE_VALUE = '/^(?:none|0[a-z%]*)$/i'
+const OUTLINE_KEY = '/^outline(?:-?(?:style|width|color))?$/i'
+const NO_OUTLINE_VALUE = '/^(?:none|0[a-z%]*|transparent)$/i'
 
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
 
