@@ -24,4 +24,4 @@
 - [17 スタイルの判定は1つだけ持ち、ESLint と `scripts/` の両方から通す](./adr/17-one-style-judgment-two-runners.md)
 - [18 記事の識別を文字だけにし、`emoji` / `image` はスキーマに残す](./adr/18-text-only-article-identity.md)
 - [19 `accent` は状態に加えて数と記号の目印にも使い、状態の合図は色に限らない](./adr/19-accent-for-state-and-marker.md)
-- [20 抑制の口は `<script>` の `eslint-disable` だけにし、テンプレートに逃げ道を作らない](./adr/20-no-template-lint-escape.md)
+- [20 ブロックの並びを固定し、抑制の口は `<script>` の `eslint-disable` だけにする](./adr/20-no-template-lint-escape.md)

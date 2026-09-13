@@ -1,18 +1,3 @@
-<script setup lang="ts">
-	import { useArticleTags } from '~/composables/useArticleTags'
-	import { usePageSeo } from '~/composables/usePageSeo'
-
-	const route = useRoute()
-
-	const { data: tags } = useArticleTags()
-
-	usePageSeo({
-		path: () => route.path,
-		title: 'Tags',
-		description: '記事に付けられたタグの一覧。',
-	})
-</script>
-
 <template>
 	<div class="mx-auto w-full max-w-column space-y-8">
 		<div class="flex items-baseline gap-4">
@@ -33,3 +18,18 @@
 		</div>
 	</div>
 </template>
+
+<script setup lang="ts">
+	import { useArticleTags } from '~/composables/useArticleTags'
+	import { usePageSeo } from '~/composables/usePageSeo'
+
+	const route = useRoute()
+
+	const { data: tags } = useArticleTags()
+
+	usePageSeo({
+		path: () => route.path,
+		title: 'Tags',
+		description: '記事に付けられたタグの一覧。',
+	})
+</script>

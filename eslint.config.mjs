@@ -377,6 +377,8 @@ export default [
 			'style/no-web-font': 'error',
 			'style/no-theme-branch': 'error',
 			'style/no-scroll-behavior': 'error',
+			// 並びが eslint-disable の届く先を決めるので、見た目ではなく抑制のために固定する
+			'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],
 			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS],
 		},
 	},

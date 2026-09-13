@@ -1,3 +1,22 @@
+<template>
+	<a
+		v-if="isSameDocumentHash"
+		:href="href"
+		:target="targetAttr"
+		:rel="relAttr"
+	>
+		<slot />
+	</a>
+	<NuxtLink
+		v-else
+		:href="href"
+		:target="targetAttr"
+		:rel="relAttr"
+	>
+		<slot />
+	</NuxtLink>
+</template>
+
 <script setup lang="ts">
 	const props = defineProps({
 		href: {
@@ -47,22 +66,3 @@
 		name: 'ProseA',
 	})
 </script>
-
-<template>
-	<a
-		v-if="isSameDocumentHash"
-		:href="href"
-		:target="targetAttr"
-		:rel="relAttr"
-	>
-		<slot />
-	</a>
-	<NuxtLink
-		v-else
-		:href="href"
-		:target="targetAttr"
-		:rel="relAttr"
-	>
-		<slot />
-	</NuxtLink>
-</template>

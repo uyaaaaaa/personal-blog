@@ -1,17 +1,3 @@
-<script setup lang="ts">
-	import { useScrollTo } from '~/composables/useScrollTo'
-
-	const props = defineProps<{
-		headingId: string
-	}>()
-
-	const { scrollTo } = useScrollTo()
-
-	defineOptions({
-		name: 'HeadingAnchor',
-	})
-</script>
-
 <template>
 	<a
 		:href="`#${props.headingId}`"
@@ -36,6 +22,20 @@
 		</svg>
 	</a>
 </template>
+
+<script setup lang="ts">
+	import { useScrollTo } from '~/composables/useScrollTo'
+
+	const props = defineProps<{
+		headingId: string
+	}>()
+
+	const { scrollTo } = useScrollTo()
+
+	defineOptions({
+		name: 'HeadingAnchor',
+	})
+</script>
 
 <style scoped>
 	/* 本文のリンクとして prose 側の規則も当たるため、色と下線はここで決め切る */

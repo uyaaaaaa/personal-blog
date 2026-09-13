@@ -1,16 +1,3 @@
-<script setup lang="ts">
-	import { useArticleCategories } from '~/composables/useArticleCategories'
-	import { categoryFilterItems, type Category } from '~/utils/category'
-
-	const props = defineProps<{
-		current: Category | null
-	}>()
-
-	const { data: categories } = useArticleCategories()
-
-	const items = computed(() => categoryFilterItems(categories.value ?? [], props.current))
-</script>
-
 <template>
 	<nav aria-label="Categories">
 		<ul class="flex flex-wrap gap-3">
@@ -36,3 +23,16 @@
 		</ul>
 	</nav>
 </template>
+
+<script setup lang="ts">
+	import { useArticleCategories } from '~/composables/useArticleCategories'
+	import { categoryFilterItems, type Category } from '~/utils/category'
+
+	const props = defineProps<{
+		current: Category | null
+	}>()
+
+	const { data: categories } = useArticleCategories()
+
+	const items = computed(() => categoryFilterItems(categories.value ?? [], props.current))
+</script>

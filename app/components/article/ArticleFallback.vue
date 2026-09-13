@@ -1,37 +1,3 @@
-<script setup lang="ts">
-	import { useLatestArticles } from '~/composables/useLatestArticles'
-	import { formatDate } from '~/utils/date'
-
-	const RECENT_LIMIT = 3
-
-	interface Props {
-		variant: 'error' | 'not-found'
-		path?: string
-		// NuxtLoadingIndicatorはルート遷移にしか反応しないため、再試行の進行はここで示す
-		pending?: boolean
-	}
-
-	const props = defineProps<Props>()
-
-	const emit = defineEmits<{ retry: [] }>()
-
-	const heading = computed(() =>
-		props.variant === 'error' ? 'Unable to Load Article' : 'Article Not Found',
-	)
-
-	const description = computed(() =>
-		props.variant === 'error'
-			? 'The connection may be unstable. Please try again in a moment.'
-			: 'It may have been removed, or the URL may be incorrect.',
-	)
-
-	// 取得失敗時は同じ経路が不調なため、回遊導線は出さない
-	const { data: recentArticles } = useLatestArticles(RECENT_LIMIT, {
-		lazy: true,
-		immediate: props.variant === 'not-found',
-	})
-</script>
-
 <template>
 	<div class="mx-auto max-w-column py-8">
 		<div
@@ -86,3 +52,37 @@
 		</section>
 	</div>
 </template>
+
+<script setup lang="ts">
+	import { useLatestArticles } from '~/composables/useLatestArticles'
+	import { formatDate } from '~/utils/date'
+
+	const RECENT_LIMIT = 3
+
+	interface Props {
+		variant: 'error' | 'not-found'
+		path?: string
+		// NuxtLoadingIndicatorはルート遷移にしか反応しないため、再試行の進行はここで示す
+		pending?: boolean
+	}
+
+	const props = defineProps<Props>()
+
+	const emit = defineEmits<{ retry: [] }>()
+
+	const heading = computed(() =>
+		props.variant === 'error' ? 'Unable to Load Article' : 'Article Not Found',
+	)
+
+	const description = computed(() =>
+		props.variant === 'error'
+			? 'The connection may be unstable. Please try again in a moment.'
+			: 'It may have been removed, or the URL may be incorrect.',
+	)
+
+	// 取得失敗時は同じ経路が不調なため、回遊導線は出さない
+	const { data: recentArticles } = useLatestArticles(RECENT_LIMIT, {
+		lazy: true,
+		immediate: props.variant === 'not-found',
+	})
+</script>

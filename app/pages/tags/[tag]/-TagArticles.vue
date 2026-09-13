@@ -1,3 +1,25 @@
+<template>
+	<div class="mx-auto w-full max-w-column space-y-8">
+		<div class="flex items-baseline gap-4">
+			<h1 class="font-mono text-heading font-bold text-main">
+				<span class="text-accent">#</span>{{ tagName }}
+			</h1>
+			<span class="font-mono text-base text-sub">{{ filteredArticles.length }}</span>
+		</div>
+
+		<ArticleList
+			:articles="pagedItems"
+			:start-number="startNumber"
+		/>
+
+		<Pagination
+			:page="page"
+			:total-pages="totalPages"
+			:base-path="basePath"
+		/>
+	</div>
+</template>
+
 <script setup lang="ts">
 	import ArticleList from '~/components/article/ArticleList.vue'
 	import Pagination from '~/components/ui/Pagination.vue'
@@ -51,25 +73,3 @@
 		description: () => `${tagName.value} タグが付いた記事の一覧。`,
 	})
 </script>
-
-<template>
-	<div class="mx-auto w-full max-w-column space-y-8">
-		<div class="flex items-baseline gap-4">
-			<h1 class="font-mono text-heading font-bold text-main">
-				<span class="text-accent">#</span>{{ tagName }}
-			</h1>
-			<span class="font-mono text-base text-sub">{{ filteredArticles.length }}</span>
-		</div>
-
-		<ArticleList
-			:articles="pagedItems"
-			:start-number="startNumber"
-		/>
-
-		<Pagination
-			:page="page"
-			:total-pages="totalPages"
-			:base-path="basePath"
-		/>
-	</div>
-</template>
