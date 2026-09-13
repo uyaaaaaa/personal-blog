@@ -26,6 +26,15 @@ export const SCROLL_BEHAVIOR_MESSAGE = `scroll-behavior は宣言しない。ペ
 export const SCROLL_BEHAVIOR_PROPERTY = '(?<![a-z-])scroll-behavior'
 export const SCROLL_BEHAVIOR_CLASS = '(?:^|[\\s:])(?:[a-z-]+:)*!?scroll-(?:smooth|auto)(?![a-z-])'
 
+export const OUTLINE_REMOVAL_MESSAGE =
+	'フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。同じ要素に別の見える指標があるときだけ、.vue の <style> に書き、理由を添えた eslint-disable を <script> に置いて許す。'
+
+// outline-offset-0 と綴りが重なるので、後ろが区切りか終端のものだけを見る
+export const OUTLINE_REMOVAL_CLASS = '(?:^|[\\s:])(?:[a-z-]+:)*!?outline-(?:none|0)(?![\\w-])'
+// カスタムプロパティ（--outline）と綴りが重なるので、前が区切りか終端のものだけを見る
+export const OUTLINE_REMOVAL_PROPERTY =
+	'(?<![\\w-])outline(?:-(?:style|width))?\\s*:\\s*(?:none|0[a-z%]*)(?![\\w-])'
+
 // 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる
 const COLOR_PREFIX =
 	'text|bg|border|divide|outline|ring|ring-offset|shadow|accent|caret|decoration|fill|stroke|placeholder|from|via|to'
@@ -198,6 +207,10 @@ const THEME_SELECTOR = /\.(?:dark|light)(?![\w-])/
 const COLOR_SCHEME = /prefers-color-scheme/i
 const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
 const SCROLL_BEHAVIOR = new RegExp(SCROLL_BEHAVIOR_CLASS)
+const OUTLINE_PROPERTY = /^outline(?:-(?:style|width))?$/i
+// 輪郭が消えるのは none と 0 だけで組まれた値。`outline: 0 none` のように並ぶこともある
+const NO_OUTLINE_VALUE = /^(?:(?:none|0[a-z%]*)\s*)+$/i
+const OUTLINE_REMOVAL = new RegExp(OUTLINE_REMOVAL_CLASS)
 
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
 const CHECKS = {
@@ -338,6 +351,24 @@ const CHECKS = {
 			root.walkAtRules('apply', (rule) => {
 				if (THEME_CLASS.test(rule.params))
 					found.push({ node: rule, messageId: 'themeClass' })
+			})
+			return found
+		},
+	},
+
+	'no-outline-removal': {
+		messages: {
+			outlineRemoval: OUTLINE_REMOVAL_MESSAGE,
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				if (OUTLINE_PROPERTY.test(decl.prop) && NO_OUTLINE_VALUE.test(decl.value))
+					found.push({ node: decl, messageId: 'outlineRemoval' })
+			})
+			root.walkAtRules('apply', (rule) => {
+				if (OUTLINE_REMOVAL.test(rule.params))
+					found.push({ node: rule, messageId: 'outlineRemoval' })
 			})
 			return found
 		},

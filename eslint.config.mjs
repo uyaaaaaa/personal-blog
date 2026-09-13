@@ -11,6 +11,8 @@ import styleTokens, {
 	INVARIANT_URL,
 	MOTION_URL,
 	OFF_BREAKPOINT_VARIANTS,
+	OUTLINE_REMOVAL_CLASS,
+	OUTLINE_REMOVAL_PROPERTY,
 	SCROLL_BEHAVIOR_CLASS,
 	SCROLL_BEHAVIOR_MESSAGE,
 	SCROLL_BEHAVIOR_PROPERTY,
@@ -32,6 +34,8 @@ const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file
 const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない。読み取りを useScrollFrame に渡し、アプリ全体で1本の購読に集約する。 ${INVARIANT_URL}`
 const IMPORTANT_MESSAGE =
 	'!important は書かない。Tailwind の ! 修飾子と style 属性も同じ。第三者由来のインラインスタイルを打ち消すときだけ、理由を添えた eslint-disable で許す。'
+const OUTLINE_MESSAGE =
+	'フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。Tailwind の outline-none / outline-0 と style 属性も同じ。同じ要素に別の見える指標があるときだけ、理由を添えた eslint-disable で許す。'
 
 // フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
 // 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
@@ -52,6 +56,10 @@ const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))
 const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
+// :style のオブジェクトはキーと値に割れるので、綴りでは当たらない。
+// 数値の 0 は esquery の正規表現が文字列にしか当たらないので、値として別に見る
+const OUTLINE_KEY = '/^outline(?:-?(?:style|width))?$/i'
+const NO_OUTLINE_VALUE = '/^(?:none|0[a-z%]*)$/i'
 
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
 
@@ -220,6 +228,26 @@ const TEMPLATE_RESTRICTIONS = [
 		selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Literal[value=/${INLINE_IMPORTANT}/i], TemplateElement[value.cooked=/${INLINE_IMPORTANT}/i])`,
 		message: IMPORTANT_MESSAGE,
 	},
+	{
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${OUTLINE_REMOVAL_CLASS}/]`,
+		message: OUTLINE_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${OUTLINE_REMOVAL_CLASS}/], TemplateElement[value.cooked=/${OUTLINE_REMOVAL_CLASS}/])`,
+		message: OUTLINE_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=false][key.name='style'] > VLiteral[value=/${OUTLINE_REMOVAL_PROPERTY}/i]`,
+		message: OUTLINE_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Literal[value=/${OUTLINE_REMOVAL_PROPERTY}/i], TemplateElement[value.cooked=/${OUTLINE_REMOVAL_PROPERTY}/i])`,
+		message: OUTLINE_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Property[key.name=${OUTLINE_KEY}], Property[key.value=${OUTLINE_KEY}]) > :matches(Literal[value=${NO_OUTLINE_VALUE}], Literal[value=0])`,
+		message: OUTLINE_MESSAGE,
+	},
 	...PAGE_SCROLL,
 	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${SCROLL_BEHAVIOR_CLASS}/]`,
@@ -376,6 +404,7 @@ export default [
 			'style/no-custom-breakpoint': 'error',
 			'style/no-web-font': 'error',
 			'style/no-theme-branch': 'error',
+			'style/no-outline-removal': 'error',
 			'style/no-scroll-behavior': 'error',
 			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS],
 		},

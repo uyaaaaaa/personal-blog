@@ -9,6 +9,7 @@ const eslint = new ESLint({ cwd: ROOT })
 const WEB_FONT = /Web フォントを読み込まない/
 const THEME_BRANCH = /dark: で色を分岐しない|prefers-color-scheme で分岐しない/
 const LANDING = /着地位置は CSS が持つ|scroll-behavior は宣言しない/
+const OUTLINE = /フォーカスの輪郭を消さない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -26,6 +27,12 @@ const themeBranchesIn = async (relative, code) => {
 const landingsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => LANDING.test(message.message)).length
+}
+
+// 同じく、フォーカスの輪郭の指摘だけを数える
+const outlinesIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => OUTLINE.test(message.message)).length
 }
 
 const config = (body) => `export default defineNuxtConfig({\n${body}\n})`
@@ -353,6 +360,44 @@ describe('ページ内ジャンプの着地位置', () => {
 			await landingsIn(
 				'app/composables/useA.ts',
 				"export const useA = (el: HTMLElement) => el.style.setProperty('overscroll-behavior', 'contain')",
+			),
+		).toBe(0)
+	})
+})
+
+describe('フォーカスの輪郭', () => {
+	it('テンプレートのクラスを落とす', async () => {
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input class="outline-none" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input class="focus-visible:outline-0" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input :class="[\'outline-none\']" />')),
+		).toBeGreaterThan(0)
+	})
+
+	it('style 属性の宣言を落とす', async () => {
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input style="outline: none" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input :style="{ outlineWidth: 0 }" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input :style="{ outline: \'none\' }" />')),
+		).toBeGreaterThan(0)
+	})
+
+	it('輪郭を出す指定と、綴りの重なる指定は通す', async () => {
+		expect(await outlinesIn('app/pages/a.vue', sfc('<input class="outline-offset-0" />'))).toBe(
+			0,
+		)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc('<input style="outline: 2px solid currentColor" />'),
 			),
 		).toBe(0)
 	})
