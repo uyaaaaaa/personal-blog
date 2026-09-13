@@ -13,7 +13,7 @@
 		],
 		"PreToolUse": [
 			{
-				"matcher": "Skill|mcp__github__add_comment_to_pending_review|mcp__github__pull_request_review_write",
+				"matcher": "Skill|mcp__github__add_comment_to_pending_review|mcp__github__add_issue_comment|mcp__github__add_reply_to_pull_request_comment|mcp__github__pull_request_review_write",
 				"hooks": [
 					{
 						"type": "command",
@@ -79,7 +79,7 @@
 				]
 			},
 			{
-				"matcher": "mcp__github__add_comment_to_pending_review|mcp__github__pull_request_review_write",
+				"matcher": "mcp__github__add_comment_to_pending_review|mcp__github__add_issue_comment|mcp__github__pull_request_review_write",
 				"hooks": [
 					{
 						"type": "command",
