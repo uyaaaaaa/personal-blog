@@ -36,7 +36,7 @@ const unlisten = () => {
 	}
 }
 
-export const readOnScrollFrame = (read: Read) => {
+const readOnScrollFrame = (read: Read) => {
 	read()
 	reads.add(read)
 	listen()
