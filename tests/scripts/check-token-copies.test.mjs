@@ -117,7 +117,51 @@ describe('check-token-copies', () => {
 		all({ theme: null })
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/Shiki のテーマを読み取れない/)
+		expect(stderr).toMatch(/highlight\.theme が無い/)
+	})
+
+	it('highlight の外の theme を正本にしない', () => {
+		all({ tokens: { light: DARK_FOREGROUND }, theme: null })
+		writeFileSync(
+			join(root, 'nuxt.config.ts'),
+			`export default defineNuxtConfig({\n` +
+				`\tcontent: { build: { markdown: { highlight: { langs: [] } } } },\n` +
+				`\tappConfig: { theme: 'github-dark' },\n` +
+				`})\n`,
+		)
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/highlight\.theme が無い/)
+	})
+
+	it('括弧を持つ綴りでは highlight のブロックを閉じない', () => {
+		all()
+		writeFileSync(
+			join(root, 'nuxt.config.ts'),
+			`export default defineNuxtConfig({\n` +
+				`\tcontent: { build: { markdown: { highlight: { langs: ['}'], theme: ${THEMES} } } } },\n` +
+				`})\n`,
+		)
+		expect(check().status).toBe(0)
+	})
+
+	it('正本に値が無ければ、どの写しのものか分かる理由を出す', () => {
+		all()
+		writeFileSync(join(root, 'theme/tokens.ts'), `export const colors = {} as const\n`)
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/theme_color の正本 theme\/tokens\.ts の colors\.bg に値が無い/)
+		expect(stderr).toMatch(/background_color の正本/)
+		expect(stderr).not.toMatch(/TypeError/)
+	})
+
+	it('写しの側に値が無ければ理由を出す', () => {
+		all()
+		writeFileSync(join(root, 'public/site.webmanifest'), '{}')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/theme_color に値が無い/)
+		expect(stderr).not.toMatch(/TypeError/)
 	})
 
 	it('入っていないテーマを選んでいれば理由を出す', () => {
