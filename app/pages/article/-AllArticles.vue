@@ -1,5 +1,6 @@
 <script setup lang="ts">
 	import ArticleList from '~/components/article/ArticleList.vue'
+	import CategoryFilter from '~/components/article/CategoryFilter.vue'
 	import Pagination from '~/components/ui/Pagination.vue'
 	import { usePagination } from '~/composables/usePagination'
 	import { usePageSeo } from '~/composables/usePageSeo'
@@ -32,6 +33,8 @@
 			<h1 class="text-heading font-bold text-main">Articles</h1>
 			<span class="font-mono text-base text-sub">{{ articles?.length ?? 0 }}</span>
 		</div>
+
+		<CategoryFilter :current="null" />
 
 		<ArticleList
 			:articles="pagedItems"
