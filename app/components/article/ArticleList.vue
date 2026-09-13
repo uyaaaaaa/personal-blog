@@ -8,6 +8,7 @@
 			:path="article.path"
 			:date="article.date"
 			:tags="article.tags"
+			:heading-level="headingLevel"
 		/>
 	</ul>
 </template>
@@ -25,5 +26,6 @@
 	defineProps<{
 		articles: Article[]
 		startNumber: number
+		headingLevel?: 2 | 3
 	}>()
 </script>

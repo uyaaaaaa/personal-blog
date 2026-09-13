@@ -1,5 +1,5 @@
 <template>
-	<div class="mx-auto w-full max-w-column space-y-16">
+	<div class="mx-auto w-full max-w-column space-y-12">
 		<Hero
 			v-if="heroArticle"
 			:article="heroArticle"
@@ -11,6 +11,7 @@
 			:title="shelf.title"
 			:articles="shelf.articles"
 			:total="shelf.total"
+			:start-number="shelf.startNumber"
 			:view-all-path="`/category/${shelf.category}`"
 		/>
 	</div>
@@ -20,9 +21,9 @@
 	import Hero from '~/components/article/Hero.vue'
 	import ArticleShelf from '~/components/article/ArticleShelf.vue'
 	import { usePageSeo } from '~/composables/usePageSeo'
-	import { buildShelves } from '~/utils/shelf'
+	import { buildShelves, type ShelfLimits } from '~/utils/shelf'
 
-	const SHELF_LIMIT = 6
+	const SHELF_LIMITS: ShelfLimits = { blog: 5, book: 3 }
 
 	const route = useRoute()
 
@@ -30,14 +31,14 @@
 		queryCollection('article')
 			.where('published', '=', true)
 			.order('date', 'DESC')
-			.select('path', 'title', 'description', 'date', 'emoji', 'image', 'tags', 'category')
+			.select('path', 'title', 'description', 'date', 'tags', 'category')
 			.all(),
 	)
 
 	const heroArticle = computed(() => articles.value?.[0] ?? null)
 
 	const shelves = computed(() =>
-		buildShelves(articles.value ?? [], heroArticle.value?.path, SHELF_LIMIT),
+		buildShelves(articles.value ?? [], heroArticle.value?.path, SHELF_LIMITS),
 	)
 
 	usePageSeo({ path: () => route.path })
