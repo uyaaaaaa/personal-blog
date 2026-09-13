@@ -37,7 +37,6 @@ export const darkColors: Record<keyof typeof colors, string> = {
 	'header-bg': 'rgba(20, 20, 20, 0.85)',
 	overlay: 'rgba(0, 0, 0, 0.5)',
 	scrollbar: '#3A3A3A',
-	// github-darkの前景色。ProsePreがdiffのマーカーと語にこれを当てるので、隣のトークンと同じ灰にする
 	'code-text': '#E1E4E8',
 	// GitHubのdiff表示の行背景（github-darkのトークン背景は帯が強すぎる）
 	'diff-add-bg': 'rgba(46, 160, 67, 0.15)',
