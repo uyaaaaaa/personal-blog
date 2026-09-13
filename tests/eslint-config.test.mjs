@@ -432,6 +432,36 @@ describe('フォーカスの輪郭', () => {
 		).toBe(0)
 	})
 
+	it('値でない語と、色の中の 0 は通す', async () => {
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input style="outline: 2px solid #0ff" />')),
+		).toBe(0)
+		expect(
+			await outlinesIn(
+				'app/pages/a.vue',
+				sfc(
+					`<input :style="{ outlineColor: kind === 'none' ? 'red' : 'blue' }" />`,
+					`const kind = 'x'`,
+				),
+			),
+		).toBe(0)
+	})
+
+	it('同じ指摘を2件出さない', async () => {
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc(`<input :style="{ outlineWidth: '0' }" />`)),
+		).toBe(1)
+	})
+
+	it('all でまとめて初期値に戻す指定も落とす', async () => {
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc('<input style="all: unset" />')),
+		).toBeGreaterThan(0)
+		expect(
+			await outlinesIn('app/pages/a.vue', sfc(`<input :style="{ all: 'unset' }" />`)),
+		).toBeGreaterThan(0)
+	})
+
 	it('値そのものでない 0 は通す', async () => {
 		expect(
 			await outlinesIn(

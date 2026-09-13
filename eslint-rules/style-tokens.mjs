@@ -32,17 +32,18 @@ export const OUTLINE_REMOVAL_MESSAGE =
 // outline-offset-0 と綴りが重なるので、後ろが区切りか終端のものだけを見る
 export const OUTLINE_REMOVAL_CLASS =
 	'(?:^|[\\s:])(?:[a-z-]+:)*!?outline-(?:none|0|transparent)(?![\\w-])'
-// 輪郭が消える値。線を持たない語か透明な色が1つでも入る。`0.5rem` の 0 は語ではなく、
-// 関数の中（`rgb(0 0 0)`）も色の一部なので数えない
-export const OUTLINE_REMOVAL_VALUE =
-	'(?<![\\w.%-])(?:none|0[a-z%]*|transparent)(?![\\w.%-])(?![^()]*\\))'
+// 値の語の区切り。`0.5rem` の 0 と `#0ff` の 0 は語の一部で、値ではない
+const WORD_EDGE = '[\\w.%#-]'
+// 輪郭が消える値。線を持たない語か透明な色が1つでも入る。
+// 関数の中（`rgb(0 0 0)`）は色の一部なので数えない
+export const OUTLINE_REMOVAL_VALUE = `(?<!${WORD_EDGE})(?:none|0[a-z%]*|transparent)(?!${WORD_EDGE})(?![^()]*\\))`
 // 初期値に戻す語。初期値が none なのは outline-style なので、輪郭が消えるのは
-// 一括指定と outline-style のときだけ（outline-color は色、outline-width は medium に戻る）
-export const OUTLINE_RESET_VALUE = '(?<![\\w.%-])(?:unset|initial)(?![\\w.%-])(?![^()]*\\))'
+// 一括指定と outline-style と all のときだけ（outline-color は色、outline-width は medium に戻る）
+export const OUTLINE_RESET_VALUE = `(?<!${WORD_EDGE})(?:unset|initial)(?!${WORD_EDGE})(?![^()]*\\))`
 // カスタムプロパティ（--outline）と綴りが重なるので、前が区切りか終端のものだけを見る
 export const OUTLINE_REMOVAL_PROPERTY = [
 	`(?<![\\w-])outline(?:-(?:style|width|color))?\\s*:[^;]*${OUTLINE_REMOVAL_VALUE}`,
-	`(?<![\\w-])outline(?:-style)?\\s*:[^;]*${OUTLINE_RESET_VALUE}`,
+	`(?<![\\w-])(?:all|outline(?:-style)?)\\s*:[^;]*${OUTLINE_RESET_VALUE}`,
 ].join('|')
 
 // 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる
@@ -218,7 +219,7 @@ const COLOR_SCHEME = /prefers-color-scheme/i
 const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
 const SCROLL_BEHAVIOR = new RegExp(SCROLL_BEHAVIOR_CLASS)
 const OUTLINE_PROPERTY = /^outline(?:-(?:style|width|color))?$/i
-const OUTLINE_STYLE_PROPERTY = /^outline(?:-style)?$/i
+const OUTLINE_RESET_PROPERTY = /^(?:all|outline(?:-style)?)$/i
 // 宣言と style 属性で判定が割れないよう、値は綴りも同じものを使う
 const NO_OUTLINE_VALUE = new RegExp(OUTLINE_REMOVAL_VALUE, 'i')
 const RESET_OUTLINE_VALUE = new RegExp(OUTLINE_RESET_VALUE, 'i')
@@ -377,7 +378,7 @@ const CHECKS = {
 			root.walkDecls((decl) => {
 				const removes =
 					(OUTLINE_PROPERTY.test(decl.prop) && NO_OUTLINE_VALUE.test(decl.value)) ||
-					(OUTLINE_STYLE_PROPERTY.test(decl.prop) && RESET_OUTLINE_VALUE.test(decl.value))
+					(OUTLINE_RESET_PROPERTY.test(decl.prop) && RESET_OUTLINE_VALUE.test(decl.value))
 				if (removes) found.push({ node: decl, messageId: 'outlineRemoval' })
 			})
 			root.walkAtRules('apply', (rule) => {

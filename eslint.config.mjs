@@ -60,12 +60,13 @@ const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
 // :style のオブジェクトはキーと値に割れるので、綴りでは当たらない
 const OUTLINE_KEY = '/^outline(?:-?(?:style|width|color))?$/i'
-const OUTLINE_STYLE_KEY = '/^outline(?:-?style)?$/i'
+const OUTLINE_RESET_KEY = '/^(?:all|outline(?:-?style)?)$/i'
 const styleObject = (key) =>
 	`VAttribute[directive=true][key.argument.name='style'] :matches(Property[key.name=${key}], Property[key.value=${key}])`
-// 値は条件式やテンプレート文字列の中にも入るので、子孫まで見る
+// 値は条件式やテンプレート文字列の中にも入るので子孫まで見る。
+// 比較の被演算子（`kind === 'none'`）は値ではないので外す
 const outlineValue = (value) =>
-	`:matches(Literal[value=/${value}/i], TemplateElement[value.cooked=/${value}/i])`
+	`:matches(Literal[value=/${value}/i], TemplateElement[value.cooked=/${value}/i]):not(BinaryExpression > *)`
 
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
 
@@ -255,13 +256,13 @@ const TEMPLATE_RESTRICTIONS = [
 		message: OUTLINE_MESSAGE,
 	},
 	{
-		selector: `${styleObject(OUTLINE_STYLE_KEY)} ${outlineValue(OUTLINE_RESET_VALUE)}`,
+		selector: `${styleObject(OUTLINE_RESET_KEY)} ${outlineValue(OUTLINE_RESET_VALUE)}`,
 		message: OUTLINE_MESSAGE,
 	},
 	// 数値の 0 は esquery の正規表現が文字列にしか当たらないので別に見る。
-	// 添字や条件の 0 まで拾わないよう、値そのものだけを見る
+	// 添字や条件の 0 まで拾わないよう値そのものだけを見て、文字列の '0' は上の綴りに任せる
 	{
-		selector: `${styleObject(OUTLINE_KEY)} > Literal[value=0]`,
+		selector: `${styleObject(OUTLINE_KEY)} > Literal[value=0][value=type(number)]`,
 		message: OUTLINE_MESSAGE,
 	},
 	...PAGE_SCROLL,
