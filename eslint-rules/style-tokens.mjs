@@ -218,7 +218,14 @@ function isWhiteOrBlack(literal) {
 	)
 }
 
-// 判定は宣言の値でも style 属性の全文でも同じものを使う
+function untokenizedLengths(value) {
+	const found = []
+	for (const [literal, , number, unit] of stripNonValues(value).matchAll(LENGTH)) {
+		if (!vocabulary[unit.toLowerCase()].has(Math.abs(Number(number)))) found.push(literal)
+	}
+	return found
+}
+
 function colorLiterals(value) {
 	const text = stripNonValues(value).replace(CUSTOM_PROPERTY, '')
 	const matches = [
@@ -277,29 +284,38 @@ function propertyName(property) {
 	return null
 }
 
-// parent は木を遡るので外す
-const children = (node) =>
-	Object.entries(node).flatMap(([key, value]) =>
-		key === 'parent' ? [] : Array.isArray(value) ? value : [value],
-	)
-
 // :style は宣言そのものを持たないので、キーと文字列から宣言を組み直す。
-// 条件式やテンプレート文字列の中の文字列も、そのキーの値として読む
+// 辿るのはどの枝も値になる形だけ。呼び出しの引数・添字・比較の被演算子は値ではない
 function* declarations(node, property = '') {
 	if (!node || typeof node.type !== 'string') return
 	const declare = (text) => (property ? `${property}: ${text}` : text)
-	if (node.type === 'ObjectExpression') {
-		for (const entry of node.properties) {
-			// 名乗らないキー（[key] や ...styles）の値も、宣言の綴りを持たない値として読む
-			const target = entry.type === 'SpreadElement' ? entry.argument : entry.value
-			yield* declarations(target, propertyName(entry) ?? '')
-		}
-	} else if (node.type === 'Literal') {
-		if (typeof node.value === 'string') yield { text: declare(node.value), node }
-	} else if (node.type === 'TemplateLiteral') {
-		for (const quasi of node.quasis) yield { text: declare(quasi.value.cooked), node: quasi }
-	} else {
-		for (const child of children(node)) yield* declarations(child, property)
+	switch (node.type) {
+		case 'ObjectExpression':
+			for (const entry of node.properties) {
+				// 名乗らないキー（[key] や ...styles）の値も、綴りを持たない値として読む
+				const target = entry.type === 'SpreadElement' ? entry.argument : entry.value
+				yield* declarations(target, propertyName(entry) ?? '')
+			}
+			return
+		case 'Literal':
+			if (typeof node.value === 'string') yield { text: declare(node.value), node }
+			return
+		case 'TemplateLiteral':
+			for (const quasi of node.quasis)
+				yield { text: declare(quasi.value.cooked), node: quasi }
+			return
+		case 'ArrayExpression':
+			for (const element of node.elements) yield* declarations(element, property)
+			return
+		case 'ConditionalExpression':
+			yield* declarations(node.consequent, property)
+			yield* declarations(node.alternate, property)
+			return
+		case 'LogicalExpression':
+			// && の左は条件で、|| と ?? の左は値
+			if (node.operator !== '&&') yield* declarations(node.left, property)
+			yield* declarations(node.right, property)
+			return
 	}
 }
 
@@ -352,14 +368,18 @@ const CHECKS = {
 		find(root) {
 			const found = []
 			const check = (value, node) => {
-				for (const [literal, , number, unit] of stripNonValues(value).matchAll(LENGTH)) {
-					if (vocabulary[unit.toLowerCase()].has(Math.abs(Number(number)))) continue
+				for (const literal of untokenizedLengths(value))
 					found.push({ node, messageId: 'untokenized', data: { literal } })
-				}
 			}
 			root.walkDecls((decl) => check(decl.value, decl))
 			root.walkAtRules((rule) => check(rule.params, rule))
 			return found
+		},
+		fromAttribute(text) {
+			return untokenizedLengths(text).map((literal) => ({
+				messageId: 'untokenized',
+				data: { literal },
+			}))
 		},
 	},
 

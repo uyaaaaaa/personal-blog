@@ -61,6 +61,27 @@ describe('no-untokenized-size', () => {
 			],
 		})
 	})
+
+	it('style 属性の長さも宣言と同じ判定で落とす', () => {
+		tester.run('no-untokenized-size', styleTokens.rules['no-untokenized-size'], {
+			valid: [
+				{ filename: 'a.vue', code: attribute('style="padding: 0.75rem"') },
+				{ filename: 'a.vue', code: attribute(':style="{ maxWidth: \'1200px\' }"') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: attribute('style="padding: 137px"'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute(':style="{ maxWidth: \'137px\' }"'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+			],
+		})
+	})
 })
 
 describe('no-important', () => {
@@ -236,9 +257,7 @@ describe('no-color-literal', () => {
 			],
 		})
 	})
-})
 
-describe('no-color-literal', () => {
 	it('style 属性の色も宣言と同じ判定で落とす', () => {
 		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
 			valid: [
@@ -250,6 +269,15 @@ describe('no-color-literal', () => {
 					code: attribute(':style="{ \'--callout-rgb-light\': config.rgb }"'),
 				},
 				{ filename: 'a.vue', code: attribute('style="color: rgba(0, 0, 0, 0.5)"') },
+				{
+					filename: 'a.vue',
+					code: attribute(':style="{ backgroundImage: asset(\'red-panda.png\') }"'),
+				},
+				{ filename: 'a.vue', code: attribute(':style="{ color: palette[\'tomato\'] }"') },
+				{
+					filename: 'a.vue',
+					code: attribute(':style="{ color: kind === \'red\' ? main : sub }"'),
+				},
 			],
 			invalid: [
 				{
@@ -266,6 +294,11 @@ describe('no-color-literal', () => {
 					filename: 'a.vue',
 					code: attribute(":style=\"{ color: open ? '#ff0000' : '#00ff00' }\""),
 					errors: [{ messageId: 'literal' }, { messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute(':style="{ color: open && \'red\' }"'),
+					errors: [{ messageId: 'literal' }],
 				},
 				{
 					filename: 'a.vue',
