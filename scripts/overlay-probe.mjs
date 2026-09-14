@@ -31,7 +31,6 @@ export const OVERLAYS = {
 		link: '.search-result',
 		scroller: '.search-results',
 		dialog: true,
-		// 被せた側の素の部分を押すと閉じ、戻し先にフォーカスを返す
 		restoresOnOutsideClick: true,
 		widths: [375, 1280],
 	},
@@ -184,7 +183,6 @@ const PAGE_HELPERS = `
 		const label = (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\\s+/g, ' ')
 		return el.tagName + (label ? \` "\${label.slice(0, 24)}"\` : '') + ($shown(el) ? '' : ' (見えない)')
 	}
-	// フォーカスの輪郭。出ている / 出ていないは撮っても写らないので、算出値をそのまま残す
 	const $ring = (el) => {
 		if (!el || el === document.body) return ${JSON.stringify(NO_RING)}
 		const style = getComputedStyle(el)
@@ -256,7 +254,6 @@ const start = async () => {
 	const setTouch = (enabled) =>
 		cdp.send('Emulation.setTouchEmulationEnabled', { enabled, maxTouchPoints: 5 })
 
-	// 指で1回押して離す。マウスと同じ click に見えても、ポインタの種別は touch で届く
 	const tap = async (selector, label) => {
 		sent(`${label}をタップ`)
 		const point = await centerOf(selector)
@@ -317,10 +314,6 @@ const start = async () => {
 	const reload = async () => {
 		await cdp.send('Page.navigate', { url: `${baseUrl}/` })
 		await waitFor(`document.readyState === 'complete'`, 30000)
-		// ハイドレーションが済むまでクリックが効かない。dev は module を1本ずつ配るので、
-		// app ができていてもヘッダーはまだのことがある。指のタップは pointerdown だけが
-		// 先に届き、click はその後に来るので、押した指を数え落とす側だけが残る。
-		// __vueParentComponent はビルドによっては付かない。待てなければそのまま進む
 		await waitFor(`!!document.querySelector('#__nuxt')?.__vue_app__`, 30000)
 		await waitFor(`!!document.querySelector(TRIGGER)?.__vueParentComponent`, 3000)
 		await evaluate('await $frames(2)')
@@ -334,7 +327,6 @@ const start = async () => {
 		await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'keyUp', modifiers })
 	}
 
-	// insertText はキーを押さずに値だけ入れる。押した事実まで要る経路はこちらで送る
 	const typeKeys = async (text) => {
 		sent(`"${text}" をキーで打つ`)
 		for (const char of text) {
@@ -750,8 +742,6 @@ const probes = [
 		},
 	},
 	{
-		// テキスト入力はポインタで移しても :focus-visible に一致する。出ていないことは
-		// 「輪郭が見えない」ではなく算出値でしか確かめられない
 		name: 'focus-ring/実クリックで開く',
 		input: true,
 		run: async (p) => {
@@ -817,7 +807,6 @@ const probes = [
 		},
 	},
 	{
-		// 打つだけではフォーカスは動かない。輪郭を出すのは移動したときだけ
 		name: 'focus-ring/実クリックで開いてキーで打つ',
 		input: true,
 		run: async (p) => {
@@ -854,8 +843,6 @@ const probes = [
 		},
 	},
 	{
-		// 空のままだと閉じ込めの行き先が入力欄自身になり、フォーカスが動かない。
-		// キーに切り替えたのに輪郭が出ない経路は、ここでしか通らない
 		name: 'focus-ring/実クリックで開き語を打たずに Tab',
 		input: true,
 		run: async (p) => {
@@ -870,7 +857,6 @@ const probes = [
 		},
 	},
 	{
-		// 目印が残ると、ポインタで開いた後にキーボードで戻った先が見えなくなる
 		name: 'focus-ring/実クリックで開き Tab で出て Shift+Tab で戻る',
 		input: true,
 		run: async (p) => {
@@ -903,8 +889,6 @@ const probes = [
 		},
 	},
 	{
-		// 開いたまま md を跨ぐと、戻し先が隠れる側に変わる。focus() は効かず blur も
-		// 来ないので、目印を付けたままにすると幅を戻したとき輪郭が出なくなる
 		name: 'focus-ring/幅を跨いだ戻し先に目印を残さない',
 		restoresOnOutsideClick: true,
 		widths: [375],

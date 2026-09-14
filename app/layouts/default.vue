@@ -14,8 +14,7 @@
 
 	const route = useRoute()
 
-	/* eslint-disable style/no-outline-removal -- 目印を付けるのはポインタで移したフォーカスだけで、
-	   キーボードで移した先には付かない（→ gestureFocus）。入力欄には focus-within の下線が別に出る */
+	/* eslint-disable style/no-outline-removal -- 目印が付くのはポインタで移したフォーカスだけ */
 </script>
 
 <style>
@@ -32,8 +31,6 @@
 		outline-offset: 2px;
 	}
 
-	/* ブラウザ既定の :focus-visible も輪郭を出すので、消すところまでやる。
-	   テキスト入力はポインタで移しても :focus-visible に一致する */
 	[data-pointer-focus]:focus-visible {
 		outline: none;
 	}
