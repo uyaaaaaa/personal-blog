@@ -31,8 +31,6 @@ category: blog
 
 言語指定は `nuxt.config.ts` の `langs` にあるものだけ色がつく。
 
-`js` `ts` `json` `html` `css` `vue` `shell` `sh` `bash` `md` `mdc` `yaml` `vim` `lua` `sql` `php` `diff`
-
 プレーンテキストは `txt`。これ以外を使いたいときは `nuxt.config.ts` に追加する。
 綴りは `langs` に書いてあるものに揃える（`typescript` や `yml` ではなく `ts` `yaml`）。
 
@@ -57,8 +55,7 @@ Obsidian互換。`> [!TYPE] タイトル` で書く。
 > 本文
 ```
 
-使えるタイプ: `note` `abstract` `info` `todo` `tip` `success` `question` `warning` `failure` `danger` `bug` `example` `quote`
-（`summary` `tldr` `hint` `important` `check` `done` `help` `faq` `caution` `attention` `fail` `missing` `error` `cite` はエイリアス。未知のタイプは `note` になる）
+使えるタイプとエイリアスは `Callout.vue` の `CALLOUT_CONFIG` / `TYPE_ALIASES`。未知のタイプは `note` になる。
 
 `> [!NOTE]- タイトル` で折りたたみ（`-` は初期状態が閉、`+` は開）。
 
