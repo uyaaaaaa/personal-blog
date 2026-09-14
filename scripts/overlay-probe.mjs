@@ -317,8 +317,12 @@ const start = async () => {
 	const reload = async () => {
 		await cdp.send('Page.navigate', { url: `${baseUrl}/` })
 		await waitFor(`document.readyState === 'complete'`, 30000)
-		// ハイドレーションが済むまでクリックが効かない
+		// ハイドレーションが済むまでクリックが効かない。dev は module を1本ずつ配るので、
+		// app ができていてもヘッダーはまだのことがある。指のタップは pointerdown だけが
+		// 先に届き、click はその後に来るので、押した指を数え落とす側だけが残る。
+		// __vueParentComponent はビルドによっては付かない。待てなければそのまま進む
 		await waitFor(`!!document.querySelector('#__nuxt')?.__vue_app__`, 30000)
+		await waitFor(`!!document.querySelector(TRIGGER)?.__vueParentComponent`, 3000)
 		await evaluate('await $frames(2)')
 	}
 
@@ -328,6 +332,24 @@ const start = async () => {
 		const base = { key, code, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode }
 		await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'rawKeyDown', modifiers })
 		await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'keyUp', modifiers })
+	}
+
+	// insertText はキーを押さずに値だけ入れる。押した事実まで要る経路はこちらで送る
+	const typeKeys = async (text) => {
+		sent(`"${text}" をキーで打つ`)
+		for (const char of text) {
+			const code = `Key${char.toUpperCase()}`
+			const keyCode = char.toUpperCase().charCodeAt(0)
+			const base = {
+				key: char,
+				code,
+				windowsVirtualKeyCode: keyCode,
+				nativeVirtualKeyCode: keyCode,
+			}
+			await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'keyDown', text: char })
+			await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'keyUp' })
+		}
+		await evaluate('await $frames(2)')
 	}
 
 	// ブラウザ既定（アドレスバーへの移動）を止めているかは defaultPrevented で見る。
@@ -522,6 +544,7 @@ const start = async () => {
 		waitClosed,
 		reload,
 		pressKey,
+		typeKeys,
 		pressShortcut,
 		openByShortcut,
 		openCover,
@@ -790,6 +813,43 @@ const probes = [
 			return {
 				observed: show(state, ['active', 'activeShown', 'ring']),
 				ok: state.activeShown && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		// 打つだけではフォーカスは動かない。輪郭を出すのは移動したときだけ
+		name: 'focus-ring/実クリックで開いてキーで打つ',
+		input: true,
+		run: async (p) => {
+			await p.open()
+			await p.typeKeys('a')
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
+			return {
+				observed: show(state, ['active', 'query', 'ring']),
+				ok: state.inInput && state.ring === NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/キーで打った後に素の部分を実クリックで戻る',
+		restoresOnOutsideClick: true,
+		run: async (p) => {
+			await p.open()
+			await p.typeKeys('a')
+			const point = await p.overlayPoint()
+			sent('被せた側の素の部分を実クリック')
+			await p.mouse('mousePressed', point, 1)
+			await p.mouse('mouseReleased', point, 0)
+			await p.waitClosed()
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'active', 'ring']),
+				ok: state.overlay === 'hidden' && state.activeShown && state.ring === NO_RING,
 			}
 		},
 	},

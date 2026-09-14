@@ -7,11 +7,12 @@ const onPointerdown = () => {
 	byPointer = true
 }
 
-// フォーカスが動かないキー操作もある。移した先を待たず、今居る要素から落とす
-const onKeydown = () => {
+// 打つ・選ぶだけではフォーカスは動かず、輪郭も出さない。Tab は行き先が今の要素自身に
+// なることがあり、そのときは blur が来ないので、ここで落とす
+const onKeydown = (event: KeyboardEvent) => {
 	byPointer = false
 
-	if (document.activeElement instanceof HTMLElement) {
+	if (event.key === 'Tab' && document.activeElement instanceof HTMLElement) {
 		document.activeElement.removeAttribute(POINTER_ATTRIBUTE)
 	}
 }
