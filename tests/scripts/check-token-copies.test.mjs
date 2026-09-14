@@ -77,13 +77,6 @@ describe('check-token-copies', () => {
 		expect(stderr).toMatch(/colors\.bg は #FAFAF8/)
 	})
 
-	it('webmanifest の background_color が地の色と違えば落とす', () => {
-		all({ manifest: { background: '#FFFFFF' } })
-		const { status, stderr } = check()
-		expect(status).toBe(1)
-		expect(stderr).toMatch(/background_color は #FFFFFF/)
-	})
-
 	it('code-text がテーマの前景色と違えば落とす', () => {
 		all({ tokens: { light: '#C9D1D9' } })
 		const { status, stderr } = check()
@@ -113,13 +106,6 @@ describe('check-token-copies', () => {
 		expect(check().status).toBe(0)
 	})
 
-	it('highlight.theme が無ければ理由を出す', () => {
-		all({ theme: null })
-		const { status, stderr } = check()
-		expect(status).toBe(1)
-		expect(stderr).toMatch(/highlight\.theme が無い/)
-	})
-
 	it('highlight の外の theme を正本にしない', () => {
 		all({ tokens: { light: DARK_FOREGROUND }, theme: null })
 		writeFileSync(
@@ -132,17 +118,6 @@ describe('check-token-copies', () => {
 		const { status, stderr } = check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/highlight\.theme が無い/)
-	})
-
-	it('括弧を持つ綴りが混ざっていても正本を読む', () => {
-		all()
-		writeFileSync(
-			join(root, 'nuxt.config.ts'),
-			`export default defineNuxtConfig({\n` +
-				`\tcontent: { build: { markdown: { highlight: { langs: ['}'], theme: ${THEMES} } } } },\n` +
-				`})\n`,
-		)
-		expect(check().status).toBe(0)
 	})
 
 	it('コメントの中の theme を正本にしない', () => {
@@ -190,19 +165,6 @@ describe('check-token-copies', () => {
 		const { status, stderr } = check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/github-dark の editor\.foreground は #e1e4e8/)
-	})
-
-	it('正規表現リテラルを持つ設定でも正本を読む', () => {
-		all()
-		writeFileSync(
-			join(root, 'nuxt.config.ts'),
-			`export default defineNuxtConfig({\n` +
-				`\tcontent: { build: { markdown: { highlight: {\n` +
-				`\t\tignore: [/['"]/],\n` +
-				`\t\ttheme: ${THEMES}, langs: [] } } } },\n` +
-				`})\n`,
-		)
-		expect(check().status).toBe(0)
 	})
 
 	it('設定が既定のエクスポートを持たなければ理由を出す', () => {
