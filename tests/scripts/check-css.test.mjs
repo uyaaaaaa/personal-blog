@@ -27,8 +27,18 @@ const check = () => spawnSync(process.execPath, [SCRIPT, root], { encoding: 'utf
 
 describe('check-css', () => {
 	it('語彙とトークンで書いた CSS を通す', () => {
-		write('a.css', '.a {\n\tcolor: var(--color-ink);\n\tpadding: 0.75rem;\n}\n')
+		write(
+			'a.css',
+			'.a {\n\tcolor: var(--color-ink);\n\tfont-family: var(--font-mono);\n\tpadding: 0.75rem;\n}\n',
+		)
 		expect(check().status).toBe(0)
+	})
+
+	it('書体の名前を落とす', () => {
+		write('a.css', ".a {\n\tfont-family: 'Comic Sans MS';\n}\n")
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/書体の名前/)
 	})
 
 	it('@font-face と @import を落とす', () => {

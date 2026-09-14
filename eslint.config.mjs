@@ -9,9 +9,11 @@ import styleTokens, {
 	BREAKPOINT_WIDTHS,
 	COLOR_SCHEME_MESSAGE,
 	DOCS_URL,
+	FONT_CLASS_MESSAGE,
 	INVARIANT_URL,
 	MOTION_URL,
 	OFF_BREAKPOINT_VARIANTS,
+	OFF_TOKEN_FONT_CLASS,
 	OUTLINE_REMOVAL_CLASS,
 	OUTLINE_REMOVAL_PROPERTY,
 	OUTLINE_REMOVAL_VALUE,
@@ -202,6 +204,14 @@ const TEMPLATE_RESTRICTIONS = [
 	{
 		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${PALETTE_CLASS}/], TemplateElement[value.cooked=/${PALETTE_CLASS}/])`,
 		message: PALETTE_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${OFF_TOKEN_FONT_CLASS}/]`,
+		message: FONT_CLASS_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${OFF_TOKEN_FONT_CLASS}/], TemplateElement[value.cooked=/${OFF_TOKEN_FONT_CLASS}/])`,
+		message: FONT_CLASS_MESSAGE,
 	},
 	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${THEME_COLOR_CLASS}/]`,
@@ -416,6 +426,7 @@ export default [
 			],
 			'style/no-untokenized-size': 'error',
 			'style/no-color-literal': 'error',
+			'style/no-font-literal': 'error',
 			'style/no-important': 'error',
 			'style/no-reduced-motion': 'error',
 			'style/no-custom-breakpoint': 'error',
