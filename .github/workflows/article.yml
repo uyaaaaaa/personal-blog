@@ -1,22 +1,20 @@
-name: Typecheck
+name: Article
 
 on:
     pull_request:
-        paths-ignore: ['content/**']
     push:
         branches: [main]
-        paths-ignore: ['content/**']
     workflow_dispatch:
 
 permissions:
     contents: read
 
 concurrency:
-    group: typecheck-${{ github.ref }}
+    group: article-${{ github.ref }}
     cancel-in-progress: true
 
 jobs:
-    typecheck:
+    article:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7
@@ -24,5 +22,5 @@ jobs:
               with:
                   node-version: 22
                   cache: npm
-            - run: npm ci
-            - run: npm run typecheck
+            - run: npm ci --ignore-scripts
+            - run: npm run lint:article

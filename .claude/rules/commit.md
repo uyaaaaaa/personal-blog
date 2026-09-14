@@ -16,6 +16,7 @@ paths:
 ```
 
 - 本文は任意で、書くのは「なぜ」だけ。「何を」は件名と差分が持つ
+- 記事（`content/`）だけのコミットには、この形を課さない（→ [ADR 21](../../docs/adr/21-checks-split-by-changed-paths.md)）
 
 ## 件名に書くこと
 
