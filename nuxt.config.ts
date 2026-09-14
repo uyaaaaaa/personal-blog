@@ -87,14 +87,14 @@ export default defineNuxtConfig({
 		},
 	},
 	hooks: {
-		// collection は modules:done で組み上がるので、起点に渡せるのは nitro が起きてから
-		'nitro:init'(nitro) {
+		// collection が組み上がるのはビルドの中だけ。nuxt prepare には無く、dev は焼かない
+		'nitro:build:before'(nitro) {
+			if (nitro.options.dev) return
+
 			const pages = articleRoutes(nitro.options.runtimeConfig.content.localDatabase.filename)
 			nitro.options.prerender.routes.push(...pages)
 
 			nitro.hooks.hook('compiled', () => {
-				// dev では rollup の watcher からも発火し、そこにプリレンダ済みの生成物は無い
-				if (nitro.options.dev) return
 				writeWorkerRoutes(nitro.options.output.dir, pages)
 			})
 		},
