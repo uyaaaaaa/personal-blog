@@ -42,6 +42,11 @@ describe('article-routes', () => {
 		expect(articleRoutes(file)).toEqual(['/article/vim-folding'])
 	})
 
+	it('公開中の記事が1件も無ければ理由を出して落ちる', () => {
+		seed([['/article/test-articles', 0]])
+		expect(() => articleRoutes(file)).toThrow(/公開中の記事が1件も無い/)
+	})
+
 	it('DB が無ければ理由を出して落ちる', () => {
 		expect(() => articleRoutes(file)).toThrow(/公開中の記事のパスを読めない/)
 	})
