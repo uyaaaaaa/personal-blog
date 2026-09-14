@@ -2,6 +2,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { read } from '../../scripts/stdin.mjs'
 
 const HOOKS_PATH = '.githooks'
 const EVIDENCE = '.verify'
@@ -49,21 +50,12 @@ export const setup = ({ has, run, remake, source }) => {
 	return done.join('、')
 }
 
-const read = async () => {
-	let buf = ''
-	for await (const chunk of process.stdin) buf += chunk
-	return buf
-}
-
 if (process.argv[1]?.endsWith('session-start.mjs')) {
 	const root = process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
-	// source はハーネスが stdin で渡す。手で打つと読み終わらないので待たない
 	let source
-	if (!process.stdin.isTTY) {
-		try {
-			source = JSON.parse((await read()) || '{}').source
-		} catch {}
-	}
+	try {
+		source = JSON.parse((await read()) || '{}').source
+	} catch {}
 
 	process.stdout.write(
 		`${setup({

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
 const PULL = /\/pull\/(\d+)/
@@ -98,12 +99,6 @@ export const decide = (input, store) => {
 	const next = recorded(input, kept)
 	if (next) store.write(next)
 	return null
-}
-
-const read = async () => {
-	let buf = ''
-	for await (const chunk of process.stdin) buf += chunk
-	return buf
 }
 
 if (process.argv[1]?.endsWith('pr-followup.mjs')) {
