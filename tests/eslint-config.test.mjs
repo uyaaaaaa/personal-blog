@@ -12,6 +12,7 @@ const LANDING = /着地位置は CSS が持つ|scroll-behavior は宣言しな�
 const OUTLINE = /フォーカスの輪郭を消さない/
 const IMPORTANT = /!important は書かない/
 const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前のクラス/
+const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -47,6 +48,12 @@ const importantsIn = async (relative, code) => {
 const singleSourcesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => SINGLE_SOURCE.test(message.message)).length
+}
+
+// 同じく、実体の描画以外の指摘だけを数える
+const renderOnlyIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => RENDER_ONLY.test(message.message)).length
 }
 
 // 並びの指摘は綴りが eslint-plugin-vue のものなので、ルール名で数える
@@ -639,5 +646,38 @@ describe('制限の抑制', () => {
 			await blockOrdersIn('app/pages/a.vue', `${template}\n${style}\n${script()}`),
 		).toBeGreaterThan(0)
 		expect(await blockOrdersIn('app/pages/a.vue', `${template}\n${script()}\n${style}`)).toBe(0)
+	})
+})
+
+describe('ルートファイルの中身', () => {
+	const ENTITY = "import AllArticles from './-AllArticles.vue'"
+	const ROOT_FILE = 'app/pages/article/index.vue'
+
+	it('実体を描画するだけなら通す', async () => {
+		expect(await renderOnlyIn(ROOT_FILE, sfc('<AllArticles />', ENTITY))).toBe(0)
+	})
+
+	it('ロジックとマークアップを落とす', async () => {
+		expect(
+			await renderOnlyIn(
+				ROOT_FILE,
+				sfc('<AllArticles />', `${ENTITY}\nconst heading = computed(() => 'x')`),
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await renderOnlyIn(ROOT_FILE, sfc('<div><h1>x</h1><AllArticles /></div>', ENTITY)),
+		).toBeGreaterThan(0)
+	})
+
+	it('実体を import しないページは見ない', async () => {
+		expect(
+			await renderOnlyIn(
+				'app/pages/index.vue',
+				sfc(
+					'<div><Hero /></div>',
+					"import Hero from '~/components/article/Hero.vue'\nconst n = 1",
+				),
+			),
+		).toBe(0)
 	})
 })

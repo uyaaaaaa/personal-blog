@@ -6,6 +6,8 @@ import { state } from './state.mjs'
 const SKILL = '.claude/skills/review/SKILL.md'
 const EVIDENCE = '.verify'
 const COMMENT_TOOL = 'mcp__github__add_comment_to_pending_review'
+const ISSUE_TOOL = 'mcp__github__add_issue_comment'
+const REPLY_TOOL = 'mcp__github__add_reply_to_pull_request_comment'
 const REVIEW_TOOL = 'mcp__github__pull_request_review_write'
 
 const GRADE = /^\|\s*`([a-z]+)`\s*\|[^|]*\|\s*`(!\[[^\]]*\]\([^)]*\))`\s*\|/gm
@@ -78,7 +80,8 @@ const judged = (judgments, counts) =>
 // API の event は判定の名前を大文字にしたもの。表を2つ持たずに突き合わせる
 const eventOf = (name) => name.toUpperCase().replace(/\s+/g, '_')
 
-const key = ({ owner, repo, pullNumber }) => `review.${owner}.${repo}.${pullNumber}`
+const key = ({ owner, repo, pullNumber, issue_number: issue }) =>
+	`review.${owner}.${repo}.${pullNumber ?? issue}`
 
 // code-review が受け取る effort の綴り。手順書ではなく呼ぶ側の語彙
 const LEVELS = new Set(['low', 'medium', 'high', 'xhigh', 'max'])
@@ -108,6 +111,56 @@ const skilled = (input, it, ask) => {
 	return updated === null ? null : { updatedInput: { ...input.tool_input, args: updated } }
 }
 
+const LINK = /!?\[[^\]]*\]\(([^)]*)\)/g
+const SPELLED = /^!\[[^\]]*\]\(([^)]*)\)$/
+
+const byUrl = (grades) => {
+	const found = new Map()
+	for (const badge of grades.values()) {
+		const url = SPELLED.exec(badge)?.[1]
+		if (url !== undefined) found.set(url, badge)
+	}
+	return found
+}
+
+const respelled = (body, grades) => {
+	const badges = byUrl(grades)
+	return body.replace(LINK, (whole, url) => badges.get(url) ?? whole)
+}
+
+const counted = (body, grades) =>
+	Object.fromEntries(
+		[...grades]
+			.map(([name, badge]) => [name, body.split(badge).length - 1])
+			.filter(([, count]) => count > 0),
+	)
+
+const sum = (counts, names) =>
+	Object.entries(counts)
+		.filter(([name]) => names === undefined || names.includes(name))
+		.reduce((total, [, count]) => total + count, 0)
+
+const merged = (counts, adding) =>
+	Object.entries(adding).reduce(
+		(found, [name, count]) => ({ ...found, [name]: (found[name] ?? 0) + count }),
+		{ ...counts },
+	)
+
+const tally = (counts) =>
+	Object.entries(counts)
+		.map(([name, count]) => `${name} ${count}`)
+		.join(' / ') || '0件'
+
+const over = (adding, counts, it) => {
+	if (sum(counts) + sum(adding) > it.total) {
+		return `この PR に${it.total}件出している。捨てる側で絞る`
+	}
+	if (sum(counts, it.soft) + sum(adding, it.soft) > it.softTotal) {
+		return `${it.soft.join(' と ')} は合わせて${it.softTotal}件まで出している`
+	}
+	return null
+}
+
 const graded = (body, grades) => {
 	const found = [...grades].filter(([, badge]) => body.includes(badge))
 	if (found.length !== 1) return { names: found.map(([name]) => name) }
@@ -115,38 +168,22 @@ const graded = (body, grades) => {
 	return { name, badge, head: body.startsWith(badge) }
 }
 
-const commented = (input, it, ask) => {
-	const { body, ...where } = input.tool_input ?? {}
-	if (typeof body !== 'string') return null
-
-	const grade = graded(body, it.grades)
+const commented = (text, it, seen) => {
+	const grade = graded(text, it.grades)
 	if (!grade.name) {
-		return {
-			reason:
-				grade.names.length === 0
-					? `グレードのバッジが無い。${SKILL} の本文を1つだけ先頭に写す`
-					: `バッジが ${grade.names.join(' と ')} の${grade.names.length}つある。1コメント1グレードに割る`,
-		}
+		return grade.names.length === 0
+			? `グレードのバッジが無い。${SKILL} の本文を1つだけ先頭に写す`
+			: `バッジが ${grade.names.join(' と ')} の${grade.names.length}つある。1コメント1グレードに割る`
 	}
-	if (!grade.head) return { reason: `バッジはコメントの先頭に置く（${grade.name}）` }
-	if (body.slice(grade.badge.length).split('\n')[0].trim() === '') {
-		return { reason: 'バッジと同じ行に、何が起きるかを言い切る見出しを置く' }
+	if (!grade.head) return `バッジはコメントの先頭に置く（${grade.name}）`
+	if (text.slice(grade.badge.length).split('\n')[0].trim() === '') {
+		return 'バッジと同じ行に、何が起きるかを言い切る見出しを置く'
 	}
 
-	const rows = body.split('\n').filter((line) => line.trim() !== '').length
-	if (rows > it.lines) return { reason: `${rows}行ある。見出しも本文も含めて${it.lines}行以内` }
+	const rows = text.split('\n').filter((line) => line.trim() !== '').length
+	if (rows > it.lines) return `${rows}行ある。見出しも本文も含めて${it.lines}行以内`
 
-	const counts = ask.state(key(where), input).read()?.grades ?? {}
-	const posted = Object.values(counts).reduce((sum, count) => sum + count, 0)
-	if (posted >= it.total) return { reason: `この PR に${it.total}件出している。捨てる側で絞る` }
-
-	const soft = it.soft.reduce((sum, name) => sum + (counts[name] ?? 0), 0)
-	if (it.soft.includes(grade.name) && soft >= it.softTotal) {
-		return {
-			reason: `${it.soft.join(' と ')} は合わせて${it.softTotal}件まで出している`,
-		}
-	}
-	return null
+	return over({ [grade.name]: 1 }, seen?.grades ?? {}, it)
 }
 
 const SUBMITTING = new Set(['create', 'submit_pending'])
@@ -155,45 +192,59 @@ const SUBMITTING = new Set(['create', 'submit_pending'])
 // 数えた件数より緩い側に倒した判定だけを落とす
 const looser = (judgments, one, than) => judgments.indexOf(one) > judgments.indexOf(than)
 
-const submitted = (input, it, ask) => {
-	const { method, event, body, ...where } = input.tool_input ?? {}
-	if (!SUBMITTING.has(method) || typeof event !== 'string') return null
+const repeated = (seen, it) =>
+	(seen?.submits ?? 0) > it.rounds
+		? `この PR に${it.rounds}回出し直している。残った論点を1コメントにまとめ、判断を書き手に渡す`
+		: null
 
-	const seen = ask.state(key(where), input).read()
-	if (seen === null) return null
-
-	if ((seen.submits ?? 0) > it.rounds) {
-		return {
-			reason: `この PR に${it.rounds}回出し直している。残った論点を1コメントにまとめ、判断を書き手に渡す`,
-		}
-	}
-
-	const want = judged(it.judgments, seen.grades ?? {})
-	const head = String(body ?? '').split('\n')[0]
+const unjudged = (head, counts, it) => {
+	const want = judged(it.judgments, counts)
 	const written = it.judgments.find(({ name }) => head.includes(name))
-	if (!written) return { reason: `サマリの先頭行に判定（${want.name}）を置く` }
+	if (!written) return `サマリの先頭行に判定（${want.name}）を置く`
+	return looser(it.judgments, written, want)
+		? `件数（${tally(counts)}）に対する判定は ${want.name}`
+		: null
+}
 
-	const counts = Object.entries(seen.grades ?? {})
-		.map(([name, count]) => `${name} ${count}`)
-		.join(' / ')
+const submitted = (text, it, seen, input) => {
+	const { method, event } = input.tool_input ?? {}
+	if (!SUBMITTING.has(method) || typeof event !== 'string' || seen === null) return null
+
+	const counts = seen.grades ?? {}
+	const reason = repeated(seen, it) ?? unjudged(text.split('\n')[0], counts, it)
+	if (reason) return reason
+
+	const want = judged(it.judgments, counts)
 	const softest = it.judgments.find(({ needs }) => needs.length === 0)
 	// 自分の PR には REQUEST_CHANGES を返せないので、event は最も緩いものだけ見る
-	const approving = event === eventOf(softest.name) && want !== softest
-	if (approving || looser(it.judgments, written, want)) {
-		return { reason: `件数（${counts || '0件'}）に対する判定は ${want.name}` }
-	}
-	return null
+	return event === eventOf(softest.name) && want !== softest
+		? `件数（${tally(counts)}）に対する判定は ${want.name}`
+		: null
+}
+
+// 自分の PR に REQUEST_CHANGES を返せない回は、レビュー1本がコメント1本で来る
+const bundled = (text, it, seen) => {
+	const adding = counted(text, it.grades)
+	if (sum(adding) === 0) return null
+
+	return (
+		repeated(seen, it) ??
+		over(adding, seen?.grades ?? {}, it) ??
+		unjudged(text.split('\n')[0], merged(seen?.grades ?? {}, adding), it)
+	)
 }
 
 const recorded = (input, it, ask) => {
 	if (input.tool_response?.isError || input.tool_response?.is_error) return
 	const { method, event, body, ...where } = input.tool_input ?? {}
+	const text = typeof body === 'string' ? body : ''
+	const box = ask.state(key(where), input)
+	const held = () => box.read() ?? { grades: {}, submits: 0 }
 
 	if (input.tool_name === COMMENT_TOOL) {
-		const grade = graded(typeof body === 'string' ? body : '', it.grades)
+		const grade = graded(text, it.grades)
 		if (!grade.name) return
-		const box = ask.state(key(where), input)
-		const seen = box.read() ?? { grades: {}, submits: 0 }
+		const seen = held()
 		box.write({
 			...seen,
 			grades: { ...seen.grades, [grade.name]: (seen.grades?.[grade.name] ?? 0) + 1 },
@@ -201,12 +252,16 @@ const recorded = (input, it, ask) => {
 		return
 	}
 
+	if (input.tool_name === ISSUE_TOOL) {
+		if (sum(counted(text, it.grades)) === 0) return
+		box.write({ grades: {}, submits: (held().submits ?? 0) + 1 })
+		return
+	}
+
 	if (method === 'delete_pending' || (SUBMITTING.has(method) && typeof event === 'string')) {
-		const box = ask.state(key(where), input)
-		const seen = box.read() ?? { grades: {}, submits: 0 }
 		box.write({
 			grades: {},
-			submits: (seen.submits ?? 0) + (method === 'delete_pending' ? 0 : 1),
+			submits: (held().submits ?? 0) + (method === 'delete_pending' ? 0 : 1),
 		})
 	}
 }
@@ -225,9 +280,17 @@ const ASK = {
 	state,
 }
 
+// バッジを載せられる口はどれも綴りを正本に直す。型と件数は手順書が出し先を決めている口だけ
+const JUDGED = {
+	[COMMENT_TOOL]: commented,
+	[ISSUE_TOOL]: bundled,
+	[REVIEW_TOOL]: submitted,
+	[REPLY_TOOL]: () => null,
+}
+
 export const decide = (input, ask = ASK) => {
 	const tool = input.tool_name ?? ''
-	if (tool !== 'Skill' && tool !== COMMENT_TOOL && tool !== REVIEW_TOOL) return null
+	if (tool !== 'Skill' && !Object.hasOwn(JUDGED, tool)) return null
 
 	const it = rules(ask.skill())
 	if (!complete(it)) return null
@@ -238,8 +301,15 @@ export const decide = (input, ask = ASK) => {
 	}
 
 	if (tool === 'Skill') return skilled(input, it, ask)
-	if (tool === COMMENT_TOOL) return commented(input, it, ask)
-	return submitted(input, it, ask)
+
+	const { body, ...where } = input.tool_input ?? {}
+	const written = typeof body === 'string'
+	if (!written && tool !== REVIEW_TOOL) return null
+
+	const text = respelled(written ? body : '', it.grades)
+	const reason = JUDGED[tool](text, it, ask.state(key(where), input).read(), input)
+	if (reason) return { reason }
+	return written && text !== body ? { updatedInput: { ...input.tool_input, body: text } } : null
 }
 
 const read = async () => {

@@ -40,6 +40,32 @@ const comment = (body, event = 'PreToolUse') => ({
 	tool_input: { ...WHERE, path: 'app/app.vue', subjectType: 'LINE', body },
 })
 
+const bundle = (body, event = 'PreToolUse') => ({
+	hook_event_name: event,
+	tool_name: 'mcp__github__add_issue_comment',
+	tool_input: { owner: WHERE.owner, repo: WHERE.repo, issue_number: WHERE.pullNumber, body },
+})
+
+const reply = (body) => ({
+	hook_event_name: 'PreToolUse',
+	tool_name: 'mcp__github__add_reply_to_pull_request_comment',
+	tool_input: { ...WHERE, commentID: 12, body },
+})
+
+const REVIEW = [
+	'**判定: Request changes** — 目次の開閉が生成 HTML に出ない。',
+	'',
+	'- must 1',
+	'',
+	'---',
+	'',
+	`${MUST} **静的生成の HTML では閉じたままになる**`,
+	'',
+	'初期状態がビルド時に焼き付く。',
+].join('\n')
+
+const dropped = (body) => body.replaceAll('![', '[')
+
 const submit = (event, body = '', method = 'submit_pending', name = 'PreToolUse') => ({
 	hook_event_name: name,
 	tool_name: 'mcp__github__pull_request_review_write',
@@ -118,6 +144,21 @@ describe('インラインコメントの型', () => {
 		expect(decide(comment(`${MUST}\n本文`), ask())?.reason).toMatch(/見出し/)
 	})
 
+	it('綴りの違うバッジを正本に直して通す', () => {
+		const body = dropped(`${MUST} **見出し**\n\n理由`)
+		expect(decide(comment(body), ask())).toEqual({
+			updatedInput: {
+				...comment(body).tool_input,
+				body: `${MUST} **見出し**\n\n理由`,
+			},
+		})
+	})
+
+	it('バッジでないリンクは書き換えない', () => {
+		const body = `${MUST} **見出し**\n\n[ADR 11](../../docs/adr/11-no-enforcement-inventory.md) のとおり`
+		expect(decide(comment(body), ask())).toBeNull()
+	})
+
 	it('6行を超えるコメントを落とす', () => {
 		const body = `${MUST} **見出し**\n\n1\n2\n3\n4\n5\n6`
 		expect(decide(comment(body), ask())?.reason).toMatch(/6行以内/)
@@ -187,6 +228,20 @@ describe('submit の判定', () => {
 		expect(decide(submit('APPROVE'), ask({ held }))?.reason).toMatch(/先頭行/)
 	})
 
+	it('body を持たない呼び出しに空の body を足さない', () => {
+		const bodiless = (method, event) => ({
+			hook_event_name: 'PreToolUse',
+			tool_name: 'mcp__github__pull_request_review_write',
+			tool_input: { ...WHERE, method, ...(event !== undefined && { event }) },
+		})
+		const held = { grades: {}, submits: 0 }
+		expect(decide(bodiless('delete_pending'), ask({ held }))).toBeNull()
+		expect(decide(bodiless('resolve_thread'), ask({ held }))).toBeNull()
+		expect(decide(bodiless('submit_pending', 'APPROVE'), ask({ held }))?.reason).toMatch(
+			/先頭行/,
+		)
+	})
+
 	it('数えていない PR の submit は通す', () => {
 		expect(decide(submit('APPROVE'), ask())).toBeNull()
 		expect(decide(submit('COMMENT'), ask())).toBeNull()
@@ -242,5 +297,68 @@ describe('読み取れないとき', () => {
 	it('他のツールは見ない', () => {
 		expect(decide({ tool_name: 'Bash', tool_input: { command: 'ls' } }, ask())).toBeNull()
 		expect(decide({}, ask())).toBeNull()
+	})
+})
+
+describe('コメント1本で返したレビュー', () => {
+	it('綴りを直し、件数に合う判定を通す', () => {
+		expect(decide(bundle(dropped(REVIEW)), ask())).toEqual({
+			updatedInput: { ...bundle(REVIEW).tool_input, body: REVIEW },
+		})
+		expect(decide(bundle(REVIEW), ask())).toBeNull()
+	})
+
+	it('件数より緩い判定を落とす', () => {
+		const body = REVIEW.replace('Request changes', 'Comment')
+		expect(decide(bundle(body), ask())?.reason).toMatch(/Request changes/)
+	})
+
+	it('判定の無いサマリを落とす', () => {
+		expect(
+			decide(bundle(REVIEW.replace('**判定: Request changes** — ', '')), ask())?.reason,
+		).toMatch(/先頭行/)
+	})
+
+	it('本文のバッジを数えて上限を見る', () => {
+		const many = REVIEW + `\n\n${MUST} **見出し**`.repeat(5)
+		expect(decide(bundle(many), ask())?.reason).toMatch(/5件/)
+
+		const soft = REVIEW.replace(MUST, NITS) + `\n\n${NITS} **見出し**`.repeat(2)
+		expect(decide(bundle(soft), ask())?.reason).toMatch(/合わせて2件/)
+	})
+
+	it('インラインで出した件数と合わせて見る', () => {
+		const held = { grades: { must: 3, suggestion: 2 }, submits: 0 }
+		expect(decide(bundle(REVIEW), ask({ held }))?.reason).toMatch(/5件/)
+	})
+
+	it('4回目の出し直しを落とす', () => {
+		const held = { grades: {}, submits: 4 }
+		expect(decide(bundle(REVIEW), ask({ held }))?.reason).toMatch(/3回/)
+	})
+
+	it('バッジの無いコメントは見ない', () => {
+		expect(decide(bundle('直して push しました'), ask())).toBeNull()
+	})
+
+	it('1回の出し直しとして数え、件数を畳む', () => {
+		const it_ = ask({ held: { grades: { must: 2 }, submits: 1 } })
+		decide(bundle(REVIEW, 'PostToolUse'), it_)
+		expect(it_.box.value).toEqual({ grades: {}, submits: 2 })
+	})
+
+	it('バッジの無いコメントは数えない', () => {
+		const it_ = ask({ held: { grades: { must: 2 }, submits: 1 } })
+		decide(bundle('直して push しました', 'PostToolUse'), it_)
+		expect(it_.box.value).toEqual({ grades: { must: 2 }, submits: 1 })
+	})
+})
+
+describe('スレッドへの返信', () => {
+	it('綴りだけ直し、インラインの型は見ない', () => {
+		expect(decide(reply(dropped(`${NITS} 見出し`)), ask())).toEqual({
+			updatedInput: { ...reply('').tool_input, body: `${NITS} 見出し` },
+		})
+		expect(decide(reply('直しました'), ask())).toBeNull()
 	})
 })

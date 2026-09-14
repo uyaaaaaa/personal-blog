@@ -2,6 +2,7 @@ import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
 import importLayers from './eslint-rules/import-layers.mjs'
+import rootFiles from './eslint-rules/root-files.mjs'
 import styleTokens, {
 	BREAKPOINT_LABEL,
 	BREAKPOINT_URL,
@@ -404,7 +405,7 @@ export default [
 	},
 	{
 		files: withTest('app/**/*.vue'),
-		plugins: { vue: pluginVue, style: styleTokens, imports: importLayers },
+		plugins: { vue: pluginVue, style: styleTokens, imports: importLayers, roots: rootFiles },
 		languageOptions: {
 			parser: vueParser,
 			parserOptions: {
@@ -433,6 +434,7 @@ export default [
 			'style/no-theme-branch': 'error',
 			'style/no-outline-removal': 'error',
 			'style/no-scroll-behavior': 'error',
+			'roots/render-only': 'error',
 			// 並びが eslint-disable の届く先を決めるので、見た目ではなく抑制のために固定する
 			'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],
 			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS],
