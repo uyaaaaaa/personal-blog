@@ -20,37 +20,31 @@ const webFontsIn = async (relative, code) => {
 	return result.messages.filter((message) => WEB_FONT.test(message.message)).length
 }
 
-// 同じく、テーマ分岐の指摘だけを数える
 const themeBranchesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => THEME_BRANCH.test(message.message)).length
 }
 
-// 同じく、着地位置の指摘だけを数える
 const landingsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => LANDING.test(message.message)).length
 }
 
-// 同じく、フォーカスの輪郭の指摘だけを数える
 const outlinesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => OUTLINE.test(message.message)).length
 }
 
-// 同じく、!important の指摘だけを数える
 const importantsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => IMPORTANT.test(message.message)).length
 }
 
-// 同じく、色と書体の指摘だけを数える
 const singleSourcesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => SINGLE_SOURCE.test(message.message)).length
 }
 
-// 同じく、実体の描画以外の指摘だけを数える
 const renderOnlyIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => RENDER_ONLY.test(message.message)).length
@@ -596,6 +590,21 @@ describe('色と書体の単一情報源', () => {
 		).toBeGreaterThan(0)
 		expect(await singleSourcesIn('app/pages/a.vue', sfc('<p class="font-mono" />'))).toBe(0)
 		expect(await singleSourcesIn('app/pages/a.vue', sfc('<p class="font-medium" />'))).toBe(0)
+	})
+
+	it('script が要素のスタイルに書く色と書体を .vue の外でも落とす', async () => {
+		expect(
+			await singleSourcesIn('app/composables/useA.ts', "el.style.color = '#ff0000'"),
+		).toBeGreaterThan(0)
+		expect(
+			await singleSourcesIn(
+				'app/utils/a.ts',
+				"el.style.setProperty('font-family', 'Georgia')",
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await singleSourcesIn('app/composables/useA.ts', "el.style.overflow = 'hidden'"),
+		).toBe(0)
 	})
 
 	it('<style> と .css と同じ判定で見る', async () => {

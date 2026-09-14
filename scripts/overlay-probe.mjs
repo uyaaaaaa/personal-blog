@@ -1263,5 +1263,4 @@ const main = async () => {
 	process.exit(failed > 0 ? 1 : 0)
 }
 
-// テストと pr-guard から import したときは走らせない
 if (process.argv[1]?.endsWith('overlay-probe.mjs')) await main()

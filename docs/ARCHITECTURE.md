@@ -39,7 +39,7 @@
 
   theme/tokens.ts ──▶ tailwind.config.ts ──▶ CSS 変数 / Tailwind theme
 
-  ビルド時 ──▶ 全ページを静的生成
+  collection の全件 ──▶ プリレンダの起点 ──▶ 全ページを静的生成 ──▶ 出ていないパスは404
 ```
 
 各条件の細目は [rules/structure.md](../.claude/rules/structure.md) と [rules/style.md](../.claude/rules/style.md)、理由は [ADR 06](./adr/06-route-read-only-at-entry.md) と [ADR 05](./adr/05-fetch-follows-route-dependency.md) が持ちます。
@@ -55,9 +55,10 @@
 | 型の解決 | `nuxt typecheck` |
 | 依存グラフ | dependency-cruiser |
 | ファイルをまたぐ突き合わせ | `scripts/` の検査 |
+| ビルドの生成物 | `scripts/` の検査。`nuxt.config.ts` のビルド後の hook から呼ぶ |
 | ESLint が読まないファイル（記事の Markdown） | `scripts/` の検査 |
 | ブラウザでの操作 | `scripts/` の probe（lint では回さない） |
 | エージェントのツール呼び出し | `.claude/hooks/` の PreToolUse |
 | エージェントが手順を最後まで行ったか | `.claude/hooks/` の PostToolUse と Stop |
 
-commit のたびに回すのは lint だけにし、テストと型検査と build は PR で受ける。lint で落とせるようになったルールは `.claude/rules/` から消す。
+commit のたびに回すのは lint だけにし、テストと型検査と build は PR で受ける。lint は見ている対象で分け、記事（`content/`）しか変えていないコミットと PR では、コードのための検査と workflow を回さない。lint で落とせるようになったルールは `.claude/rules/` から消す。

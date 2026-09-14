@@ -1,2 +1,4 @@
 #!/bin/sh
-node scripts/check-commit-msg.mjs "$1"
+if node scripts/touches-code.mjs; then
+	node scripts/check-commit-msg.mjs "$1"
+fi

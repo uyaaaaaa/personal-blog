@@ -1,5 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import remarkObsidianCallout from './remark/obsidian-callout.mjs'
+import { articleRoutes } from './scripts/article-routes.mjs'
+import { writeWorkerRoutes } from './scripts/worker-routes.mjs'
 import { CATEGORIES } from './app/utils/category'
 
 export default defineNuxtConfig({
@@ -78,35 +80,23 @@ export default defineNuxtConfig({
 		},
 		cloudflare: {
 			pages: {
-				routes: {
-					include: ['/*'],
-					// プリレンダ済みのパスをWorkerに通さない。1ルートあたり1件で数えられ、
-					// Cloudflareの上限は100件のため、記事とタグはワイルドカードで畳む
-					exclude: [
-						'/article/*',
-						'/tags/*',
-						'/category/*',
-						'/__nuxt_content/*',
-						'/',
-						'/_payload.json',
-						'/about',
-						'/about/_payload.json',
-						'/article',
-						'/tags',
-						'/dump.article.sql',
-						'/404.html',
-						'/apple-touch-icon.png',
-						'/favicon.ico',
-						'/favicon.svg',
-						'/icon-192.png',
-						'/icon-512.png',
-						'/ogp.png',
-						'/ogp.svg',
-						'/robots.txt',
-						'/site.webmanifest',
-					],
-				},
+				// 自動収集はワイルドカードに畳まず、上限を超えた分を黙って切り落とす。
+				// 畳んでから書く writeWorkerRoutes に _routes.json を持たせる
+				defaultRoutes: false,
 			},
+		},
+	},
+	hooks: {
+		// collection が組み上がるのはビルドの中だけ。nuxt prepare には無く、dev は焼かない
+		'nitro:build:before'(nitro) {
+			if (nitro.options.dev) return
+
+			const pages = articleRoutes(nitro.options.runtimeConfig.content.localDatabase.filename)
+			nitro.options.prerender.routes.push(...pages)
+
+			nitro.hooks.hook('compiled', () => {
+				writeWorkerRoutes(nitro.options.output.dir, pages)
+			})
 		},
 	},
 	typescript: {

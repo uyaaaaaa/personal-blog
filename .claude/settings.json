@@ -57,6 +57,24 @@
 						"timeout": 600
 					}
 				]
+			},
+			{
+				"matcher": "mcp__github__issue_write",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/issue-guard.mjs\""
+					}
+				]
+			},
+			{
+				"matcher": "mcp__.*__(create_session|slack_send_message|slack_send_message_draft|slack_schedule_message)",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/dispatch-guard.mjs\""
+					}
+				]
 			}
 		],
 		"PostToolUse": [
@@ -84,6 +102,15 @@
 					{
 						"type": "command",
 						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/review-guard.mjs\""
+					}
+				]
+			},
+			{
+				"matcher": "mcp__.*__(create_session|slack_send_message|slack_send_message_draft|slack_schedule_message)",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/dispatch-guard.mjs\""
 					}
 				]
 			}

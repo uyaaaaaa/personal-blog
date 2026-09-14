@@ -11,7 +11,7 @@ npm run dev
 
 コマンドの一覧は `package.json` の `scripts`、記事のフロントマターのスキーマは `content.schema.ts` にあります。
 
-`npm install` で Git フック（`.githooks/`）が有効になり、commit のたびに `npm run lint` とコミットメッセージの形式の検査が走ります。テストはフックに載せていないので、ローカルでは手で打つか PR に任せます。整形で落ちたときは `npm run format` を実行してから commit し直してください。整形の対象はコードだけで、記事と設計ドキュメントの Markdown は含みません。
+`npm install` で Git フック（`.githooks/`）が有効になり、commit のたびに検査が走ります。テストはフックに載せていないので、ローカルでは手で打つか PR に任せます。整形で落ちたときは `npm run format` を実行してから commit し直してください。整形の対象はコードだけで、記事と設計ドキュメントの Markdown は含みません。
 
 Prettier 導入時の一括整形は独立した1コミットにしてあります。clone したら次を1回実行すると、`git blame` がそのコミットを飛ばします。
 
