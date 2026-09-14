@@ -106,7 +106,6 @@ const read = async () => {
 	return buf
 }
 
-// テストから import したときは走らせない
 if (process.argv[1]?.endsWith('pr-followup.mjs')) {
 	try {
 		const input = JSON.parse((await read()) || '{}')

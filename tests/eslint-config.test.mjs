@@ -20,37 +20,31 @@ const webFontsIn = async (relative, code) => {
 	return result.messages.filter((message) => WEB_FONT.test(message.message)).length
 }
 
-// 同じく、テーマ分岐の指摘だけを数える
 const themeBranchesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => THEME_BRANCH.test(message.message)).length
 }
 
-// 同じく、着地位置の指摘だけを数える
 const landingsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => LANDING.test(message.message)).length
 }
 
-// 同じく、フォーカスの輪郭の指摘だけを数える
 const outlinesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => OUTLINE.test(message.message)).length
 }
 
-// 同じく、!important の指摘だけを数える
 const importantsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => IMPORTANT.test(message.message)).length
 }
 
-// 同じく、色と書体の指摘だけを数える
 const singleSourcesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => SINGLE_SOURCE.test(message.message)).length
 }
 
-// 同じく、実体の描画以外の指摘だけを数える
 const renderOnlyIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => RENDER_ONLY.test(message.message)).length
