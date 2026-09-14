@@ -21,12 +21,17 @@ open issue を上から順に落とす。
 | :--- | :--- |
 | `needs-decision` ラベル | 書き手の判断待ち。本文は読まない |
 | `documentation` ラベル | 記事のネタで、`article` の対象 |
-| `## ゴール` `## 現状` `## 完了条件` が揃っていない | 完了条件が外から判定できることが自走の前提（→ `create-issues`） |
-| 完了条件が4つ以上 | issue が2本に割れている |
+| `node scripts/issue-shape.mjs` が落とす | `create-issues` の型に合わない。完了条件が外から判定できることが自走の前提 |
 | `claude/issue-<番号>-` の remote branch があるか、`Closes #<番号>` の open PR がある | 既に走っている |
 | 完了条件が外から判定できない | 「使いやすくなっている」は条件ではない |
 | 完了条件が判断を含む | 「〜が決まっている」は、決めるのが書き手の仕事で、直す作業ではない |
 | `.claude/rules/docs.md` の ADR 基準を両方満たす判断を要求する | 既存の ADR を差し替えるものも同じ |
+
+**型は手で見ない。** 取得した JSON をそのままファイルに落として通す。判定は `create-issues` の型1つで、ここに書き写さない。
+
+```sh
+node scripts/issue-shape.mjs < .verify/issues.json
+```
 
 **判断で落としたら `needs-decision` を付ける。** 完了条件が外から判定できない・判断を含む・ADR 基準に当たる、の3つで落ちたときだけ。他の行で落ちたものには付けない。
 
