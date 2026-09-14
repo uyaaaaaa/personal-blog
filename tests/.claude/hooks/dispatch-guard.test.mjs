@@ -121,6 +121,29 @@ describe('Slack', () => {
 	})
 })
 
+describe('発火の境目', () => {
+	const fired = () => ({ hook_event_name: 'UserPromptSubmit', session_id: 's1' })
+
+	it('次の発火では、使い切った数えが戻る', () => {
+		const asked = ask({ held: { sessions: 2, posts: 1 } })
+		expect(decide(start(ISSUE), asked)).toMatch('最大2本')
+		expect(decide(post({ channel_id: RULES.channel }), asked)).toMatch('最大1つ')
+
+		decide(fired(), asked)
+
+		expect(decide(start(ISSUE), asked)).toBeNull()
+		expect(decide(post({ channel_id: RULES.channel }), asked)).toBeNull()
+	})
+
+	it('同じ発火の中では戻らない', () => {
+		const asked = ask()
+		decide(fired(), asked)
+		decide(start(ISSUE, 'PostToolUse'), asked)
+		decide(start(ISSUE, 'PostToolUse'), asked)
+		expect(decide(start(ISSUE), asked)).toMatch('最大2本')
+	})
+})
+
 describe('見ないもの', () => {
 	it('関係ないツールと、読めない手順書は通す', () => {
 		expect(decide({ tool_name: 'mcp__github__issue_write', tool_input: {} }, ask())).toBeNull()
