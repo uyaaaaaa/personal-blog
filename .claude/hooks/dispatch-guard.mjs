@@ -87,7 +87,6 @@ const mismatch = (input) => {
 const failed = (input) => Boolean(input.tool_response?.isError || input.tool_response?.is_error)
 
 export const decide = (input, ask = ASK) => {
-	// 常駐の Routine は同じセッションに発火するので、発火の境目でしか数えは戻らない
 	if (input.hook_event_name === 'UserPromptSubmit') {
 		ask.state(KEY, { session_id: input.session_id }).write(FRESH)
 		return null
