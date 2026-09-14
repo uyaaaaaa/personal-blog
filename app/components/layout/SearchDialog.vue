@@ -96,6 +96,7 @@
 
 <script setup lang="ts">
 	import { useFocusTrap } from '~/composables/useFocusTrap'
+	import { useGestureFocus } from '~/composables/useGestureFocus'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 	import { formatDate } from '~/utils/date'
 	import { searchArticles } from '~/utils/search'
@@ -218,6 +219,8 @@
 		}
 	}
 
+	const { focusByGesture } = useGestureFocus()
+
 	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), (event) => {
 		if (!isComposingKey(event)) emit('close')
 	})
@@ -234,7 +237,7 @@
 
 			composing = false
 			query.value = ''
-			inputRef.value?.focus()
+			focusByGesture(inputRef.value)
 		},
 		{ flush: 'post' },
 	)

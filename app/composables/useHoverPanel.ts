@@ -1,6 +1,9 @@
+import { useGestureFocus } from '~/composables/useGestureFocus'
+
 const CLOSE_DELAY_MS = 150
 
 export const useHoverPanel = () => {
+	const { focusByGesture } = useGestureFocus()
 	const isOpen = ref(false)
 	const rootRef = ref<HTMLElement | null>(null)
 	const triggerRef = ref<HTMLButtonElement | null>(null)
@@ -39,7 +42,7 @@ export const useHoverPanel = () => {
 		if (!isOpen.value) return
 
 		close()
-		triggerRef.value?.focus()
+		focusByGesture(triggerRef.value)
 	}
 
 	const onFocusout = (event: FocusEvent) => {

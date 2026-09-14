@@ -400,6 +400,7 @@
 	import { useArticleCategories } from '~/composables/useArticleCategories'
 	import { useArticleTags } from '~/composables/useArticleTags'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
+	import { useGestureFocus } from '~/composables/useGestureFocus'
 	import { useHoverPanel } from '~/composables/useHoverPanel'
 	import { useLatestArticles } from '~/composables/useLatestArticles'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
@@ -420,9 +421,11 @@
 
 	const menuButtonRef = ref<HTMLButtonElement | null>(null)
 
+	const { focusByGesture } = useGestureFocus()
+
 	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる
 	const closeDrawer = () => {
-		menuButtonRef.value?.focus()
+		focusByGesture(menuButtonRef.value)
 		emit('close')
 	}
 

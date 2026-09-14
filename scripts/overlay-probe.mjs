@@ -15,6 +15,7 @@ const DEBUG_PORT = 9333
 // 色を持たない border-left-color の算出値
 const TRANSPARENT = 'rgba(0, 0, 0, 0)'
 const NO_ACTIVE = 'なし'
+const NO_RING = 'なし'
 const OPEN_TIMEOUT = 4000
 const TRANSITION = 400
 
@@ -30,6 +31,8 @@ export const OVERLAYS = {
 		link: '.search-result',
 		scroller: '.search-results',
 		dialog: true,
+		// 被せた側の素の部分を押すと閉じ、戻し先にフォーカスを返す
+		restoresOnOutsideClick: true,
 		widths: [375, 1280],
 	},
 	drawer: {
@@ -181,11 +184,20 @@ const PAGE_HELPERS = `
 		const label = (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\\s+/g, ' ')
 		return el.tagName + (label ? \` "\${label.slice(0, 24)}"\` : '') + ($shown(el) ? '' : ' (見えない)')
 	}
+	// フォーカスの輪郭。出ている / 出ていないは撮っても写らないので、算出値をそのまま残す
+	const $ring = (el) => {
+		if (!el || el === document.body) return ${JSON.stringify(NO_RING)}
+		const style = getComputedStyle(el)
+		if (style.outlineStyle === 'none' || parseFloat(style.outlineWidth) === 0)
+			return ${JSON.stringify(NO_RING)}
+		return style.outlineStyle + ' ' + style.outlineWidth
+	}
 	const $state = () => ({
 		overlay: getComputedStyle(document.querySelector(OVERLAY)).visibility,
 		overflow: document.body.style.overflow,
 		active: $name(document.activeElement),
 		activeShown: $shown(document.activeElement) && document.activeElement !== document.body,
+		ring: $ring(document.activeElement),
 		path: $path(),
 		query: INPUT ? (document.querySelector(INPUT)?.value ?? null) : null,
 	})
@@ -243,6 +255,16 @@ const start = async () => {
 	// 指の操作は mouse と別の経路で届く
 	const setTouch = (enabled) =>
 		cdp.send('Emulation.setTouchEmulationEnabled', { enabled, maxTouchPoints: 5 })
+
+	// 指で1回押して離す。マウスと同じ click に見えても、ポインタの種別は touch で届く
+	const tap = async (selector, label) => {
+		sent(`${label}をタップ`)
+		const point = await centerOf(selector)
+		const at = [{ x: Math.round(point.x), y: Math.round(point.y) }]
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: at })
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+		await evaluate('await $frames(3)')
+	}
 
 	// 1回で運ぶとタップ扱いになるので、刻んで送る
 	const touchDrag = async (point, dy, label) => {
@@ -491,6 +513,7 @@ const start = async () => {
 		evaluate,
 		setWidth,
 		setTouch,
+		tap,
 		touchDrag,
 		watchTouchMoves,
 		overlayPoint,
@@ -699,6 +722,118 @@ const probes = [
 			return {
 				observed: show(state, ['overlay', 'active', 'activeShown']),
 				ok: state.overlay === 'hidden' && state.activeShown,
+			}
+		},
+	},
+	{
+		// テキスト入力はポインタで移しても :focus-visible に一致する。出ていないことは
+		// 「輪郭が見えない」ではなく算出値でしか確かめられない
+		name: 'focus-ring/実クリックで開く',
+		input: true,
+		run: async (p) => {
+			await p.open()
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['active', 'ring']),
+				ok: state.ring === NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/タップで開く',
+		input: true,
+		widths: [375],
+		run: async (p) => {
+			await p.setTouch(true)
+			await p.reload()
+			await p.setWidth(375)
+			await p.tap(config.trigger, 'トリガ')
+			const opened = await p.waitFor(
+				`getComputedStyle(document.querySelector(OVERLAY)).visibility === 'visible'`,
+			)
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'active', 'ring']),
+				ok: opened && state.ring === NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/ショートカットで開く',
+		shortcut: true,
+		run: async (p) => {
+			const { opened } = await p.openByShortcut(META)
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['active', 'ring']),
+				ok: opened && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/実クリックで開いてから Tab',
+		dialog: true,
+		run: async (p) => {
+			await p.open()
+			await p.reveal()
+			await p.pressKey('Tab')
+			await p.evaluate('await $frames(2)')
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['active', 'activeShown', 'ring']),
+				ok: state.activeShown && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		// 目印が残ると、ポインタで開いた後にキーボードで戻った先が見えなくなる
+		name: 'focus-ring/実クリックで開き Tab で出て Shift+Tab で戻る',
+		input: true,
+		run: async (p) => {
+			await p.open()
+			await p.reveal()
+			await p.pressKey('Tab')
+			await p.pressKey('Tab', SHIFT)
+			await p.evaluate('await $frames(2)')
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['active', 'ring']),
+				ok: state.active.startsWith('INPUT') && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/実クリックで開き Escape で戻る',
+		dialog: true,
+		run: async (p) => {
+			await p.open()
+			await p.reveal()
+			await p.pressKey('Tab')
+			await p.pressKey('Escape')
+			await p.waitClosed()
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'active', 'ring']),
+				ok: state.overlay === 'hidden' && state.activeShown && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/実クリックで開き素の部分を実クリックで戻る',
+		restoresOnOutsideClick: true,
+		run: async (p) => {
+			await p.open()
+			await p.reveal()
+			await p.pressKey('Tab')
+			const point = await p.overlayPoint()
+			sent('被せた側の素の部分を実クリック')
+			await p.mouse('mousePressed', point, 1)
+			await p.mouse('mouseReleased', point, 0)
+			await p.waitClosed()
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'active', 'ring']),
+				ok: state.overlay === 'hidden' && state.activeShown && state.ring === NO_RING,
 			}
 		},
 	},
@@ -1213,6 +1348,7 @@ const main = async () => {
 				if (item.covering && !covering) continue
 				if (item.scroller && !config.scroller) continue
 				if (item.dialog && !config.dialog) continue
+				if (item.restoresOnOutsideClick && !config.restoresOnOutsideClick) continue
 				if (item.widths && !item.widths.includes(width)) continue
 
 				// CDP の指の設定は reload でも消えない。前の probe の条件を持ち越さない

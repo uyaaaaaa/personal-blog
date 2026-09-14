@@ -13,6 +13,9 @@
 	import Footer from '~/components/layout/Footer.vue'
 
 	const route = useRoute()
+
+	/* eslint-disable style/no-outline-removal -- 目印を付けるのはポインタで移したフォーカスだけで、
+	   キーボードで移した先には付かない（→ useGestureFocus）。入力欄には focus-within の下線が別に出る */
 </script>
 
 <style>
@@ -27,6 +30,12 @@
 	:focus-visible {
 		outline: 2px solid var(--color-accent);
 		outline-offset: 2px;
+	}
+
+	/* ブラウザ既定の :focus-visible も輪郭を出すので、消すところまでやる。
+	   テキスト入力はポインタで移しても :focus-visible に一致する */
+	[data-pointer-focus]:focus-visible {
+		outline: none;
 	}
 
 	*,
