@@ -10,4 +10,4 @@ paths:
 
 - **例外は、フレームワークが名前で解決する領域。** markdown から名前で参照されるコンポーネントは import できない。
 
-auto-import を止めた理由は [docs/adr/03-no-auto-import.md](../../docs/adr/03-no-auto-import.md)。置き場の判定は [structure.md](./structure.md)。
+auto-import を止めた理由は [docs/adr/02-no-auto-import.md](../../docs/adr/02-no-auto-import.md)。置き場の判定は [structure.md](./structure.md)。
