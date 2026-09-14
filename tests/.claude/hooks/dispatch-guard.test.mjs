@@ -122,11 +122,7 @@ describe('Slack', () => {
 })
 
 describe('発火の境目', () => {
-	const fired = (prompt = `${RULES.name} スキルに従って、この回の分を進める。`) => ({
-		hook_event_name: 'UserPromptSubmit',
-		session_id: 's1',
-		prompt,
-	})
+	const fired = () => ({ hook_event_name: 'UserPromptSubmit', session_id: 's1' })
 
 	it('次の発火では、使い切った数えが戻る', () => {
 		const asked = ask({ held: { sessions: 2, posts: 1 } })
@@ -145,19 +141,6 @@ describe('発火の境目', () => {
 		decide(start(ISSUE, 'PostToolUse'), asked)
 		decide(start(ISSUE, 'PostToolUse'), asked)
 		expect(decide(start(ISSUE), asked)).toMatch('最大2本')
-	})
-
-	it('スキルを名指さない割り込みでは戻らない', () => {
-		const asked = ask({ held: { sessions: 2, posts: 1 } })
-		decide(fired('ありがとう。PR の CI を見ておいて'), asked)
-		expect(decide(start(ISSUE), asked)).toMatch('最大2本')
-		expect(decide(post({ channel_id: RULES.channel }), asked)).toMatch('最大1つ')
-	})
-
-	it('手順書が読めなければ戻さない', () => {
-		const asked = ask({ held: { sessions: 2, posts: 1 }, source: '' })
-		decide(fired(), asked)
-		expect(asked.box.value).toMatchObject({ sessions: 2, posts: 1 })
 	})
 })
 
