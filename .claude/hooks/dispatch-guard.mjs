@@ -10,6 +10,7 @@ const SCRIPT = 'scripts/session-args.mjs'
 const KEY = 'dispatch'
 const FRESH = { sessions: 0, posts: 0 }
 
+const NAME = /^name: (\S+)$/m
 const SESSIONS = /最大(\d+)本/
 const POSTS = /1回の発火につき最大(\d+)つ/
 const CHANNEL = /`(#[a-z0-9-]+)`（`(C[A-Z0-9]+)`）/
@@ -26,6 +27,7 @@ const BRANCH = /^作業ブランチは (\S+) にする。$/
 export const rules = (source) => {
 	const channel = CHANNEL.exec(source)
 	return {
+		name: NAME.exec(source)?.[1],
 		sessions: Number(SESSIONS.exec(source)?.[1]),
 		posts: Number(POSTS.exec(source)?.[1]),
 		room: channel?.[1],
@@ -87,9 +89,13 @@ const mismatch = (input) => {
 const failed = (input) => Boolean(input.tool_response?.isError || input.tool_response?.is_error)
 
 export const decide = (input, ask = ASK) => {
-	// 常駐の Routine は同じセッションに発火するので、発火の境目でしか数えは戻らない
+	// 常駐の Routine は同じセッションに発火するので、発火の境目でしか数えは戻らない。
+	// 境目はスキルを名指す指示で、割り込みや通知の発言では戻さない
 	if (input.hook_event_name === 'UserPromptSubmit') {
-		ask.state(KEY, { session_id: input.session_id }).write(FRESH)
+		const { name } = rules(ask.skill())
+		if (name !== undefined && (input.prompt ?? '').includes(name)) {
+			ask.state(KEY, { session_id: input.session_id }).write(FRESH)
+		}
 		return null
 	}
 
