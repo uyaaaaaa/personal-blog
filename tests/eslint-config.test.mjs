@@ -711,6 +711,13 @@ describe('標準入力の読み取り', () => {
 		).toBeGreaterThan(0)
 	})
 
+	it('束縛で受けた読み取りも落とす', async () => {
+		expect(
+			await stdinReadsIn(HOOK, "import { stdin as input } from 'node:process'"),
+		).toBeGreaterThan(0)
+		expect(await stdinReadsIn(HOOK, 'const { stdin } = process')).toBeGreaterThan(0)
+	})
+
 	it('集約先そのものと、通して読む側は通す', async () => {
 		expect(
 			await stdinReadsIn(
@@ -725,5 +732,6 @@ describe('標準入力の読み取り', () => {
 			),
 		).toBe(0)
 		expect(await stdinReadsIn(HOOK, 'readFileSync(path, 0)\nsetTimeout(fn, 0)')).toBe(0)
+		expect(await stdinReadsIn(HOOK, 'const { input, encoding } = options')).toBe(0)
 	})
 })

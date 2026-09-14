@@ -106,6 +106,15 @@ const STDIN_READ = [
 			":matches(Literal[value='/dev/stdin'], TemplateElement[value.cooked='/dev/stdin'])",
 		message: STDIN_MESSAGE,
 	},
+	// 束縛で受けると、読むところに process も stdin も綴られない
+	{
+		selector: "ImportSpecifier[imported.name='stdin']",
+		message: STDIN_MESSAGE,
+	},
+	{
+		selector: "ObjectPattern > Property[key.name='stdin']",
+		message: STDIN_MESSAGE,
+	},
 ]
 
 const LANDING_MESSAGE = `ページ内ジャンプの着地位置は CSS が持つ。JS でオフセットを足さず、ページ全体を動かす呼び出しは useScrollTo に集約する。 ${INVARIANT_URL}`
