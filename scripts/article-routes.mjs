@@ -1,20 +1,22 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { parseFrontMatter } from 'remark-mdc'
-import { articleFiles, fail } from './article-files.mjs'
+import Database from 'better-sqlite3'
 
-export const articleRoutes = (given) => {
-	const { dir, files } = articleFiles(given)
+const TABLE = '_content_article'
 
-	const routes = []
+// パスは @nuxt/content が slugify して決める。ファイル名から組み直すと綴りが割れるので、
+// ビルド時に組み上がった collection の DB をそのまま読む
+export const articleRoutes = (databaseFile) => {
+	let db
 	try {
-		for (const name of files) {
-			const { data } = parseFrontMatter(readFileSync(join(dir, name), 'utf8'))
-			if (data.published === true) routes.push(`/article/${name.replace(/\.md$/, '')}`)
-		}
+		db = new Database(databaseFile, { readonly: true, fileMustExist: true })
+		return db
+			.prepare(`SELECT path FROM ${TABLE} WHERE published = 1 ORDER BY path`)
+			.all()
+			.map((row) => row.path)
 	} catch (error) {
-		fail('記事を読み取れない:', `  ${error.message}`)
+		throw new Error(
+			`${TABLE} から公開中の記事のパスを読めない（${databaseFile}）: ${error.message}`,
+		)
+	} finally {
+		db?.close()
 	}
-
-	return routes.sort()
 }

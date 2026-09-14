@@ -4,10 +4,6 @@ import { articleRoutes } from './scripts/article-routes.mjs'
 import { writeWorkerRoutes } from './scripts/worker-routes.mjs'
 import { CATEGORIES } from './app/utils/category'
 
-// リンクを辿るプリレンダは、どこからもリンクされない記事を落とす。一覧に載るかに関わらず、
-// collection の全件をここから起点に渡す
-const ARTICLES = articleRoutes()
-
 export default defineNuxtConfig({
 	compatibilityDate: '2025-07-15',
 	imports: { scan: false },
@@ -80,25 +76,26 @@ export default defineNuxtConfig({
 		preset: 'cloudflare-pages',
 		prerender: {
 			crawlLinks: true,
-			routes: [
-				'/',
-				'/404.html',
-				...CATEGORIES.map((category) => `/category/${category}`),
-				...ARTICLES,
-			],
+			routes: ['/', '/404.html', ...CATEGORIES.map((category) => `/category/${category}`)],
 		},
 		cloudflare: {
 			pages: {
-				// 除外の自動収集はプリレンダより先に走り、出来上がった dist を見ていない。
-				// 生成された全パスを見る writeWorkerRoutes に _routes.json を持たせる
+				// 自動収集はワイルドカードに畳まず、上限を超えた分を黙って切り落とす。
+				// 畳んでから書く writeWorkerRoutes に _routes.json を持たせる
 				defaultRoutes: false,
 			},
 		},
 	},
 	hooks: {
+		// collection は modules:done で組み上がるので、起点に渡せるのは nitro が起きてから
 		'nitro:init'(nitro) {
+			const pages = articleRoutes(nitro.options.runtimeConfig.content.localDatabase.filename)
+			nitro.options.prerender.routes.push(...pages)
+
 			nitro.hooks.hook('compiled', () => {
-				writeWorkerRoutes(nitro.options.output.dir, ARTICLES)
+				// dev では rollup の watcher からも発火し、そこにプリレンダ済みの生成物は無い
+				if (nitro.options.dev) return
+				writeWorkerRoutes(nitro.options.output.dir, pages)
 			})
 		},
 	},
