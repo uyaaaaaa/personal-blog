@@ -55,18 +55,15 @@ describe('decide', () => {
 		expect(reason).toMatch('ラベルは')
 	})
 
-	it('update は渡された項目だけを見る', () => {
-		const update = { method: 'update', issue_number: 295, title: undefined, body: undefined }
-		expect(decide(write({ ...update, labels: ['enhancement'] }), ask())).toBeNull()
-		expect(decide(write({ ...update, labels: ['enhancement', 'bug'] }), ask())).toMatch(
-			'ラベルは',
-		)
-		expect(decide(write({ ...update, labels: undefined, title: 'fix: 直す' }), ask())).toMatch(
-			'接頭辞',
-		)
+	it('更新は見ない。PR のラベル付けも同じ口を通る', () => {
+		const update = { method: 'update', issue_number: 369, title: undefined, body: undefined }
+		expect(decide(write({ ...update, labels: ['agent'] }), ask())).toBeNull()
+		expect(
+			decide(write({ ...update, labels: undefined, title: 'fix: 直す' }), ask()),
+		).toBeNull()
 	})
 
-	it('issue を書かない呼び出しは見ない', () => {
+	it('issue を作らない呼び出しは見ない', () => {
 		expect(decide(write({ method: 'get' }), ask())).toBeNull()
 		expect(
 			decide({ tool_name: 'mcp__github__add_issue_comment', tool_input: {} }, ask()),

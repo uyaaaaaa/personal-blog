@@ -5,24 +5,19 @@ import { complete, findings, rules } from '../../scripts/issue-shape.mjs'
 
 const SKILL = '.claude/skills/create-issues/SKILL.md'
 const TOOL = 'mcp__github__issue_write'
-const WRITING = new Set(['create', 'update'])
+// 更新は見ない。PR の題・本文・ラベルも同じ口を通り、issue と見分けられない
+const CREATE = 'create'
 
 export const decide = (input, ask = ASK) => {
 	if (input.tool_name !== TOOL) return null
 
 	const { method, title, body, labels } = input.tool_input ?? {}
-	if (!WRITING.has(method)) return null
+	if (method !== CREATE) return null
 
 	const it = rules(ask.skill())
 	if (!complete(it)) return null
 
-	// create は全部を、update は渡された項目だけを同じ判定に通す
-	const issue =
-		method === 'create'
-			? { title: title ?? '', body: body ?? '', labels: labels ?? [] }
-			: { title, body, labels }
-
-	const found = findings(issue, it)
+	const found = findings({ title: title ?? '', body: body ?? '', labels: labels ?? [] }, it)
 	if (found.length === 0) return null
 	return `issue が型に合わない（→ ${SKILL}）:\n${found.map((reason) => `- ${reason}`).join('\n')}`
 }
