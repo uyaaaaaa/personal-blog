@@ -155,7 +155,7 @@ describe('インラインコメントの型', () => {
 	})
 
 	it('バッジでないリンクは書き換えない', () => {
-		const body = `${MUST} **見出し**\n\n[ADR 11](../../docs/adr/11-no-enforcement-inventory.md) のとおり`
+		const body = `${MUST} **見出し**\n\n[ADR 03](../../docs/adr/03-flat-directory-by-type.md) のとおり`
 		expect(decide(comment(body), ask())).toBeNull()
 	})
 

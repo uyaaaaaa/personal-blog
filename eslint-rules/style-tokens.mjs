@@ -4,13 +4,13 @@ import { colors, fontFamily, sizes } from '../theme/tokens.ts'
 
 export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
 export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
-export const MOTION_URL = `${DOCS_URL}/adr/02-no-prefers-reduced-motion.md`
-export const BREAKPOINT_URL = `${DOCS_URL}/adr/15-two-breakpoints.md`
+export const MOTION_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#原則`
+export const BREAKPOINT_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#原則`
 export const INVARIANT_URL = `${DOCS_URL}/ARCHITECTURE.md#不変条件`
-export const SUPPRESSION_URL = `${DOCS_URL}/adr/20-no-template-lint-escape.md`
 
 // 抑制が届く先は eslint-disable を書いた場所より下だけ。テンプレートは <script> より上にあり、.css は ESLint が読まない
-export const STYLE_EXCEPTION = `例外は .vue の <style> に書き、理由を添えた eslint-disable を <script> に置く。テンプレートと .css には eslint-disable が届かない。 ${SUPPRESSION_URL}`
+export const STYLE_EXCEPTION =
+	'例外は .vue の <style> に書き、理由を添えた eslint-disable を <script> に置く。テンプレートと .css には eslint-disable が届かない。'
 
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'

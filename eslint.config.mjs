@@ -38,7 +38,7 @@ const declarationRules = Object.fromEntries(
 )
 
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
-const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
+const AUTO_IMPORT_URL = `${DOCS_URL}/adr/02-no-auto-import.md`
 
 const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`
 const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL}の2つだけ。他の境界を作らない。 ${BREAKPOINT_URL}`

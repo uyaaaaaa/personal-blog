@@ -1,28 +1,14 @@
 # 判断の記録
 
-思想が反映されていて、簡単には変えられない判断だけを `docs/adr/` に1判断1ファイルで置きます。
-コンポーネント内の設計や個々の制約は書きません（実装が正です）。基準と書き方は [.claude/rules/docs.md](../.claude/rules/docs.md)、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md)、構造と検査の置き場は [ARCHITECTURE.md](./ARCHITECTURE.md) にあります。
+ディレクトリ構造と依存関係に影響する判断だけを `docs/adr/` に1判断1ファイルで置きます。
+運用の設計（整形・検査の置き方・テストの走らせ方・デザインの大方針）は書きません。基準と書き方は [.claude/rules/docs.md](../.claude/rules/docs.md)、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md)、構造と検査の置き場は [ARCHITECTURE.md](./ARCHITECTURE.md) にあります。
 
 番号は固定の識別子ではなく、リンクはファイル名で引きます。
 
 - [01 ページ番号をクエリではなくパスで持つ](./adr/01-page-number-in-path.md)
-- [02 `prefers-reduced-motion` を参照しない](./adr/02-no-prefers-reduced-motion.md)
-- [03 自作モジュールの auto-import を止める](./adr/03-no-auto-import.md)
-- [04 ディレクトリは型別のフラット構成を維持する](./adr/04-flat-directory-by-type.md)
-- [05 整形は Prettier に任せ、ESLint には持たせない](./adr/05-prettier-owns-formatting.md)
-- [06 テストは `tests/` に実装の構成をミラーして置く](./adr/06-tests-mirrored-under-tests.md)
-- [07 Nuxt を起こすのはコンポーネントのテストだけにする](./adr/07-nuxt-environment-per-file.md)
-- [08 テストを2回目の使用とみなして抽出する](./adr/08-test-as-second-use.md)
-- [09 サイズにも名前を付けてトークンに置く](./adr/09-size-tokens-and-no-arbitrary-values.md)
-- [10 ドキュメントは原則持たず、思想が反映され簡単に変えられない判断だけを ADR に残す](./adr/10-docs-only-for-hard-to-reverse-decisions.md)
-- [11 効いている検査の一覧を文書に持たない](./adr/11-no-enforcement-inventory.md)
-- [12 scoped CSS の値も Tailwind の語彙に限り、ESLint で落とす](./adr/12-style-block-token-lint.md)
-- [13 route に依らない取得は、それを出すコンポーネントが持つ](./adr/13-fetch-follows-route-dependency.md)
-- [14 route を読むのは入口だけにし、下の層は props と引数で受け取る](./adr/14-route-read-only-at-entry.md)
-- [15 ブレークポイントは md と lg の2つに限り、ESLint で落とす](./adr/15-two-breakpoints.md)
-- [16 `components/` の共有部品は題材を知らないものだけを `ui/` に置く](./adr/16-ui-knows-no-domain.md)
-- [17 スタイルの判定は1つだけ持ち、ESLint と `scripts/` の両方から通す](./adr/17-one-style-judgment-two-runners.md)
-- [18 記事の識別を文字だけにし、`emoji` / `image` はスキーマに残す](./adr/18-text-only-article-identity.md)
-- [19 `accent` は状態に加えて数と記号の目印にも使い、状態の合図は色に限らない](./adr/19-accent-for-state-and-marker.md)
-- [20 ブロックの並びを固定し、抑制の口を `<script>` の `eslint-disable` だけにする](./adr/20-no-template-lint-escape.md)
-- [21 検査は変更されたパスで振り分け、記事だけの変更にコードの規約を課さない](./adr/21-checks-split-by-changed-paths.md)
+- [02 自作モジュールの auto-import を止める](./adr/02-no-auto-import.md)
+- [03 ディレクトリは型別のフラット構成を維持する](./adr/03-flat-directory-by-type.md)
+- [04 テストは `tests/` に実装の構成をミラーして置く](./adr/04-tests-mirrored-under-tests.md)
+- [05 route に依らない取得は、それを出すコンポーネントが持つ](./adr/05-fetch-follows-route-dependency.md)
+- [06 route を読むのは入口だけにし、下の層は props と引数で受け取る](./adr/06-route-read-only-at-entry.md)
+- [07 `components/` の共有部品は題材を知らないものだけを `ui/` に置く](./adr/07-ui-knows-no-domain.md)

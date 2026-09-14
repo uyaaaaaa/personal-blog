@@ -15,7 +15,7 @@ description: "このブログの UI（コンポーネント・ページ・スタ
 
 既存の同種コンポーネントの書き方に揃える。Tailwind のクラスを基本にし、複雑な状態やアニメーションだけ scoped CSS にする。
 
-DESIGN_GUIDELINE の原則を覆したら、同じ変更でそちらを直す。覆した方針が ADR の基準（`.claude/rules/docs.md`）に当たるなら `docs/adr/` に1ファイル足し、`docs/DECISIONS.md` にも行を足す。
+DESIGN_GUIDELINE の原則を覆したら、同じ変更でそちらを直す。デザインの方針は ADR に書かない（基準は `.claude/rules/docs.md`）。
 
 ## 3. 実測する
 
