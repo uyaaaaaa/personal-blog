@@ -219,7 +219,6 @@ const read = async () => {
 }
 
 if (process.argv[1]?.endsWith('git-guard.mjs')) {
-	// 判定できないときは黙って通す。フックがツール呼び出しを止めない
 	try {
 		const input = JSON.parse((await read()) || '{}')
 		const reason = decide(input)
