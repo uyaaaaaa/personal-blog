@@ -78,6 +78,36 @@ const outlineValue = (value) =>
 
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
 
+const STDIN_MESSAGE =
+	'標準入力は scripts/stdin.mjs だけが読む。読み取りの境目にまたがった多バイト文字が U+FFFD になる。'
+
+// fd 0 と /dev/stdin も同じ入口。綴りを変えただけの読み取りを同じ判定で見る
+const STDIN_FD = '/^(readFileSync|readFile|createReadStream|openSync|open)$/'
+const STDIN_READ = [
+	{
+		selector: "MemberExpression[property.name='stdin']",
+		message: STDIN_MESSAGE,
+	},
+	{
+		selector: "MemberExpression[computed=true] > Literal[value='stdin']",
+		message: STDIN_MESSAGE,
+	},
+	{
+		// 第2引数以降の 0 に当たらないよう、最初の引数だけを見る
+		selector: `CallExpression[callee.name=${STDIN_FD}] > Literal[value=0]:first-child`,
+		message: STDIN_MESSAGE,
+	},
+	{
+		selector: `CallExpression[callee.property.name=${STDIN_FD}] > Literal[value=0]:first-child`,
+		message: STDIN_MESSAGE,
+	},
+	{
+		selector:
+			":matches(Literal[value='/dev/stdin'], TemplateElement[value.cooked='/dev/stdin'])",
+		message: STDIN_MESSAGE,
+	},
+]
+
 const LANDING_MESSAGE = `ページ内ジャンプの着地位置は CSS が持つ。JS でオフセットを足さず、ページ全体を動かす呼び出しは useScrollTo に集約する。 ${INVARIANT_URL}`
 
 const PAGE_SCROLLER = '/^(documentElement|body|scrollingElement)$/'
@@ -514,6 +544,14 @@ export default [
 		},
 		rules: {
 			'no-restricted-syntax': ['error', ...WEB_FONT, ...PAGE_SCROLL],
+		},
+	},
+	{
+		// 読み取りを1本に保つ。集約先そのものは除く
+		files: withTest('.claude/hooks/**/*.mjs', 'scripts/**/*.mjs'),
+		ignores: ['scripts/stdin.mjs'],
+		rules: {
+			'no-restricted-syntax': ['error', ...STDIN_READ],
 		},
 	},
 	{
