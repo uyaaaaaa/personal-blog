@@ -422,13 +422,15 @@ const start = async () => {
 	}
 
 	// synthetic は click でフォーカスを動かさないブラウザ（Safari / Firefox）と同じ状況を作る。
-	const open = async ({ synthetic = false } = {}) => {
+	const open = async ({ synthetic = false, touch = false } = {}) => {
 		for (let attempt = 0; attempt < 8; attempt++) {
 			if (synthetic) {
 				sent('トリガに合成 click（フォーカスを動かさない）')
 				await evaluate(
 					`$vis(TRIGGER).dispatchEvent(new MouseEvent('click', { bubbles: true }))`,
 				)
+			} else if (touch) {
+				await tap(config.trigger, 'トリガ')
 			} else {
 				await click(config.trigger, 'トリガ')
 			}
@@ -513,7 +515,6 @@ const start = async () => {
 		evaluate,
 		setWidth,
 		setTouch,
-		tap,
 		touchDrag,
 		watchTouchMoves,
 		overlayPoint,
@@ -734,8 +735,8 @@ const probes = [
 			await p.open()
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: show(state, ['active', 'ring']),
-				ok: state.ring === NO_RING,
+				observed: show(state, ['active', 'activeShown', 'ring']),
+				ok: state.activeShown && state.ring === NO_RING,
 			}
 		},
 	},
@@ -747,14 +748,11 @@ const probes = [
 			await p.setTouch(true)
 			await p.reload()
 			await p.setWidth(375)
-			await p.tap(config.trigger, 'トリガ')
-			const opened = await p.waitFor(
-				`getComputedStyle(document.querySelector(OVERLAY)).visibility === 'visible'`,
-			)
+			await p.open({ touch: true })
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: show(state, ['overlay', 'active', 'ring']),
-				ok: opened && state.ring === NO_RING,
+				observed: show(state, ['overlay', 'active', 'activeShown', 'ring']),
+				ok: state.activeShown && state.ring === NO_RING,
 			}
 		},
 	},
@@ -765,8 +763,8 @@ const probes = [
 			const { opened } = await p.openByShortcut(META)
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: show(state, ['active', 'ring']),
-				ok: opened && state.ring !== NO_RING,
+				observed: show(state, ['active', 'activeShown', 'ring']),
+				ok: opened && state.activeShown && state.ring !== NO_RING,
 			}
 		},
 	},
@@ -776,6 +774,22 @@ const probes = [
 		run: async (p) => {
 			await p.open()
 			await p.reveal()
+			await p.pressKey('Tab')
+			await p.evaluate('await $frames(2)')
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['active', 'activeShown', 'ring']),
+				ok: state.activeShown && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		// 空のままだと閉じ込めの行き先が入力欄自身になり、フォーカスが動かない。
+		// キーに切り替えたのに輪郭が出ない経路は、ここでしか通らない
+		name: 'focus-ring/実クリックで開き語を打たずに Tab',
+		input: true,
+		run: async (p) => {
+			await p.open()
 			await p.pressKey('Tab')
 			await p.evaluate('await $frames(2)')
 			const state = await p.evaluate('return $state()')
@@ -797,8 +811,8 @@ const probes = [
 			await p.evaluate('await $frames(2)')
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: show(state, ['active', 'ring']),
-				ok: state.active.startsWith('INPUT') && state.ring !== NO_RING,
+				observed: show(state, ['active', 'activeShown', 'ring']),
+				ok: state.activeShown && state.active.startsWith('INPUT') && state.ring !== NO_RING,
 			}
 		},
 	},

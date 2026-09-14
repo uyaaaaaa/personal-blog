@@ -2,21 +2,23 @@
 const POINTER_ATTRIBUTE = 'data-pointer-focus'
 
 let byPointer = false
-let listening = false
 
 const onPointerdown = () => {
 	byPointer = true
 }
 
+// フォーカスが動かないキー操作もある。移した先を待たず、今居る要素から落とす
 const onKeydown = () => {
 	byPointer = false
+
+	if (document.activeElement instanceof HTMLElement) {
+		document.activeElement.removeAttribute(POINTER_ATTRIBUTE)
+	}
 }
 
-// 直前の操作はページのどこで起きてもよく、外す先も無いので、購読はアプリで1本だけ持つ
-const listen = () => {
-	if (listening) return
-
-	listening = true
+// 購読はアプリで1本、ハイドレーションより前に立てる。指のタップは pointerdown だけが
+// 先に届き、click はマウント後に来るので、lifecycle で立てると押した指を数え落とす
+if (import.meta.client) {
 	document.addEventListener('pointerdown', onPointerdown, true)
 	document.addEventListener('keydown', onKeydown, true)
 }
@@ -43,8 +45,4 @@ const focusByGesture = (element: HTMLElement | null | undefined) => {
 	element.focus()
 }
 
-export const useGestureFocus = () => {
-	onMounted(listen)
-
-	return { focusByGesture }
-}
+export const useGestureFocus = () => ({ focusByGesture })
