@@ -86,7 +86,6 @@ const read = async () => {
 	return buf
 }
 
-// テストから import したときは走らせない
 if (process.argv[1]?.endsWith('verify-guard.mjs')) {
 	// 判定できないときは黙って通す。フックがツール呼び出しを止めない
 	try {

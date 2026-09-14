@@ -55,7 +55,6 @@ const read = async () => {
 	return buf
 }
 
-// テストから import したときは走らせない
 if (process.argv[1]?.endsWith('session-start.mjs')) {
 	const root = process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
 	// source はハーネスが stdin で渡す。手で打つと読み終わらないので待たない

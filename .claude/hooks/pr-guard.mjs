@@ -190,7 +190,6 @@ const read = async () => {
 	return buf
 }
 
-// テストから import したときは走らせない
 if (process.argv[1]?.endsWith('pr-guard.mjs')) {
 	try {
 		const found = decide(JSON.parse((await read()) || '{}'))
