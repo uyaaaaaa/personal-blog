@@ -148,6 +148,11 @@ const shaped = (body, it) => {
 
 const named = (label) => (typeof label === 'string' ? label : label?.name)
 
+// GitHub は本文の無い issue に null を返す。欠けた値も空として同じ判定に通す
+const text = (value) => (typeof value === 'string' ? value : '')
+const list = (value) =>
+	Array.isArray(value) ? value.map(named).filter((name) => typeof name === 'string') : []
+
 const labelled = (labels, it) => {
 	const found = []
 	const kinds = labels.filter((label) => it.kinds.includes(label))
@@ -161,14 +166,14 @@ const labelled = (labels, it) => {
 }
 
 export const findings = ({ title, body, labels }, it) => [
-	...(typeof title === 'string' && it.unprefixed && PREFIX.test(title)
-		? ['タイトルに分類の接頭辞が付いている']
-		: []),
-	...(Array.isArray(labels) ? labelled(labels.map(named), it) : []),
-	...(typeof body === 'string' ? shaped(body, it) : []),
+	...(it.unprefixed && PREFIX.test(text(title)) ? ['タイトルに分類の接頭辞が付いている'] : []),
+	...labelled(list(labels), it),
+	...shaped(text(body), it),
 ]
 
 const read = async () => {
+	// Buffer のまま連結すると、読み取りの境目に来た多バイト文字が U+FFFD になる
+	process.stdin.setEncoding('utf8')
 	let buf = ''
 	for await (const chunk of process.stdin) buf += chunk
 	return buf

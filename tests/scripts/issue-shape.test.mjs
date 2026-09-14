@@ -1,4 +1,6 @@
+import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { complete, findings, rules } from '~~/scripts/issue-shape.mjs'
 
@@ -135,7 +137,40 @@ describe('findings', () => {
 		expect(found({ labels: ['bug', 'needs-decision'] })).toEqual([])
 	})
 
-	it('渡されなかった項目は見ない', () => {
-		expect(findings({ title: 'タグの一覧が混ざる' }, RULES)).toEqual([])
+	it('欠けた値は空として落とす', () => {
+		expect(
+			findings({ title: 'タグの一覧が混ざる', body: null, labels: ['bug'] }, RULES),
+		).toContain('## ゴール が無い')
+		expect(findings({}, RULES).length).toBeGreaterThan(0)
+	})
+})
+
+// 標準入力は 64 KiB ずつ届く。境目に多バイト文字が来る入力を作って通す
+const CHUNK = 65536
+const HEADING = '完了条件'
+
+const dump = (filler) =>
+	JSON.stringify([
+		{
+			number: 1,
+			title: 'タグの一覧が混ざる',
+			body: body({ ...SHAPED, 現状: [`- ${'x'.repeat(filler)}`] }),
+			labels: ['bug'],
+		},
+	])
+
+const straddling = () => {
+	for (let filler = CHUNK - 200; filler < CHUNK + 200; filler += 1) {
+		const json = dump(filler)
+		if (Buffer.from(json).indexOf(Buffer.from(HEADING)) === CHUNK - 1) return json
+	}
+	throw new Error('境目に見出しが来る入力を作れない')
+}
+
+describe('CLI', () => {
+	it('読み取りの境目に見出しが来ても、型に合う issue を落とさない', () => {
+		const script = fileURLToPath(new URL('../../scripts/issue-shape.mjs', import.meta.url))
+		const out = execFileSync('node', [script], { input: straddling(), encoding: 'utf8' })
+		expect(out.trim()).toBe('#1 型に合う')
 	})
 })
