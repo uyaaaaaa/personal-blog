@@ -397,6 +397,7 @@
 <script setup lang="ts">
 	import HeaderMenuPanel from '~/components/layout/HeaderMenuPanel.vue'
 	import HeaderMenuColumn from '~/components/layout/HeaderMenuColumn.vue'
+	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useArticleCategories } from '~/composables/useArticleCategories'
 	import { useArticleTags } from '~/composables/useArticleTags'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
@@ -422,7 +423,7 @@
 
 	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる
 	const closeDrawer = () => {
-		menuButtonRef.value?.focus()
+		focusByGesture(menuButtonRef.value)
 		emit('close')
 	}
 

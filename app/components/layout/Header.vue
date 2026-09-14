@@ -145,6 +145,7 @@
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
+	import { focusByGesture } from '~/composables/gestureFocus'
 	import { isSearchShortcut } from '~/utils/shortcut'
 
 	const props = defineProps<{
@@ -170,7 +171,7 @@
 	const openSearchFrom = (opener: HTMLElement | null) => {
 		searchOpener = opener
 		// Safari と Firefox は click で button にフォーカスを移さないので、開く前に寄せる
-		opener?.focus()
+		focusByGesture(opener)
 		isSearchOpen.value = true
 	}
 
@@ -180,7 +181,7 @@
 
 	const closeSearch = () => {
 		isSearchOpen.value = false
-		searchOpener?.focus()
+		focusByGesture(searchOpener)
 		searchOpener = null
 	}
 

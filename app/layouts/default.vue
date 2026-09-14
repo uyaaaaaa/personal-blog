@@ -13,6 +13,8 @@
 	import Footer from '~/components/layout/Footer.vue'
 
 	const route = useRoute()
+
+	/* eslint-disable style/no-outline-removal -- 目印が付くのはポインタで移したフォーカスだけ */
 </script>
 
 <style>
@@ -27,6 +29,10 @@
 	:focus-visible {
 		outline: 2px solid var(--color-accent);
 		outline-offset: 2px;
+	}
+
+	[data-pointer-focus]:focus-visible {
+		outline: none;
 	}
 
 	*,

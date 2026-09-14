@@ -95,6 +95,7 @@
 </template>
 
 <script setup lang="ts">
+	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 	import { formatDate } from '~/utils/date'
@@ -234,7 +235,7 @@
 
 			composing = false
 			query.value = ''
-			inputRef.value?.focus()
+			focusByGesture(inputRef.value)
 		},
 		{ flush: 'post' },
 	)

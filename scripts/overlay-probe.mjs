@@ -15,6 +15,7 @@ const DEBUG_PORT = 9333
 // 色を持たない border-left-color の算出値
 const TRANSPARENT = 'rgba(0, 0, 0, 0)'
 const NO_ACTIVE = 'なし'
+const NO_RING = 'なし'
 const OPEN_TIMEOUT = 4000
 const TRANSITION = 400
 
@@ -30,6 +31,7 @@ export const OVERLAYS = {
 		link: '.search-result',
 		scroller: '.search-results',
 		dialog: true,
+		restoresOnOutsideClick: true,
 		widths: [375, 1280],
 	},
 	drawer: {
@@ -181,11 +183,19 @@ const PAGE_HELPERS = `
 		const label = (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\\s+/g, ' ')
 		return el.tagName + (label ? \` "\${label.slice(0, 24)}"\` : '') + ($shown(el) ? '' : ' (見えない)')
 	}
+	const $ring = (el) => {
+		if (!el || el === document.body) return ${JSON.stringify(NO_RING)}
+		const style = getComputedStyle(el)
+		if (style.outlineStyle === 'none' || parseFloat(style.outlineWidth) === 0)
+			return ${JSON.stringify(NO_RING)}
+		return style.outlineStyle + ' ' + style.outlineWidth
+	}
 	const $state = () => ({
 		overlay: getComputedStyle(document.querySelector(OVERLAY)).visibility,
 		overflow: document.body.style.overflow,
 		active: $name(document.activeElement),
 		activeShown: $shown(document.activeElement) && document.activeElement !== document.body,
+		ring: $ring(document.activeElement),
 		path: $path(),
 		query: INPUT ? (document.querySelector(INPUT)?.value ?? null) : null,
 	})
@@ -244,6 +254,15 @@ const start = async () => {
 	const setTouch = (enabled) =>
 		cdp.send('Emulation.setTouchEmulationEnabled', { enabled, maxTouchPoints: 5 })
 
+	const tap = async (selector, label) => {
+		sent(`${label}をタップ`)
+		const point = await centerOf(selector)
+		const at = [{ x: Math.round(point.x), y: Math.round(point.y) }]
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: at })
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+		await evaluate('await $frames(3)')
+	}
+
 	// 1回で運ぶとタップ扱いになるので、刻んで送る
 	const touchDrag = async (point, dy, label) => {
 		sent(label)
@@ -295,8 +314,8 @@ const start = async () => {
 	const reload = async () => {
 		await cdp.send('Page.navigate', { url: `${baseUrl}/` })
 		await waitFor(`document.readyState === 'complete'`, 30000)
-		// ハイドレーションが済むまでクリックが効かない
 		await waitFor(`!!document.querySelector('#__nuxt')?.__vue_app__`, 30000)
+		await waitFor(`!!document.querySelector(TRIGGER)?.__vueParentComponent`, 3000)
 		await evaluate('await $frames(2)')
 	}
 
@@ -306,6 +325,23 @@ const start = async () => {
 		const base = { key, code, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode }
 		await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'rawKeyDown', modifiers })
 		await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'keyUp', modifiers })
+	}
+
+	const typeKeys = async (text) => {
+		sent(`"${text}" をキーで打つ`)
+		for (const char of text) {
+			const code = `Key${char.toUpperCase()}`
+			const keyCode = char.toUpperCase().charCodeAt(0)
+			const base = {
+				key: char,
+				code,
+				windowsVirtualKeyCode: keyCode,
+				nativeVirtualKeyCode: keyCode,
+			}
+			await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'keyDown', text: char })
+			await cdp.send('Input.dispatchKeyEvent', { ...base, type: 'keyUp' })
+		}
+		await evaluate('await $frames(2)')
 	}
 
 	// ブラウザ既定（アドレスバーへの移動）を止めているかは defaultPrevented で見る。
@@ -400,13 +436,15 @@ const start = async () => {
 	}
 
 	// synthetic は click でフォーカスを動かさないブラウザ（Safari / Firefox）と同じ状況を作る。
-	const open = async ({ synthetic = false } = {}) => {
+	const open = async ({ synthetic = false, touch = false } = {}) => {
 		for (let attempt = 0; attempt < 8; attempt++) {
 			if (synthetic) {
 				sent('トリガに合成 click（フォーカスを動かさない）')
 				await evaluate(
 					`$vis(TRIGGER).dispatchEvent(new MouseEvent('click', { bubbles: true }))`,
 				)
+			} else if (touch) {
+				await tap(config.trigger, 'トリガ')
 			} else {
 				await click(config.trigger, 'トリガ')
 			}
@@ -498,6 +536,7 @@ const start = async () => {
 		waitClosed,
 		reload,
 		pressKey,
+		typeKeys,
 		pressShortcut,
 		openByShortcut,
 		openCover,
@@ -699,6 +738,201 @@ const probes = [
 			return {
 				observed: show(state, ['overlay', 'active', 'activeShown']),
 				ok: state.overlay === 'hidden' && state.activeShown,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/実クリックで開く',
+		input: true,
+		run: async (p) => {
+			await p.open()
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
+			return {
+				observed: show(state, ['active', 'activeShown', 'ring']),
+				ok: state.inInput && state.ring === NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/タップで開く',
+		input: true,
+		widths: [375],
+		run: async (p) => {
+			await p.setTouch(true)
+			await p.reload()
+			await p.setWidth(375)
+			await p.open({ touch: true })
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
+			return {
+				observed: show(state, ['overlay', 'active', 'activeShown', 'ring']),
+				ok: state.inInput && state.ring === NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/ショートカットで開く',
+		shortcut: true,
+		run: async (p) => {
+			const { opened } = await p.openByShortcut(META)
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['active', 'activeShown', 'ring']),
+				ok: opened && state.activeShown && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/実クリックで開いてから Tab',
+		dialog: true,
+		run: async (p) => {
+			await p.open()
+			await p.reveal()
+			await p.pressKey('Tab')
+			await p.evaluate('await $frames(2)')
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['active', 'activeShown', 'ring']),
+				ok: state.activeShown && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/実クリックで開いてキーで打つ',
+		input: true,
+		run: async (p) => {
+			await p.open()
+			await p.typeKeys('a')
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
+			return {
+				observed: show(state, ['active', 'query', 'ring']),
+				ok: state.inInput && state.ring === NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/キーで打った後に素の部分を実クリックで戻る',
+		restoresOnOutsideClick: true,
+		run: async (p) => {
+			await p.open()
+			await p.typeKeys('a')
+			const point = await p.overlayPoint()
+			sent('被せた側の素の部分を実クリック')
+			await p.mouse('mousePressed', point, 1)
+			await p.mouse('mouseReleased', point, 0)
+			await p.waitClosed()
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'active', 'ring']),
+				ok: state.overlay === 'hidden' && state.activeShown && state.ring === NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/実クリックで開き語を打たずに Tab',
+		input: true,
+		run: async (p) => {
+			await p.open()
+			await p.pressKey('Tab')
+			await p.evaluate('await $frames(2)')
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['active', 'activeShown', 'ring']),
+				ok: state.activeShown && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/実クリックで開き Tab で出て Shift+Tab で戻る',
+		input: true,
+		run: async (p) => {
+			await p.open()
+			await p.reveal()
+			await p.pressKey('Tab')
+			await p.pressKey('Tab', SHIFT)
+			await p.evaluate('await $frames(2)')
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['active', 'activeShown', 'ring']),
+				ok: state.activeShown && state.active.startsWith('INPUT') && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/実クリックで開き Escape で戻る',
+		dialog: true,
+		run: async (p) => {
+			await p.open()
+			await p.reveal()
+			await p.pressKey('Tab')
+			await p.pressKey('Escape')
+			await p.waitClosed()
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'active', 'ring']),
+				ok: state.overlay === 'hidden' && state.activeShown && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/幅を跨いだ戻し先に目印を残さない',
+		restoresOnOutsideClick: true,
+		widths: [375],
+		run: async (p) => {
+			await p.open()
+			sent('幅を 1280 に広げる')
+			await p.setWidth(1280)
+			await p.evaluate('await $frames(2)')
+			const point = await p.overlayPoint()
+			sent('被せた側の素の部分を実クリック')
+			await p.mouse('mousePressed', point, 1)
+			await p.mouse('mouseReleased', point, 0)
+			await p.waitClosed()
+			sent('幅を 375 に戻す')
+			await p.setWidth(375)
+			await p.evaluate('await $frames(2)')
+			await p.pressKey('Tab')
+			const seen = await p.evaluate(`
+				const el = $vis(TRIGGER)
+				el.focus()
+				return { name: $name(el), ring: $ring(el) }
+			`)
+			return {
+				observed: `戻し先=${seen.name} ring="${seen.ring}"`,
+				ok: seen.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/実クリックで開き素の部分を実クリックで戻る',
+		restoresOnOutsideClick: true,
+		run: async (p) => {
+			await p.open()
+			await p.reveal()
+			await p.pressKey('Tab')
+			const point = await p.overlayPoint()
+			sent('被せた側の素の部分を実クリック')
+			await p.mouse('mousePressed', point, 1)
+			await p.mouse('mouseReleased', point, 0)
+			await p.waitClosed()
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'active', 'ring']),
+				ok: state.overlay === 'hidden' && state.activeShown && state.ring === NO_RING,
 			}
 		},
 	},
@@ -1213,6 +1447,7 @@ const main = async () => {
 				if (item.covering && !covering) continue
 				if (item.scroller && !config.scroller) continue
 				if (item.dialog && !config.dialog) continue
+				if (item.restoresOnOutsideClick && !config.restoresOnOutsideClick) continue
 				if (item.widths && !item.widths.includes(width)) continue
 
 				// CDP の指の設定は reload でも消えない。前の probe の条件を持ち越さない
