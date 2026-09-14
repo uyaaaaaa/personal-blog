@@ -3,7 +3,7 @@
 思想が反映されていて、簡単には変えられない判断だけを `docs/adr/` に1判断1ファイルで置きます。
 コンポーネント内の設計や個々の制約は書きません（実装が正です）。基準と書き方は [.claude/rules/docs.md](../.claude/rules/docs.md)、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md)、構造と検査の置き場は [ARCHITECTURE.md](./ARCHITECTURE.md) にあります。
 
-番号は連番で、ADR を消したら詰め直します。番号は固定の識別子ではなく、リンクはファイル名で引きます。
+番号は固定の識別子ではなく、リンクはファイル名で引きます。
 
 - [01 ページ番号をクエリではなくパスで持つ](./adr/01-page-number-in-path.md)
 - [02 `prefers-reduced-motion` を参照しない](./adr/02-no-prefers-reduced-motion.md)
@@ -24,4 +24,4 @@
 - [17 スタイルの判定は1つだけ持ち、ESLint と `scripts/` の両方から通す](./adr/17-one-style-judgment-two-runners.md)
 - [18 記事の識別を文字だけにし、`emoji` / `image` はスキーマに残す](./adr/18-text-only-article-identity.md)
 - [19 `accent` は状態に加えて数と記号の目印にも使い、状態の合図は色に限らない](./adr/19-accent-for-state-and-marker.md)
-- [20 ブロックの並びを固定し、抑制の口は `<script>` の `eslint-disable` だけにする](./adr/20-no-template-lint-escape.md)
+- [20 ブロックの並びを固定し、抑制の口を `<script>` の `eslint-disable` だけにする](./adr/20-no-template-lint-escape.md)
