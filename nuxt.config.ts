@@ -1,6 +1,12 @@
 import { fileURLToPath } from 'node:url'
 import remarkObsidianCallout from './remark/obsidian-callout.mjs'
+import { articleRoutes } from './scripts/article-routes.mjs'
+import { writeWorkerRoutes } from './scripts/worker-routes.mjs'
 import { CATEGORIES } from './app/utils/category'
+
+// リンクを辿るプリレンダは、どこからもリンクされない記事を落とす。一覧に載るかに関わらず、
+// collection の全件をここから起点に渡す
+const ARTICLES = articleRoutes()
 
 export default defineNuxtConfig({
 	compatibilityDate: '2025-07-15',
@@ -74,39 +80,26 @@ export default defineNuxtConfig({
 		preset: 'cloudflare-pages',
 		prerender: {
 			crawlLinks: true,
-			routes: ['/', '/404.html', ...CATEGORIES.map((category) => `/category/${category}`)],
+			routes: [
+				'/',
+				'/404.html',
+				...CATEGORIES.map((category) => `/category/${category}`),
+				...ARTICLES,
+			],
 		},
 		cloudflare: {
 			pages: {
-				routes: {
-					include: ['/*'],
-					// プリレンダ済みのパスをWorkerに通さない。1ルートあたり1件で数えられ、
-					// Cloudflareの上限は100件のため、記事とタグはワイルドカードで畳む
-					exclude: [
-						'/article/*',
-						'/tags/*',
-						'/category/*',
-						'/__nuxt_content/*',
-						'/',
-						'/_payload.json',
-						'/about',
-						'/about/_payload.json',
-						'/article',
-						'/tags',
-						'/dump.article.sql',
-						'/404.html',
-						'/apple-touch-icon.png',
-						'/favicon.ico',
-						'/favicon.svg',
-						'/icon-192.png',
-						'/icon-512.png',
-						'/ogp.png',
-						'/ogp.svg',
-						'/robots.txt',
-						'/site.webmanifest',
-					],
-				},
+				// 除外の自動収集はプリレンダより先に走り、出来上がった dist を見ていない。
+				// 生成された全パスを見る writeWorkerRoutes に _routes.json を持たせる
+				defaultRoutes: false,
 			},
+		},
+	},
+	hooks: {
+		'nitro:init'(nitro) {
+			nitro.hooks.hook('compiled', () => {
+				writeWorkerRoutes(nitro.options.output.dir, ARTICLES)
+			})
 		},
 	},
 	typescript: {

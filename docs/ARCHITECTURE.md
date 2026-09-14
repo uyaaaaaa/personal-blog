@@ -39,7 +39,7 @@
 
   theme/tokens.ts ──▶ tailwind.config.ts ──▶ CSS 変数 / Tailwind theme
 
-  ビルド時 ──▶ 全ページを静的生成
+  collection の全件 ──▶ プリレンダの起点 ──▶ 全ページを静的生成 ──▶ 出ていないパスは404
 ```
 
 各条件の細目は [rules/structure.md](../.claude/rules/structure.md) と [rules/style.md](../.claude/rules/style.md)、理由は [ADR 14](./adr/14-route-read-only-at-entry.md)・[ADR 13](./adr/13-fetch-follows-route-dependency.md)・[ADR 09](./adr/09-size-tokens-and-no-arbitrary-values.md)・[ADR 12](./adr/12-style-block-token-lint.md) が持ちます。
@@ -55,6 +55,7 @@
 | 型の解決 | `nuxt typecheck` |
 | 依存グラフ | dependency-cruiser |
 | ファイルをまたぐ突き合わせ | `scripts/` の検査 |
+| ビルドの生成物 | `scripts/` の検査。`nuxt.config.ts` のビルド後の hook から呼ぶ |
 | ESLint が読まないファイル（記事の Markdown） | `scripts/` の検査 |
 | ブラウザでの操作 | `scripts/` の probe（lint では回さない） |
 | エージェントのツール呼び出し | `.claude/hooks/` の PreToolUse |
