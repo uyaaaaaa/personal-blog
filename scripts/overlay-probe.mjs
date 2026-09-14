@@ -733,10 +733,15 @@ const probes = [
 		input: true,
 		run: async (p) => {
 			await p.open()
-			const state = await p.evaluate('return $state()')
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
 			return {
 				observed: show(state, ['active', 'activeShown', 'ring']),
-				ok: state.activeShown && state.ring === NO_RING,
+				ok: state.inInput && state.ring === NO_RING,
 			}
 		},
 	},
@@ -749,10 +754,15 @@ const probes = [
 			await p.reload()
 			await p.setWidth(375)
 			await p.open({ touch: true })
-			const state = await p.evaluate('return $state()')
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
 			return {
 				observed: show(state, ['overlay', 'active', 'activeShown', 'ring']),
-				ok: state.activeShown && state.ring === NO_RING,
+				ok: state.inInput && state.ring === NO_RING,
 			}
 		},
 	},
@@ -829,6 +839,37 @@ const probes = [
 			return {
 				observed: show(state, ['overlay', 'active', 'ring']),
 				ok: state.overlay === 'hidden' && state.activeShown && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
+		// 開いたまま md を跨ぐと、戻し先が隠れる側に変わる。focus() は効かず blur も
+		// 来ないので、目印を付けたままにすると幅を戻したとき輪郭が出なくなる
+		name: 'focus-ring/幅を跨いだ戻し先に目印を残さない',
+		restoresOnOutsideClick: true,
+		widths: [375],
+		run: async (p) => {
+			await p.open()
+			sent('幅を 1280 に広げる')
+			await p.setWidth(1280)
+			await p.evaluate('await $frames(2)')
+			const point = await p.overlayPoint()
+			sent('被せた側の素の部分を実クリック')
+			await p.mouse('mousePressed', point, 1)
+			await p.mouse('mouseReleased', point, 0)
+			await p.waitClosed()
+			sent('幅を 375 に戻す')
+			await p.setWidth(375)
+			await p.evaluate('await $frames(2)')
+			await p.pressKey('Tab')
+			const seen = await p.evaluate(`
+				const el = $vis(TRIGGER)
+				el.focus()
+				return { name: $name(el), ring: $ring(el) }
+			`)
+			return {
+				observed: `戻し先=${seen.name} ring="${seen.ring}"`,
+				ok: seen.ring !== NO_RING,
 			}
 		},
 	},

@@ -95,8 +95,8 @@
 </template>
 
 <script setup lang="ts">
+	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
-	import { useGestureFocus } from '~/composables/useGestureFocus'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 	import { formatDate } from '~/utils/date'
 	import { searchArticles } from '~/utils/search'
@@ -218,8 +218,6 @@
 			openActive()
 		}
 	}
-
-	const { focusByGesture } = useGestureFocus()
 
 	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), (event) => {
 		if (!isComposingKey(event)) emit('close')

@@ -15,7 +15,7 @@
 	const route = useRoute()
 
 	/* eslint-disable style/no-outline-removal -- 目印を付けるのはポインタで移したフォーカスだけで、
-	   キーボードで移した先には付かない（→ useGestureFocus）。入力欄には focus-within の下線が別に出る */
+	   キーボードで移した先には付かない（→ gestureFocus）。入力欄には focus-within の下線が別に出る */
 </script>
 
 <style>

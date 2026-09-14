@@ -397,10 +397,10 @@
 <script setup lang="ts">
 	import HeaderMenuPanel from '~/components/layout/HeaderMenuPanel.vue'
 	import HeaderMenuColumn from '~/components/layout/HeaderMenuColumn.vue'
+	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useArticleCategories } from '~/composables/useArticleCategories'
 	import { useArticleTags } from '~/composables/useArticleTags'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
-	import { useGestureFocus } from '~/composables/useGestureFocus'
 	import { useHoverPanel } from '~/composables/useHoverPanel'
 	import { useLatestArticles } from '~/composables/useLatestArticles'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
@@ -420,8 +420,6 @@
 	const LATEST_ARTICLES_LIMIT = 5
 
 	const menuButtonRef = ref<HTMLButtonElement | null>(null)
-
-	const { focusByGesture } = useGestureFocus()
 
 	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる
 	const closeDrawer = () => {

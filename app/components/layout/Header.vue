@@ -145,14 +145,12 @@
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
-	import { useGestureFocus } from '~/composables/useGestureFocus'
+	import { focusByGesture } from '~/composables/gestureFocus'
 	import { isSearchShortcut } from '~/utils/shortcut'
 
 	const props = defineProps<{
 		location: string
 	}>()
-
-	const { focusByGesture } = useGestureFocus()
 
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)

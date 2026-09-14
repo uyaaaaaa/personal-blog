@@ -31,18 +31,17 @@ const unmark = (event: FocusEvent) => {
 
 // テキスト入力はポインタでフォーカスを移しても :focus-visible に一致するので、
 // 輪郭を出すかどうかをブラウザの判定に任せられない
-const focusByGesture = (element: HTMLElement | null | undefined) => {
+export const focusByGesture = (element: HTMLElement | null | undefined) => {
 	if (!element) return
 
 	element.removeAttribute(POINTER_ATTRIBUTE)
+	element.focus()
 
-	if (byPointer) {
+	// 隠れている戻し先には focus() が効かない。乗らなかった要素に付けると、blur も
+	// keydown も来ないまま残り、後からキーボードで来たときに輪郭を消してしまう
+	if (byPointer && document.activeElement === element) {
 		element.setAttribute(POINTER_ATTRIBUTE, '')
 		// 同じ関数なら重ねて登録されない（DOM が type と callback で重複を見る）
 		element.addEventListener('blur', unmark, { once: true })
 	}
-
-	element.focus()
 }
-
-export const useGestureFocus = () => ({ focusByGesture })
