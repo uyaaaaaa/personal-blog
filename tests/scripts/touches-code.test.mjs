@@ -25,6 +25,8 @@ const write = (path, body) => {
 	writeFileSync(join(repo, path), body)
 }
 
+const run = (cwd) => spawnSync('node', [SCRIPT], { cwd, encoding: 'utf8' })
+
 const started = () => {
 	repo = mkdtempSync(join(tmpdir(), 'touches-code-'))
 	git('init', '--quiet')
@@ -40,11 +42,22 @@ const touchesCode = (stage) => {
 	started()
 	stage()
 	git('add', '--all')
-	return spawnSync('node', [SCRIPT], { cwd: repo, stdio: 'pipe' }).status === 0
+	return run(repo).status === 0
 }
 
-const source = (name) => readFileSync(join(WORKFLOWS, name), 'utf8')
-const filters = (name) => [...source(name).matchAll(/paths(?:-ignore)?:\s*\['([^']+)'\]/g)]
+const committed = (stage) => {
+	started()
+	stage()
+	git('add', '--all')
+	git('commit', '--quiet', '--no-verify', '-m', '直す')
+	return run(repo).status === 0
+}
+
+const pathKeys = (name) =>
+	readFileSync(join(WORKFLOWS, name), 'utf8')
+		.split('\n')
+		.map((line) => line.trim())
+		.filter((line) => line.startsWith('paths:') || line.startsWith('paths-ignore:'))
 
 describe('変更されたパスの振り分け', () => {
 	it('記事だけを変えたコミットはコードに触っていないと見る', () => {
@@ -72,23 +85,32 @@ describe('変更されたパスの振り分け', () => {
 			true,
 		)
 	})
+})
 
-	it('変更が1つも取れないときは検査を回す側に倒す', () => {
-		expect(touchesCode(() => {})).toBe(true)
+describe('変更されたパスが取れない回', () => {
+	it('--amend は作り直す先のコミットと同じ振り分けになる', () => {
+		expect(committed(() => write(`${ARTICLE}/article/one.md`, '---\ntitle: 直す\n---\n'))).toBe(
+			false,
+		)
+		expect(committed(() => write('app/utils/one.ts', 'export const one = 2\n'))).toBe(true)
+	})
+
+	it('git が失敗した回は理由を出してコードの検査も回す', () => {
+		const outside = run(mkdtempSync(join(tmpdir(), 'touches-code-outside-')))
+		expect(outside.status).toBe(0)
+		expect(outside.stderr).toMatch('変更されたパスを読み取れない')
 	})
 })
 
 describe('workflow の振り分け', () => {
 	it('コードのための workflow は pull_request と push の両方で記事を外す', () => {
+		const ignored = `paths-ignore: ['${ARTICLE}/**']`
 		for (const name of CODE_WORKFLOWS) {
-			expect(filters(name).map(([, glob]) => glob)).toEqual([
-				`${ARTICLE}/**`,
-				`${ARTICLE}/**`,
-			])
+			expect(pathKeys(name)).toEqual([ignored, ignored])
 		}
 	})
 
 	it('記事の検査はパスで絞らない', () => {
-		expect(filters('article.yml')).toEqual([])
+		expect(pathKeys('article.yml')).toEqual([])
 	})
 })

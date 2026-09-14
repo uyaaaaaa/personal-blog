@@ -3,12 +3,28 @@ import { execFileSync } from 'node:child_process'
 // 記事は content/ の下にしか置けない（scripts/article-files.mjs）
 const ARTICLE = /^content\//
 
-// 名前の変更を1件に畳むと、コードから記事へ移したときに消えた側のパスが出ない
-const staged = execFileSync('git', ['diff', '--cached', '--name-only', '--no-renames'], {
-	encoding: 'utf8',
-})
-	.split('\n')
-	.filter((path) => path !== '')
+const TOUCHES_CODE = 0
+const ARTICLE_ONLY = 1
 
-// 空になるのは --amend など。絞り込む根拠が無いので、検査を回す側に倒す
-process.exit(staged.length === 0 || staged.some((path) => !ARTICLE.test(path)) ? 0 : 1)
+// 名前の変更を1件に畳むと、コードから記事へ移したときに消えた側のパスが出ない
+const changed = (...range) =>
+	execFileSync('git', ['diff', '--cached', '--name-only', '--no-renames', ...range], {
+		encoding: 'utf8',
+	})
+		.split('\n')
+		.filter((path) => path !== '')
+
+let paths
+try {
+	paths = changed()
+	// index が空になるのは --amend。作り直す先のコミットが含むものを見る
+	if (paths.length === 0) paths = changed('HEAD^')
+} catch (error) {
+	const [reason] = error.message.split('\n')
+	console.error(`変更されたパスを読み取れないので、コードの検査も回す: ${reason}`)
+	process.exit(TOUCHES_CODE)
+}
+
+process.exit(
+	paths.length > 0 && paths.every((path) => ARTICLE.test(path)) ? ARTICLE_ONLY : TOUCHES_CODE,
+)
