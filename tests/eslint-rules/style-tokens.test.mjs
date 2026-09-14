@@ -16,6 +16,8 @@ const attribute = (spelling) => `<template><div ${spelling} /></template>`
 
 const script = (body) => `<template><div /></template>\n<script setup>${body}</script>`
 
+const handler = (body) => `<template><div @click="${body}" /></template>`
+
 describe('no-untokenized-size', () => {
 	it('語彙にある長さだけを通す', () => {
 		tester.run('no-untokenized-size', styleTokens.rules['no-untokenized-size'], {
@@ -285,6 +287,8 @@ describe('no-color-literal', () => {
 					filename: 'a.vue',
 					code: script("Object.assign(el.dataset, { tone: 'tomato' })"),
 				},
+				{ filename: 'a.vue', code: script("el.dataset.style = 'color: tomato'") },
+				{ filename: 'a.vue', code: script("el.dataset['style'] = 'color: tomato'") },
 			],
 			invalid: [
 				{
@@ -326,6 +330,27 @@ describe('no-color-literal', () => {
 					filename: 'a.vue',
 					code: script("el.style.color = open ? '#ff0000' : '#00ff00'"),
 					errors: [{ messageId: 'literal' }, { messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el['style'].color = '#ff0000'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style['setProperty']('color', 'tomato')"),
+					errors: [{ messageId: 'literal' }],
+				},
+				// 行内ハンドラは <script> の外なので、template 側の visitor が要る
+				{
+					filename: 'a.vue',
+					code: handler("el.style.color = '#ff0000'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: handler("el.style.setProperty('color', 'tomato')"),
+					errors: [{ messageId: 'literal' }],
 				},
 			],
 		})

@@ -342,20 +342,20 @@ function eachStyleAttribute(context, visit) {
 	}
 }
 
-const isStyleObject = (node) =>
-	node?.type === 'MemberExpression' &&
-	!node.computed &&
-	node.property.type === 'Identifier' &&
-	node.property.name === 'style'
-
 const isString = (node) => node?.type === 'Literal' && typeof node.value === 'string'
 
-// 名乗らない書き先（el.style[name]）は、綴りを持たない値として読む
-function writtenProperty(node) {
-	if (!node.computed && node.property.type === 'Identifier') return kebab(node.property.name)
-	if (isString(node.property)) return kebab(node.property.value)
+// 名乗らない綴り（el.style[name]）は空。綴りを持たない値として読む
+function memberName(node) {
+	if (!node.computed && node.property.type === 'Identifier') return node.property.name
+	if (isString(node.property)) return node.property.value
 	return ''
 }
+
+// dataset の下に並ぶのは data 属性で、CSS ではない
+const isStyleObject = (node) =>
+	node?.type === 'MemberExpression' &&
+	memberName(node) === 'style' &&
+	!(node.object.type === 'MemberExpression' && memberName(node.object) === 'dataset')
 
 // cssText は宣言の並びをまるごと受けるので、プロパティの綴りは値の側が持つ
 const CSS_TEXT = 'css-text'
@@ -370,27 +370,24 @@ function* styleWrites(node) {
 			return
 		}
 		if (!isStyleObject(target.object)) return
-		const property = writtenProperty(target)
+		const property = kebab(memberName(target))
 		yield* declarations(node.right, property === CSS_TEXT ? '' : property)
 		return
 	}
 	const callee = node.callee
-	if (callee?.type !== 'MemberExpression' || callee.computed) return
+	if (callee?.type !== 'MemberExpression') return
+	const method = memberName(callee)
 	const [first, second] = node.arguments
-	if (callee.property.name === 'setProperty' && isStyleObject(callee.object)) {
+	if (method === 'setProperty' && isStyleObject(callee.object)) {
 		yield* declarations(second, isString(first) ? kebab(first.value) : '')
 		return
 	}
-	if (
-		callee.property.name === 'setAttribute' &&
-		isString(first) &&
-		/^style$/i.test(first.value)
-	) {
+	if (method === 'setAttribute' && isString(first) && /^style$/i.test(first.value)) {
 		yield* declarations(second)
 		return
 	}
 	if (
-		callee.property.name === 'assign' &&
+		method === 'assign' &&
 		callee.object.type === 'Identifier' &&
 		callee.object.name === 'Object' &&
 		isStyleObject(first)
@@ -663,7 +660,14 @@ const ruleOf = (check) => ({
 		const write = (node) => {
 			for (const { text, node: value } of styleWrites(node)) report(text, value)
 		}
-		return { ...visitors, AssignmentExpression: write, CallExpression: write }
+		const script = { ...visitors, AssignmentExpression: write, CallExpression: write }
+		// 素の visitor は <script> しか歩かない。行内ハンドラは template 側に渡して同じ判定に通す
+		const services = context.sourceCode.parserServices ?? context.parserServices
+		if (!services?.defineTemplateBodyVisitor) return script
+		return services.defineTemplateBodyVisitor(
+			{ AssignmentExpression: write, CallExpression: write },
+			script,
+		)
 	},
 })
 
