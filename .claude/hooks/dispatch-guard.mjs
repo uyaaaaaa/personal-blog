@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { KINDS, SUFFIX, args } from '../../scripts/session-args.mjs'
+import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
 const SKILL = '.claude/skills/dispatch/SKILL.md'
@@ -123,14 +124,6 @@ export const decide = (input, ask = ASK) => {
 const root = () => process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
 
 const ASK = { skill: () => readFileSync(join(root(), SKILL), 'utf8'), state }
-
-const read = async () => {
-	// Buffer のまま連結すると、読み取りの境目に来た多バイト文字が U+FFFD になる
-	process.stdin.setEncoding('utf8')
-	let buf = ''
-	for await (const chunk of process.stdin) buf += chunk
-	return buf
-}
 
 // テストから import したときは走らせない
 if (process.argv[1]?.endsWith('dispatch-guard.mjs')) {

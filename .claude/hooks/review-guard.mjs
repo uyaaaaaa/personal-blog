@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
 const SKILL = '.claude/skills/review/SKILL.md'
@@ -310,12 +311,6 @@ export const decide = (input, ask = ASK) => {
 	const reason = JUDGED[tool](text, it, ask.state(key(where), input).read(), input)
 	if (reason) return { reason }
 	return written && text !== body ? { updatedInput: { ...input.tool_input, body: text } } : null
-}
-
-const read = async () => {
-	let buf = ''
-	for await (const chunk of process.stdin) buf += chunk
-	return buf
 }
 
 if (process.argv[1]?.endsWith('review-guard.mjs')) {

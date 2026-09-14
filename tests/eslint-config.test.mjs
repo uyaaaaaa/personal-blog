@@ -13,6 +13,7 @@ const OUTLINE = /フォーカスの輪郭を消さない/
 const IMPORTANT = /!important は書かない/
 const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前のクラス/
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
+const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -48,6 +49,11 @@ const singleSourcesIn = async (relative, code) => {
 const renderOnlyIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => RENDER_ONLY.test(message.message)).length
+}
+
+const stdinReadsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => STDIN.test(message.message)).length
 }
 
 // 並びの指摘は綴りが eslint-plugin-vue のものなので、ルール名で数える
@@ -688,5 +694,44 @@ describe('ルートファイルの中身', () => {
 				),
 			),
 		).toBe(0)
+	})
+})
+
+describe('標準入力の読み取り', () => {
+	const HOOK = '.claude/hooks/a-guard.mjs'
+
+	it('綴りを変えた読み取りも落とす', async () => {
+		expect(
+			await stdinReadsIn(HOOK, 'for await (const chunk of process.stdin) buf += chunk'),
+		).toBeGreaterThan(0)
+		expect(await stdinReadsIn(HOOK, "process['stdin'].setEncoding('utf8')")).toBeGreaterThan(0)
+		expect(await stdinReadsIn(HOOK, "readFileSync(0, 'utf8')")).toBeGreaterThan(0)
+		expect(
+			await stdinReadsIn('scripts/a.mjs', "fs.readFileSync('/dev/stdin', 'utf8')"),
+		).toBeGreaterThan(0)
+	})
+
+	it('束縛で受けた読み取りも落とす', async () => {
+		expect(
+			await stdinReadsIn(HOOK, "import { stdin as input } from 'node:process'"),
+		).toBeGreaterThan(0)
+		expect(await stdinReadsIn(HOOK, 'const { stdin } = process')).toBeGreaterThan(0)
+	})
+
+	it('集約先そのものと、通して読む側は通す', async () => {
+		expect(
+			await stdinReadsIn(
+				'scripts/stdin.mjs',
+				'for await (const chunk of process.stdin) buf += chunk',
+			),
+		).toBe(0)
+		expect(
+			await stdinReadsIn(
+				HOOK,
+				"import { read } from '../../scripts/stdin.mjs'\nawait read()",
+			),
+		).toBe(0)
+		expect(await stdinReadsIn(HOOK, 'readFileSync(path, 0)\nsetTimeout(fn, 0)')).toBe(0)
+		expect(await stdinReadsIn(HOOK, 'const { input, encoding } = options')).toBe(0)
 	})
 })

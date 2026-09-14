@@ -2,6 +2,7 @@
 import { execFileSync } from 'node:child_process'
 import { readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
 const EVIDENCE = '.verify'
@@ -85,12 +86,6 @@ const shots = () => {
 const ahead = () => {
 	const upstream = git('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')
 	return Number(git('rev-list', '--count', `${upstream || TRUNK}..HEAD`)) || 0
-}
-
-const read = async () => {
-	let buf = ''
-	for await (const chunk of process.stdin) buf += chunk
-	return buf
 }
 
 if (process.argv[1]?.endsWith('stop-guard.mjs')) {

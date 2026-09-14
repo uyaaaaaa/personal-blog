@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { OVERLAYS } from '../../scripts/overlay-probe.mjs'
+import { read } from '../../scripts/stdin.mjs'
 
 const TRUNK = 'main'
 const EVIDENCE = '.verify'
@@ -182,12 +183,6 @@ const ASK = {
 		writeFileSync(join(root(), EVIDENCE, `${name}.log`), log)
 		return { code, log }
 	},
-}
-
-const read = async () => {
-	let buf = ''
-	for await (const chunk of process.stdin) buf += chunk
-	return buf
 }
 
 if (process.argv[1]?.endsWith('pr-guard.mjs')) {

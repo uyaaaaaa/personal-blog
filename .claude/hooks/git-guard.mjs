@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process'
+import { read } from '../../scripts/stdin.mjs'
 import { REDIRECT, SEPARATOR, invoked, tokens, unquote } from './command.mjs'
 
 const SHAPE = 'claude/<主題>-<英数字4〜6>'
@@ -210,12 +211,6 @@ export const decide = (input, ask = ASK) => {
 		if (reason) return reason
 	}
 	return null
-}
-
-const read = async () => {
-	let buf = ''
-	for await (const chunk of process.stdin) buf += chunk
-	return buf
 }
 
 if (process.argv[1]?.endsWith('git-guard.mjs')) {

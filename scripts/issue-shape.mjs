@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { read } from './stdin.mjs'
 
 const SKILL = new URL('../.claude/skills/create-issues/SKILL.md', import.meta.url)
 
@@ -170,14 +171,6 @@ export const findings = ({ title, body, labels }, it) => [
 	...labelled(list(labels), it),
 	...shaped(text(body), it),
 ]
-
-const read = async () => {
-	// Buffer のまま連結すると、読み取りの境目に来た多バイト文字が U+FFFD になる
-	process.stdin.setEncoding('utf8')
-	let buf = ''
-	for await (const chunk of process.stdin) buf += chunk
-	return buf
-}
 
 const main = async () => {
 	let issues

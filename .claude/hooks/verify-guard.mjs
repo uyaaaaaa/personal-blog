@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // 証跡の残らない実測と、dev と同時に回した実測を落とす。
 import { readFileSync } from 'node:fs'
+import { read } from '../../scripts/stdin.mjs'
 import { REDIRECT, SEPARATOR, invoked, tokens, unquote } from './command.mjs'
 
 const EVIDENCE = '.verify'
@@ -78,12 +79,6 @@ export const decide = (input, ask = ASK) => {
 		}
 	}
 	return null
-}
-
-const read = async () => {
-	let buf = ''
-	for await (const chunk of process.stdin) buf += chunk
-	return buf
 }
 
 if (process.argv[1]?.endsWith('verify-guard.mjs')) {
