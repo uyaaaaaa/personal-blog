@@ -14,6 +14,8 @@ const sfc = (css) => `<template><div class="a" /></template>\n<style scoped>${cs
 
 const attribute = (spelling) => `<template><div ${spelling} /></template>`
 
+const script = (body) => `<template><div /></template>\n<script setup>${body}</script>`
+
 describe('no-untokenized-size', () => {
 	it('語彙にある長さだけを通す', () => {
 		tester.run('no-untokenized-size', styleTokens.rules['no-untokenized-size'], {
@@ -56,6 +58,19 @@ describe('no-untokenized-size', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('.a { max-width: var(--fallback, 17px); }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+			],
+		})
+	})
+
+	it('script が要素のスタイルに書く長さも宣言と同じ判定で落とす', () => {
+		tester.run('no-untokenized-size', styleTokens.rules['no-untokenized-size'], {
+			valid: [{ filename: 'a.vue', code: script("el.style.width = '1rem'") }],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script("el.style.width = '17px'"),
 					errors: [{ messageId: 'untokenized' }],
 				},
 			],
@@ -258,6 +273,64 @@ describe('no-color-literal', () => {
 		})
 	})
 
+	it('script が要素のスタイルに書く色も宣言と同じ判定で落とす', () => {
+		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
+			valid: [
+				{ filename: 'a.vue', code: script("el.style.color = 'var(--color-main)'") },
+				{ filename: 'a.vue', code: script("el.style.overflow = 'hidden'") },
+				{ filename: 'a.vue', code: script("el.style.setProperty('overflow', 'hidden')") },
+				{ filename: 'a.vue', code: script('const kind = el.style.color') },
+				{ filename: 'a.vue', code: script("el.setAttribute('title', 'tomato')") },
+				{
+					filename: 'a.vue',
+					code: script("Object.assign(el.dataset, { tone: 'tomato' })"),
+				},
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script("el.style.color = '#ff0000'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style['background-color'] = 'tomato'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style[name] = '#ff0000'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.setProperty('color', 'tomato')"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.cssText = 'color: #ff0000'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.setAttribute('style', 'color: tomato')"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("Object.assign(el.style, { color: 'tomato' })"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.color = open ? '#ff0000' : '#00ff00'"),
+					errors: [{ messageId: 'literal' }, { messageId: 'literal' }],
+				},
+			],
+		})
+	})
+
 	it('style 属性の色も宣言と同じ判定で落とす', () => {
 		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
 			valid: [
@@ -354,6 +427,43 @@ describe('no-font-literal', () => {
 					filename: 'a.vue',
 					code: sfc('.a { @apply font-serif; }'),
 					errors: [{ messageId: 'fontClass' }],
+				},
+			],
+		})
+	})
+
+	it('script が要素のスタイルに書く書体も宣言と同じ判定で落とす', () => {
+		tester.run('no-font-literal', styleTokens.rules['no-font-literal'], {
+			valid: [
+				{ filename: 'a.vue', code: script("el.style.fontFamily = 'var(--font-mono)'") },
+				{ filename: 'a.vue', code: script("el.style.fontWeight = '600'") },
+				{ filename: 'a.vue', code: script("el.style.overflow = 'hidden'") },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script("el.style.fontFamily = 'Comic Sans MS'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.font = 'bold 1rem Georgia'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.setProperty('font-family', 'Georgia')"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.cssText = 'font-family: Verdana'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("Object.assign(el.style, { fontFamily: 'Georgia' })"),
+					errors: [{ messageId: 'literal' }],
 				},
 			],
 		})

@@ -8,6 +8,7 @@ import styleTokens, {
 	BREAKPOINT_URL,
 	BREAKPOINT_WIDTHS,
 	COLOR_SCHEME_MESSAGE,
+	DECLARATION_RULES,
 	DOCS_URL,
 	FONT_CLASS_MESSAGE,
 	INVARIANT_URL,
@@ -30,6 +31,11 @@ import styleTokens, {
 
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
+
+// 宣言を読む判定は script が要素のスタイルに書く経路にも当たるので、.vue の外でも通す
+const declarationRules = Object.fromEntries(
+	DECLARATION_RULES.map((name) => [`style/${name}`, 'error']),
+)
 
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/03-no-auto-import.md`
@@ -383,7 +389,7 @@ export default [
 	},
 	{
 		files: withTest('app/**/*.ts'),
-		plugins: { imports: importLayers },
+		plugins: { imports: importLayers, style: styleTokens },
 		languageOptions: {
 			parser: tsParser,
 			parserOptions: {
@@ -393,6 +399,7 @@ export default [
 		},
 		rules: {
 			...restrictions,
+			...declarationRules,
 			'imports/order': 'error',
 			'no-restricted-syntax': [
 				...restrictions['no-restricted-syntax'],
@@ -424,9 +431,7 @@ export default [
 					ignorePatterns: ['Nuxt[A-Z]\\w*', 'ContentRenderer'],
 				},
 			],
-			'style/no-untokenized-size': 'error',
-			'style/no-color-literal': 'error',
-			'style/no-font-literal': 'error',
+			...declarationRules,
 			'style/no-important': 'error',
 			'style/no-reduced-motion': 'error',
 			'style/no-custom-breakpoint': 'error',

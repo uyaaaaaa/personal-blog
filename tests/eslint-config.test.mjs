@@ -598,6 +598,21 @@ describe('色と書体の単一情報源', () => {
 		expect(await singleSourcesIn('app/pages/a.vue', sfc('<p class="font-medium" />'))).toBe(0)
 	})
 
+	it('script が要素のスタイルに書く色と書体を .vue の外でも落とす', async () => {
+		expect(
+			await singleSourcesIn('app/composables/useA.ts', "el.style.color = '#ff0000'"),
+		).toBeGreaterThan(0)
+		expect(
+			await singleSourcesIn(
+				'app/utils/a.ts',
+				"el.style.setProperty('font-family', 'Georgia')",
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await singleSourcesIn('app/composables/useA.ts', "el.style.overflow = 'hidden'"),
+		).toBe(0)
+	})
+
 	it('<style> と .css と同じ判定で見る', async () => {
 		const style = `<style scoped>.a { font-family: 'Comic Sans MS'; }</style>`
 		expect(

@@ -342,6 +342,63 @@ function eachStyleAttribute(context, visit) {
 	}
 }
 
+const isStyleObject = (node) =>
+	node?.type === 'MemberExpression' &&
+	!node.computed &&
+	node.property.type === 'Identifier' &&
+	node.property.name === 'style'
+
+const isString = (node) => node?.type === 'Literal' && typeof node.value === 'string'
+
+// 名乗らない書き先（el.style[name]）は、綴りを持たない値として読む
+function writtenProperty(node) {
+	if (!node.computed && node.property.type === 'Identifier') return kebab(node.property.name)
+	if (isString(node.property)) return kebab(node.property.value)
+	return ''
+}
+
+// cssText は宣言の並びをまるごと受けるので、プロパティの綴りは値の側が持つ
+const CSS_TEXT = 'css-text'
+
+// script から要素のスタイルへ書く経路。書いた先は宣言になるので、style 属性と同じ判定に通す
+function* styleWrites(node) {
+	if (node.type === 'AssignmentExpression') {
+		const target = node.left
+		if (target.type !== 'MemberExpression') return
+		if (isStyleObject(target)) {
+			yield* declarations(node.right)
+			return
+		}
+		if (!isStyleObject(target.object)) return
+		const property = writtenProperty(target)
+		yield* declarations(node.right, property === CSS_TEXT ? '' : property)
+		return
+	}
+	const callee = node.callee
+	if (callee?.type !== 'MemberExpression' || callee.computed) return
+	const [first, second] = node.arguments
+	if (callee.property.name === 'setProperty' && isStyleObject(callee.object)) {
+		yield* declarations(second, isString(first) ? kebab(first.value) : '')
+		return
+	}
+	if (
+		callee.property.name === 'setAttribute' &&
+		isString(first) &&
+		/^style$/i.test(first.value)
+	) {
+		yield* declarations(second)
+		return
+	}
+	if (
+		callee.property.name === 'assign' &&
+		callee.object.type === 'Identifier' &&
+		callee.object.name === 'Object' &&
+		isStyleObject(first)
+	) {
+		for (const source of node.arguments.slice(1)) yield* declarations(source)
+	}
+}
+
 const REDUCED_MOTION = /prefers-reduced-motion/i
 const MEDIA_CONDITION = /\(([^()]*)\)/g
 const WIDTH_FEATURE = /\bwidth\b/i
@@ -585,7 +642,12 @@ export function findings(root) {
 const ruleOf = (check) => ({
 	meta: { type: 'problem', schema: [], messages: check.messages },
 	create(context) {
-		return {
+		const report = (text, node) => {
+			for (const found of check.fromAttribute(text)) {
+				context.report({ loc: node.loc, ...found })
+			}
+		}
+		const visitors = {
 			Program() {
 				eachStyleBlock(context, (root, locate) => {
 					for (const { node, messageId, data } of check.find(root)) {
@@ -593,15 +655,20 @@ const ruleOf = (check) => ({
 					}
 				})
 				if (!check.fromAttribute) return
-				eachStyleAttribute(context, (text, node) => {
-					for (const found of check.fromAttribute(text)) {
-						context.report({ loc: node.loc, ...found })
-					}
-				})
+				eachStyleAttribute(context, report)
 			},
 		}
+		if (!check.fromAttribute) return visitors
+
+		const write = (node) => {
+			for (const { text, node: value } of styleWrites(node)) report(text, value)
+		}
+		return { ...visitors, AssignmentExpression: write, CallExpression: write }
 	},
 })
+
+// 宣言を読む判定。style 属性と script の書き込みを見るので、.vue の外でも要る
+export const DECLARATION_RULES = Object.keys(CHECKS).filter((name) => CHECKS[name].fromAttribute)
 
 export default {
 	rules: Object.fromEntries(Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(check)])),
