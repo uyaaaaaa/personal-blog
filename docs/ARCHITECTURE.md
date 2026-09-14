@@ -60,4 +60,4 @@
 | エージェントのツール呼び出し | `.claude/hooks/` の PreToolUse |
 | エージェントが手順を最後まで行ったか | `.claude/hooks/` の PostToolUse と Stop |
 
-commit のたびに回すのは lint だけにし、テストと型検査と build は PR で受ける。lint で落とせるようになったルールは `.claude/rules/` から消す。
+commit のたびに回すのは lint だけにし、テストと型検査と build は PR で受ける。lint は見ている対象で分け、記事（`content/`）しか変えていないコミットと PR では、コードのための検査と workflow を回さない。lint で落とせるようになったルールは `.claude/rules/` から消す。

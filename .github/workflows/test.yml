@@ -2,8 +2,10 @@ name: Test
 
 on:
     pull_request:
+        paths-ignore: ['content/**']
     push:
         branches: [main]
+        paths-ignore: ['content/**']
     workflow_dispatch:
 
 permissions:
