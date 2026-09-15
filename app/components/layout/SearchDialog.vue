@@ -36,10 +36,12 @@
 						y2="16.65"
 					/>
 				</svg>
+				<!-- WebKit は type="search" にクリアボタンを足す。クラスを付けられない擬似要素なので、type では出させず role で検索欄だと名乗る -->
 				<input
 					ref="inputRef"
 					v-model="query"
-					type="search"
+					type="text"
+					role="searchbox"
 					class="search-input"
 					placeholder="Search articles by title or tag"
 					aria-label="Search articles by title or tag"
@@ -320,10 +322,6 @@
 
 	.search-input::placeholder {
 		color: var(--color-sub);
-	}
-
-	.search-input::-webkit-search-cancel-button {
-		display: none;
 	}
 
 	.search-note {
