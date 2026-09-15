@@ -3,7 +3,7 @@
 		v-if="page"
 		class="mx-auto w-full max-w-column lg:grid lg:max-w-article lg:grid-cols-article lg:gap-14"
 	>
-		<div class="min-w-0">
+		<div class="min-w-0 space-y-12">
 			<article class="space-y-8">
 				<header class="space-y-4 border-b border-border pb-8">
 					<div
@@ -39,6 +39,8 @@
 					<ContentRenderer :value="page" />
 				</div>
 			</article>
+
+			<ReadNext :current-path="articlePath" />
 		</div>
 
 		<aside class="hidden lg:block">
@@ -66,6 +68,7 @@
 	import Toc from '~/components/article/Toc.vue'
 	import TocInline from '~/components/article/TocInline.vue'
 	import ArticleFallback from '~/components/article/ArticleFallback.vue'
+	import ReadNext from '~/components/article/ReadNext.vue'
 	import ScrollToTopButton from '~/components/ui/ScrollToTopButton.vue'
 	import { usePageSeo } from '~/composables/usePageSeo'
 	import { CATEGORY_LABELS, isCategory } from '~/utils/category'
