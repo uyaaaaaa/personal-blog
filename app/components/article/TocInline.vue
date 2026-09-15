@@ -2,7 +2,7 @@
 	<nav class="border-y border-border lg:hidden">
 		<button
 			type="button"
-			class="flex w-full items-center justify-between gap-3 py-3 font-mono text-2xs tracking-marker text-sub transition-colors hover:text-accent"
+			class="flex w-full items-center justify-between gap-3 py-3 font-mono text-2xs tracking-marker text-sub transition-color hover:text-accent"
 			:aria-expanded="isOpen"
 			aria-controls="toc-inline-list"
 			@click="isOpen = !isOpen"
@@ -18,7 +18,7 @@
 				stroke-width="2"
 				stroke-linecap="round"
 				stroke-linejoin="round"
-				class="transition-transform duration-200"
+				class="transition-move"
 				:class="{ 'rotate-180': isOpen }"
 				aria-hidden="true"
 			>
@@ -38,7 +38,7 @@
 				<a
 					:href="`#${link.id}`"
 					@click.prevent="scrollTo(link.id)"
-					class="flex gap-3 text-sm transition-colors hover:text-accent"
+					class="flex gap-3 text-sm transition-color hover:text-accent"
 					:class="activeId === link.id ? 'font-medium text-main' : 'text-sub'"
 				>
 					<span class="flex-none font-mono text-xs leading-5 text-accent">{{
@@ -57,7 +57,7 @@
 						<a
 							:href="`#${child.id}`"
 							@click.prevent="scrollTo(child.id)"
-							class="block break-words pl-9 text-xs transition-colors hover:text-accent"
+							class="block break-words pl-9 text-xs transition-color hover:text-accent"
 							:class="activeId === child.id ? 'font-medium text-main' : 'text-sub'"
 						>
 							{{ child.text }}

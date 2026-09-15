@@ -38,7 +38,7 @@
 				stroke-width="2"
 				stroke-linecap="round"
 				stroke-linejoin="round"
-				class="shrink-0 transition-transform duration-200"
+				class="shrink-0 transition-move"
 				:class="{ 'rotate-90': isOpen }"
 				aria-hidden="true"
 			>

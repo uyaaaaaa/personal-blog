@@ -33,7 +33,7 @@
 				>
 					<NuxtLink
 						:to="article.path"
-						class="flex flex-col gap-1 py-3 text-sm text-main transition-colors hover:text-accent md:flex-row md:items-baseline md:gap-4"
+						class="flex flex-col gap-1 py-3 text-sm text-main transition-color hover:text-accent md:flex-row md:items-baseline md:gap-4"
 						prefetch-on="interaction"
 					>
 						<time

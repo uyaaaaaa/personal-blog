@@ -2,7 +2,7 @@
 	<a
 		:href="`#${props.headingId}`"
 		aria-label="Link to this section"
-		class="heading-anchor ml-2 hidden align-middle opacity-0 transition-opacity duration-200 focus-visible:opacity-100 group-hover:opacity-100 lg:inline-block"
+		class="heading-anchor ml-2 hidden align-middle opacity-0 transition-move focus-visible:opacity-100 group-hover:opacity-100 lg:inline-block"
 		@click.exact.prevent="scrollTo(props.headingId)"
 	>
 		<svg

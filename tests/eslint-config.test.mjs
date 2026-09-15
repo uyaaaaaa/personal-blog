@@ -19,6 +19,7 @@ const DOM_ASSEMBLY = /DOM を組み立てない/
 const DISPLAY = /display: none を宣言に書かない/
 const CSS_IMPORT = /@import を書かない/
 const REDUCED_MOTION = /prefers-reduced-motion で分岐しない/
+const MOTION = /決めた長さではない|モーションのクラスは用途の名前|transition の対象に all/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -54,6 +55,11 @@ const singleSourcesIn = async (relative, code) => {
 const reducedMotionsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => REDUCED_MOTION.test(message.message)).length
+}
+
+const motionsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => MOTION.test(message.message)).length
 }
 
 const cssImportsIn = async (relative, code) => {
@@ -758,6 +764,81 @@ describe('表示・非表示の出し分け', () => {
 		expect(await displaysIn('app/pages/a.vue', style('.a { display: none; }'))).toBe(1)
 		expect(await displaysIn('app/pages/a.vue', style('.a { @apply md:hidden; }'))).toBe(1)
 		expect(await displaysIn('app/pages/a.vue', style('.a { display: grid; }'))).toBe(0)
+	})
+})
+
+describe('モーションの長さ', () => {
+	it('用途の名前でないモーションのクラスを落とす', async () => {
+		expect(await motionsIn('app/pages/a.vue', sfc('<p class="duration-200" />'))).toBe(1)
+		expect(await motionsIn('app/pages/a.vue', sfc('<p class="transition-colors" />'))).toBe(1)
+		expect(await motionsIn('app/pages/a.vue', sfc('<p class="md:animate-spin" />'))).toBe(1)
+		expect(
+			await motionsIn('app/pages/a.vue', sfc(`<p :class="['transition-transform']" />`)),
+		).toBe(1)
+	})
+
+	it('用途の名前のクラスは通す', async () => {
+		expect(
+			await motionsIn(
+				'app/pages/a.vue',
+				sfc('<p class="transition-color md:transition-move" />'),
+			),
+		).toBe(0)
+		expect(await motionsIn('app/pages/a.vue', sfc('<p class="text-sm font-medium" />'))).toBe(0)
+	})
+
+	it('style 属性と :style の長さを落とす', async () => {
+		expect(
+			await motionsIn('app/pages/a.vue', sfc('<p style="transition: color 0.42s" />')),
+		).toBe(1)
+		expect(
+			await motionsIn(
+				'app/pages/a.vue',
+				sfc(`<p :style="{ transitionDuration: '0.42s' }" />`),
+			),
+		).toBe(1)
+		expect(
+			await motionsIn('app/pages/a.vue', sfc('<p style="transition: color 0.15s" />')),
+		).toBe(0)
+	})
+
+	it('script が要素のスタイルに書く長さを .vue の外でも落とす', async () => {
+		expect(
+			await motionsIn('app/composables/useA.ts', "el.style.transition = 'opacity 0.42s'"),
+		).toBe(1)
+		expect(
+			await motionsIn(
+				'app/utils/a.ts',
+				"el.style.setProperty('transition-duration', '0.42s')",
+			),
+		).toBe(1)
+		expect(
+			await motionsIn('app/composables/useA.ts', "el.style.transition = 'opacity 0.2s'"),
+		).toBe(0)
+	})
+
+	it('script が組み立てたスタイルシートの長さを落とす', async () => {
+		expect(
+			await motionsIn(
+				'app/utils/a.ts',
+				"sheet.insertRule('.a { transition: color 0.42s; }')",
+			),
+		).toBe(1)
+		expect(
+			await motionsIn(
+				'app/utils/a.ts',
+				"sheet.insertRule('.a { transition: color 0.15s; }')",
+			),
+		).toBe(0)
+	})
+
+	it('<style> の宣言と @apply を落とす', async () => {
+		const style = (css) => `${sfc('<p class="a" />')}\n<style scoped>${css}</style>`
+		expect(await motionsIn('app/pages/a.vue', style('.a { transition: all 0.3s; }'))).toBe(1)
+		expect(await motionsIn('app/pages/a.vue', style('.a { @apply duration-200; }'))).toBe(1)
+		expect(
+			await motionsIn('app/pages/a.vue', style('.a { transition: transform 0.2s; }')),
+		).toBe(0)
 	})
 })
 
