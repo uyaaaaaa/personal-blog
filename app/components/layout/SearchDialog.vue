@@ -101,6 +101,7 @@
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
+	import { usePublishedArticles } from '~/composables/usePublishedArticles'
 	import { formatDate } from '~/utils/date'
 	import { searchArticles } from '~/utils/search'
 	import { deltaToReveal } from '~/utils/scroll'
@@ -113,20 +114,14 @@
 		(e: 'close'): void
 	}>()
 
-	const { data: articles } = useAsyncData('search-articles', () =>
-		queryCollection('article')
-			.where('published', '=', true)
-			.order('date', 'DESC')
-			.select('path', 'title', 'date', 'tags')
-			.all(),
-	)
+	const { data: articles } = usePublishedArticles()
 
 	const query = ref('')
 	const activeIndex = ref(0)
 	const inputRef = ref<HTMLInputElement | null>(null)
 	const resultsRef = ref<HTMLElement | null>(null)
 
-	const results = computed(() => searchArticles(articles.value ?? [], query.value))
+	const results = computed(() => searchArticles(articles.value, query.value))
 
 	const emptyMessage = computed(() =>
 		query.value.trim() === ''
