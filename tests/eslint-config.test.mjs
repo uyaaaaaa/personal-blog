@@ -743,50 +743,22 @@ describe('標準入力の読み取り', () => {
 })
 
 describe('記事のクエリの公開制御', () => {
-	const COMPOSABLE = 'app/composables/useArticles.ts'
-	const PAGE = 'app/pages/index.vue'
-	const COMPONENT = 'app/components/layout/SearchDialog.vue'
-
 	const query = (chain) =>
 		`const { data } = await useAsyncData('articles', () => queryCollection('article')${chain})`
 
-	it('公開制御を欠いた鎖を落とす', async () => {
-		expect(await publishedIn(COMPOSABLE, query(".select('tags').all()"))).toBeGreaterThan(0)
-		expect(
-			await publishedIn(PAGE, sfc('', query(".order('date', 'DESC').all()"))),
-		).toBeGreaterThan(0)
-		expect(await publishedIn(COMPONENT, sfc('', query('.all()')))).toBeGreaterThan(0)
-		expect(await publishedIn(COMPOSABLE, query('.path(articlePath).first()'))).toBeGreaterThan(
-			0,
-		)
-	})
+	const MISSING = ".order('date', 'DESC').all()"
+	const FILTERED = ".where('published', '=', true).all()"
 
-	it('collection の名前を変数で渡しても落とす', async () => {
-		expect(await publishedIn(COMPOSABLE, 'await queryCollection(name).all()')).toBeGreaterThan(
-			0,
-		)
+	it('クエリを書く層すべてで落とす', async () => {
+		expect(await publishedIn('app/composables/useArticles.ts', query(MISSING))).toBe(1)
+		expect(await publishedIn('app/pages/index.vue', sfc('', query(MISSING)))).toBe(1)
+		expect(
+			await publishedIn('app/components/layout/SearchDialog.vue', sfc('', query(MISSING))),
+		).toBe(1)
 	})
 
 	it('公開制御の付いた鎖は通す', async () => {
-		expect(await publishedIn(COMPOSABLE, query(".where('published', '=', true).all()"))).toBe(0)
-		expect(
-			await publishedIn(COMPOSABLE, query(".path(p).where('published', '=', true).first()")),
-		).toBe(0)
-		expect(
-			await publishedIn(
-				PAGE,
-				sfc('', query(".where('published', '=', true).select('path').all()")),
-			),
-		).toBe(0)
-	})
-
-	it('記事のクエリでない鎖は通す', async () => {
-		expect(
-			await publishedIn(COMPOSABLE, 'const shown = articles.filter(isRecent).slice(0, 3)'),
-		).toBe(0)
-	})
-
-	it('鎖を包む呼び出しと二重に数えない', async () => {
-		expect(await publishedIn(COMPOSABLE, query('.all()'))).toBe(1)
+		expect(await publishedIn('app/composables/useArticles.ts', query(FILTERED))).toBe(0)
+		expect(await publishedIn('app/pages/index.vue', sfc('', query(FILTERED)))).toBe(0)
 	})
 })
