@@ -118,7 +118,6 @@ describe('no-important', () => {
 		})
 	})
 
-	// <style> しか読まない判定も、script が組み立てたスタイルシートには当たる
 	it('script が組み立てたスタイルシートも同じ判定で落とす', () => {
 		tester.run('no-important', styleTokens.rules['no-important'], {
 			valid: [{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") }],
@@ -399,7 +398,6 @@ describe('no-color-literal', () => {
 					code: script("tag.innerHTML = '.a { color: tomato; }'"),
 					errors: [{ messageId: 'literal' }],
 				},
-				// 書き込み先を数えないので、束縛越しに組み立てても当たる
 				{
 					filename: 'a.vue',
 					code: script("const css = '.a { color: tomato; }'\ntag.textContent = css"),
@@ -410,7 +408,6 @@ describe('no-color-literal', () => {
 					code: script('sheet.replaceSync(`.a { color: tomato; }`)'),
 					errors: [{ messageId: 'literal' }],
 				},
-				// HTML ごと書く経路では <style> の中身だけが CSS
 				{
 					filename: 'a.vue',
 					code: script("tag.innerHTML = '<style>.a { color: tomato; }</style>'"),
@@ -421,7 +418,6 @@ describe('no-color-literal', () => {
 					code: handler("sheet.insertRule('.a { color: tomato; }')"),
 					errors: [{ messageId: 'literal' }],
 				},
-				// 宣言の並びとして読んだ値は、スタイルシートとして読み直さない
 				{
 					filename: 'a.vue',
 					code: script("el.style.cssText = '.a { color: tomato; }'"),
@@ -594,7 +590,6 @@ describe('no-font-literal', () => {
 					code: script("tag.textContent = '.a { font: bold 1rem Verdana; }'"),
 					errors: [{ messageId: 'literal' }],
 				},
-				// 規則でなくとも、本体を持つ at-rule は同じ並びとして読む
 				{
 					filename: 'a.vue',
 					code: script("sheet.insertRule('@font-face { font-family: Georgia; }')"),
@@ -680,7 +675,7 @@ describe('no-web-font', () => {
 		})
 	})
 
-	// 本体を持たない at-rule も規則の並びとして読む。資源の綴りを持つものは綴りを読む側が報告する
+	// 資源の綴りを持つものは、綴りを読む側が報告する
 	it('script が組み立てた @import と @font-face を落とす', () => {
 		tester.run('no-web-font', styleTokens.rules['no-web-font'], {
 			valid: [
@@ -799,7 +794,7 @@ describe('no-theme-branch', () => {
 			],
 		})
 	})
-	// 綴りを持つ at-rule は外れても、綴りを持たない規則は読む
+	// 綴りを持つ at-rule は外れ、綴りを持たない規則が残る
 	it('script が組み立てたスタイルシートを規則ごとに読む', () => {
 		tester.run('no-theme-branch', styleTokens.rules['no-theme-branch'], {
 			valid: [{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") }],
@@ -937,7 +932,7 @@ describe('no-scroll-behavior', () => {
 		})
 	})
 
-	// 綴りを持つ宣言は no-restricted-syntax が JS の文字列から報告する（→ eslint-config のテスト）
+	// この綴りは no-restricted-syntax が報告する（→ eslint-config のテスト）
 	it('組み立てたスタイルシートでも綴りを持つ宣言は読まない', () => {
 		tester.run('no-scroll-behavior', styleTokens.rules['no-scroll-behavior'], {
 			valid: [
@@ -1029,7 +1024,6 @@ describe('no-display-none', () => {
 					code: script("el.style.cssText = 'display: none'"),
 					errors: [{ messageId: 'displayNone' }],
 				},
-				// 宣言の並びとして読めない綴りは、書き込みの値でもスタイルシートとして読む
 				{
 					filename: 'a.vue',
 					code: script("el.style.cssText = '.a { @apply hidden; }'"),

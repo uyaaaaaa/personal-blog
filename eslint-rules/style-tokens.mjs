@@ -412,12 +412,10 @@ function* styleWrites(node) {
 	}
 }
 
-// HTML ごと書く経路（innerHTML・document.write）では、CSS として読めるのは <style> の中身だけ
 const STYLE_ELEMENT = /<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi
 
-// script が組み立てたスタイルシート。insertRule・textContent・innerHTML のような書き込み先を
-// 数えると数え落とした先と束縛越しの組み立てが抜け道になるので、綴りが規則か at-rule として
-// 読めるかで見る。どちらも無い文字列は宣言の並びか CSS でない綴りで、前者は style 属性が見る
+// 書き込み先（insertRule・textContent・innerHTML）を数えると、数え落とした先と束縛越しの
+// 組み立てが抜け道になるので、綴りが規則か at-rule として読めるかで見る
 function* stylesheetsIn(text) {
 	if (!text.includes('{') && !text.includes('@')) return
 	const bodies = [...text.matchAll(STYLE_ELEMENT)].map(([, body]) => body)
@@ -462,9 +460,8 @@ const RESET_OUTLINE_VALUE = new RegExp(OUTLINE_RESET_VALUE, 'i')
 const OUTLINE_REMOVAL = new RegExp(OUTLINE_REMOVAL_CLASS)
 const OFF_TOKEN_FONT = new RegExp(OFF_TOKEN_FONT_CLASS)
 
-// 同じ綴りを no-restricted-syntax が JS の文字列から読む判定。組み立てたスタイルシートでも、
-// その綴りを持つ宣言・at-rule はあちらが報告するので二重に出さない。判定ごとには外さない。
-// 綴りを持たない規則（.dark のセレクタ・資源を持たない @import）はここが読む
+// no-restricted-syntax が JS の文字列から読む綴り。その綴りを持つ宣言・at-rule は
+// あちらが報告するので、読めたものごとに外す
 const SPELLED_IN_SCRIPT = {
 	'no-scroll-behavior': new RegExp(`${SCROLL_BEHAVIOR_PROPERTY}|${SCROLL_BEHAVIOR_CLASS}`, 'i'),
 	'no-reduced-motion': REDUCED_MOTION,
@@ -731,7 +728,6 @@ const ruleOf = (name, check) => ({
 			return found.length > 0
 		}
 		const spelled = SPELLED_IN_SCRIPT[name]
-		// 宣言の並びとして報告済みの値。同じ綴りをスタイルシートとして読み直さない。
 		// ESLint は親から歩くので、書き込みの方が先に入れる
 		const reported = new Set()
 		const reportSheet = (text, node) => {
@@ -747,7 +743,6 @@ const ruleOf = (name, check) => ({
 				if (report(text, value)) reported.add(value)
 			}
 		}
-		// 組み立てたスタイルシートは綴りで取れない判定が読む。宣言の並びを読む判定は要素への書き込みも見る
 		const inScript = {
 			Literal(node) {
 				if (typeof node.value === 'string') reportSheet(node.value, node)

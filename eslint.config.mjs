@@ -32,7 +32,7 @@ import styleTokens, {
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
 
-// どの判定も script が書く綴り（要素のスタイル・組み立てたスタイルシート）に当たるので、.vue の外でも通す
+// どの判定も script が書く綴りに当たるので、.vue の外でも通す
 const styleRules = Object.fromEntries(
 	Object.keys(styleTokens.rules).map((name) => [`style/${name}`, 'error']),
 )

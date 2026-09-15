@@ -652,7 +652,6 @@ describe('色と書体の単一情報源', () => {
 		).toBe(0)
 	})
 
-	// 綴りを no-restricted-syntax も読む判定は、同じ文字列で2件出さない
 	it('組み立てたスタイルシートの指摘を1件に寄せる', async () => {
 		const SHEET = "sheet.insertRule('html { scroll-behavior: smooth; }')"
 		expect(await landingsIn('app/utils/a.ts', SHEET)).toBe(1)
@@ -671,14 +670,12 @@ describe('色と書体の単一情報源', () => {
 		expect(
 			await singleSourcesIn('app/utils/a.ts', "el.style.cssText = '.a { color: tomato; }'"),
 		).toBe(1)
-		// 補間で組み立てた断片は CSS として読めないので、綴りを読む側だけが見る
 		expect(
 			await landingsIn(
 				'app/utils/a.ts',
 				'sheet.insertRule(`html { scroll-behavior: ${v}; }`)',
 			),
 		).toBe(1)
-		// 本体を持たない at-rule は両方が読める形
 		expect(
 			await themeBranchesIn(
 				'app/utils/a.ts',
@@ -691,7 +688,6 @@ describe('色と書体の単一情報源', () => {
 				'sheet.insertRule(\'@import url("https://fonts.googleapis.com/css2")\')',
 			),
 		).toBe(1)
-		// メディア特性の名前は大小を区別しない。外す側と読む側で揃っていないと両方から外れる
 		expect(
 			await themeBranchesIn(
 				'app/utils/a.ts',
@@ -706,7 +702,6 @@ describe('色と書体の単一情報源', () => {
 		).toBe(1)
 	})
 
-	// フォントの資源の綴りを持たない読み込みは、組み立てたスタイルシートからしか見えない
 	it('script が組み立てた @import を落とす', async () => {
 		expect(
 			await cssImportsIn('app/utils/a.ts', 'sheet.insertRule(\'@import url("/theme.css")\')'),
