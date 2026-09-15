@@ -1,10 +1,9 @@
 import postcss from 'postcss'
 import resolveConfig from 'tailwindcss/resolveConfig.js'
-import { colors, fontFamily, sizes } from '../theme/tokens.ts'
+import { colors, durations, fontFamily, motionProperties, sizes } from '../theme/tokens.ts'
 
 export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
 export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
-export const MOTION_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#原則`
 export const BREAKPOINT_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#原則`
 export const INVARIANT_URL = `${DOCS_URL}/ARCHITECTURE.md#不変条件`
 
@@ -199,6 +198,118 @@ export const OFF_BREAKPOINT_VARIANTS = [
 	...Object.keys(theme.screens).filter((name) => !BREAKPOINTS.includes(name)),
 	...Object.keys(theme.screens).map((name) => `max-${name}`),
 ]
+
+const TIME = /(?<![\w.-])(\d*\.?\d+)(m?s)(?![\w-])/gi
+
+const toMilliseconds = (number, unit) => Number(number) * (unit.toLowerCase() === 's' ? 1000 : 1)
+
+const millisecondsOf = (value) => {
+	const [[, number, unit]] = value.matchAll(TIME)
+	return toMilliseconds(number, unit)
+}
+
+// 用途ごとの長さ。綴りが違っても同じ長さ（0.2s と 200ms）は同じものとして見る
+const DURATION = Object.fromEntries(
+	Object.entries(durations).map(([purpose, value]) => [purpose, millisecondsOf(value)]),
+)
+const DECIDED = new Set(Object.values(DURATION))
+
+const DURATION_LABEL = Object.entries(durations)
+	.map(([purpose, value]) => `${purpose} は ${value}`)
+	.join('、')
+
+// 用途は2つ。色だけが変わるものと、それ以外の動き。
+// 辺ごとの色（border-top-color）も色なので、綴りの末尾でも読む
+const COLOR_PROPERTY = new RegExp(`^(?:${motionProperties.color.join('|')})$|-color$`, 'i')
+
+const purposeOf = (property) => (COLOR_PROPERTY.test(property) ? 'color' : 'move')
+
+// 短縮形は対象・長さ・遅延・緩急を順不同で持つ。緩急の語と関数を外した最初の語が対象になる
+const TIMING_WORDS = new Set(
+	'ease ease-in ease-out ease-in-out linear step-start step-end normal allow-discrete inherit initial unset revert revert-layer'.split(
+		' ',
+	),
+)
+// 関数は名前ごと外す。中の語（steps(4, end) の end）は対象の名前ではない
+const FUNCTION_CALL = /[\w-]*\([^()]*\)/g
+const SEGMENT_WORD = /(?<![\w.-])(?:--[\w-]+|[a-zA-Z][\w-]*)/g
+
+// 対象を書かない短縮形は all と同じ
+const ALL = 'all'
+
+function propertyOf(segment) {
+	for (const [word] of segment.replace(FUNCTION_CALL, ' ').matchAll(SEGMENT_WORD)) {
+		if (TIMING_WORDS.has(word.toLowerCase())) continue
+		return word.toLowerCase()
+	}
+	return ALL
+}
+
+// 緩急の関数（cubic-bezier(0.4, 0, 0.2, 1)）が持つカンマと混ざらないよう、括弧の外だけで割る
+function segmentsOf(value) {
+	const segments = ['']
+	let depth = 0
+	for (const character of value) {
+		if (character === '(') depth += 1
+		else if (character === ')') depth -= 1
+		else if (character === ',' && depth === 0) {
+			segments.push('')
+			continue
+		}
+		segments[segments.length - 1] += character
+	}
+	return segments
+}
+
+// カスタムプロパティは var() で長さとして参照されるので、モーションの宣言と同じ判定で見る
+const MOTION_PROPERTY = /^(?:(?:transition|animation)(?:-[\w-]+)?|--[\w-]+)$/i
+const TRANSITION_TARGET = /^transition(?:-property)?$/i
+// style 属性は宣言の並びなので、綴りからモーションの宣言を取り出す
+const MOTION_DECLARATION = /(?<![\w-])((?:transition|animation)(?:-[\w-]+)?|--[\w-]+)\s*:([^;]*)/gi
+
+// 宣言1つ分の指摘。置き場所は呼ぶ側が足す
+function motionFindings(property, value) {
+	const found = []
+	if (TRANSITION_TARGET.test(property)) {
+		for (const segment of segmentsOf(value)) {
+			const target = propertyOf(segment)
+			if (target === ALL) {
+				found.push({ messageId: 'mixed' })
+				continue
+			}
+			const purpose = purposeOf(target)
+			for (const [literal, number, unit] of segment.matchAll(TIME)) {
+				// 0 は動かさない指定なので、どの用途でも通す
+				const milliseconds = toMilliseconds(number, unit)
+				if (milliseconds === 0 || milliseconds === DURATION[purpose]) continue
+				const data = { literal, property: target, expected: durations[purpose], purpose }
+				found.push({ messageId: 'offPurpose', data })
+			}
+		}
+		return found
+	}
+	if (!MOTION_PROPERTY.test(property)) return found
+
+	// 対象が別の宣言にあるので用途は決まらない。決めた長さのどれかであることだけを見る
+	for (const [literal, number, unit] of value.matchAll(TIME)) {
+		const milliseconds = toMilliseconds(number, unit)
+		if (milliseconds === 0 || DECIDED.has(milliseconds)) continue
+		found.push({ messageId: 'anyPurpose', data: { literal } })
+	}
+	return found
+}
+
+const MOTION_PURPOSES = Object.keys(durations).join('|')
+const MOTION_CLASSES = Object.keys(durations).map((purpose) => `transition-${purpose}`)
+// 長さを別に書くクラスの接頭辞
+const LENGTH_CLASSES = ['duration', 'delay', 'animate']
+
+export const MOTION_CLASS_MESSAGE = `モーションのクラスは用途の名前で書く（${MOTION_CLASSES.join(' / ')}）。長さは用途のクラスが持つので、長さを別に書くクラス（${LENGTH_CLASSES.map((name) => `${name}-`).join(' / ')}）は無い。`
+
+// 用途のクラス以外の transition-* は theme から消してあり、書いても何も出ない
+export const OFF_PURPOSE_MOTION_CLASS = `(?:^|[\\s:])(?:[a-z-]+:)*!?(?:transition(?!-(?:${MOTION_PURPOSES})(?![\\w-]))|(?:${LENGTH_CLASSES.join('|')})-)`
+
+const OFF_PURPOSE_MOTION = new RegExp(OFF_PURPOSE_MOTION_CLASS)
 
 function offsetsOf(css) {
 	const offsets = [0]
@@ -561,9 +672,38 @@ const CHECKS = {
 		},
 	},
 
+	'no-off-purpose-motion': {
+		messages: {
+			offPurpose:
+				'{{literal}} は {{property}} に決めた長さではない。{{property}} は {{expected}}（theme/tokens.ts の durations.{{purpose}}）で書く。',
+			mixed: 'transition の対象に all を書かない。用途ごとに長さが変わるので、動かすプロパティを挙げる。',
+			anyPurpose: `{{literal}} は決めた長さではない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ（${DURATION_LABEL}）。`,
+			motionClass: MOTION_CLASS_MESSAGE,
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				for (const one of motionFindings(decl.prop, decl.value))
+					found.push({ node: decl, ...one })
+			})
+			root.walkAtRules('apply', (rule) => {
+				if (OFF_PURPOSE_MOTION.test(rule.params))
+					found.push({ node: rule, messageId: 'motionClass' })
+			})
+			return found
+		},
+		fromAttribute(text) {
+			const found = []
+			for (const [, property, value] of text.matchAll(MOTION_DECLARATION))
+				found.push(...motionFindings(property, value))
+			return found
+		},
+	},
+
 	'no-reduced-motion': {
 		messages: {
-			reducedMotion: `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`,
+			reducedMotion:
+				'prefers-reduced-motion で分岐しない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ。',
 		},
 		find(root) {
 			const found = []

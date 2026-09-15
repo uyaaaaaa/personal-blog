@@ -2,7 +2,9 @@ import type { Config } from 'tailwindcss'
 import plugin from 'tailwindcss/plugin'
 import typography from '@tailwindcss/typography'
 import {
+	durations,
 	fontFamily,
+	motionProperties,
 	sizes,
 	toCssVariables,
 	toDarkCssVariables,
@@ -18,6 +20,22 @@ const baseStyles = plugin(({ addBase }) => {
 	})
 })
 
+// 用途ごとに1つのクラスにする。対象のプロパティと長さが離れると、同じ用途に別の長さが付く
+const motion = plugin(({ addUtilities, theme }) => {
+	addUtilities(
+		Object.fromEntries(
+			Object.entries(motionProperties).map(([purpose, properties]) => [
+				`.transition-${purpose}`,
+				{
+					transitionProperty: properties.join(', '),
+					transitionTimingFunction: theme('transitionTimingFunction.DEFAULT'),
+					transitionDuration: durations[purpose as keyof typeof durations],
+				},
+			]),
+		),
+	)
+})
+
 export default <Config>{
 	content: [
 		'./app/components/**/*.{js,vue,ts}',
@@ -31,6 +49,12 @@ export default <Config>{
 	safelist: ['sr-only'],
 	darkMode: 'class',
 	theme: {
+		// 長さを別に書くクラス（duration- / delay- / animate-）と、用途の決まらない transition-*
+		// を消す。モーションのクラスは motion が用途ごとに1つずつ持つ
+		transitionProperty: {},
+		transitionDuration: {},
+		transitionDelay: {},
+		animation: {},
 		extend: {
 			colors: toTailwindColors(),
 			typography: {
@@ -72,5 +96,5 @@ export default <Config>{
 			...sizes,
 		},
 	},
-	plugins: [typography, baseStyles],
+	plugins: [typography, baseStyles, motion],
 }
