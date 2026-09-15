@@ -52,6 +52,18 @@ describe('check-css', () => {
 		expect(stderr).toMatch(/@import を書かない/)
 	})
 
+	it('display で消す宣言を落とす', () => {
+		write('a.css', '.a {\n\tdisplay: none;\n}\n')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/display: none を宣言に書かない/)
+	})
+
+	it('並べ方の display は通す', () => {
+		write('a.css', '.a {\n\tdisplay: grid;\n}\n')
+		expect(check().status).toBe(0)
+	})
+
 	it('大文字の綴りと、入れ子にした at-rule も落とす', () => {
 		write(
 			'a.css',

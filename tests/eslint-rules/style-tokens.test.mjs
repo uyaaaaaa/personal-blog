@@ -787,3 +787,91 @@ describe('no-scroll-behavior', () => {
 		})
 	})
 })
+
+describe('no-display-none', () => {
+	it('display で消す宣言とクラスを落とし、並べ方の display は通す', () => {
+		tester.run('no-display-none', styleTokens.rules['no-display-none'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { display: flex; }') },
+				{ filename: 'a.vue', code: sfc('.a { display: inline-block; }') },
+				{ filename: 'a.vue', code: sfc('.a { display: -webkit-box; }') },
+				{ filename: 'a.vue', code: sfc('.a { border: none; outline: none; }') },
+				{ filename: 'a.vue', code: sfc('.a { --display: none; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply md:block; }') },
+				// 綴りの重なる overflow-hidden / truncate は display を持たない
+				{ filename: 'a.vue', code: sfc('.a { @apply md:overflow-hidden truncate; }') },
+				// 出し分けを持つのは template のクラス
+				{ filename: 'a.vue', code: attribute('class="hidden md:block"') },
+				{ filename: 'a.vue', code: attribute('style="display: flex"') },
+				{ filename: 'a.vue', code: script("el.style.overflow = 'hidden'") },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { display: none; }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { DISPLAY: NONE; }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { display: none; } .a.is-open { display: block; }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@media (min-width: 768px) { .a { display: none; } }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a::-webkit-search-cancel-button { display: none; }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply hidden; }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply md:hidden; }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute('style="display: none"'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute(`:style="{ display: open ? 'block' : 'none' }"`),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.display = 'none'"),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.setProperty('display', 'none')"),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.cssText = 'display: none'"),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: handler("el.style.display = 'none'"),
+					errors: [{ messageId: 'displayNone' }],
+				},
+			],
+		})
+	})
+})

@@ -15,6 +15,7 @@ const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前�
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
 const PUBLISHED = /記事のクエリには公開制御/
+const DISPLAY = /display: none を宣言に書かない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -45,6 +46,11 @@ const importantsIn = async (relative, code) => {
 const singleSourcesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => SINGLE_SOURCE.test(message.message)).length
+}
+
+const displaysIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => DISPLAY.test(message.message)).length
 }
 
 const renderOnlyIn = async (relative, code) => {
@@ -624,6 +630,38 @@ describe('色と書体の単一情報源', () => {
 		expect(
 			await singleSourcesIn('app/pages/a.vue', `${sfc('<p class="a" />')}\n${style}`),
 		).toBeGreaterThan(0)
+	})
+})
+
+describe('表示・非表示の出し分け', () => {
+	it('style 属性と :style の display: none を落とす', async () => {
+		expect(await displaysIn('app/pages/a.vue', sfc('<p style="display: none" />'))).toBe(1)
+		expect(
+			await displaysIn(
+				'app/pages/a.vue',
+				sfc(`<p :style="{ display: open ? 'block' : 'none' }" />`, 'const open = false'),
+			),
+		).toBe(1)
+	})
+
+	it('出し分けを持つ template のクラスと、並べ方の display は通す', async () => {
+		expect(await displaysIn('app/pages/a.vue', sfc('<p class="hidden md:block" />'))).toBe(0)
+		expect(await displaysIn('app/pages/a.vue', sfc('<p style="display: flex" />'))).toBe(0)
+	})
+
+	it('script が要素のスタイルに書く経路を .vue の外でも落とす', async () => {
+		expect(await displaysIn('app/composables/useA.ts', "el.style.display = 'none'")).toBe(1)
+		expect(await displaysIn('app/utils/a.ts', "el.style.setProperty('display', 'none')")).toBe(
+			1,
+		)
+		expect(await displaysIn('app/composables/useA.ts', "el.style.overflow = 'hidden'")).toBe(0)
+	})
+
+	it('<style> の宣言と @apply を落とす', async () => {
+		const style = (css) => `${sfc('<p class="a" />')}\n<style scoped>${css}</style>`
+		expect(await displaysIn('app/pages/a.vue', style('.a { display: none; }'))).toBe(1)
+		expect(await displaysIn('app/pages/a.vue', style('.a { @apply md:hidden; }'))).toBe(1)
+		expect(await displaysIn('app/pages/a.vue', style('.a { display: grid; }'))).toBe(0)
 	})
 })
 

@@ -24,6 +24,9 @@ export const COLOR_SCHEME_MESSAGE =
 export const THEME_CLASS_MESSAGE =
 	'dark: で色を分岐しない。テーマの差は theme/tokens.ts の darkColors が作る。dark: を書くのはテーマで DOM を出し分けるときだけ。'
 
+export const DISPLAY_NONE_MESSAGE =
+	'display: none を宣言に書かない。表示・非表示の切り替えは template のクラス（hidden / md:block）か v-show で行う。クラスを付けられない UA の擬似要素は、それを作らない要素に変えて出させない。'
+
 export const SCROLL_BEHAVIOR_MESSAGE = `scroll-behavior は宣言しない。ページ遷移とブラウザバックの位置復元までアニメーションする。滑らかに送るのは useScrollTo が呼び出しごとに指定する。 ${INVARIANT_URL}`
 
 // overscroll-behavior / overscroll-contain と綴りが重なるので、前が区切りか終端のものだけを見る
@@ -405,6 +408,13 @@ const THEME_SELECTOR = /\.(?:dark|light)(?![\w-])/
 const COLOR_SCHEME = /prefers-color-scheme/i
 const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
 const SCROLL_BEHAVIOR = new RegExp(SCROLL_BEHAVIOR_CLASS)
+const DISPLAY_PROPERTY = /^display$/i
+// display が消すのは none のときだけ。flex と grid は並べ方で、出し分けではない
+const HIDDEN_DISPLAY = /(?<![\w-])none(?![\w-])/i
+// @apply hidden も宣言に開くと display: none になる。variant が前に付く
+const HIDDEN_CLASS = /(?:^|[\s:])(?:[a-z-]+:)*!?hidden(?![\w-])/
+// style 属性は宣言の並びなので、綴りから display の宣言を取り出す
+const DISPLAY_DECLARATION = /(?<![\w-])display\s*:([^;]*)/gi
 const OUTLINE_PROPERTY = /^outline(?:-(?:style|width|color))?$/i
 const OUTLINE_RESET_PROPERTY = /^(?:all|outline(?:-style)?)$/i
 // 宣言と style 属性で判定が割れないよう、値は綴りも同じものを使う
@@ -598,6 +608,30 @@ const CHECKS = {
 				if (OUTLINE_REMOVAL.test(rule.params))
 					found.push({ node: rule, messageId: 'outlineRemoval' })
 			})
+			return found
+		},
+	},
+
+	'no-display-none': {
+		messages: {
+			displayNone: DISPLAY_NONE_MESSAGE,
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				if (DISPLAY_PROPERTY.test(decl.prop) && HIDDEN_DISPLAY.test(decl.value))
+					found.push({ node: decl, messageId: 'displayNone' })
+			})
+			root.walkAtRules('apply', (rule) => {
+				if (HIDDEN_CLASS.test(rule.params))
+					found.push({ node: rule, messageId: 'displayNone' })
+			})
+			return found
+		},
+		fromAttribute(text) {
+			const found = []
+			for (const [, value] of text.matchAll(DISPLAY_DECLARATION))
+				if (HIDDEN_DISPLAY.test(value)) found.push({ messageId: 'displayNone' })
 			return found
 		},
 	},
