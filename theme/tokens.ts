@@ -59,7 +59,6 @@ export const fontFamily = {
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 }
 
-// 用途ごとに長さを1つ持つ。名前が用途で、値がその長さ
 export const durations = {
 	color: '0.15s',
 	move: '0.2s',
