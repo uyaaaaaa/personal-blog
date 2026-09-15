@@ -42,7 +42,7 @@
   collection の全件 ──▶ プリレンダの起点 ──▶ 全ページを静的生成 ──▶ 出ていないパスは404
 ```
 
-各条件の細目は [rules/structure.md](../.claude/rules/structure.md) と [rules/style.md](../.claude/rules/style.md)、理由は [ADR 06](./adr/06-route-read-only-at-entry.md) と [ADR 05](./adr/05-fetch-follows-route-dependency.md) が持ちます。
+各条件の細目は [rules/structure.md](../.claude/rules/structure.md)、理由は [ADR 06](./adr/06-route-read-only-at-entry.md) と [ADR 05](./adr/05-fetch-follows-route-dependency.md) が持ちます。
 
 ## 検査の置き場
 
