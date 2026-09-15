@@ -1,6 +1,7 @@
 import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
+import articleQueries from './eslint-rules/article-queries.mjs'
 import importLayers from './eslint-rules/import-layers.mjs'
 import rootFiles from './eslint-rules/root-files.mjs'
 import styleTokens, {
@@ -428,7 +429,7 @@ export default [
 	},
 	{
 		files: withTest('app/**/*.ts'),
-		plugins: { imports: importLayers, style: styleTokens },
+		plugins: { imports: importLayers, style: styleTokens, queries: articleQueries },
 		languageOptions: {
 			parser: tsParser,
 			parserOptions: {
@@ -440,6 +441,7 @@ export default [
 			...restrictions,
 			...declarationRules,
 			'imports/order': 'error',
+			'queries/published': 'error',
 			'no-restricted-syntax': [
 				...restrictions['no-restricted-syntax'],
 				{
@@ -451,7 +453,13 @@ export default [
 	},
 	{
 		files: withTest('app/**/*.vue'),
-		plugins: { vue: pluginVue, style: styleTokens, imports: importLayers, roots: rootFiles },
+		plugins: {
+			vue: pluginVue,
+			style: styleTokens,
+			imports: importLayers,
+			roots: rootFiles,
+			queries: articleQueries,
+		},
 		languageOptions: {
 			parser: vueParser,
 			parserOptions: {
@@ -463,6 +471,7 @@ export default [
 		rules: {
 			...restrictions,
 			'imports/order': 'error',
+			'queries/published': 'error',
 			// components: false 後もグローバル登録が残るのはNuxtの組み込みコンポーネントのみ
 			'vue/no-undef-components': [
 				'error',

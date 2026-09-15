@@ -14,6 +14,7 @@ const IMPORTANT = /!important は書かない/
 const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前のクラス/
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
+const PUBLISHED = /記事のクエリには公開制御/
 const DISPLAY = /display: none を宣言に書かない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
@@ -60,6 +61,11 @@ const renderOnlyIn = async (relative, code) => {
 const stdinReadsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => STDIN.test(message.message)).length
+}
+
+const publishedIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => PUBLISHED.test(message.message)).length
 }
 
 // 並びの指摘は綴りが eslint-plugin-vue のものなので、ルール名で数える
@@ -771,5 +777,26 @@ describe('標準入力の読み取り', () => {
 		).toBe(0)
 		expect(await stdinReadsIn(HOOK, 'readFileSync(path, 0)\nsetTimeout(fn, 0)')).toBe(0)
 		expect(await stdinReadsIn(HOOK, 'const { input, encoding } = options')).toBe(0)
+	})
+})
+
+describe('記事のクエリの公開制御', () => {
+	const query = (chain) =>
+		`const { data } = await useAsyncData('articles', () => queryCollection('article')${chain})`
+
+	const MISSING = ".order('date', 'DESC').all()"
+	const FILTERED = ".where('published', '=', true).all()"
+
+	it('クエリを書く層すべてで落とす', async () => {
+		expect(await publishedIn('app/composables/useArticles.ts', query(MISSING))).toBe(1)
+		expect(await publishedIn('app/pages/index.vue', sfc('', query(MISSING)))).toBe(1)
+		expect(
+			await publishedIn('app/components/layout/SearchDialog.vue', sfc('', query(MISSING))),
+		).toBe(1)
+	})
+
+	it('公開制御の付いた鎖は通す', async () => {
+		expect(await publishedIn('app/composables/useArticles.ts', query(FILTERED))).toBe(0)
+		expect(await publishedIn('app/pages/index.vue', sfc('', query(FILTERED)))).toBe(0)
 	})
 })
