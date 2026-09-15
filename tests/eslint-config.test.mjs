@@ -16,6 +16,8 @@ const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
 const PUBLISHED = /記事のクエリには公開制御/
 const DISPLAY = /display: none を宣言に書かない/
+const CSS_IMPORT = /@import を書かない/
+const REDUCED_MOTION = /prefers-reduced-motion で分岐しない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -46,6 +48,16 @@ const importantsIn = async (relative, code) => {
 const singleSourcesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => SINGLE_SOURCE.test(message.message)).length
+}
+
+const reducedMotionsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => REDUCED_MOTION.test(message.message)).length
+}
+
+const cssImportsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => CSS_IMPORT.test(message.message)).length
 }
 
 const displaysIn = async (relative, code) => {
@@ -623,6 +635,84 @@ describe('色と書体の単一情報源', () => {
 		expect(
 			await singleSourcesIn('app/composables/useA.ts', "el.style.overflow = 'hidden'"),
 		).toBe(0)
+	})
+
+	it('script が組み立てたスタイルシートの色と書体を .vue の外でも落とす', async () => {
+		expect(
+			await singleSourcesIn(
+				'app/composables/useA.ts',
+				"sheet.insertRule('.a { color: tomato; font-family: Georgia; }')",
+			),
+		).toBe(2)
+		expect(
+			await singleSourcesIn('app/utils/a.ts', "tag.textContent = '.a { color: #ff0000; }'"),
+		).toBeGreaterThan(0)
+		expect(
+			await singleSourcesIn(
+				'app/utils/a.ts',
+				"tag.innerHTML = '.a { font-family: Georgia; }'",
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await singleSourcesIn('app/utils/a.ts', "sheet.insertRule('.a { display: flex; }')"),
+		).toBe(0)
+	})
+
+	it('組み立てたスタイルシートの指摘を1件に寄せる', async () => {
+		const SHEET = "sheet.insertRule('html { scroll-behavior: smooth; }')"
+		expect(await landingsIn('app/utils/a.ts', SHEET)).toBe(1)
+		expect(
+			await themeBranchesIn(
+				'app/utils/a.ts',
+				"sheet.insertRule('@media (prefers-color-scheme: dark) { .a { top: 0; } }')",
+			),
+		).toBe(1)
+		expect(
+			await webFontsIn(
+				'app/utils/a.ts',
+				'sheet.insertRule(\'@font-face { src: url("/x.woff2"); }\')',
+			),
+		).toBe(1)
+		expect(
+			await singleSourcesIn('app/utils/a.ts', "el.style.cssText = '.a { color: tomato; }'"),
+		).toBe(1)
+		expect(
+			await landingsIn(
+				'app/utils/a.ts',
+				'sheet.insertRule(`html { scroll-behavior: ${v}; }`)',
+			),
+		).toBe(1)
+		expect(
+			await themeBranchesIn(
+				'app/utils/a.ts',
+				"sheet.insertRule('@media (prefers-color-scheme: dark)')",
+			),
+		).toBe(1)
+		expect(
+			await webFontsIn(
+				'app/utils/a.ts',
+				'sheet.insertRule(\'@import url("https://fonts.googleapis.com/css2")\')',
+			),
+		).toBe(1)
+		expect(
+			await themeBranchesIn(
+				'app/utils/a.ts',
+				"sheet.insertRule('@media (Prefers-Color-Scheme: dark) { .a { top: 0; } }')",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/utils/a.ts',
+				"sheet.insertRule('@media (Prefers-Reduced-Motion: reduce) { .a { top: 0; } }')",
+			),
+		).toBe(1)
+	})
+
+	it('script が組み立てた @import を落とす', async () => {
+		expect(
+			await cssImportsIn('app/utils/a.ts', 'sheet.insertRule(\'@import url("/theme.css")\')'),
+		).toBe(1)
+		expect(await cssImportsIn('app/utils/a.ts', "sheet.insertRule('.a { top: 0; }')")).toBe(0)
 	})
 
 	it('<style> と .css と同じ判定で見る', async () => {

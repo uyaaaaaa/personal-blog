@@ -15,6 +15,12 @@ export const STYLE_EXCEPTION =
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
 
+// フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
+// 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
+const FONT_FILE = '\\.(?:woff2?|otf|ttf|eot)\\b'
+const FONT_HOST = '\\b(?:(?:fontsource|fonts?)(?:[./]|$)|(?:typeface|typekit)[./-])'
+export const WEB_FONT_RESOURCE = `(?:${FONT_FILE}|${FONT_HOST})`
+
 export const THEME_BRANCH_MESSAGE =
 	'テーマごとに宣言を分岐しない。差は theme/tokens.ts の darkColors が作る。.dark と .light に書けるのはカスタムプロパティの再定義だけ。'
 
@@ -171,9 +177,16 @@ const breakpoints = buildBreakpoints()
 
 export const BREAKPOINT_LABEL = breakpoints.label
 
-export const BREAKPOINT_WIDTHS = [...breakpoints.pixels].flatMap((px) =>
+const BREAKPOINT_WIDTHS = [...breakpoints.pixels].flatMap((px) =>
 	Object.entries(PIXELS_PER).map(([unit, scale]) => `${px / scale}${unit}`),
 )
+
+const WIDTHS = BREAKPOINT_WIDTHS.join('|')
+// 宣言（max-width: 36rem）と混ざらないよう、括弧から見る
+const WIDTH_BY_LENGTH = `\\((?=[^()]*width)[^()]*?(?<![\\d.])(?!(?:${WIDTHS})\\b)\\d*\\.?\\d+[a-z%]+`
+// 組み立てた文字列は長さが別のリテラルに出るので、綴りからも見る
+const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))`
+const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 
 // tokens の fontFamily が theme を上書きするので、残るのは Tailwind の既定の family だけ
 const OFF_TOKEN_FONTS = Object.keys(theme.fontFamily).filter((name) => !(name in fontFamily))
@@ -399,6 +412,28 @@ function* styleWrites(node) {
 	}
 }
 
+const STYLE_ELEMENT = /<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi
+
+function* stylesheetsIn(text) {
+	if (!text.includes('{') && !text.includes('@')) return
+	const bodies = [...text.matchAll(STYLE_ELEMENT)].map(([, body]) => body)
+	for (const candidate of [text, ...bodies]) {
+		let root
+		try {
+			root = postcss.parse(candidate, { from: undefined })
+		} catch {
+			continue
+		}
+		let found = false
+		const mark = () => {
+			found = true
+		}
+		root.walkRules(mark)
+		root.walkAtRules(mark)
+		if (found) yield root
+	}
+}
+
 const REDUCED_MOTION = /prefers-reduced-motion/i
 const MEDIA_CONDITION = /\(([^()]*)\)/g
 const WIDTH_FEATURE = /\bwidth\b/i
@@ -422,6 +457,21 @@ const NO_OUTLINE_VALUE = new RegExp(OUTLINE_REMOVAL_VALUE, 'i')
 const RESET_OUTLINE_VALUE = new RegExp(OUTLINE_RESET_VALUE, 'i')
 const OUTLINE_REMOVAL = new RegExp(OUTLINE_REMOVAL_CLASS)
 const OFF_TOKEN_FONT = new RegExp(OFF_TOKEN_FONT_CLASS)
+
+const SCRIPT_SPELLING = {
+	'no-scroll-behavior': `${SCROLL_BEHAVIOR_PROPERTY}|${SCROLL_BEHAVIOR_CLASS}`,
+	'no-reduced-motion': REDUCED_MOTION.source,
+	'no-theme-branch': COLOR_SCHEME.source,
+	'no-web-font': WEB_FONT_RESOURCE,
+	'no-custom-breakpoint': BREAKPOINT_MEDIA,
+}
+
+export const scriptSpellingSelector = (name) =>
+	`:matches(Literal[value=/${SCRIPT_SPELLING[name]}/i], TemplateElement[value.cooked=/${SCRIPT_SPELLING[name]}/i])`
+
+const spelledInScript = Object.fromEntries(
+	Object.entries(SCRIPT_SPELLING).map(([name, spelling]) => [name, new RegExp(spelling, 'i')]),
+)
 
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
 const CHECKS = {
@@ -670,15 +720,43 @@ export function findings(root) {
 		.sort((a, b) => a.line - b.line || a.column - b.column)
 }
 
-const ruleOf = (check) => ({
+const ruleOf = (name, check) => ({
 	meta: { type: 'problem', schema: [], messages: check.messages },
 	create(context) {
 		const report = (text, node) => {
-			for (const found of check.fromAttribute(text)) {
-				context.report({ loc: node.loc, ...found })
+			const found = check.fromAttribute(text)
+			for (const one of found) {
+				context.report({ loc: node.loc, ...one })
+			}
+			return found.length > 0
+		}
+		const spelled = spelledInScript[name]
+		// ESLint は親から歩くので、書き込みの方が先に入れる
+		const reported = new Set()
+		const reportSheet = (text, node) => {
+			if (reported.has(node)) return
+			for (const root of stylesheetsIn(text))
+				for (const { node: found, messageId, data } of check.find(root)) {
+					if (spelled?.test(found.toString())) continue
+					context.report({ loc: node.loc, messageId, data })
+				}
+		}
+		const write = (node) => {
+			for (const { text, node: value } of styleWrites(node)) {
+				if (report(text, value)) reported.add(value)
 			}
 		}
-		const visitors = {
+		const inScript = {
+			Literal(node) {
+				if (typeof node.value === 'string') reportSheet(node.value, node)
+			},
+			TemplateElement(node) {
+				if (typeof node.value.cooked === 'string') reportSheet(node.value.cooked, node)
+			},
+			...(check.fromAttribute ? { AssignmentExpression: write, CallExpression: write } : {}),
+		}
+		const script = {
+			...inScript,
 			Program() {
 				eachStyleBlock(context, (root, locate) => {
 					for (const { node, messageId, data } of check.find(root)) {
@@ -689,25 +767,15 @@ const ruleOf = (check) => ({
 				eachStyleAttribute(context, report)
 			},
 		}
-		if (!check.fromAttribute) return visitors
-
-		const write = (node) => {
-			for (const { text, node: value } of styleWrites(node)) report(text, value)
-		}
-		const script = { ...visitors, AssignmentExpression: write, CallExpression: write }
 		// 素の visitor は <script> しか歩かない。行内ハンドラは template 側に渡して同じ判定に通す
 		const services = context.sourceCode.parserServices ?? context.parserServices
 		if (!services?.defineTemplateBodyVisitor) return script
-		return services.defineTemplateBodyVisitor(
-			{ AssignmentExpression: write, CallExpression: write },
-			script,
-		)
+		return services.defineTemplateBodyVisitor(inScript, script)
 	},
 })
 
-// 宣言を読む判定。style 属性と script の書き込みを見るので、.vue の外でも要る
-export const DECLARATION_RULES = Object.keys(CHECKS).filter((name) => CHECKS[name].fromAttribute)
-
 export default {
-	rules: Object.fromEntries(Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(check)])),
+	rules: Object.fromEntries(
+		Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(name, check)]),
+	),
 }

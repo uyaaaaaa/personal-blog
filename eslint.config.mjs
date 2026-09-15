@@ -7,9 +7,7 @@ import rootFiles from './eslint-rules/root-files.mjs'
 import styleTokens, {
 	BREAKPOINT_LABEL,
 	BREAKPOINT_URL,
-	BREAKPOINT_WIDTHS,
 	COLOR_SCHEME_MESSAGE,
-	DECLARATION_RULES,
 	DOCS_URL,
 	FONT_CLASS_MESSAGE,
 	INVARIANT_URL,
@@ -23,19 +21,20 @@ import styleTokens, {
 	SCROLL_BEHAVIOR_CLASS,
 	SCROLL_BEHAVIOR_MESSAGE,
 	SCROLL_BEHAVIOR_PROPERTY,
+	scriptSpellingSelector,
 	STYLE_EXCEPTION,
 	THEME_CLASS_MESSAGE,
 	THEME_COLOR_CLASS,
 	TOKEN_URL,
 	WEB_FONT_MESSAGE,
+	WEB_FONT_RESOURCE,
 } from './eslint-rules/style-tokens.mjs'
 
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
 
-// 宣言を読む判定は script が要素のスタイルに書く経路にも当たるので、.vue の外でも通す
-const declarationRules = Object.fromEntries(
-	DECLARATION_RULES.map((name) => [`style/${name}`, 'error']),
+const styleRules = Object.fromEntries(
+	Object.keys(styleTokens.rules).map((name) => [`style/${name}`, 'error']),
 )
 
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
@@ -48,23 +47,11 @@ const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない
 const IMPORTANT_MESSAGE = `!important は書かない。Tailwind の ! 修飾子と style 属性も同じ。第三者由来のインラインスタイルを打ち消すときだけ許す。${STYLE_EXCEPTION}`
 const OUTLINE_MESSAGE = `フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。Tailwind の outline-none / outline-0 と style 属性も同じ。同じ要素に別の見える指標があるときだけ許す。${STYLE_EXCEPTION}`
 
-// フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
-// 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
-const FONT_FILE = '\\.(?:woff2?|otf|ttf|eot)\\b'
-const FONT_HOST = '\\b(?:(?:fontsource|fonts?)(?:[./]|$)|(?:typeface|typekit)[./-])'
-const WEB_FONT_RESOURCE = `(?:${FONT_FILE}|${FONT_HOST})`
-
 const PALETTE_COLORS =
 	'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
 const PALETTE_CLASS = `(?:^|[\\s:])!?[a-z]+(?:-[a-z]+)*-(?:${PALETTE_COLORS})-(?:50|[1-9]00|950)\\b`
 // 任意値の variant（min-[600px]:）は角括弧の検査が落とす
 const BREAKPOINT_CLASS = `(?:^|[\\s:])(?:${OFF_BREAKPOINT_VARIANTS.join('|')}):`
-// 宣言（max-width: 36rem）と混ざらないよう、括弧から見る
-const WIDTHS = BREAKPOINT_WIDTHS.join('|')
-const WIDTH_BY_LENGTH = `\\((?=[^()]*width)[^()]*?(?<![\\d.])(?!(?:${WIDTHS})\\b)\\d*\\.?\\d+[a-z%]+`
-// 組み立てた文字列は長さが別のリテラルに出るので、綴りからも見る
-const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))`
-const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
 // :style のオブジェクトはキーと値に割れるので、綴りでは当たらない
@@ -148,11 +135,7 @@ const PAGE_SCROLL = [
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 	{
-		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_PROPERTY}/i], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_PROPERTY}/i])`,
-		message: SCROLL_BEHAVIOR_MESSAGE,
-	},
-	{
-		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_CLASS}/], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_CLASS}/])`,
+		selector: scriptSpellingSelector('no-scroll-behavior'),
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 ]
@@ -175,7 +158,7 @@ const WEB_FONT = [
 	{
 		// 1つの selector にまとめる。分けると両方に当たる文字列が2回報告される
 		selector: [
-			`:matches(Literal[value=/${WEB_FONT_RESOURCE}/i], TemplateElement[value.cooked=/${WEB_FONT_RESOURCE}/i])`,
+			scriptSpellingSelector('no-web-font'),
 			// フォントを読み込むモジュール（@nuxt/fonts 等）と、設定が並べる指定子。名前で見る
 			':matches(ImportDeclaration, ImportExpression) > Literal[value=/font/i]',
 			// typography の css は配列を持たないので当たらない
@@ -392,17 +375,15 @@ const restrictions = {
 				'onunload / onbeforeunload は使わない。bfcache を壊すので、離脱時の処理は pagehide か visibilitychange に置く。',
 		},
 		{
-			selector:
-				':matches(Literal[value=/prefers-reduced-motion/], TemplateElement[value.cooked=/prefers-reduced-motion/])',
+			selector: scriptSpellingSelector('no-reduced-motion'),
 			message: REDUCED_MOTION_MESSAGE,
 		},
 		{
-			selector:
-				':matches(Literal[value=/prefers-color-scheme/], TemplateElement[value.cooked=/prefers-color-scheme/])',
+			selector: scriptSpellingSelector('no-theme-branch'),
 			message: COLOR_SCHEME_MESSAGE,
 		},
 		{
-			selector: `:matches(Literal[value=/${BREAKPOINT_MEDIA}/i], TemplateElement[value.cooked=/${BREAKPOINT_MEDIA}/i])`,
+			selector: scriptSpellingSelector('no-custom-breakpoint'),
 			message: BREAKPOINT_MESSAGE,
 		},
 		...SCROLL_SUBSCRIPTION,
@@ -439,7 +420,7 @@ export default [
 		},
 		rules: {
 			...restrictions,
-			...declarationRules,
+			...styleRules,
 			'imports/order': 'error',
 			'queries/published': 'error',
 			'no-restricted-syntax': [
@@ -479,14 +460,7 @@ export default [
 					ignorePatterns: ['Nuxt[A-Z]\\w*', 'ContentRenderer'],
 				},
 			],
-			...declarationRules,
-			'style/no-important': 'error',
-			'style/no-reduced-motion': 'error',
-			'style/no-custom-breakpoint': 'error',
-			'style/no-web-font': 'error',
-			'style/no-theme-branch': 'error',
-			'style/no-outline-removal': 'error',
-			'style/no-scroll-behavior': 'error',
+			...styleRules,
 			'roots/render-only': 'error',
 			// 並びが eslint-disable の届く先を決めるので、見た目ではなく抑制のために固定する
 			'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],

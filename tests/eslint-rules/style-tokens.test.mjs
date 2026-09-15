@@ -117,6 +117,19 @@ describe('no-important', () => {
 			],
 		})
 	})
+
+	it('script が組み立てたスタイルシートも同じ判定で落とす', () => {
+		tester.run('no-important', styleTokens.rules['no-important'], {
+			valid: [{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") }],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('.a { top: 0 !important; }')"),
+					errors: [{ messageId: 'important' }],
+				},
+			],
+		})
+	})
 })
 
 describe('no-reduced-motion', () => {
@@ -356,6 +369,69 @@ describe('no-color-literal', () => {
 		})
 	})
 
+	it('script が組み立てたスタイルシートの色も宣言と同じ判定で落とす', () => {
+		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
+			valid: [
+				{ filename: 'a.vue', code: script("sheet.insertRule('.a { display: flex; }')") },
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('.a { color: var(--color-main); }')"),
+				},
+				// 規則を持たない綴りはスタイルシートではない
+				{ filename: 'a.vue', code: script("el.setAttribute('title', 'tomato')") },
+				{ filename: 'a.vue', code: script("const url = 'https://example.com/?q=tomato'") },
+				{ filename: 'a.vue', code: script('const json = \'{ "color": "tomato" }\'') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('.a { color: tomato; }')"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("tag.textContent = '.a { color: #ff0000; }'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("tag.innerHTML = '.a { color: tomato; }'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("const css = '.a { color: tomato; }'\ntag.textContent = css"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script('sheet.replaceSync(`.a { color: tomato; }`)'),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("tag.innerHTML = '<style>.a { color: tomato; }</style>'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: handler("sheet.insertRule('.a { color: tomato; }')"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.cssText = '.a { color: tomato; }'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.setAttribute('style', '.a { color: tomato; }')"),
+					errors: [{ messageId: 'literal' }],
+				},
+			],
+		})
+	})
+
 	it('style 属性の色も宣言と同じ判定で落とす', () => {
 		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
 			valid: [
@@ -494,6 +570,35 @@ describe('no-font-literal', () => {
 		})
 	})
 
+	it('script が組み立てたスタイルシートの書体も宣言と同じ判定で落とす', () => {
+		tester.run('no-font-literal', styleTokens.rules['no-font-literal'], {
+			valid: [
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('.a { font-family: var(--font-mono); }')"),
+				},
+				{ filename: 'a.vue', code: script("sheet.insertRule('.a { font-weight: 600; }')") },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('.a { font-family: Georgia; }')"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("tag.textContent = '.a { font: bold 1rem Verdana; }'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('@font-face { font-family: Georgia; }')"),
+					errors: [{ messageId: 'literal' }],
+				},
+			],
+		})
+	})
+
 	it('style 属性の書体も宣言と同じ判定で落とす', () => {
 		tester.run('no-font-literal', styleTokens.rules['no-font-literal'], {
 			valid: [
@@ -565,6 +670,31 @@ describe('no-web-font', () => {
 					filename: 'a.vue',
 					code: sfc("@Import './local.css';"),
 					errors: [{ messageId: 'import' }],
+				},
+			],
+		})
+	})
+
+	// 資源の綴りを持つものは、綴りを読む側が報告する
+	it('script が組み立てた @import と @font-face を落とす', () => {
+		tester.run('no-web-font', styleTokens.rules['no-web-font'], {
+			valid: [
+				{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") },
+				{
+					filename: 'a.vue',
+					code: script('sheet.insertRule(\'@font-face { src: url("/x.woff2"); }\')'),
+				},
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script('sheet.insertRule(\'@import url("/theme.css")\')'),
+					errors: [{ messageId: 'import' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('@font-face { font-family: Georgia; }')"),
+					errors: [{ messageId: 'webFont' }],
 				},
 			],
 		})
@@ -660,6 +790,21 @@ describe('no-theme-branch', () => {
 						'@media (prefers-color-scheme: dark) { .a { color: var(--color-sub); } }',
 					),
 					errors: [{ messageId: 'colorScheme' }],
+				},
+			],
+		})
+	})
+	// 綴りを持つ at-rule は外れ、綴りを持たない規則が残る
+	it('script が組み立てたスタイルシートを規則ごとに読む', () => {
+		tester.run('no-theme-branch', styleTokens.rules['no-theme-branch'], {
+			valid: [{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") }],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script(
+						"sheet.insertRule('@media (prefers-color-scheme: dark) { .a { top: 0; } } .dark .b { top: 0; }')",
+					),
+					errors: [{ messageId: 'themeBranch' }],
 				},
 			],
 		})
@@ -786,6 +931,19 @@ describe('no-scroll-behavior', () => {
 			],
 		})
 	})
+
+	// この綴りは no-restricted-syntax が報告する（→ eslint-config のテスト）
+	it('組み立てたスタイルシートでも綴りを持つ宣言は読まない', () => {
+		tester.run('no-scroll-behavior', styleTokens.rules['no-scroll-behavior'], {
+			valid: [
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('html { scroll-behavior: smooth; }')"),
+				},
+			],
+			invalid: [],
+		})
+	})
 })
 
 describe('no-display-none', () => {
@@ -864,6 +1022,11 @@ describe('no-display-none', () => {
 				{
 					filename: 'a.vue',
 					code: script("el.style.cssText = 'display: none'"),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.cssText = '.a { @apply hidden; }'"),
 					errors: [{ messageId: 'displayNone' }],
 				},
 				{
