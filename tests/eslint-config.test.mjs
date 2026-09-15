@@ -14,6 +14,7 @@ const IMPORTANT = /!important は書かない/
 const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前のクラス/
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
+const PUBLISHED = /記事のクエリには公開制御/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -54,6 +55,11 @@ const renderOnlyIn = async (relative, code) => {
 const stdinReadsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => STDIN.test(message.message)).length
+}
+
+const publishedIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => PUBLISHED.test(message.message)).length
 }
 
 // 並びの指摘は綴りが eslint-plugin-vue のものなので、ルール名で数える
@@ -733,5 +739,54 @@ describe('標準入力の読み取り', () => {
 		).toBe(0)
 		expect(await stdinReadsIn(HOOK, 'readFileSync(path, 0)\nsetTimeout(fn, 0)')).toBe(0)
 		expect(await stdinReadsIn(HOOK, 'const { input, encoding } = options')).toBe(0)
+	})
+})
+
+describe('記事のクエリの公開制御', () => {
+	const COMPOSABLE = 'app/composables/useArticles.ts'
+	const PAGE = 'app/pages/index.vue'
+	const COMPONENT = 'app/components/layout/SearchDialog.vue'
+
+	const query = (chain) =>
+		`const { data } = await useAsyncData('articles', () => queryCollection('article')${chain})`
+
+	it('公開制御を欠いた鎖を落とす', async () => {
+		expect(await publishedIn(COMPOSABLE, query(".select('tags').all()"))).toBeGreaterThan(0)
+		expect(
+			await publishedIn(PAGE, sfc('', query(".order('date', 'DESC').all()"))),
+		).toBeGreaterThan(0)
+		expect(await publishedIn(COMPONENT, sfc('', query('.all()')))).toBeGreaterThan(0)
+		expect(await publishedIn(COMPOSABLE, query('.path(articlePath).first()'))).toBeGreaterThan(
+			0,
+		)
+	})
+
+	it('collection の名前を変数で渡しても落とす', async () => {
+		expect(await publishedIn(COMPOSABLE, 'await queryCollection(name).all()')).toBeGreaterThan(
+			0,
+		)
+	})
+
+	it('公開制御の付いた鎖は通す', async () => {
+		expect(await publishedIn(COMPOSABLE, query(".where('published', '=', true).all()"))).toBe(0)
+		expect(
+			await publishedIn(COMPOSABLE, query(".path(p).where('published', '=', true).first()")),
+		).toBe(0)
+		expect(
+			await publishedIn(
+				PAGE,
+				sfc('', query(".where('published', '=', true).select('path').all()")),
+			),
+		).toBe(0)
+	})
+
+	it('記事のクエリでない鎖は通す', async () => {
+		expect(
+			await publishedIn(COMPOSABLE, 'const shown = articles.filter(isRecent).slice(0, 3)'),
+		).toBe(0)
+	})
+
+	it('鎖を包む呼び出しと二重に数えない', async () => {
+		expect(await publishedIn(COMPOSABLE, query('.all()'))).toBe(1)
 	})
 })

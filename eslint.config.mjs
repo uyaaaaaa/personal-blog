@@ -117,6 +117,19 @@ const STDIN_READ = [
 	},
 ]
 
+const PUBLISHED_MESSAGE =
+	"記事のクエリには公開制御（.where('published', ...)）を付ける。抜けると下書きが本番に出る。"
+
+// collection は article の1つだけなので、引数は見ない。名前を変数で渡しても当たる
+const ARTICLE_QUERY = "CallExpression[callee.name='queryCollection']"
+const PUBLISHED_CONDITION =
+	"CallExpression[callee.property.name='where'] > Literal[value='published']"
+// 鎖の一番外の呼び出しだけを見る。途中の呼び出しと、鎖を包む呼び出し（useAsyncData 等）で二重に数えない
+const ARTICLE_QUERY_PUBLISHED = {
+	selector: `CallExpression[callee.type='MemberExpression']:not(MemberExpression > *):has(${ARTICLE_QUERY}):not(:has(${PUBLISHED_CONDITION}))`,
+	message: PUBLISHED_MESSAGE,
+}
+
 const LANDING_MESSAGE = `ページ内ジャンプの着地位置は CSS が持つ。JS でオフセットを足さず、ページ全体を動かす呼び出しは useScrollTo に集約する。 ${INVARIANT_URL}`
 
 const PAGE_SCROLLER = '/^(documentElement|body|scrollingElement)$/'
@@ -407,6 +420,7 @@ const restrictions = {
 		...SCROLL_SUBSCRIPTION,
 		...PAGE_SCROLL,
 		...WEB_FONT,
+		ARTICLE_QUERY_PUBLISHED,
 	],
 }
 
