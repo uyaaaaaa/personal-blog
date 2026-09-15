@@ -25,7 +25,7 @@ export const THEME_CLASS_MESSAGE =
 	'dark: で色を分岐しない。テーマの差は theme/tokens.ts の darkColors が作る。dark: を書くのはテーマで DOM を出し分けるときだけ。'
 
 export const DISPLAY_NONE_MESSAGE =
-	'display: none で隠さない。表示・非表示の切り替えは template のクラス（hidden / md:block）で行う。クラスを付けられない UA の擬似要素は、それを作らない要素に変えて出させない。'
+	'display: none を宣言に書かない。表示・非表示の切り替えは template のクラス（hidden / md:block）か v-show で行う。クラスを付けられない UA の擬似要素は、それを作らない要素に変えて出させない。'
 
 export const SCROLL_BEHAVIOR_MESSAGE = `scroll-behavior は宣言しない。ページ遷移とブラウザバックの位置復元までアニメーションする。滑らかに送るのは useScrollTo が呼び出しごとに指定する。 ${INVARIANT_URL}`
 

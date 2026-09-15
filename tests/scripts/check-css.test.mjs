@@ -56,7 +56,7 @@ describe('check-css', () => {
 		write('a.css', '.a {\n\tdisplay: none;\n}\n')
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/display: none で隠さない/)
+		expect(stderr).toMatch(/display: none を宣言に書かない/)
 	})
 
 	it('並べ方の display は通す', () => {

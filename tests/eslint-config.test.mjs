@@ -14,7 +14,7 @@ const IMPORTANT = /!important は書かない/
 const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前のクラス/
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
-const DISPLAY = /display: none で隠さない/
+const DISPLAY = /display: none を宣言に書かない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
