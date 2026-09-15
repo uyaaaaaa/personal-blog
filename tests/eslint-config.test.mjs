@@ -15,6 +15,7 @@ const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前�
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
 const PUBLISHED = /記事のクエリには公開制御/
+const DOM_ASSEMBLY = /DOM を組み立てない/
 const DISPLAY = /display: none を宣言に書かない/
 const CSS_IMPORT = /@import を書かない/
 const REDUCED_MOTION = /prefers-reduced-motion で分岐しない/
@@ -78,6 +79,11 @@ const stdinReadsIn = async (relative, code) => {
 const publishedIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => PUBLISHED.test(message.message)).length
+}
+
+const assembliesIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => DOM_ASSEMBLY.test(message.message)).length
 }
 
 // 並びの指摘は綴りが eslint-plugin-vue のものなので、ルール名で数える
@@ -888,5 +894,81 @@ describe('記事のクエリの公開制御', () => {
 	it('公開制御の付いた鎖は通す', async () => {
 		expect(await publishedIn('app/composables/useArticles.ts', query(FILTERED))).toBe(0)
 		expect(await publishedIn('app/pages/index.vue', sfc('', query(FILTERED)))).toBe(0)
+	})
+})
+
+describe('composable の DOM の組み立て', () => {
+	const COMPOSABLE = 'app/composables/useShelf.ts'
+	const UTIL = 'app/utils/shelf.ts'
+
+	const body = (statement) =>
+		`export const build = (host: HTMLElement, html: string) => {\n${statement}\n}`
+
+	const ASSEMBLIES = {
+		生成: "void document.createElement('p')",
+		複製: 'void host.cloneNode(true)',
+		挿入: 'host.prepend(host.children[0]!)',
+		文字列: 'host.innerHTML = html',
+	}
+
+	it.each(Object.entries(ASSEMBLIES))('%s の綴りを落とす', async (_label, statement) => {
+		expect(await assembliesIn(COMPOSABLE, body(statement))).toBe(1)
+		expect(await assembliesIn(UTIL, body(statement))).toBe(1)
+	})
+
+	it('document を経由しない組み立ても落とす', async () => {
+		expect(await assembliesIn(COMPOSABLE, body('void new Image()'))).toBe(1)
+		expect(await assembliesIn(COMPOSABLE, body("host.appendChild(h('p', html))"))).toBe(2)
+		expect(await assembliesIn(COMPOSABLE, body("host['appendChild'](new Text(html))"))).toBe(2)
+		expect(
+			await assembliesIn(COMPOSABLE, body("host.insertAdjacentHTML('beforeend', html)")),
+		).toBe(1)
+		expect(await assembliesIn(COMPOSABLE, body('host.setHTML(html)'))).toBe(1)
+		expect(await assembliesIn(COMPOSABLE, body('document.write(html)'))).toBe(1)
+	})
+
+	it('読み取り・購読・フォーカスの移動は通す', async () => {
+		expect(await assembliesIn(COMPOSABLE, body('void host.innerHTML'))).toBe(0)
+		expect(
+			await assembliesIn(
+				COMPOSABLE,
+				body("void document.getElementById('toc')?.textContent"),
+			),
+		).toBe(0)
+		expect(await assembliesIn(COMPOSABLE, body("void host.querySelectorAll('a').length"))).toBe(
+			0,
+		)
+		expect(
+			await assembliesIn(COMPOSABLE, body("document.addEventListener('click', () => {})")),
+		).toBe(0)
+		expect(
+			await assembliesIn(
+				COMPOSABLE,
+				body("host.setAttribute('data-open', html)\nhost.focus()"),
+			),
+		).toBe(0)
+	})
+
+	it('要素を受け取らない append は通す', async () => {
+		expect(await assembliesIn(UTIL, body("new URLSearchParams().append('page', html)"))).toBe(0)
+		expect(await assembliesIn(UTIL, body("new FormData().append('body', html)"))).toBe(0)
+	})
+
+	it('テンプレートを持つ層と、対象を組み立てるテストでは落とさない', async () => {
+		expect(
+			await assembliesIn(
+				'app/components/article/Toc.vue',
+				sfc('', body('host.innerHTML = html')),
+			),
+		).toBe(0)
+		expect(
+			await assembliesIn(
+				'tests/app/composables/useShelf.test.ts',
+				body('host.innerHTML = html'),
+			),
+		).toBe(0)
+		expect(
+			await assembliesIn('tests/app/utils/shelf.test.ts', body("host.appendChild(h('p'))")),
+		).toBe(0)
 	})
 })
