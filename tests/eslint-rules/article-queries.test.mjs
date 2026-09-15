@@ -104,6 +104,22 @@ describe('published', () => {
 		})
 	})
 
+	it('表明を挟んだ鎖も、公開制御があれば通す', () => {
+		run({
+			valid: [
+				"queryCollection('article')!.where('published', '=', true).all()",
+				"(queryCollection('article') as never).where('published', '=', true).all()",
+				"queryCollection('article')!.andWhere((group) => group.where('published', '=', true)).all()",
+			],
+			invalid: [
+				{
+					code: "queryCollection('article')!.order('date', 'DESC').all()",
+					errors: [{ messageId: 'published' }],
+				},
+			],
+		})
+	})
+
 	it('鎖を変数で分けたものを落とす', () => {
 		run({
 			valid: [],
