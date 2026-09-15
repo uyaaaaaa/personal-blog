@@ -10,7 +10,7 @@
 				v-for="tag in tags"
 				:key="tag.slug"
 				:to="`/tags/${tag.slug}`"
-				class="flex items-baseline gap-2 rounded-full border border-border px-3 py-1.5 font-mono text-sm text-main transition-colors hover:border-main"
+				class="flex items-baseline gap-2 rounded-full border border-border px-3 py-1.5 font-mono text-sm text-main transition-color hover:border-main"
 			>
 				<span>{{ tag.name }}</span>
 				<span class="text-xs text-accent">{{ tag.count }}</span>

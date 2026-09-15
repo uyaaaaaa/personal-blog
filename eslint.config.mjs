@@ -11,8 +11,9 @@ import styleTokens, {
 	DOCS_URL,
 	FONT_CLASS_MESSAGE,
 	INVARIANT_URL,
-	MOTION_URL,
+	MOTION_CLASS_MESSAGE,
 	OFF_BREAKPOINT_VARIANTS,
+	OFF_PURPOSE_MOTION_CLASS,
 	OFF_TOKEN_FONT_CLASS,
 	OUTLINE_REMOVAL_CLASS,
 	OUTLINE_REMOVAL_PROPERTY,
@@ -40,10 +41,12 @@ const styleRules = Object.fromEntries(
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/02-no-auto-import.md`
 
-const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`
+const REDUCED_MOTION_MESSAGE =
+	'prefers-reduced-motion で分岐しない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ。'
 const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL}の2つだけ。他の境界を作らない。 ${BREAKPOINT_URL}`
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
 const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない。読み取りを useScrollFrame に渡し、アプリ全体で1本の購読に集約する。 ${INVARIANT_URL}`
+const DOM_ASSEMBLY_MESSAGE = `composable と utils は DOM を組み立てない。要素の生成・複製・挿入・文字列からの差し込みは、それを描くテンプレートが持つ。読み取り・購読・フォーカスの移動はここで行ってよい。 ${ARCHITECTURE_URL}`
 const IMPORTANT_MESSAGE = `!important は書かない。Tailwind の ! 修飾子と style 属性も同じ。第三者由来のインラインスタイルを打ち消すときだけ許す。${STYLE_EXCEPTION}`
 const OUTLINE_MESSAGE = `フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。Tailwind の outline-none / outline-0 と style 属性も同じ。同じ要素に別の見える指標があるときだけ許す。${STYLE_EXCEPTION}`
 
@@ -251,6 +254,14 @@ const TEMPLATE_RESTRICTIONS = [
 		message: THEME_CLASS_MESSAGE,
 	},
 	{
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${OFF_PURPOSE_MOTION_CLASS}/]`,
+		message: MOTION_CLASS_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${OFF_PURPOSE_MOTION_CLASS}/], TemplateElement[value.cooked=/${OFF_PURPOSE_MOTION_CLASS}/])`,
+		message: MOTION_CLASS_MESSAGE,
+	},
+	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${BREAKPOINT_CLASS}/]`,
 		message: BREAKPOINT_MESSAGE,
 	},
@@ -392,10 +403,52 @@ const restrictions = {
 	],
 }
 
+// 組み立ての綴りは4通りある。1つだけを見ると残りが抜け道になるので、同じ判定で見る
+const DOM_CREATE =
+	'create(?:Element(?:NS)?|TextNode|DocumentFragment|Comment|Attribute(?:NS)?|ContextualFragment)'
+const DOM_CLONE = 'cloneNode|importNode|adoptNode'
+// append は URLSearchParams / FormData / Headers も持つ名前なので、受け手を見ないここでは外す
+const DOM_INSERT =
+	'appendChild|insertBefore|insertNode|replaceChild|replaceChildren|insertAdjacent(?:Element|Text|HTML)|prepend|before|after|replaceWith'
+const DOM_FROM_STRING = 'parseFromString|parseHTML(?:Unsafe)?|setHTML(?:Unsafe)?'
+const DOM_ASSEMBLY_METHOD = `/^(?:${DOM_CREATE}|${DOM_CLONE}|${DOM_INSERT}|${DOM_FROM_STRING})$/`
+// new で作る要素。document を経由しないので、上の呼び出しの綴りには出ない
+const DOM_CONSTRUCTOR = '/^(?:Image|Option|Audio|Text|Comment|DocumentFragment|DOMParser)$/'
+// テンプレートを介さず描く経路。auto-import されるので import にも現れない
+const VNODE =
+	'/^(?:h|createVNode|createElementVNode|createElementBlock|createTextVNode|createCommentVNode|createStaticVNode|cloneVNode|createApp|defineComponent)$/'
+const HTML_SINK = '/^(?:inner|outer)HTML$/'
+
+const DOM_ASSEMBLY = [
+	{
+		selector: `CallExpression:matches([callee.property.name=${DOM_ASSEMBLY_METHOD}], [callee.property.value=${DOM_ASSEMBLY_METHOD}])`,
+		message: DOM_ASSEMBLY_MESSAGE,
+	},
+	{
+		selector: `NewExpression[callee.name=${DOM_CONSTRUCTOR}]`,
+		message: DOM_ASSEMBLY_MESSAGE,
+	},
+	{
+		selector: `CallExpression[callee.name=${VNODE}]`,
+		message: DOM_ASSEMBLY_MESSAGE,
+	},
+	// 読み取りは通すので、代入だけを見る
+	{
+		selector: `AssignmentExpression:matches([left.property.name=${HTML_SINK}], [left.property.value=${HTML_SINK}])`,
+		message: DOM_ASSEMBLY_MESSAGE,
+	},
+	// write は clipboard にも stream にもあるので、document に呼ぶものだけを見る
+	{
+		selector: `CallExpression[callee.object.name='document'][callee.property.name=/^write(?:ln)?$/]`,
+		message: DOM_ASSEMBLY_MESSAGE,
+	},
+]
+
 // 404 はページ側の判定を受けて composable が送出するので、ここでは落とさない
 const CALLED_LAYER_SYNTAX = [
 	...restrictions['no-restricted-syntax'].slice(1),
 	...ROUTE_ACCESS,
+	...DOM_ASSEMBLY,
 	{
 		selector: `Program:has(> ${REEXPORT}):not(:has(> :not(:matches(ImportDeclaration, ${REEXPORT}))))`,
 		message: BARREL_MESSAGE,
@@ -504,6 +557,16 @@ export default [
 		files: withTest('app/composables/**/*.ts', 'app/utils/**/*.ts'),
 		rules: {
 			'no-restricted-syntax': ['error', ...CALLED_LAYER_SYNTAX],
+		},
+	},
+	{
+		// 読む対象の DOM を組み立てるのはテストの仕事。実装側に課す判定だけを外す
+		files: ['tests/app/composables/**/*.ts', 'tests/app/utils/**/*.ts'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				...CALLED_LAYER_SYNTAX.filter((rule) => !DOM_ASSEMBLY.includes(rule)),
+			],
 		},
 	},
 	{

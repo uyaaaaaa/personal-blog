@@ -64,6 +64,18 @@ describe('check-css', () => {
 		expect(check().status).toBe(0)
 	})
 
+	it('用途に決めた長さでないモーションを落とす', () => {
+		write('a.css', '.a {\n\ttransition: color 0.42s;\n}\n')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/決めた長さではない/)
+	})
+
+	it('用途に決めた長さのモーションは通す', () => {
+		write('a.css', '.a {\n\ttransition: color 0.15s;\n\tanimation: spin 0.2s;\n}\n')
+		expect(check().status).toBe(0)
+	})
+
 	it('大文字の綴りと、入れ子にした at-rule も落とす', () => {
 		write(
 			'a.css',

@@ -23,7 +23,7 @@
 							v-for="tag in page.tags"
 							:key="tag"
 							:to="`/tags/${tagToSlug(tag)}`"
-							class="transition-colors hover:text-accent"
+							class="transition-color hover:text-accent"
 							>#{{ tag }}</NuxtLink
 						>
 					</div>
