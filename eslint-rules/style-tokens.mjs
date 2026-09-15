@@ -3,7 +3,7 @@ import resolveConfig from 'tailwindcss/resolveConfig.js'
 import { colors, durations, fontFamily, motionProperties, sizes } from '../theme/tokens.ts'
 
 export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
-export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
+export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#原則`
 export const BREAKPOINT_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#原則`
 export const INVARIANT_URL = `${DOCS_URL}/ARCHITECTURE.md#不変条件`
 
