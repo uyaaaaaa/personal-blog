@@ -1,12 +1,9 @@
-// collection は article の1つだけなので、引数は見ない。名前を変数で渡しても当たる。
-// 綴りは4つあり、queryCollection 以外の3つも where を継げる（@nuxt/content の ChainablePromise）
+// collection を引く綴りは4つあり、queryCollection 以外の3つも where を継げる（@nuxt/content）
 const QUERY = /^queryCollection/
 const PUBLISHED = 'published'
-// 群は入れ子にできる（CollectionQueryGroup）。中の where も群を呼んだ鎖に属する。
-// orWhere は群の中を OR で繋ぐので、中の published は他の条件で迂回される。数えるのは andWhere だけ
+// orWhere は群の中を OR で繋ぐので、中の published は隣の条件で迂回される（@nuxt/content）
 const GROUP = 'andWhere'
 
-// 型の表明（`!` `as`）は式を包むだけで、受け手は中の式のまま。辿る前に剥がす
 const ASSERTION = new Set([
 	'TSNonNullExpression',
 	'TSAsExpression',
@@ -28,7 +25,6 @@ const isQuery = (node) =>
 	node.callee.type === 'Identifier' &&
 	QUERY.test(node.callee.name)
 
-// 鎖の根。`a.b().c()` の receiver を下に辿ると、鎖を始めた呼び出しに着く
 const root = (call) => {
 	let node = call
 	while (node?.type === 'CallExpression' && node.callee.type === 'MemberExpression')
@@ -36,14 +32,12 @@ const root = (call) => {
 	return node
 }
 
-// 表明を挟んだ親を飛ばして、包んでいる呼び出しに出る
 const holder = (node) => {
 	let it = node.parent
 	while (it && ASSERTION.has(it.type)) it = it.parent
 	return it
 }
 
-// 群の関数の中から、その群を呼んだ側へ出る
 const groupCall = (node) => {
 	for (let it = node; it; it = it.parent) {
 		if (it.type !== 'FunctionExpression' && it.type !== 'ArrowFunctionExpression') continue
@@ -57,7 +51,6 @@ const groupCall = (node) => {
 	return null
 }
 
-// 公開制御が属するクエリ。鎖の根が束縛（変数・引数）なら、辿る先は無い
 const queryOf = (call) => {
 	const base = root(call)
 	if (isQuery(base)) return base
@@ -66,7 +59,6 @@ const queryOf = (call) => {
 	return group === null ? null : queryOf(group)
 }
 
-// 値として書いた 'published' と混ざらないよう、where の第1引数だけを見る
 const filtersPublished = (call) =>
 	methodName(call.callee) === 'where' && call.arguments[0]?.value === PUBLISHED
 
