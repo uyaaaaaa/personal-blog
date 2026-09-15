@@ -64,6 +64,10 @@ const styleObject = (key) =>
 const outlineValue = (value) =>
 	`:matches(Literal[value=/${value}/i], TemplateElement[value.cooked=/${value}/i]):not(BinaryExpression > *)`
 
+// 規則の並びとして読める文字列は style/* が組み立てたスタイルシートとして読む。
+// ここで見るのは宣言・引数・クラス名に現れる綴りだけなので、波括弧（\x7b）を持つ文字列は外す
+const outsideStylesheet = (spelling) => `^(?![\\s\\S]*\\x7b)[\\s\\S]*?(?:${spelling})`
+
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
 
 const STDIN_MESSAGE =
@@ -135,11 +139,11 @@ const PAGE_SCROLL = [
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 	{
-		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_PROPERTY}/i], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_PROPERTY}/i])`,
+		selector: `:matches(Literal[value=/${outsideStylesheet(SCROLL_BEHAVIOR_PROPERTY)}/i], TemplateElement[value.cooked=/${outsideStylesheet(SCROLL_BEHAVIOR_PROPERTY)}/i])`,
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 	{
-		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_CLASS}/], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_CLASS}/])`,
+		selector: `:matches(Literal[value=/${outsideStylesheet(SCROLL_BEHAVIOR_CLASS)}/], TemplateElement[value.cooked=/${outsideStylesheet(SCROLL_BEHAVIOR_CLASS)}/])`,
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 ]
@@ -162,7 +166,7 @@ const WEB_FONT = [
 	{
 		// 1つの selector にまとめる。分けると両方に当たる文字列が2回報告される
 		selector: [
-			`:matches(Literal[value=/${WEB_FONT_RESOURCE}/i], TemplateElement[value.cooked=/${WEB_FONT_RESOURCE}/i])`,
+			`:matches(Literal[value=/${outsideStylesheet(WEB_FONT_RESOURCE)}/i], TemplateElement[value.cooked=/${outsideStylesheet(WEB_FONT_RESOURCE)}/i])`,
 			// フォントを読み込むモジュール（@nuxt/fonts 等）と、設定が並べる指定子。名前で見る
 			':matches(ImportDeclaration, ImportExpression) > Literal[value=/font/i]',
 			// typography の css は配列を持たないので当たらない
@@ -323,7 +327,7 @@ const TEMPLATE_RESTRICTIONS = [
 		message: WEB_FONT_MESSAGE,
 	},
 	{
-		selector: `VAttribute[directive=true] :matches(Literal[value=/${WEB_FONT_RESOURCE}/i], TemplateElement[value.cooked=/${WEB_FONT_RESOURCE}/i])`,
+		selector: `VAttribute[directive=true] :matches(Literal[value=/${outsideStylesheet(WEB_FONT_RESOURCE)}/i], TemplateElement[value.cooked=/${outsideStylesheet(WEB_FONT_RESOURCE)}/i])`,
 		message: WEB_FONT_MESSAGE,
 	},
 ]
@@ -379,17 +383,15 @@ const restrictions = {
 				'onunload / onbeforeunload は使わない。bfcache を壊すので、離脱時の処理は pagehide か visibilitychange に置く。',
 		},
 		{
-			selector:
-				':matches(Literal[value=/prefers-reduced-motion/], TemplateElement[value.cooked=/prefers-reduced-motion/])',
+			selector: `:matches(Literal[value=/${outsideStylesheet('prefers-reduced-motion')}/], TemplateElement[value.cooked=/${outsideStylesheet('prefers-reduced-motion')}/])`,
 			message: REDUCED_MOTION_MESSAGE,
 		},
 		{
-			selector:
-				':matches(Literal[value=/prefers-color-scheme/], TemplateElement[value.cooked=/prefers-color-scheme/])',
+			selector: `:matches(Literal[value=/${outsideStylesheet('prefers-color-scheme')}/], TemplateElement[value.cooked=/${outsideStylesheet('prefers-color-scheme')}/])`,
 			message: COLOR_SCHEME_MESSAGE,
 		},
 		{
-			selector: `:matches(Literal[value=/${BREAKPOINT_MEDIA}/i], TemplateElement[value.cooked=/${BREAKPOINT_MEDIA}/i])`,
+			selector: `:matches(Literal[value=/${outsideStylesheet(BREAKPOINT_MEDIA)}/i], TemplateElement[value.cooked=/${outsideStylesheet(BREAKPOINT_MEDIA)}/i])`,
 			message: BREAKPOINT_MESSAGE,
 		},
 		...SCROLL_SUBSCRIPTION,

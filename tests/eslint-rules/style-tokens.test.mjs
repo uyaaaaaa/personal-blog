@@ -680,18 +680,16 @@ describe('no-web-font', () => {
 		})
 	})
 
-	// 本体を持たない at-rule も規則の並びとして読む。フォントの資源の綴りは
-	// no-restricted-syntax に寄せたので、ここに残るのは @import と @font-face
+	// 本体を持たない at-rule も規則の並びとして読む
 	it('script が組み立てた @import と @font-face を落とす', () => {
 		tester.run('no-web-font', styleTokens.rules['no-web-font'], {
-			valid: [
+			valid: [{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") }],
+			invalid: [
 				{
 					filename: 'a.vue',
 					code: script('sheet.insertRule(\'@font-face { src: url("/x.woff2"); }\')'),
+					errors: [{ messageId: 'webFont' }],
 				},
-				{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") },
-			],
-			invalid: [
 				{
 					filename: 'a.vue',
 					code: script('sheet.insertRule(\'@import url("/theme.css")\')'),
@@ -796,6 +794,21 @@ describe('no-theme-branch', () => {
 						'@media (prefers-color-scheme: dark) { .a { color: var(--color-sub); } }',
 					),
 					errors: [{ messageId: 'colorScheme' }],
+				},
+			],
+		})
+	})
+	// 綴りが1つ当たっても、同じ文字列の残りの規則は読む
+	it('script が組み立てたスタイルシートを規則ごとに読む', () => {
+		tester.run('no-theme-branch', styleTokens.rules['no-theme-branch'], {
+			valid: [{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") }],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script(
+						"sheet.insertRule('@media (prefers-color-scheme: dark) { .a { top: 0; } } .dark .b { top: 0; }')",
+					),
+					errors: [{ messageId: 'themeBranch' }, { messageId: 'colorScheme' }],
 				},
 			],
 		})
@@ -923,16 +936,18 @@ describe('no-scroll-behavior', () => {
 		})
 	})
 
-	// 同じ綴りを no-restricted-syntax が Literal から読むので、ここからは読まない
-	it('script が組み立てたスタイルシートは読まない', () => {
+	it('script が組み立てたスタイルシートも同じ判定で落とす', () => {
 		tester.run('no-scroll-behavior', styleTokens.rules['no-scroll-behavior'], {
 			valid: [
+				{ filename: 'a.vue', code: script("sheet.insertRule('.a { overflow: auto; }')") },
+			],
+			invalid: [
 				{
 					filename: 'a.vue',
 					code: script("sheet.insertRule('html { scroll-behavior: smooth; }')"),
+					errors: [{ messageId: 'scrollBehavior' }],
 				},
 			],
-			invalid: [],
 		})
 	})
 })
@@ -1013,6 +1028,12 @@ describe('no-display-none', () => {
 				{
 					filename: 'a.vue',
 					code: script("el.style.cssText = 'display: none'"),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				// 宣言の並びとして読めない綴りは、書き込みの値でもスタイルシートとして読む
+				{
+					filename: 'a.vue',
+					code: script("el.style.cssText = '.a { @apply hidden; }'"),
 					errors: [{ messageId: 'displayNone' }],
 				},
 				{

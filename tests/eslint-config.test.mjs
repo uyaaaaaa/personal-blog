@@ -667,6 +667,18 @@ describe('色と書体の単一情報源', () => {
 		).toBe(1)
 	})
 
+	// 綴りを読む側が届かない経路。寄せると検査が黙って抜ける
+	it('綴りを読む側が届かない経路でも落とす', async () => {
+		const SHEET = "sheet.insertRule('@media (prefers-color-scheme: dark) { .a { top: 0; } }')"
+		expect(await themeBranchesIn('app/pages/a.vue', sfc(`<div @click="${SHEET}" />`))).toBe(1)
+		expect(
+			await landingsIn(
+				'app/composables/useScrollTo.ts',
+				"sheet.insertRule('html { scroll-behavior: smooth; }')",
+			),
+		).toBe(1)
+	})
+
 	// フォントの資源の綴りを持たない読み込みは、組み立てたスタイルシートからしか見えない
 	it('script が組み立てた @import を落とす', async () => {
 		expect(

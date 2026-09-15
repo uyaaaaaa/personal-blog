@@ -462,17 +462,6 @@ const RESET_OUTLINE_VALUE = new RegExp(OUTLINE_RESET_VALUE, 'i')
 const OUTLINE_REMOVAL = new RegExp(OUTLINE_REMOVAL_CLASS)
 const OFF_TOKEN_FONT = new RegExp(OFF_TOKEN_FONT_CLASS)
 
-// 同じ綴りを no-restricted-syntax が script の Literal から読む判定。そちらが先に見るので、
-// 組み立てたスタイルシートからは読まずに報告を一方へ寄せる。綴りで取れない側（.dark の
-// セレクタ・@font-face・@import）はここに載らないので、判定はスタイルシートから残る
-const SPELLED_IN_SCRIPT = {
-	'no-scroll-behavior': new RegExp(`${SCROLL_BEHAVIOR_PROPERTY}|${SCROLL_BEHAVIOR_CLASS}`, 'i'),
-	'no-reduced-motion': REDUCED_MOTION,
-	'no-theme-branch': COLOR_SCHEME,
-	'no-web-font': new RegExp(WEB_FONT_RESOURCE, 'i'),
-	'no-custom-breakpoint': new RegExp(BREAKPOINT_MEDIA, 'i'),
-}
-
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
 const CHECKS = {
 	'no-untokenized-size': {
@@ -720,19 +709,21 @@ export function findings(root) {
 		.sort((a, b) => a.line - b.line || a.column - b.column)
 }
 
-const ruleOf = (name, check) => ({
+const ruleOf = (check) => ({
 	meta: { type: 'problem', schema: [], messages: check.messages },
 	create(context) {
 		const report = (text, node) => {
-			for (const found of check.fromAttribute(text)) {
-				context.report({ loc: node.loc, ...found })
+			const found = check.fromAttribute(text)
+			for (const one of found) {
+				context.report({ loc: node.loc, ...one })
 			}
+			return found.length > 0
 		}
-		const spelled = SPELLED_IN_SCRIPT[name]
-		// 宣言の並びとして読んだ値。ESLint は親から歩くので、書き込みの方が先に入れる
-		const written = new Set()
+		// 宣言の並びとして報告済みの値。同じ綴りをスタイルシートとして読み直さない。
+		// ESLint は親から歩くので、書き込みの方が先に入れる
+		const reported = new Set()
 		const reportSheet = (text, node) => {
-			if (written.has(node) || spelled?.test(text)) return
+			if (reported.has(node)) return
 			for (const root of stylesheetsIn(text))
 				for (const { messageId, data } of check.find(root)) {
 					context.report({ loc: node.loc, messageId, data })
@@ -740,8 +731,7 @@ const ruleOf = (name, check) => ({
 		}
 		const write = (node) => {
 			for (const { text, node: value } of styleWrites(node)) {
-				written.add(value)
-				report(text, value)
+				if (report(text, value)) reported.add(value)
 			}
 		}
 		// 組み立てたスタイルシートは綴りで取れない判定が読む。宣言の並びを読む判定は要素への書き込みも見る
@@ -774,7 +764,5 @@ const ruleOf = (name, check) => ({
 })
 
 export default {
-	rules: Object.fromEntries(
-		Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(name, check)]),
-	),
+	rules: Object.fromEntries(Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(check)])),
 }
