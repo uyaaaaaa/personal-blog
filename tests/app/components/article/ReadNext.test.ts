@@ -3,8 +3,6 @@ import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ReadNext from '~/components/article/ReadNext.vue'
 
-// queryCollection は Nuxt Content の SQLite を開く。ここで測りたいのは取得した一覧に
-// 対する描画なので、チェーンをそのまま返すだけのスタブに差し替えて取得先を切る
 const { published } = vi.hoisted(() => ({ published: vi.fn() }))
 
 mockNuxtImport('queryCollection', () => () => {

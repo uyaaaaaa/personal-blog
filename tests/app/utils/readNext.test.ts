@@ -3,7 +3,6 @@ import { readNextArticles } from '~/utils/readNext'
 
 const article = (path: string, category = 'blog') => ({ path, category })
 
-// 新しい順に並んだ一覧を受け取る前提なので、添字の小さいものほど新しい
 const blog = ['/b0', '/b1', '/b2', '/b3'].map((path) => article(path))
 
 describe('readNextArticles', () => {
