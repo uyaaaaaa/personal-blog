@@ -22,9 +22,9 @@ const anchorOf = (heading) =>
 	heading
 		.replace(MARKDOWN_LINK, '$1')
 		.toLowerCase()
-		.replace(ANCHOR_DROPPED, '')
 		.trim()
-		.replaceAll(/\s+/g, '-')
+		.replace(ANCHOR_DROPPED, '')
+		.replaceAll(' ', '-')
 
 const anchorsOf = (source) => {
 	const anchors = new Set()
@@ -68,8 +68,14 @@ if (urls.length === 0) {
 const errors = []
 const cached = new Map()
 
-const anchors = (path) => {
-	if (!cached.has(path)) cached.set(path, anchorsOf(readFileSync(join(ROOT, path), 'utf8')))
+const read = (path) => {
+	if (!cached.has(path)) {
+		try {
+			cached.set(path, { anchors: anchorsOf(readFileSync(join(ROOT, path), 'utf8')) })
+		} catch (error) {
+			cached.set(path, { unreadable: error.message })
+		}
+	}
 	return cached.get(path)
 }
 
@@ -80,7 +86,11 @@ for (const url of urls) {
 		continue
 	}
 	if (fragment === undefined) continue
-	if (!anchors(target).has(fragment)) {
+
+	const { anchors, unreadable } = read(target)
+	if (unreadable !== undefined) {
+		errors.push(`${url}: ${target} を読み取れない（${unreadable}）`)
+	} else if (!anchors.has(fragment)) {
 		errors.push(`${url}: ${target} に #${fragment} に当たる見出しが無い`)
 	}
 }

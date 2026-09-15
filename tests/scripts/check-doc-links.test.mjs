@@ -55,6 +55,19 @@ it('見出しの消えた案内を落とす', () => {
 	expect(stderr).toMatch(/#原則 に当たる見出しが無い/)
 })
 
+it('空白を1つずつハイフンにする GitHub のアンカーに揃える', () => {
+	guideline('## 原則 / 守る線', '', '値は名前で書く。')
+	config(`色の直値は書かない。 ${GUIDELINE}#原則--守る線`)
+	expect(check().status).toBe(0)
+})
+
+it('読み取れない行き先を落とす', () => {
+	config(`色の直値は書かない。 ${REPO_URL}docs#原則`)
+	const { status, stderr } = check()
+	expect(status).toBe(1)
+	expect(stderr).toMatch(/docs を読み取れない/)
+})
+
 it('ファイルの消えた案内を落とす', () => {
 	rmSync(join(root, 'docs/DESIGN_GUIDELINE.md'))
 	const { status, stderr } = check()
