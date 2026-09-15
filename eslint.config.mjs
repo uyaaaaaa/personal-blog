@@ -378,14 +378,15 @@ const restrictions = {
 			message:
 				'onunload / onbeforeunload は使わない。bfcache を壊すので、離脱時の処理は pagehide か visibilitychange に置く。',
 		},
+		// メディア特性の名前は大小を区別しないので、外す側（style/*）と同じく /i で見る
 		{
 			selector:
-				':matches(Literal[value=/prefers-reduced-motion/], TemplateElement[value.cooked=/prefers-reduced-motion/])',
+				':matches(Literal[value=/prefers-reduced-motion/i], TemplateElement[value.cooked=/prefers-reduced-motion/i])',
 			message: REDUCED_MOTION_MESSAGE,
 		},
 		{
 			selector:
-				':matches(Literal[value=/prefers-color-scheme/], TemplateElement[value.cooked=/prefers-color-scheme/])',
+				':matches(Literal[value=/prefers-color-scheme/i], TemplateElement[value.cooked=/prefers-color-scheme/i])',
 			message: COLOR_SCHEME_MESSAGE,
 		},
 		{

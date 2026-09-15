@@ -16,6 +16,7 @@ const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
 const DISPLAY = /display: none を宣言に書かない/
 const CSS_IMPORT = /@import を書かない/
+const REDUCED_MOTION = /prefers-reduced-motion で分岐しない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -46,6 +47,11 @@ const importantsIn = async (relative, code) => {
 const singleSourcesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => SINGLE_SOURCE.test(message.message)).length
+}
+
+const reducedMotionsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => REDUCED_MOTION.test(message.message)).length
 }
 
 const cssImportsIn = async (relative, code) => {
@@ -683,6 +689,19 @@ describe('色と書体の単一情報源', () => {
 			await webFontsIn(
 				'app/utils/a.ts',
 				'sheet.insertRule(\'@import url("https://fonts.googleapis.com/css2")\')',
+			),
+		).toBe(1)
+		// メディア特性の名前は大小を区別しない。外す側と読む側で揃っていないと両方から外れる
+		expect(
+			await themeBranchesIn(
+				'app/utils/a.ts',
+				"sheet.insertRule('@media (Prefers-Color-Scheme: dark) { .a { top: 0; } }')",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/utils/a.ts',
+				"sheet.insertRule('@media (Prefers-Reduced-Motion: reduce) { .a { top: 0; } }')",
 			),
 		).toBe(1)
 	})
