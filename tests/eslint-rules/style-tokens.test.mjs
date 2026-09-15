@@ -356,6 +356,61 @@ describe('no-color-literal', () => {
 		})
 	})
 
+	it('script が組み立てたスタイルシートの色も宣言と同じ判定で落とす', () => {
+		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
+			valid: [
+				{ filename: 'a.vue', code: script("sheet.insertRule('.a { display: flex; }')") },
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('.a { color: var(--color-main); }')"),
+				},
+				// 規則を持たない綴りはスタイルシートではない
+				{ filename: 'a.vue', code: script("el.setAttribute('title', 'tomato')") },
+				{ filename: 'a.vue', code: script("const url = 'https://example.com/?q=tomato'") },
+				{ filename: 'a.vue', code: script('const json = \'{ "color": "tomato" }\'') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('.a { color: tomato; }')"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("tag.textContent = '.a { color: #ff0000; }'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("tag.innerHTML = '.a { color: tomato; }'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				// 書き込み先を数えないので、束縛越しに組み立てても当たる
+				{
+					filename: 'a.vue',
+					code: script("const css = '.a { color: tomato; }'\ntag.textContent = css"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script('sheet.replaceSync(`.a { color: tomato; }`)'),
+					errors: [{ messageId: 'literal' }],
+				},
+				// HTML ごと書く経路では <style> の中身だけが CSS
+				{
+					filename: 'a.vue',
+					code: script("tag.innerHTML = '<style>.a { color: tomato; }</style>'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: handler("sheet.insertRule('.a { color: tomato; }')"),
+					errors: [{ messageId: 'literal' }],
+				},
+			],
+		})
+	})
+
 	it('style 属性の色も宣言と同じ判定で落とす', () => {
 		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
 			valid: [
@@ -488,6 +543,36 @@ describe('no-font-literal', () => {
 				{
 					filename: 'a.vue',
 					code: script("Object.assign(el.style, { fontFamily: 'Georgia' })"),
+					errors: [{ messageId: 'literal' }],
+				},
+			],
+		})
+	})
+
+	it('script が組み立てたスタイルシートの書体も宣言と同じ判定で落とす', () => {
+		tester.run('no-font-literal', styleTokens.rules['no-font-literal'], {
+			valid: [
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('.a { font-family: var(--font-mono); }')"),
+				},
+				{ filename: 'a.vue', code: script("sheet.insertRule('.a { font-weight: 600; }')") },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('.a { font-family: Georgia; }')"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("tag.textContent = '.a { font: bold 1rem Verdana; }'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				// 規則でなくとも、本体を持つ at-rule は同じ並びとして読む
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('@font-face { font-family: Georgia; }')"),
 					errors: [{ messageId: 'literal' }],
 				},
 			],
@@ -781,6 +866,22 @@ describe('no-scroll-behavior', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('.a { @apply md:scroll-auto; }'),
+					errors: [{ messageId: 'scrollBehavior' }],
+				},
+			],
+		})
+	})
+
+	// <style> しか読まない判定も、組み立てたスタイルシートには当たる
+	it('script が組み立てたスタイルシートも同じ判定で落とす', () => {
+		tester.run('no-scroll-behavior', styleTokens.rules['no-scroll-behavior'], {
+			valid: [
+				{ filename: 'a.vue', code: script("sheet.insertRule('.a { overflow: auto; }')") },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('html { scroll-behavior: smooth; }')"),
 					errors: [{ messageId: 'scrollBehavior' }],
 				},
 			],

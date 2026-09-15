@@ -8,7 +8,6 @@ import styleTokens, {
 	BREAKPOINT_URL,
 	BREAKPOINT_WIDTHS,
 	COLOR_SCHEME_MESSAGE,
-	DECLARATION_RULES,
 	DOCS_URL,
 	FONT_CLASS_MESSAGE,
 	INVARIANT_URL,
@@ -32,9 +31,9 @@ import styleTokens, {
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
 
-// 宣言を読む判定は script が要素のスタイルに書く経路にも当たるので、.vue の外でも通す
-const declarationRules = Object.fromEntries(
-	DECLARATION_RULES.map((name) => [`style/${name}`, 'error']),
+// どの判定も script が書く綴り（要素のスタイル・組み立てたスタイルシート）に当たるので、.vue の外でも通す
+const styleRules = Object.fromEntries(
+	Object.keys(styleTokens.rules).map((name) => [`style/${name}`, 'error']),
 )
 
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
@@ -438,7 +437,7 @@ export default [
 		},
 		rules: {
 			...restrictions,
-			...declarationRules,
+			...styleRules,
 			'imports/order': 'error',
 			'no-restricted-syntax': [
 				...restrictions['no-restricted-syntax'],
@@ -470,14 +469,7 @@ export default [
 					ignorePatterns: ['Nuxt[A-Z]\\w*', 'ContentRenderer'],
 				},
 			],
-			...declarationRules,
-			'style/no-important': 'error',
-			'style/no-reduced-motion': 'error',
-			'style/no-custom-breakpoint': 'error',
-			'style/no-web-font': 'error',
-			'style/no-theme-branch': 'error',
-			'style/no-outline-removal': 'error',
-			'style/no-scroll-behavior': 'error',
+			...styleRules,
 			'roots/render-only': 'error',
 			// 並びが eslint-disable の届く先を決めるので、見た目ではなく抑制のために固定する
 			'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],

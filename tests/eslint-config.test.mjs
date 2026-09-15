@@ -619,6 +619,27 @@ describe('色と書体の単一情報源', () => {
 		).toBe(0)
 	})
 
+	it('script が組み立てたスタイルシートの色と書体を .vue の外でも落とす', async () => {
+		expect(
+			await singleSourcesIn(
+				'app/composables/useA.ts',
+				"sheet.insertRule('.a { color: tomato; font-family: Georgia; }')",
+			),
+		).toBe(2)
+		expect(
+			await singleSourcesIn('app/utils/a.ts', "tag.textContent = '.a { color: #ff0000; }'"),
+		).toBeGreaterThan(0)
+		expect(
+			await singleSourcesIn(
+				'app/utils/a.ts',
+				"tag.innerHTML = '.a { font-family: Georgia; }'",
+			),
+		).toBeGreaterThan(0)
+		expect(
+			await singleSourcesIn('app/utils/a.ts', "sheet.insertRule('.a { display: flex; }')"),
+		).toBe(0)
+	})
+
 	it('<style> と .css と同じ判定で見る', async () => {
 		const style = `<style scoped>.a { font-family: 'Comic Sans MS'; }</style>`
 		expect(

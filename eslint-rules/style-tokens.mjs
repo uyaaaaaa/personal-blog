@@ -399,6 +399,34 @@ function* styleWrites(node) {
 	}
 }
 
+// HTML ごと書く経路（innerHTML・document.write）では、CSS として読めるのは <style> の中身だけ
+const STYLE_ELEMENT = /<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi
+
+// script が組み立てたスタイルシート。insertRule・textContent・innerHTML のような書き込み先を
+// 数えると数え落とした先と束縛越しの組み立てが抜け道になるので、綴りが本体を持つ規則の並びと
+// して読めるかで見る。本体を持たない文字列は宣言の並びか CSS でない綴りで、前者は style 属性が見る
+function* stylesheetsIn(text) {
+	if (!text.includes('{')) return
+	const bodies = [...text.matchAll(STYLE_ELEMENT)].map(([, body]) => body)
+	for (const candidate of [text, ...bodies]) {
+		let root
+		try {
+			root = postcss.parse(candidate, { from: undefined })
+		} catch {
+			continue
+		}
+		let hasBlock = false
+		// 本体を持たない at-rule（@import url(...)）は規則の並びではない。
+		// それが読む先は no-restricted-syntax が資源の綴りで塞ぐ
+		const mark = (node) => {
+			if (node.nodes) hasBlock = true
+		}
+		root.walkRules(mark)
+		root.walkAtRules(mark)
+		if (hasBlock) yield root
+	}
+}
+
 const REDUCED_MOTION = /prefers-reduced-motion/i
 const MEDIA_CONDITION = /\(([^()]*)\)/g
 const WIDTH_FEATURE = /\bwidth\b/i
@@ -678,7 +706,27 @@ const ruleOf = (check) => ({
 				context.report({ loc: node.loc, ...found })
 			}
 		}
-		const visitors = {
+		const reportSheet = (text, node) => {
+			for (const root of stylesheetsIn(text))
+				for (const { messageId, data } of check.find(root)) {
+					context.report({ loc: node.loc, messageId, data })
+				}
+		}
+		const write = (node) => {
+			for (const { text, node: value } of styleWrites(node)) report(text, value)
+		}
+		// 組み立てたスタイルシートはどの判定も読む。宣言の並びを読む判定だけが要素への書き込みに当たる
+		const inScript = {
+			Literal(node) {
+				if (typeof node.value === 'string') reportSheet(node.value, node)
+			},
+			TemplateElement(node) {
+				if (typeof node.value.cooked === 'string') reportSheet(node.value.cooked, node)
+			},
+			...(check.fromAttribute ? { AssignmentExpression: write, CallExpression: write } : {}),
+		}
+		const script = {
+			...inScript,
 			Program() {
 				eachStyleBlock(context, (root, locate) => {
 					for (const { node, messageId, data } of check.find(root)) {
@@ -689,24 +737,12 @@ const ruleOf = (check) => ({
 				eachStyleAttribute(context, report)
 			},
 		}
-		if (!check.fromAttribute) return visitors
-
-		const write = (node) => {
-			for (const { text, node: value } of styleWrites(node)) report(text, value)
-		}
-		const script = { ...visitors, AssignmentExpression: write, CallExpression: write }
 		// 素の visitor は <script> しか歩かない。行内ハンドラは template 側に渡して同じ判定に通す
 		const services = context.sourceCode.parserServices ?? context.parserServices
 		if (!services?.defineTemplateBodyVisitor) return script
-		return services.defineTemplateBodyVisitor(
-			{ AssignmentExpression: write, CallExpression: write },
-			script,
-		)
+		return services.defineTemplateBodyVisitor(inScript, script)
 	},
 })
-
-// 宣言を読む判定。style 属性と script の書き込みを見るので、.vue の外でも要る
-export const DECLARATION_RULES = Object.keys(CHECKS).filter((name) => CHECKS[name].fromAttribute)
 
 export default {
 	rules: Object.fromEntries(Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(check)])),
