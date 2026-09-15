@@ -151,6 +151,141 @@ describe('no-reduced-motion', () => {
 	})
 })
 
+describe('no-off-purpose-motion', () => {
+	it('用途に決めた長さだけを通す', () => {
+		tester.run('no-off-purpose-motion', styleTokens.rules['no-off-purpose-motion'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { transition: color 0.15s ease; }') },
+				// 同じ長さの別の綴り
+				{ filename: 'a.vue', code: sfc('.a { transition: background-color 150ms; }') },
+				{ filename: 'a.vue', code: sfc('.a { transition: border-top-color 0.15s; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: color 0.15s, transform 0.2s; }'),
+				},
+				// 動かさない 0 は、どの用途でも通す
+				{
+					filename: 'a.vue',
+					code: sfc(
+						'.a { transition: opacity 0.2s ease-out, visibility 0s linear 0.2s; }',
+					),
+				},
+				// 緩急の関数が持つカンマと数は、区切りでも長さでもない
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { transition: none; }') },
+				// 関数の中の語は対象の名前ではない
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: transform 0.2s steps(4, end); }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { --panel: 0.2s; transition: opacity var(--panel); }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { animation: spin 0.2s linear; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition-property: opacity; transition-duration: 0.2s; }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-color md:transition-move; }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { border-radius: 0.2s; }') },
+				{ filename: 'a.vue', code: attribute('style="transition: opacity 0.2s"') },
+				{ filename: 'a.vue', code: script("el.style.transitionDuration = '0.2s'") },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: color 0.2s; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: opacity 0.16s ease-out; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: border-top-color 0.2s; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: grid-template-rows 0.25s ease-in-out; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: all 0.3s ease-in-out; }'),
+					errors: [{ messageId: 'mixed' }],
+				},
+				// 対象を書かない短縮形は all と同じ
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: 0.2s ease; }'),
+					errors: [{ messageId: 'mixed' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: 0.2s steps(4, end); }'),
+					errors: [{ messageId: 'mixed' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation: spin 0.42s; }'),
+					errors: [{ messageId: 'anyPurpose' }],
+				},
+				// var() で長さを渡す経路も塞ぐ
+				{
+					filename: 'a.vue',
+					code: sfc('.a { --panel: 0.42s; transition: opacity var(--panel); }'),
+					errors: [{ messageId: 'anyPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition-duration: 0.42s; }'),
+					errors: [{ messageId: 'anyPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply duration-200; }'),
+					errors: [{ messageId: 'motionClass' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-transform; }'),
+					errors: [{ messageId: 'motionClass' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute('style="transition: color 0.42s"'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: attribute(`:style="{ transitionDuration: '0.42s' }"`),
+					errors: [{ messageId: 'anyPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.style.transition = 'color 0.42s'"),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: handler("el.style.setProperty('transition', 'opacity 0.42s')"),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+			],
+		})
+	})
+})
+
 describe('no-custom-breakpoint', () => {
 	it('md と lg の境界だけを通す', () => {
 		tester.run('no-custom-breakpoint', styleTokens.rules['no-custom-breakpoint'], {

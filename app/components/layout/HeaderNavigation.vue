@@ -622,7 +622,6 @@
 		height: 2px;
 		background-color: var(--color-main);
 		border-radius: 2px;
-		transition: all 0.3s ease-in-out;
 	}
 
 	.mobile-menu-overlay {
@@ -638,8 +637,8 @@
 		visibility: hidden;
 		overflow: hidden;
 		transition:
-			opacity 0.3s ease-in-out,
-			visibility 0.3s ease-in-out;
+			opacity 0.2s ease-in-out,
+			visibility 0.2s ease-in-out;
 	}
 
 	.mobile-menu-overlay.is-open {
@@ -660,7 +659,7 @@
 		overflow-y: auto;
 		overscroll-behavior: contain;
 		transform: translateX(100%);
-		transition: transform 0.3s ease-in-out;
+		transition: transform 0.2s ease-in-out;
 	}
 
 	.mobile-menu-overlay.is-open .mobile-drawer {
@@ -725,8 +724,8 @@
 		text-decoration: none;
 		cursor: pointer;
 		transition:
-			background-color 0.2s,
-			color 0.2s;
+			background-color 0.15s,
+			color 0.15s;
 	}
 
 	.drawer-row:hover {
@@ -775,7 +774,7 @@
 	.drawer-collapse {
 		display: grid;
 		grid-template-rows: 0fr;
-		transition: grid-template-rows 0.25s ease-in-out;
+		transition: grid-template-rows 0.2s ease-in-out;
 	}
 
 	.drawer-collapse.is-open {
@@ -790,7 +789,7 @@
 		overflow: hidden;
 		border-left: 1px solid var(--color-border);
 		visibility: hidden;
-		transition: visibility 0.25s ease-in-out;
+		transition: visibility 0.2s ease-in-out;
 	}
 
 	.drawer-collapse.is-open .drawer-sublist {
@@ -805,8 +804,8 @@
 		color: var(--color-main);
 		text-decoration: none;
 		transition:
-			background-color 0.2s,
-			color 0.2s;
+			background-color 0.15s,
+			color 0.15s;
 	}
 
 	.drawer-subrow:hover {

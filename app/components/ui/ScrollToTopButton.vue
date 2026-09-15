@@ -4,7 +4,7 @@
 		type="button"
 		aria-label="Scroll to top"
 		:style="{ opacity }"
-		class="group fixed bottom-6 right-6 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface/90 text-sub shadow-sm backdrop-blur transition-colors hover:border-accent hover:text-accent lg:hidden"
+		class="group fixed bottom-6 right-6 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface/90 text-sub shadow-sm backdrop-blur transition-color hover:border-accent hover:text-accent lg:hidden"
 		@click="handleScrollToTop"
 	>
 		<svg
@@ -17,7 +17,7 @@
 			stroke-width="2"
 			stroke-linecap="round"
 			stroke-linejoin="round"
-			class="transition-transform duration-200 group-hover:-translate-y-0.5"
+			class="transition-move group-hover:-translate-y-0.5"
 		>
 			<polyline points="18 15 12 9 6 15" />
 		</svg>

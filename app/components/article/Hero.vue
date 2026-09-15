@@ -20,7 +20,7 @@
 			<h1 class="text-hero-sm font-bold text-main md:text-hero">
 				<NuxtLink
 					:to="article.path"
-					class="transition-colors hover:text-accent"
+					class="transition-color hover:text-accent"
 					prefetch-on="interaction"
 					>{{ article.title }}</NuxtLink
 				>

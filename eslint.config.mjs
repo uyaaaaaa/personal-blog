@@ -11,8 +11,9 @@ import styleTokens, {
 	DOCS_URL,
 	FONT_CLASS_MESSAGE,
 	INVARIANT_URL,
-	MOTION_URL,
+	MOTION_CLASS_MESSAGE,
 	OFF_BREAKPOINT_VARIANTS,
+	OFF_PURPOSE_MOTION_CLASS,
 	OFF_TOKEN_FONT_CLASS,
 	OUTLINE_REMOVAL_CLASS,
 	OUTLINE_REMOVAL_PROPERTY,
@@ -40,7 +41,8 @@ const styleRules = Object.fromEntries(
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/02-no-auto-import.md`
 
-const REDUCED_MOTION_MESSAGE = `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`
+const REDUCED_MOTION_MESSAGE =
+	'prefers-reduced-motion で分岐しない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ。'
 const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL}の2つだけ。他の境界を作らない。 ${BREAKPOINT_URL}`
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
 const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない。読み取りを useScrollFrame に渡し、アプリ全体で1本の購読に集約する。 ${INVARIANT_URL}`
@@ -249,6 +251,14 @@ const TEMPLATE_RESTRICTIONS = [
 	{
 		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${THEME_COLOR_CLASS}/], TemplateElement[value.cooked=/${THEME_COLOR_CLASS}/])`,
 		message: THEME_CLASS_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${OFF_PURPOSE_MOTION_CLASS}/]`,
+		message: MOTION_CLASS_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${OFF_PURPOSE_MOTION_CLASS}/], TemplateElement[value.cooked=/${OFF_PURPOSE_MOTION_CLASS}/])`,
+		message: MOTION_CLASS_MESSAGE,
 	},
 	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${BREAKPOINT_CLASS}/]`,
