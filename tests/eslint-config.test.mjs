@@ -665,16 +665,24 @@ describe('色と書体の単一情報源', () => {
 		expect(
 			await singleSourcesIn('app/utils/a.ts', "el.style.cssText = '.a { color: tomato; }'"),
 		).toBe(1)
-	})
-
-	// 綴りを読む側が届かない経路。寄せると検査が黙って抜ける
-	it('綴りを読む側が届かない経路でも落とす', async () => {
-		const SHEET = "sheet.insertRule('@media (prefers-color-scheme: dark) { .a { top: 0; } }')"
-		expect(await themeBranchesIn('app/pages/a.vue', sfc(`<div @click="${SHEET}" />`))).toBe(1)
+		// 補間で組み立てた断片は CSS として読めないので、綴りを読む側だけが見る
 		expect(
 			await landingsIn(
-				'app/composables/useScrollTo.ts',
-				"sheet.insertRule('html { scroll-behavior: smooth; }')",
+				'app/utils/a.ts',
+				'sheet.insertRule(`html { scroll-behavior: ${v}; }`)',
+			),
+		).toBe(1)
+		// 本体を持たない at-rule は両方が読める形
+		expect(
+			await themeBranchesIn(
+				'app/utils/a.ts',
+				"sheet.insertRule('@media (prefers-color-scheme: dark)')",
+			),
+		).toBe(1)
+		expect(
+			await webFontsIn(
+				'app/utils/a.ts',
+				'sheet.insertRule(\'@import url("https://fonts.googleapis.com/css2")\')',
 			),
 		).toBe(1)
 	})

@@ -680,16 +680,17 @@ describe('no-web-font', () => {
 		})
 	})
 
-	// 本体を持たない at-rule も規則の並びとして読む
+	// 本体を持たない at-rule も規則の並びとして読む。資源の綴りを持つものは綴りを読む側が報告する
 	it('script が組み立てた @import と @font-face を落とす', () => {
 		tester.run('no-web-font', styleTokens.rules['no-web-font'], {
-			valid: [{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") }],
-			invalid: [
+			valid: [
+				{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") },
 				{
 					filename: 'a.vue',
 					code: script('sheet.insertRule(\'@font-face { src: url("/x.woff2"); }\')'),
-					errors: [{ messageId: 'webFont' }],
 				},
+			],
+			invalid: [
 				{
 					filename: 'a.vue',
 					code: script('sheet.insertRule(\'@import url("/theme.css")\')'),
@@ -798,7 +799,7 @@ describe('no-theme-branch', () => {
 			],
 		})
 	})
-	// 綴りが1つ当たっても、同じ文字列の残りの規則は読む
+	// 綴りを持つ at-rule は外れても、綴りを持たない規則は読む
 	it('script が組み立てたスタイルシートを規則ごとに読む', () => {
 		tester.run('no-theme-branch', styleTokens.rules['no-theme-branch'], {
 			valid: [{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") }],
@@ -808,7 +809,7 @@ describe('no-theme-branch', () => {
 					code: script(
 						"sheet.insertRule('@media (prefers-color-scheme: dark) { .a { top: 0; } } .dark .b { top: 0; }')",
 					),
-					errors: [{ messageId: 'themeBranch' }, { messageId: 'colorScheme' }],
+					errors: [{ messageId: 'themeBranch' }],
 				},
 			],
 		})
@@ -936,18 +937,16 @@ describe('no-scroll-behavior', () => {
 		})
 	})
 
-	it('script が組み立てたスタイルシートも同じ判定で落とす', () => {
+	// 綴りを持つ宣言は no-restricted-syntax が JS の文字列から報告する（→ eslint-config のテスト）
+	it('組み立てたスタイルシートでも綴りを持つ宣言は読まない', () => {
 		tester.run('no-scroll-behavior', styleTokens.rules['no-scroll-behavior'], {
 			valid: [
-				{ filename: 'a.vue', code: script("sheet.insertRule('.a { overflow: auto; }')") },
-			],
-			invalid: [
 				{
 					filename: 'a.vue',
 					code: script("sheet.insertRule('html { scroll-behavior: smooth; }')"),
-					errors: [{ messageId: 'scrollBehavior' }],
 				},
 			],
+			invalid: [],
 		})
 	})
 })
