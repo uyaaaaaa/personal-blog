@@ -2,8 +2,9 @@
 // 綴りは4つあり、queryCollection 以外の3つも where を継げる（@nuxt/content の ChainablePromise）
 const QUERY = /^queryCollection/
 const PUBLISHED = 'published'
-// 群は入れ子にできる（CollectionQueryGroup）。中の where も群を呼んだ鎖に属する
-const GROUP = new Set(['andWhere', 'orWhere'])
+// 群は入れ子にできる（CollectionQueryGroup）。中の where も群を呼んだ鎖に属する。
+// orWhere は群の中を OR で繋ぐので、中の published は他の条件で迂回される。数えるのは andWhere だけ
+const GROUP = 'andWhere'
 
 const methodName = (callee) =>
 	callee.type === 'MemberExpression' ? (callee.property.name ?? callee.property.value) : null
@@ -27,7 +28,7 @@ const groupCall = (node) => {
 		if (it.type !== 'FunctionExpression' && it.type !== 'ArrowFunctionExpression') continue
 		const call = it.parent
 		if (call?.type !== 'CallExpression' || !call.arguments.includes(it)) return null
-		return GROUP.has(methodName(call.callee)) ? call : null
+		return methodName(call.callee) === GROUP ? call : null
 	}
 	return null
 }
