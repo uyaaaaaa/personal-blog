@@ -19,6 +19,8 @@ describe('published', () => {
 				"queryCollection('article').where('published', '=', true).select('tags').all()",
 				"queryCollection('article').path(path).where('published', '=', true).first()",
 				"queryCollectionNavigation('article').where('published', '=', true)",
+				"queryCollection('article').andWhere((group) => group.where('published', '=', true)).all()",
+				"queryCollection('article').orWhere((group) => group.andWhere((it) => it.where('published', '=', true))).all()",
 				'articles.filter(isRecent).slice(0, 3)',
 			],
 			invalid: [],
@@ -68,6 +70,18 @@ describe('published', () => {
 			invalid: [
 				{
 					code: "queryCollection('article').where('category', '=', 'published').all()",
+					errors: [{ messageId: 'published' }],
+				},
+			],
+		})
+	})
+
+	it('群の中に書いた別の条件では通さない', () => {
+		run({
+			valid: [],
+			invalid: [
+				{
+					code: "queryCollection('article').andWhere((group) => group.where('category', '=', 'blog')).all()",
 					errors: [{ messageId: 'published' }],
 				},
 			],

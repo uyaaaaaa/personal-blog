@@ -2,21 +2,43 @@
 // 綴りは4つあり、queryCollection 以外の3つも where を継げる（@nuxt/content の ChainablePromise）
 const QUERY = /^queryCollection/
 const PUBLISHED = 'published'
+// 群は入れ子にできる（CollectionQueryGroup）。中の where も群を呼んだ鎖に属する
+const GROUP = new Set(['andWhere', 'orWhere'])
 
 const methodName = (callee) =>
 	callee.type === 'MemberExpression' ? (callee.property.name ?? callee.property.value) : null
 
-// 鎖の続きを上に辿る。`.where()` は object から MemberExpression を経て CallExpression に上がる
-const chain = (query) => {
-	const links = []
-	for (let node = query; ;) {
-		const member = node.parent
-		if (member?.type !== 'MemberExpression' || member.object !== node) return links
-		const call = member.parent
-		if (call?.type !== 'CallExpression' || call.callee !== member) return links
-		links.push(call)
-		node = call
+const isQuery = (node) =>
+	node?.type === 'CallExpression' &&
+	node.callee.type === 'Identifier' &&
+	QUERY.test(node.callee.name)
+
+// 鎖の根。`a.b().c()` の receiver を下に辿ると、鎖を始めた呼び出しに着く
+const root = (call) => {
+	let node = call
+	while (node?.type === 'CallExpression' && node.callee.type === 'MemberExpression')
+		node = node.callee.object
+	return node
+}
+
+// 群の関数の中から、その群を呼んだ側へ出る
+const groupCall = (node) => {
+	for (let it = node; it; it = it.parent) {
+		if (it.type !== 'FunctionExpression' && it.type !== 'ArrowFunctionExpression') continue
+		const call = it.parent
+		if (call?.type !== 'CallExpression' || !call.arguments.includes(it)) return null
+		return GROUP.has(methodName(call.callee)) ? call : null
 	}
+	return null
+}
+
+// 公開制御が属するクエリ。鎖の根が束縛（変数・引数）なら、辿る先は無い
+const queryOf = (call) => {
+	const base = root(call)
+	if (isQuery(base)) return base
+
+	const group = groupCall(call)
+	return group === null ? null : queryOf(group)
 }
 
 // 値として書いた 'published' と混ざらないよう、where の第1引数だけを見る
@@ -33,12 +55,21 @@ const published = {
 		},
 	},
 	create(context) {
+		const queries = new Set()
+		const filtered = new Set()
+
 		return {
 			CallExpression(node) {
-				if (node.callee.type !== 'Identifier' || !QUERY.test(node.callee.name)) return
-				if (chain(node).some(filtersPublished)) return
+				if (isQuery(node)) queries.add(node)
+				if (!filtersPublished(node)) return
 
-				context.report({ node, messageId: 'published' })
+				const query = queryOf(node)
+				if (query !== null) filtered.add(query)
+			},
+			'Program:exit'() {
+				for (const query of queries)
+					if (!filtered.has(query))
+						context.report({ node: query, messageId: 'published' })
 			},
 		}
 	},
