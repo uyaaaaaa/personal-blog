@@ -186,7 +186,7 @@ const WIDTHS = BREAKPOINT_WIDTHS.join('|')
 const WIDTH_BY_LENGTH = `\\((?=[^()]*width)[^()]*?(?<![\\d.])(?!(?:${WIDTHS})\\b)\\d*\\.?\\d+[a-z%]+`
 // 組み立てた文字列は長さが別のリテラルに出るので、綴りからも見る
 const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))`
-export const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
+const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 
 // tokens の fontFamily が theme を上書きするので、残るのは Tailwind の既定の family だけ
 const OFF_TOKEN_FONTS = Object.keys(theme.fontFamily).filter((name) => !(name in fontFamily))
@@ -414,8 +414,6 @@ function* styleWrites(node) {
 
 const STYLE_ELEMENT = /<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi
 
-// 書き込み先（insertRule・textContent・innerHTML）を数えると、数え落とした先と束縛越しの
-// 組み立てが抜け道になるので、綴りが規則か at-rule として読めるかで見る
 function* stylesheetsIn(text) {
 	if (!text.includes('{') && !text.includes('@')) return
 	const bodies = [...text.matchAll(STYLE_ELEMENT)].map(([, body]) => body)
@@ -460,15 +458,20 @@ const RESET_OUTLINE_VALUE = new RegExp(OUTLINE_RESET_VALUE, 'i')
 const OUTLINE_REMOVAL = new RegExp(OUTLINE_REMOVAL_CLASS)
 const OFF_TOKEN_FONT = new RegExp(OFF_TOKEN_FONT_CLASS)
 
-// no-restricted-syntax が JS の文字列から読む綴り。その綴りを持つ宣言・at-rule は
-// あちらが報告するので、読めたものごとに外す
-const SPELLED_IN_SCRIPT = {
-	'no-scroll-behavior': new RegExp(`${SCROLL_BEHAVIOR_PROPERTY}|${SCROLL_BEHAVIOR_CLASS}`, 'i'),
-	'no-reduced-motion': REDUCED_MOTION,
-	'no-theme-branch': COLOR_SCHEME,
-	'no-web-font': new RegExp(WEB_FONT_RESOURCE, 'i'),
-	'no-custom-breakpoint': new RegExp(BREAKPOINT_MEDIA, 'i'),
+const SCRIPT_SPELLING = {
+	'no-scroll-behavior': `${SCROLL_BEHAVIOR_PROPERTY}|${SCROLL_BEHAVIOR_CLASS}`,
+	'no-reduced-motion': REDUCED_MOTION.source,
+	'no-theme-branch': COLOR_SCHEME.source,
+	'no-web-font': WEB_FONT_RESOURCE,
+	'no-custom-breakpoint': BREAKPOINT_MEDIA,
 }
+
+export const scriptSpellingSelector = (name) =>
+	`:matches(Literal[value=/${SCRIPT_SPELLING[name]}/i], TemplateElement[value.cooked=/${SCRIPT_SPELLING[name]}/i])`
+
+const spelledInScript = Object.fromEntries(
+	Object.entries(SCRIPT_SPELLING).map(([name, spelling]) => [name, new RegExp(spelling, 'i')]),
+)
 
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
 const CHECKS = {
@@ -727,7 +730,7 @@ const ruleOf = (name, check) => ({
 			}
 			return found.length > 0
 		}
-		const spelled = SPELLED_IN_SCRIPT[name]
+		const spelled = spelledInScript[name]
 		// ESLint は親から歩くので、書き込みの方が先に入れる
 		const reported = new Set()
 		const reportSheet = (text, node) => {

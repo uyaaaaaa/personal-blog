@@ -5,7 +5,6 @@ import importLayers from './eslint-rules/import-layers.mjs'
 import rootFiles from './eslint-rules/root-files.mjs'
 import styleTokens, {
 	BREAKPOINT_LABEL,
-	BREAKPOINT_MEDIA,
 	BREAKPOINT_URL,
 	COLOR_SCHEME_MESSAGE,
 	DOCS_URL,
@@ -21,6 +20,7 @@ import styleTokens, {
 	SCROLL_BEHAVIOR_CLASS,
 	SCROLL_BEHAVIOR_MESSAGE,
 	SCROLL_BEHAVIOR_PROPERTY,
+	scriptSpellingSelector,
 	STYLE_EXCEPTION,
 	THEME_CLASS_MESSAGE,
 	THEME_COLOR_CLASS,
@@ -32,7 +32,6 @@ import styleTokens, {
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
 
-// どの判定も script が書く綴りに当たるので、.vue の外でも通す
 const styleRules = Object.fromEntries(
 	Object.keys(styleTokens.rules).map((name) => [`style/${name}`, 'error']),
 )
@@ -135,11 +134,7 @@ const PAGE_SCROLL = [
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 	{
-		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_PROPERTY}/i], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_PROPERTY}/i])`,
-		message: SCROLL_BEHAVIOR_MESSAGE,
-	},
-	{
-		selector: `:matches(Literal[value=/${SCROLL_BEHAVIOR_CLASS}/], TemplateElement[value.cooked=/${SCROLL_BEHAVIOR_CLASS}/])`,
+		selector: scriptSpellingSelector('no-scroll-behavior'),
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 ]
@@ -162,7 +157,7 @@ const WEB_FONT = [
 	{
 		// 1つの selector にまとめる。分けると両方に当たる文字列が2回報告される
 		selector: [
-			`:matches(Literal[value=/${WEB_FONT_RESOURCE}/i], TemplateElement[value.cooked=/${WEB_FONT_RESOURCE}/i])`,
+			scriptSpellingSelector('no-web-font'),
 			// フォントを読み込むモジュール（@nuxt/fonts 等）と、設定が並べる指定子。名前で見る
 			':matches(ImportDeclaration, ImportExpression) > Literal[value=/font/i]',
 			// typography の css は配列を持たないので当たらない
@@ -378,19 +373,16 @@ const restrictions = {
 			message:
 				'onunload / onbeforeunload は使わない。bfcache を壊すので、離脱時の処理は pagehide か visibilitychange に置く。',
 		},
-		// メディア特性の名前は大小を区別しないので、外す側（style/*）と同じく /i で見る
 		{
-			selector:
-				':matches(Literal[value=/prefers-reduced-motion/i], TemplateElement[value.cooked=/prefers-reduced-motion/i])',
+			selector: scriptSpellingSelector('no-reduced-motion'),
 			message: REDUCED_MOTION_MESSAGE,
 		},
 		{
-			selector:
-				':matches(Literal[value=/prefers-color-scheme/i], TemplateElement[value.cooked=/prefers-color-scheme/i])',
+			selector: scriptSpellingSelector('no-theme-branch'),
 			message: COLOR_SCHEME_MESSAGE,
 		},
 		{
-			selector: `:matches(Literal[value=/${BREAKPOINT_MEDIA}/i], TemplateElement[value.cooked=/${BREAKPOINT_MEDIA}/i])`,
+			selector: scriptSpellingSelector('no-custom-breakpoint'),
 			message: BREAKPOINT_MESSAGE,
 		},
 		...SCROLL_SUBSCRIPTION,
