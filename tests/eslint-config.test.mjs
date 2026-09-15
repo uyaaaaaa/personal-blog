@@ -815,24 +815,25 @@ describe('composable の DOM の組み立て', () => {
 		`export const build = (host: HTMLElement, html: string) => {\n${statement}\n}`
 
 	const ASSEMBLIES = {
-		生成: "host.append(document.createElement('p'))",
-		複製: 'host.appendChild(host.firstElementChild!.cloneNode(true))',
-		挿入: 'host.insertBefore(host.children[0]!, null)',
+		生成: "void document.createElement('p')",
+		複製: 'void host.cloneNode(true)',
+		挿入: 'host.prepend(host.children[0]!)',
 		文字列: 'host.innerHTML = html',
 	}
 
 	it.each(Object.entries(ASSEMBLIES))('%s の綴りを落とす', async (_label, statement) => {
-		expect(await assembliesIn(COMPOSABLE, body(statement))).toBeGreaterThan(0)
-		expect(await assembliesIn(UTIL, body(statement))).toBeGreaterThan(0)
+		expect(await assembliesIn(COMPOSABLE, body(statement))).toBe(1)
+		expect(await assembliesIn(UTIL, body(statement))).toBe(1)
 	})
 
 	it('document を経由しない組み立ても落とす', async () => {
-		expect(await assembliesIn(COMPOSABLE, body('host.append(new Image())'))).toBe(2)
-		expect(await assembliesIn(COMPOSABLE, body("host['append'](new Text(html))"))).toBe(2)
-		expect(await assembliesIn(COMPOSABLE, body("host.append(h('p', html))"))).toBe(2)
+		expect(await assembliesIn(COMPOSABLE, body('void new Image()'))).toBe(1)
+		expect(await assembliesIn(COMPOSABLE, body("host.appendChild(h('p', html))"))).toBe(2)
+		expect(await assembliesIn(COMPOSABLE, body("host['appendChild'](new Text(html))"))).toBe(2)
 		expect(
 			await assembliesIn(COMPOSABLE, body("host.insertAdjacentHTML('beforeend', html)")),
 		).toBe(1)
+		expect(await assembliesIn(COMPOSABLE, body('host.setHTML(html)'))).toBe(1)
 		expect(await assembliesIn(COMPOSABLE, body('document.write(html)'))).toBe(1)
 	})
 
@@ -858,6 +859,11 @@ describe('composable の DOM の組み立て', () => {
 		).toBe(0)
 	})
 
+	it('要素を受け取らない append は通す', async () => {
+		expect(await assembliesIn(UTIL, body("new URLSearchParams().append('page', html)"))).toBe(0)
+		expect(await assembliesIn(UTIL, body("new FormData().append('body', html)"))).toBe(0)
+	})
+
 	it('テンプレートを持つ層と、対象を組み立てるテストでは落とさない', async () => {
 		expect(
 			await assembliesIn(
@@ -872,7 +878,7 @@ describe('composable の DOM の組み立て', () => {
 			),
 		).toBe(0)
 		expect(
-			await assembliesIn('tests/app/utils/shelf.test.ts', body("host.append(h('p'))")),
+			await assembliesIn('tests/app/utils/shelf.test.ts', body("host.appendChild(h('p'))")),
 		).toBe(0)
 	})
 })

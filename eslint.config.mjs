@@ -416,9 +416,10 @@ const restrictions = {
 const DOM_CREATE =
 	'create(?:Element(?:NS)?|TextNode|DocumentFragment|Comment|Attribute(?:NS)?|ContextualFragment)'
 const DOM_CLONE = 'cloneNode|importNode|adoptNode'
+// append は URLSearchParams / FormData / Headers も持つ名前なので、受け手を見ないここでは外す
 const DOM_INSERT =
-	'appendChild|insertBefore|insertNode|replaceChild|replaceChildren|insertAdjacent(?:Element|Text|HTML)|append|prepend|before|after|replaceWith'
-const DOM_FROM_STRING = 'parseFromString|parseHTMLUnsafe|setHTMLUnsafe'
+	'appendChild|insertBefore|insertNode|replaceChild|replaceChildren|insertAdjacent(?:Element|Text|HTML)|prepend|before|after|replaceWith'
+const DOM_FROM_STRING = 'parseFromString|parseHTML(?:Unsafe)?|setHTML(?:Unsafe)?'
 const DOM_ASSEMBLY_METHOD = `/^(?:${DOM_CREATE}|${DOM_CLONE}|${DOM_INSERT}|${DOM_FROM_STRING})$/`
 // new で作る要素。document を経由しないので、上の呼び出しの綴りには出ない
 const DOM_CONSTRUCTOR = '/^(?:Image|Option|Audio|Text|Comment|DocumentFragment|DOMParser)$/'
