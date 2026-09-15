@@ -8,16 +8,19 @@
 				v-for="group in groups"
 				:key="group.label"
 			>
-				<span class="footer-head">{{ group.label }}</span>
+				<span
+					class="mb-3.5 block font-mono text-xs font-medium uppercase tracking-marker text-sub"
+					>{{ group.label }}</span
+				>
 
-				<ul class="footer-list">
+				<ul class="m-0 flex list-none flex-col gap-2.5 p-0">
 					<li
 						v-for="link in group.links"
 						:key="link.path"
 					>
 						<NuxtLink
 							:to="link.path"
-							class="footer-link"
+							class="font-mono text-sm"
 							prefetch-on="interaction"
 							>{{ link.label }}</NuxtLink
 						>
@@ -51,31 +54,3 @@
 		},
 	])
 </script>
-
-<style scoped>
-	.footer-head {
-		display: block;
-		margin-bottom: 0.875rem;
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		font-weight: 500;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: var(--color-sub);
-	}
-
-	.footer-list {
-		display: flex;
-		flex-direction: column;
-		gap: 0.625rem;
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-
-	.footer-link {
-		font-family: var(--font-mono);
-		font-size: 0.875rem;
-		color: var(--color-main);
-	}
-</style>
