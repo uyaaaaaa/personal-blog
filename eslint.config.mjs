@@ -5,8 +5,8 @@ import importLayers from './eslint-rules/import-layers.mjs'
 import rootFiles from './eslint-rules/root-files.mjs'
 import styleTokens, {
 	BREAKPOINT_LABEL,
+	BREAKPOINT_MEDIA,
 	BREAKPOINT_URL,
-	BREAKPOINT_WIDTHS,
 	COLOR_SCHEME_MESSAGE,
 	DOCS_URL,
 	FONT_CLASS_MESSAGE,
@@ -26,6 +26,7 @@ import styleTokens, {
 	THEME_COLOR_CLASS,
 	TOKEN_URL,
 	WEB_FONT_MESSAGE,
+	WEB_FONT_RESOURCE,
 } from './eslint-rules/style-tokens.mjs'
 
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
@@ -46,23 +47,11 @@ const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない
 const IMPORTANT_MESSAGE = `!important は書かない。Tailwind の ! 修飾子と style 属性も同じ。第三者由来のインラインスタイルを打ち消すときだけ許す。${STYLE_EXCEPTION}`
 const OUTLINE_MESSAGE = `フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。Tailwind の outline-none / outline-0 と style 属性も同じ。同じ要素に別の見える指標があるときだけ許す。${STYLE_EXCEPTION}`
 
-// フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
-// 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
-const FONT_FILE = '\\.(?:woff2?|otf|ttf|eot)\\b'
-const FONT_HOST = '\\b(?:(?:fontsource|fonts?)(?:[./]|$)|(?:typeface|typekit)[./-])'
-const WEB_FONT_RESOURCE = `(?:${FONT_FILE}|${FONT_HOST})`
-
 const PALETTE_COLORS =
 	'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
 const PALETTE_CLASS = `(?:^|[\\s:])!?[a-z]+(?:-[a-z]+)*-(?:${PALETTE_COLORS})-(?:50|[1-9]00|950)\\b`
 // 任意値の variant（min-[600px]:）は角括弧の検査が落とす
 const BREAKPOINT_CLASS = `(?:^|[\\s:])(?:${OFF_BREAKPOINT_VARIANTS.join('|')}):`
-// 宣言（max-width: 36rem）と混ざらないよう、括弧から見る
-const WIDTHS = BREAKPOINT_WIDTHS.join('|')
-const WIDTH_BY_LENGTH = `\\((?=[^()]*width)[^()]*?(?<![\\d.])(?!(?:${WIDTHS})\\b)\\d*\\.?\\d+[a-z%]+`
-// 組み立てた文字列は長さが別のリテラルに出るので、綴りからも見る
-const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))`
-const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 const BANG_CLASS = '(?:^|[\\s:])!'
 const INLINE_IMPORTANT = '!\\s*important'
 // :style のオブジェクトはキーと値に割れるので、綴りでは当たらない

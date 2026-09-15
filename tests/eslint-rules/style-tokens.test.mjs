@@ -117,6 +117,20 @@ describe('no-important', () => {
 			],
 		})
 	})
+
+	// <style> しか読まない判定も、script が組み立てたスタイルシートには当たる
+	it('script が組み立てたスタイルシートも同じ判定で落とす', () => {
+		tester.run('no-important', styleTokens.rules['no-important'], {
+			valid: [{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") }],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('.a { top: 0 !important; }')"),
+					errors: [{ messageId: 'important' }],
+				},
+			],
+		})
+	})
 })
 
 describe('no-reduced-motion', () => {
@@ -407,6 +421,17 @@ describe('no-color-literal', () => {
 					code: handler("sheet.insertRule('.a { color: tomato; }')"),
 					errors: [{ messageId: 'literal' }],
 				},
+				// 宣言の並びとして読んだ値は、スタイルシートとして読み直さない
+				{
+					filename: 'a.vue',
+					code: script("el.style.cssText = '.a { color: tomato; }'"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("el.setAttribute('style', '.a { color: tomato; }')"),
+					errors: [{ messageId: 'literal' }],
+				},
 			],
 		})
 	})
@@ -654,6 +679,32 @@ describe('no-web-font', () => {
 			],
 		})
 	})
+
+	// 本体を持たない at-rule も規則の並びとして読む。フォントの資源の綴りは
+	// no-restricted-syntax に寄せたので、ここに残るのは @import と @font-face
+	it('script が組み立てた @import と @font-face を落とす', () => {
+		tester.run('no-web-font', styleTokens.rules['no-web-font'], {
+			valid: [
+				{
+					filename: 'a.vue',
+					code: script('sheet.insertRule(\'@font-face { src: url("/x.woff2"); }\')'),
+				},
+				{ filename: 'a.vue', code: script("sheet.insertRule('.a { top: 0; }')") },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: script('sheet.insertRule(\'@import url("/theme.css")\')'),
+					errors: [{ messageId: 'import' }],
+				},
+				{
+					filename: 'a.vue',
+					code: script("sheet.insertRule('@font-face { font-family: Georgia; }')"),
+					errors: [{ messageId: 'webFont' }],
+				},
+			],
+		})
+	})
 })
 
 describe('no-theme-branch', () => {
@@ -872,19 +923,16 @@ describe('no-scroll-behavior', () => {
 		})
 	})
 
-	// <style> しか読まない判定も、組み立てたスタイルシートには当たる
-	it('script が組み立てたスタイルシートも同じ判定で落とす', () => {
+	// 同じ綴りを no-restricted-syntax が Literal から読むので、ここからは読まない
+	it('script が組み立てたスタイルシートは読まない', () => {
 		tester.run('no-scroll-behavior', styleTokens.rules['no-scroll-behavior'], {
 			valid: [
-				{ filename: 'a.vue', code: script("sheet.insertRule('.a { overflow: auto; }')") },
-			],
-			invalid: [
 				{
 					filename: 'a.vue',
 					code: script("sheet.insertRule('html { scroll-behavior: smooth; }')"),
-					errors: [{ messageId: 'scrollBehavior' }],
 				},
 			],
+			invalid: [],
 		})
 	})
 })

@@ -15,6 +15,12 @@ export const STYLE_EXCEPTION =
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
 
+// フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
+// 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
+const FONT_FILE = '\\.(?:woff2?|otf|ttf|eot)\\b'
+const FONT_HOST = '\\b(?:(?:fontsource|fonts?)(?:[./]|$)|(?:typeface|typekit)[./-])'
+export const WEB_FONT_RESOURCE = `(?:${FONT_FILE}|${FONT_HOST})`
+
 export const THEME_BRANCH_MESSAGE =
 	'テーマごとに宣言を分岐しない。差は theme/tokens.ts の darkColors が作る。.dark と .light に書けるのはカスタムプロパティの再定義だけ。'
 
@@ -171,9 +177,16 @@ const breakpoints = buildBreakpoints()
 
 export const BREAKPOINT_LABEL = breakpoints.label
 
-export const BREAKPOINT_WIDTHS = [...breakpoints.pixels].flatMap((px) =>
+const BREAKPOINT_WIDTHS = [...breakpoints.pixels].flatMap((px) =>
 	Object.entries(PIXELS_PER).map(([unit, scale]) => `${px / scale}${unit}`),
 )
+
+const WIDTHS = BREAKPOINT_WIDTHS.join('|')
+// 宣言（max-width: 36rem）と混ざらないよう、括弧から見る
+const WIDTH_BY_LENGTH = `\\((?=[^()]*width)[^()]*?(?<![\\d.])(?!(?:${WIDTHS})\\b)\\d*\\.?\\d+[a-z%]+`
+// 組み立てた文字列は長さが別のリテラルに出るので、綴りからも見る
+const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))`
+export const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 
 // tokens の fontFamily が theme を上書きするので、残るのは Tailwind の既定の family だけ
 const OFF_TOKEN_FONTS = Object.keys(theme.fontFamily).filter((name) => !(name in fontFamily))
@@ -403,10 +416,10 @@ function* styleWrites(node) {
 const STYLE_ELEMENT = /<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi
 
 // script が組み立てたスタイルシート。insertRule・textContent・innerHTML のような書き込み先を
-// 数えると数え落とした先と束縛越しの組み立てが抜け道になるので、綴りが本体を持つ規則の並びと
-// して読めるかで見る。本体を持たない文字列は宣言の並びか CSS でない綴りで、前者は style 属性が見る
+// 数えると数え落とした先と束縛越しの組み立てが抜け道になるので、綴りが規則か at-rule として
+// 読めるかで見る。どちらも無い文字列は宣言の並びか CSS でない綴りで、前者は style 属性が見る
 function* stylesheetsIn(text) {
-	if (!text.includes('{')) return
+	if (!text.includes('{') && !text.includes('@')) return
 	const bodies = [...text.matchAll(STYLE_ELEMENT)].map(([, body]) => body)
 	for (const candidate of [text, ...bodies]) {
 		let root
@@ -415,15 +428,13 @@ function* stylesheetsIn(text) {
 		} catch {
 			continue
 		}
-		let hasBlock = false
-		// 本体を持たない at-rule（@import url(...)）は規則の並びではない。
-		// それが読む先は no-restricted-syntax が資源の綴りで塞ぐ
-		const mark = (node) => {
-			if (node.nodes) hasBlock = true
+		let found = false
+		const mark = () => {
+			found = true
 		}
 		root.walkRules(mark)
 		root.walkAtRules(mark)
-		if (hasBlock) yield root
+		if (found) yield root
 	}
 }
 
@@ -450,6 +461,17 @@ const NO_OUTLINE_VALUE = new RegExp(OUTLINE_REMOVAL_VALUE, 'i')
 const RESET_OUTLINE_VALUE = new RegExp(OUTLINE_RESET_VALUE, 'i')
 const OUTLINE_REMOVAL = new RegExp(OUTLINE_REMOVAL_CLASS)
 const OFF_TOKEN_FONT = new RegExp(OFF_TOKEN_FONT_CLASS)
+
+// 同じ綴りを no-restricted-syntax が script の Literal から読む判定。そちらが先に見るので、
+// 組み立てたスタイルシートからは読まずに報告を一方へ寄せる。綴りで取れない側（.dark の
+// セレクタ・@font-face・@import）はここに載らないので、判定はスタイルシートから残る
+const SPELLED_IN_SCRIPT = {
+	'no-scroll-behavior': new RegExp(`${SCROLL_BEHAVIOR_PROPERTY}|${SCROLL_BEHAVIOR_CLASS}`, 'i'),
+	'no-reduced-motion': REDUCED_MOTION,
+	'no-theme-branch': COLOR_SCHEME,
+	'no-web-font': new RegExp(WEB_FONT_RESOURCE, 'i'),
+	'no-custom-breakpoint': new RegExp(BREAKPOINT_MEDIA, 'i'),
+}
 
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
 const CHECKS = {
@@ -698,7 +720,7 @@ export function findings(root) {
 		.sort((a, b) => a.line - b.line || a.column - b.column)
 }
 
-const ruleOf = (check) => ({
+const ruleOf = (name, check) => ({
 	meta: { type: 'problem', schema: [], messages: check.messages },
 	create(context) {
 		const report = (text, node) => {
@@ -706,16 +728,23 @@ const ruleOf = (check) => ({
 				context.report({ loc: node.loc, ...found })
 			}
 		}
+		const spelled = SPELLED_IN_SCRIPT[name]
+		// 宣言の並びとして読んだ値。ESLint は親から歩くので、書き込みの方が先に入れる
+		const written = new Set()
 		const reportSheet = (text, node) => {
+			if (written.has(node) || spelled?.test(text)) return
 			for (const root of stylesheetsIn(text))
 				for (const { messageId, data } of check.find(root)) {
 					context.report({ loc: node.loc, messageId, data })
 				}
 		}
 		const write = (node) => {
-			for (const { text, node: value } of styleWrites(node)) report(text, value)
+			for (const { text, node: value } of styleWrites(node)) {
+				written.add(value)
+				report(text, value)
+			}
 		}
-		// 組み立てたスタイルシートはどの判定も読む。宣言の並びを読む判定だけが要素への書き込みに当たる
+		// 組み立てたスタイルシートは綴りで取れない判定が読む。宣言の並びを読む判定は要素への書き込みも見る
 		const inScript = {
 			Literal(node) {
 				if (typeof node.value === 'string') reportSheet(node.value, node)
@@ -745,5 +774,7 @@ const ruleOf = (check) => ({
 })
 
 export default {
-	rules: Object.fromEntries(Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(check)])),
+	rules: Object.fromEntries(
+		Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(name, check)]),
+	),
 }

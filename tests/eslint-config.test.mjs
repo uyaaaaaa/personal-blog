@@ -15,6 +15,7 @@ const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前�
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
 const DISPLAY = /display: none を宣言に書かない/
+const CSS_IMPORT = /@import を書かない/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -45,6 +46,11 @@ const importantsIn = async (relative, code) => {
 const singleSourcesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => SINGLE_SOURCE.test(message.message)).length
+}
+
+const cssImportsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => CSS_IMPORT.test(message.message)).length
 }
 
 const displaysIn = async (relative, code) => {
@@ -638,6 +644,35 @@ describe('色と書体の単一情報源', () => {
 		expect(
 			await singleSourcesIn('app/utils/a.ts', "sheet.insertRule('.a { display: flex; }')"),
 		).toBe(0)
+	})
+
+	// 綴りを no-restricted-syntax も読む判定は、同じ文字列で2件出さない
+	it('組み立てたスタイルシートの指摘を1件に寄せる', async () => {
+		const SHEET = "sheet.insertRule('html { scroll-behavior: smooth; }')"
+		expect(await landingsIn('app/utils/a.ts', SHEET)).toBe(1)
+		expect(
+			await themeBranchesIn(
+				'app/utils/a.ts',
+				"sheet.insertRule('@media (prefers-color-scheme: dark) { .a { top: 0; } }')",
+			),
+		).toBe(1)
+		expect(
+			await webFontsIn(
+				'app/utils/a.ts',
+				'sheet.insertRule(\'@font-face { src: url("/x.woff2"); }\')',
+			),
+		).toBe(1)
+		expect(
+			await singleSourcesIn('app/utils/a.ts', "el.style.cssText = '.a { color: tomato; }'"),
+		).toBe(1)
+	})
+
+	// フォントの資源の綴りを持たない読み込みは、組み立てたスタイルシートからしか見えない
+	it('script が組み立てた @import を落とす', async () => {
+		expect(
+			await cssImportsIn('app/utils/a.ts', 'sheet.insertRule(\'@import url("/theme.css")\')'),
+		).toBe(1)
+		expect(await cssImportsIn('app/utils/a.ts', "sheet.insertRule('.a { top: 0; }')")).toBe(0)
 	})
 
 	it('<style> と .css と同じ判定で見る', async () => {
