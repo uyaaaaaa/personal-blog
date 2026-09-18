@@ -183,6 +183,7 @@ const STYLE_WRITE = [
 ].join(', ')
 const STYLE_CALL =
 	"CallExpression:matches([callee.object.property.name='style'], [callee.object.property.value='style'])"
+const PROPERTY_WRITE = '/^(?:set|remove)Property$/'
 
 const INLINE_STYLE = [
 	{
@@ -203,12 +204,9 @@ const INLINE_STYLE = [
 		selector: `AssignmentExpression:matches(${STYLE_WRITE})`,
 		message: INLINE_STYLE_MESSAGE,
 	},
+	// 宣言を書き換えるのはこの2つだけ。読み取り（getPropertyValue 等）は通す
 	{
-		selector: `${STYLE_CALL}:not([callee.property.name='setProperty'])`,
-		message: INLINE_STYLE_MESSAGE,
-	},
-	{
-		selector: `${STYLE_CALL}[callee.property.name='setProperty']:not([arguments.0.value=${CUSTOM_PROPERTY}])`,
+		selector: `${STYLE_CALL}[callee.property.name=${PROPERTY_WRITE}]:not([arguments.0.value=${CUSTOM_PROPERTY}])`,
 		message: INLINE_STYLE_MESSAGE,
 	},
 	// 宣言の並びをまとめて渡す経路。書き込む先の綴りは引数の側が持つ
@@ -222,9 +220,18 @@ const INLINE_STYLE = [
 	},
 ]
 
-// 規則を持てるオブジェクトと、規則を差し込む呼び出し
+// 規則を持つ集まりと、規則を差し込む呼び出し。
+// sheet は createElement か CSSStyleSheet を通った先にしかなく、どちらも別の行が落とす
 const STYLESHEET_API =
-	'/^(?:styleSheets|adoptedStyleSheets|sheet|insertRule|deleteRule|addRule|removeRule)$/'
+	'/^(?:styleSheets|adoptedStyleSheets|insertRule|deleteRule|addRule|removeRule)$/'
+
+// 規則の綴り。宣言の中身は読まず、規則の形をしていることだけを見る。
+// 引用符で囲ったキー（JSON）は宣言ではないので、名前の前が語の縁のものだけを数える
+const AT_RULE =
+	'@(?:media|supports|font-face|import|keyframes|layer|page|property|charset|namespace)\\b'
+const RULE_BLOCK = '\\{[^{}]*(?<![\\w"\'-])[a-z-]+\\s*:[^{}]*\\}'
+const INSERT_CALL = 'CallExpression[callee.property.name=/^(?:insert|add)Rule$/]'
+const STYLESHEET_STRING = `<style[\\s\\/>]|${AT_RULE}|${RULE_BLOCK}`
 
 const STYLESHEET_ASSEMBLY = [
 	{
@@ -240,10 +247,10 @@ const STYLESHEET_ASSEMBLY = [
 			'CallExpression[callee.property.name=/^createElement(?:NS)?$/] > Literal[value=/^style$/i]',
 		message: STYLESHEET_MESSAGE,
 	},
-	// 文字列から差し込む経路。要素の綴りだけが共通なので、そこを見る
+	// 流し込む先（textContent・選んだ要素・Blob）は数え切れないので、流すものの側を見る。
+	// 上の呼び出しに渡すだけの綴りは、その行が落とすので二重に数えない
 	{
-		selector:
-			':matches(Literal[value=/<style[\\s/>]/i], TemplateElement[value.cooked=/<style[\\s/>]/i])',
+		selector: `:matches(Literal[value=/${STYLESHEET_STRING}/i], TemplateElement[value.cooked=/${STYLESHEET_STRING}/i]):not(${INSERT_CALL} *)`,
 		message: STYLESHEET_MESSAGE,
 	},
 ]

@@ -477,6 +477,7 @@ describe('スタイルの置き場', () => {
 		expect(await inlineStylesIn('app/utils/a.ts', "el.setAttribute('style', s)")).toBe(1)
 		expect(await inlineStylesIn('app/utils/a.ts', "el.style.setProperty('opacity', v)")).toBe(1)
 		expect(await inlineStylesIn('app/utils/a.ts', 'el.style.setProperty(name, v)')).toBe(1)
+		expect(await inlineStylesIn('app/utils/a.ts', "el.style.removeProperty('color')")).toBe(1)
 		expect(
 			await inlineStylesIn(
 				'app/components/ui/A.vue',
@@ -485,25 +486,42 @@ describe('スタイルの置き場', () => {
 		).toBe(1)
 	})
 
-	it('読み取りとカスタムプロパティの設定は通す', async () => {
+	it('読み取りとカスタムプロパティの出し入れは通す', async () => {
 		expect(await inlineStylesIn('app/utils/a.ts', 'const v = el.style.display')).toBe(0)
+		expect(
+			await inlineStylesIn('app/utils/a.ts', "const v = el.style.getPropertyValue('--a')"),
+		).toBe(0)
 		expect(await inlineStylesIn('app/utils/a.ts', "el.style.setProperty('--a', v)")).toBe(0)
+		expect(await inlineStylesIn('app/utils/a.ts', "el.style.removeProperty('--a')")).toBe(0)
 		expect(await inlineStylesIn('app/utils/a.ts', "el.setAttribute('aria-label', s)")).toBe(0)
 	})
 
 	it('script がスタイルシートを組み立てる経路を落とす', async () => {
 		expect(await stylesheetsIn('app/utils/a.ts', 'new CSSStyleSheet()')).toBe(1)
-		expect(await stylesheetsIn('app/utils/a.ts', "sheet.insertRule('.a { top: 0; }')")).toBe(1)
 		expect(await stylesheetsIn('app/utils/a.ts', 'document.adoptedStyleSheets = []')).toBe(1)
 		expect(await stylesheetsIn('app/utils/a.ts', 'document.styleSheets[0]')).toBe(1)
-		expect(await stylesheetsIn('app/utils/a.ts', 'tag.sheet')).toBe(1)
 		expect(
 			await stylesheetsIn('app/components/ui/A.vue', sfc('<p />', `const t = '<style>'`)),
 		).toBe(1)
 	})
 
-	it('規則を持てない値は通す', async () => {
-		expect(await stylesheetsIn('app/utils/a.ts', "const t = '.a { top: 0; }'")).toBe(0)
+	it('規則になっている文字列を、流し込む先に依らず落とす', async () => {
+		expect(await stylesheetsIn('app/utils/a.ts', "const t = '.a { top: 0; }'")).toBe(1)
+		expect(
+			await stylesheetsIn(
+				'app/utils/a.ts',
+				"document.querySelector('style').textContent = 'body{transition:all 3s}'",
+			),
+		).toBe(1)
+		expect(await stylesheetsIn('app/utils/a.ts', "sheet.insertRule('.a { top: 0; }')")).toBe(1)
+		expect(await stylesheetsIn('app/utils/a.ts', 'sheet.insertRule(css)')).toBe(1)
+		expect(await stylesheetsIn('app/utils/a.ts', "const t = '@font-face { src: x }'")).toBe(1)
+		expect(await stylesheetsIn('app/utils/a.ts', 'const t = `.a { top: 0; }`')).toBe(1)
+	})
+
+	it('規則の形をしていない文字列は通す', async () => {
+		expect(await stylesheetsIn('app/utils/a.ts', `const t = '{"top": "0"}'`)).toBe(0)
+		expect(await stylesheetsIn('app/utils/a.ts', `const t = 'a[href="#x"]'`)).toBe(0)
 		expect(await stylesheetsIn('app/utils/a.ts', "document.querySelector('style')")).toBe(0)
 	})
 })
