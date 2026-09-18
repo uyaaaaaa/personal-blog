@@ -226,9 +226,10 @@ const STYLESHEET_API =
 	'/^(?:styleSheets|adoptedStyleSheets|insertRule|deleteRule|addRule|removeRule)$/'
 
 // 規則の綴り。宣言の中身は読まず、規則の形をしていることだけを見る。
-// 引用符で囲ったキー（JSON）は宣言ではないので、名前の前が語の縁のものだけを数える
+// 引用符で囲ったキー（JSON）は宣言ではないので、名前の前が語の縁のものだけを数える。
+// at-rule は本体か終端が続く。語だけを見ると、綴りを含む地の文が落ちる
 const AT_RULE =
-	'@(?:media|supports|font-face|import|keyframes|layer|page|property|charset|namespace)\\b'
+	'@(?:media|supports|font-face|import|keyframes|layer|page|property|charset|namespace)\\b[^{};]*[{;]'
 const RULE_BLOCK = '\\{[^{}]*(?<![\\w"\'-])[a-z-]+\\s*:[^{}]*\\}'
 const INSERT_CALL = 'CallExpression[callee.property.name=/^(?:insert|add)Rule$/]'
 const STYLESHEET_STRING = `<style[\\s\\/>]|${AT_RULE}|${RULE_BLOCK}`

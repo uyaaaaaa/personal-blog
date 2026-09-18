@@ -516,6 +516,9 @@ describe('スタイルの置き場', () => {
 		expect(await stylesheetsIn('app/utils/a.ts', "sheet.insertRule('.a { top: 0; }')")).toBe(1)
 		expect(await stylesheetsIn('app/utils/a.ts', 'sheet.insertRule(css)')).toBe(1)
 		expect(await stylesheetsIn('app/utils/a.ts', "const t = '@font-face { src: x }'")).toBe(1)
+		expect(
+			await stylesheetsIn('app/utils/a.ts', `const t = '@import url("/theme.css");'`),
+		).toBe(1)
 		expect(await stylesheetsIn('app/utils/a.ts', 'const t = `.a { top: 0; }`')).toBe(1)
 	})
 
@@ -523,6 +526,10 @@ describe('スタイルの置き場', () => {
 		expect(await stylesheetsIn('app/utils/a.ts', `const t = '{"top": "0"}'`)).toBe(0)
 		expect(await stylesheetsIn('app/utils/a.ts', `const t = 'a[href="#x"]'`)).toBe(0)
 		expect(await stylesheetsIn('app/utils/a.ts', "document.querySelector('style')")).toBe(0)
+		// 規則の綴りを含む地の文。本体も終端も続かない
+		expect(
+			await stylesheetsIn('app/utils/a.ts', "const label = '表示は @media で出し分ける'"),
+		).toBe(0)
 	})
 })
 
