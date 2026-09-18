@@ -143,7 +143,6 @@
 			(isNotFound.value
 				? 'The article you are looking for may have been removed, or the URL may be incorrect.'
 				: undefined),
-		image: () => page.value?.image,
 		publishedTime: () => page.value?.date,
 		tags: () => page.value?.tags,
 	})

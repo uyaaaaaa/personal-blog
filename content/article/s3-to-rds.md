@@ -1,6 +1,5 @@
 ---
 title: "AmazonS3のファイルをRDSにロードして使う"
-emoji: "🪣"
 description: ""
 published: true
 date: 2026-02-18

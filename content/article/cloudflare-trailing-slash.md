@@ -1,6 +1,5 @@
 ---
 title: "Cloudflare Pagesが付ける末尾スラッシュで、記事が「無い」ことになる"
-emoji: "⛅"
 description: "静的生成したページのキーは末尾スラッシュを持たないのに、Cloudflare Pagesはリロード時にURLへ末尾スラッシュを足す。route.pathをそのままクエリに渡すと、記事があるのに無いと判定される。"
 published: true
 date: 2026-09-02

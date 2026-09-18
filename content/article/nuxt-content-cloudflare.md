@@ -1,6 +1,5 @@
 ---
 title: "Nuxt Contentの記事がSSR時に取得できない問題とその解決策"
-emoji: "⛅"
 description: ""
 published: true
 date: 2026-02-07
