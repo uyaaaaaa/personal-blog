@@ -209,7 +209,7 @@
 	onBeforeUnmount(() => window.removeEventListener('keydown', onSearchShortcut))
 
 	watch([isMenuOpen, isSearchOpen], ([menuOpen, searchOpen]) => {
-		document.body.style.overflow = menuOpen || searchOpen ? 'hidden' : ''
+		document.body.classList.toggle('scroll-locked', menuOpen || searchOpen)
 	})
 
 	// リンクを踏まない移動（ブラウザバック）でも、被せたものは残さない
@@ -221,6 +221,12 @@
 		},
 	)
 </script>
+
+<style>
+	body.scroll-locked {
+		overflow: hidden;
+	}
+</style>
 
 <style scoped>
 	.global-header {

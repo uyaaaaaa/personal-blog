@@ -11,14 +11,14 @@ const THEME_BRANCH = /dark: で色を分岐しない|prefers-color-scheme で分
 const LANDING = /着地位置は CSS が持つ|scroll-behavior は宣言しない/
 const OUTLINE = /フォーカスの輪郭を消さない/
 const IMPORTANT = /!important は書かない/
+const INLINE_STYLE = /style 属性と el\.style に書かない/
+const STYLESHEET = /スタイルシートを組み立てない/
 const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前のクラス/
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
 const PUBLISHED = /記事のクエリには公開制御/
 const DOM_ASSEMBLY = /DOM を組み立てない/
 const DISPLAY = /display: none を宣言に書かない/
-const CSS_IMPORT = /@import を書かない/
-const REDUCED_MOTION = /prefers-reduced-motion で分岐しない/
 const MOTION = /決めた長さではない|モーションのクラスは用途の名前|transition の対象に all/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
@@ -47,24 +47,24 @@ const importantsIn = async (relative, code) => {
 	return result.messages.filter((message) => IMPORTANT.test(message.message)).length
 }
 
+const inlineStylesIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => INLINE_STYLE.test(message.message)).length
+}
+
+const stylesheetsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => STYLESHEET.test(message.message)).length
+}
+
 const singleSourcesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => SINGLE_SOURCE.test(message.message)).length
 }
 
-const reducedMotionsIn = async (relative, code) => {
-	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
-	return result.messages.filter((message) => REDUCED_MOTION.test(message.message)).length
-}
-
 const motionsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => MOTION.test(message.message)).length
-}
-
-const cssImportsIn = async (relative, code) => {
-	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
-	return result.messages.filter((message) => CSS_IMPORT.test(message.message)).length
 }
 
 const displaysIn = async (relative, code) => {
@@ -364,12 +364,6 @@ describe('ページ内ジャンプの着地位置', () => {
 		).toBeGreaterThan(0)
 	})
 
-	it('静的な style 属性の宣言を落とす', async () => {
-		expect(
-			await landingsIn('app/pages/a.vue', sfc('<div style="scroll-behavior: smooth" />')),
-		).toBeGreaterThan(0)
-	})
-
 	it('設定ファイルが html に配る指定を落とす', async () => {
 		expect(
 			await landingsIn(
@@ -441,188 +435,80 @@ describe('フォーカスの輪郭', () => {
 		).toBeGreaterThan(0)
 	})
 
-	it('style 属性の宣言を落とす', async () => {
-		expect(
-			await outlinesIn('app/pages/a.vue', sfc('<input style="outline: none" />')),
-		).toBeGreaterThan(0)
-		expect(
-			await outlinesIn('app/pages/a.vue', sfc('<input :style="{ outlineWidth: 0 }" />')),
-		).toBeGreaterThan(0)
-		expect(
-			await outlinesIn('app/pages/a.vue', sfc('<input :style="{ outline: \'none\' }" />')),
-		).toBeGreaterThan(0)
-	})
-
-	it('オブジェクトで書いた :style も同じ値の見方で落とす', async () => {
-		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc(`<input :style="{ outline: '2px solid transparent' }" />`),
-			),
-		).toBeGreaterThan(0)
-		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc(`<input :style="{ outline: '0 solid red' }" />`),
-			),
-		).toBeGreaterThan(0)
-		expect(
-			await outlinesIn('app/pages/a.vue', sfc('<input :style="{ outline: `none` }" />')),
-		).toBeGreaterThan(0)
-		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc(
-					`<input :style="{ outline: on ? 'none' : '2px solid red' }" />`,
-					'const on = true',
-				),
-			),
-		).toBeGreaterThan(0)
-		expect(
-			await outlinesIn('app/pages/a.vue', sfc(`<input :style="{ outline: 'unset' }" />`)),
-		).toBeGreaterThan(0)
-		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc(`<input :style="{ outline: '2px solid currentColor' }" />`),
-			),
-		).toBe(0)
-		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc(`<input :style="{ outlineColor: 'initial' }" />`),
-			),
-		).toBe(0)
-	})
-
-	it('値でない語と、色の中の 0 は通す', async () => {
-		expect(
-			await outlinesIn('app/pages/a.vue', sfc('<input style="outline: 2px solid #0ff" />')),
-		).toBe(0)
-		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc(
-					`<input :style="{ outlineColor: kind === 'none' ? 'red' : 'blue' }" />`,
-					`const kind = 'x'`,
-				),
-			),
-		).toBe(0)
-	})
-
-	it('同じ指摘を2件出さない', async () => {
-		expect(
-			await outlinesIn('app/pages/a.vue', sfc(`<input :style="{ outlineWidth: '0' }" />`)),
-		).toBe(1)
-	})
-
-	it('all でまとめて初期値に戻す指定も落とす', async () => {
-		expect(
-			await outlinesIn('app/pages/a.vue', sfc('<input style="all: unset" />')),
-		).toBeGreaterThan(0)
-		expect(
-			await outlinesIn('app/pages/a.vue', sfc(`<input :style="{ all: 'unset' }" />`)),
-		).toBeGreaterThan(0)
-	})
-
-	it('値そのものでない 0 は通す', async () => {
-		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc(
-					`<input :style="{ outline: index === 0 ? '2px solid red' : '3px solid blue' }" />`,
-					'const index = 1',
-				),
-			),
-		).toBe(0)
-		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc(
-					`<input :style="{ outline: outlines[0] }" />`,
-					`const outlines = ['2px solid red']`,
-				),
-			),
-		).toBe(0)
-	})
-
-	it('宣言と同じ判定で style 属性を見る', async () => {
-		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc('<input style="outline: 2px solid transparent" />'),
-			),
-		).toBeGreaterThan(0)
-		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc('<input style="outline: 0.5rem solid currentColor" />'),
-			),
-		).toBe(0)
-		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc('<input style="outline: 2px solid rgb(0 0 0)" />'),
-			),
-		).toBe(0)
-		expect(
-			await outlinesIn('app/pages/a.vue', sfc('<input style="outline: unset" />')),
-		).toBeGreaterThan(0)
-	})
-
-	it('輪郭を出す指定と、綴りの重なる指定は通す', async () => {
+	it('綴りの重なるクラスは通す', async () => {
 		expect(await outlinesIn('app/pages/a.vue', sfc('<input class="outline-offset-0" />'))).toBe(
 			0,
 		)
+	})
+})
+
+describe('スタイルの置き場', () => {
+	it('style 属性と、カスタムプロパティでない :style を落とす', async () => {
+		expect(await inlineStylesIn('app/pages/a.vue', sfc('<p style="color: red" />'))).toBe(1)
+		expect(await inlineStylesIn('app/pages/a.vue', sfc('<p :style="{ opacity: 1 }" />'))).toBe(
+			1,
+		)
 		expect(
-			await outlinesIn(
+			await inlineStylesIn('app/pages/a.vue', sfc('<p :style="s" />', `const s = ''`)),
+		).toBe(1)
+		expect(
+			await inlineStylesIn('app/pages/a.vue', sfc('<p :style="[s]" />', 'const s = {}')),
+		).toBe(1)
+		expect(
+			await inlineStylesIn('app/pages/a.vue', sfc('<p :style="{ ...s }" />', 'const s = {}')),
+		).toBe(1)
+	})
+
+	it('カスタムプロパティを渡す :style は通す', async () => {
+		expect(
+			await inlineStylesIn(
 				'app/pages/a.vue',
-				sfc('<input style="outline: 2px solid currentColor" />'),
+				sfc(`<p :style="{ '--callout-rgb': rgb }" />`, `const rgb = '124, 58, 237'`),
 			),
 		).toBe(0)
+	})
+
+	it('script から要素のスタイルへ書く経路を落とす', async () => {
+		expect(await inlineStylesIn('app/utils/a.ts', "el.style.overflow = 'hidden'")).toBe(1)
+		expect(await inlineStylesIn('app/utils/a.ts', "el['style'].overflow = 'hidden'")).toBe(1)
+		expect(await inlineStylesIn('app/utils/a.ts', "el.style['overflow'] = 'hidden'")).toBe(1)
+		expect(await inlineStylesIn('app/utils/a.ts', "el.style.cssText = 'color: red'")).toBe(1)
+		expect(await inlineStylesIn('app/utils/a.ts', 'Object.assign(el.style, s)')).toBe(1)
+		expect(await inlineStylesIn('app/utils/a.ts', "el.setAttribute('style', s)")).toBe(1)
+		expect(await inlineStylesIn('app/utils/a.ts', "el.style.setProperty('opacity', v)")).toBe(1)
+		expect(await inlineStylesIn('app/utils/a.ts', 'el.style.setProperty(name, v)')).toBe(1)
 		expect(
-			await outlinesIn(
-				'app/pages/a.vue',
-				sfc('<input style="padding: 0; outline: 2px solid red" />'),
+			await inlineStylesIn(
+				'app/components/ui/A.vue',
+				sfc(`<p @click="el.style.top = '0'" />`, 'const el = document.body'),
 			),
-		).toBe(0)
+		).toBe(1)
+	})
+
+	it('読み取りとカスタムプロパティの設定は通す', async () => {
+		expect(await inlineStylesIn('app/utils/a.ts', 'const v = el.style.display')).toBe(0)
+		expect(await inlineStylesIn('app/utils/a.ts', "el.style.setProperty('--a', v)")).toBe(0)
+		expect(await inlineStylesIn('app/utils/a.ts', "el.setAttribute('aria-label', s)")).toBe(0)
+	})
+
+	it('script がスタイルシートを組み立てる経路を落とす', async () => {
+		expect(await stylesheetsIn('app/utils/a.ts', 'new CSSStyleSheet()')).toBe(1)
+		expect(await stylesheetsIn('app/utils/a.ts', "sheet.insertRule('.a { top: 0; }')")).toBe(1)
+		expect(await stylesheetsIn('app/utils/a.ts', 'document.adoptedStyleSheets = []')).toBe(1)
+		expect(await stylesheetsIn('app/utils/a.ts', 'document.styleSheets[0]')).toBe(1)
+		expect(await stylesheetsIn('app/utils/a.ts', 'tag.sheet')).toBe(1)
+		expect(
+			await stylesheetsIn('app/components/ui/A.vue', sfc('<p />', `const t = '<style>'`)),
+		).toBe(1)
+	})
+
+	it('規則を持てない値は通す', async () => {
+		expect(await stylesheetsIn('app/utils/a.ts', "const t = '.a { top: 0; }'")).toBe(0)
+		expect(await stylesheetsIn('app/utils/a.ts', "document.querySelector('style')")).toBe(0)
 	})
 })
 
 describe('色と書体の単一情報源', () => {
-	it('style 属性に書いた色と書体を落とす', async () => {
-		expect(
-			await singleSourcesIn('app/pages/a.vue', sfc('<p style="color: #ff0000" />')),
-		).toBeGreaterThan(0)
-		expect(
-			await singleSourcesIn(
-				'app/pages/a.vue',
-				sfc(`<p style="font-family: 'Comic Sans MS'" />`),
-			),
-		).toBeGreaterThan(0)
-		expect(
-			await singleSourcesIn(
-				'app/pages/a.vue',
-				sfc(`<p :style="{ color: '#ff0000', fontFamily: 'Comic Sans MS' }" />`),
-			),
-		).toBe(2)
-	})
-
-	it('トークンを引く style 属性は通す', async () => {
-		expect(
-			await singleSourcesIn(
-				'app/pages/a.vue',
-				sfc('<p style="color: var(--color-main); font-family: var(--font-mono)" />'),
-			),
-		).toBe(0)
-		expect(
-			await singleSourcesIn(
-				'app/pages/a.vue',
-				sfc(`<p :style="{ '--callout-rgb-light': rgb }" />`, `const rgb = '124, 58, 237'`),
-			),
-		).toBe(0)
-	})
-
 	it('トークンに無い family のクラスを落とす', async () => {
 		expect(
 			await singleSourcesIn('app/pages/a.vue', sfc('<p class="font-serif" />')),
@@ -634,99 +520,6 @@ describe('色と書体の単一情報源', () => {
 		expect(await singleSourcesIn('app/pages/a.vue', sfc('<p class="font-medium" />'))).toBe(0)
 	})
 
-	it('script が要素のスタイルに書く色と書体を .vue の外でも落とす', async () => {
-		expect(
-			await singleSourcesIn('app/composables/useA.ts', "el.style.color = '#ff0000'"),
-		).toBeGreaterThan(0)
-		expect(
-			await singleSourcesIn(
-				'app/utils/a.ts',
-				"el.style.setProperty('font-family', 'Georgia')",
-			),
-		).toBeGreaterThan(0)
-		expect(
-			await singleSourcesIn('app/composables/useA.ts', "el.style.overflow = 'hidden'"),
-		).toBe(0)
-	})
-
-	it('script が組み立てたスタイルシートの色と書体を .vue の外でも落とす', async () => {
-		expect(
-			await singleSourcesIn(
-				'app/composables/useA.ts',
-				"sheet.insertRule('.a { color: tomato; font-family: Georgia; }')",
-			),
-		).toBe(2)
-		expect(
-			await singleSourcesIn('app/utils/a.ts', "tag.textContent = '.a { color: #ff0000; }'"),
-		).toBeGreaterThan(0)
-		expect(
-			await singleSourcesIn(
-				'app/utils/a.ts',
-				"tag.innerHTML = '.a { font-family: Georgia; }'",
-			),
-		).toBeGreaterThan(0)
-		expect(
-			await singleSourcesIn('app/utils/a.ts', "sheet.insertRule('.a { display: flex; }')"),
-		).toBe(0)
-	})
-
-	it('組み立てたスタイルシートの指摘を1件に寄せる', async () => {
-		const SHEET = "sheet.insertRule('html { scroll-behavior: smooth; }')"
-		expect(await landingsIn('app/utils/a.ts', SHEET)).toBe(1)
-		expect(
-			await themeBranchesIn(
-				'app/utils/a.ts',
-				"sheet.insertRule('@media (prefers-color-scheme: dark) { .a { top: 0; } }')",
-			),
-		).toBe(1)
-		expect(
-			await webFontsIn(
-				'app/utils/a.ts',
-				'sheet.insertRule(\'@font-face { src: url("/x.woff2"); }\')',
-			),
-		).toBe(1)
-		expect(
-			await singleSourcesIn('app/utils/a.ts', "el.style.cssText = '.a { color: tomato; }'"),
-		).toBe(1)
-		expect(
-			await landingsIn(
-				'app/utils/a.ts',
-				'sheet.insertRule(`html { scroll-behavior: ${v}; }`)',
-			),
-		).toBe(1)
-		expect(
-			await themeBranchesIn(
-				'app/utils/a.ts',
-				"sheet.insertRule('@media (prefers-color-scheme: dark)')",
-			),
-		).toBe(1)
-		expect(
-			await webFontsIn(
-				'app/utils/a.ts',
-				'sheet.insertRule(\'@import url("https://fonts.googleapis.com/css2")\')',
-			),
-		).toBe(1)
-		expect(
-			await themeBranchesIn(
-				'app/utils/a.ts',
-				"sheet.insertRule('@media (Prefers-Color-Scheme: dark) { .a { top: 0; } }')",
-			),
-		).toBe(1)
-		expect(
-			await reducedMotionsIn(
-				'app/utils/a.ts',
-				"sheet.insertRule('@media (Prefers-Reduced-Motion: reduce) { .a { top: 0; } }')",
-			),
-		).toBe(1)
-	})
-
-	it('script が組み立てた @import を落とす', async () => {
-		expect(
-			await cssImportsIn('app/utils/a.ts', 'sheet.insertRule(\'@import url("/theme.css")\')'),
-		).toBe(1)
-		expect(await cssImportsIn('app/utils/a.ts', "sheet.insertRule('.a { top: 0; }')")).toBe(0)
-	})
-
 	it('<style> と .css と同じ判定で見る', async () => {
 		const style = `<style scoped>.a { font-family: 'Comic Sans MS'; }</style>`
 		expect(
@@ -736,27 +529,8 @@ describe('色と書体の単一情報源', () => {
 })
 
 describe('表示・非表示の出し分け', () => {
-	it('style 属性と :style の display: none を落とす', async () => {
-		expect(await displaysIn('app/pages/a.vue', sfc('<p style="display: none" />'))).toBe(1)
-		expect(
-			await displaysIn(
-				'app/pages/a.vue',
-				sfc(`<p :style="{ display: open ? 'block' : 'none' }" />`, 'const open = false'),
-			),
-		).toBe(1)
-	})
-
-	it('出し分けを持つ template のクラスと、並べ方の display は通す', async () => {
+	it('出し分けを持つ template のクラスは通す', async () => {
 		expect(await displaysIn('app/pages/a.vue', sfc('<p class="hidden md:block" />'))).toBe(0)
-		expect(await displaysIn('app/pages/a.vue', sfc('<p style="display: flex" />'))).toBe(0)
-	})
-
-	it('script が要素のスタイルに書く経路を .vue の外でも落とす', async () => {
-		expect(await displaysIn('app/composables/useA.ts', "el.style.display = 'none'")).toBe(1)
-		expect(await displaysIn('app/utils/a.ts', "el.style.setProperty('display', 'none')")).toBe(
-			1,
-		)
-		expect(await displaysIn('app/composables/useA.ts', "el.style.overflow = 'hidden'")).toBe(0)
 	})
 
 	it('<style> の宣言と @apply を落とす', async () => {
@@ -785,51 +559,6 @@ describe('モーションの長さ', () => {
 			),
 		).toBe(0)
 		expect(await motionsIn('app/pages/a.vue', sfc('<p class="text-sm font-medium" />'))).toBe(0)
-	})
-
-	it('style 属性と :style の長さを落とす', async () => {
-		expect(
-			await motionsIn('app/pages/a.vue', sfc('<p style="transition: color 0.42s" />')),
-		).toBe(1)
-		expect(
-			await motionsIn(
-				'app/pages/a.vue',
-				sfc(`<p :style="{ transitionDuration: '0.42s' }" />`),
-			),
-		).toBe(1)
-		expect(
-			await motionsIn('app/pages/a.vue', sfc('<p style="transition: color 0.15s" />')),
-		).toBe(0)
-	})
-
-	it('script が要素のスタイルに書く長さを .vue の外でも落とす', async () => {
-		expect(
-			await motionsIn('app/composables/useA.ts', "el.style.transition = 'opacity 0.42s'"),
-		).toBe(1)
-		expect(
-			await motionsIn(
-				'app/utils/a.ts',
-				"el.style.setProperty('transition-duration', '0.42s')",
-			),
-		).toBe(1)
-		expect(
-			await motionsIn('app/composables/useA.ts', "el.style.transition = 'opacity 0.2s'"),
-		).toBe(0)
-	})
-
-	it('script が組み立てたスタイルシートの長さを落とす', async () => {
-		expect(
-			await motionsIn(
-				'app/utils/a.ts',
-				"sheet.insertRule('.a { transition: color 0.42s; }')",
-			),
-		).toBe(1)
-		expect(
-			await motionsIn(
-				'app/utils/a.ts',
-				"sheet.insertRule('.a { transition: color 0.15s; }')",
-			),
-		).toBe(0)
 	})
 
 	it('<style> の宣言と @apply を落とす', async () => {

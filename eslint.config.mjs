@@ -16,12 +16,8 @@ import styleTokens, {
 	OFF_PURPOSE_MOTION_CLASS,
 	OFF_TOKEN_FONT_CLASS,
 	OUTLINE_REMOVAL_CLASS,
-	OUTLINE_REMOVAL_PROPERTY,
-	OUTLINE_REMOVAL_VALUE,
-	OUTLINE_RESET_VALUE,
 	SCROLL_BEHAVIOR_CLASS,
 	SCROLL_BEHAVIOR_MESSAGE,
-	SCROLL_BEHAVIOR_PROPERTY,
 	scriptSpellingSelector,
 	STYLE_EXCEPTION,
 	THEME_CLASS_MESSAGE,
@@ -34,6 +30,7 @@ import styleTokens, {
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
 
+// 見るのは <style> の中だけなので、ブロックを持てる .vue にだけ配る
 const styleRules = Object.fromEntries(
 	Object.keys(styleTokens.rules).map((name) => [`style/${name}`, 'error']),
 )
@@ -47,8 +44,8 @@ const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
 const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない。読み取りを useScrollFrame に渡し、アプリ全体で1本の購読に集約する。 ${INVARIANT_URL}`
 const DOM_ASSEMBLY_MESSAGE = `composable と utils は DOM を組み立てない。要素の生成・複製・挿入・文字列からの差し込みは、それを描くテンプレートが持つ。読み取り・購読・フォーカスの移動はここで行ってよい。 ${ARCHITECTURE_URL}`
-const IMPORTANT_MESSAGE = `!important は書かない。Tailwind の ! 修飾子と style 属性も同じ。第三者由来のインラインスタイルを打ち消すときだけ許す。${STYLE_EXCEPTION}`
-const OUTLINE_MESSAGE = `フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。Tailwind の outline-none / outline-0 と style 属性も同じ。同じ要素に別の見える指標があるときだけ許す。${STYLE_EXCEPTION}`
+const IMPORTANT_MESSAGE = `!important は書かない。Tailwind の ! 修飾子も同じ。第三者由来のインラインスタイルを打ち消すときだけ許す。${STYLE_EXCEPTION}`
+const OUTLINE_MESSAGE = `フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。Tailwind の outline-none / outline-0 も同じ。同じ要素に別の見える指標があるときだけ許す。${STYLE_EXCEPTION}`
 
 const PALETTE_COLORS =
 	'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
@@ -56,17 +53,6 @@ const PALETTE_CLASS = `(?:^|[\\s:])!?[a-z]+(?:-[a-z]+)*-(?:${PALETTE_COLORS})-(?
 // 任意値の variant（min-[600px]:）は角括弧の検査が落とす
 const BREAKPOINT_CLASS = `(?:^|[\\s:])(?:${OFF_BREAKPOINT_VARIANTS.join('|')}):`
 const BANG_CLASS = '(?:^|[\\s:])!'
-const INLINE_IMPORTANT = '!\\s*important'
-// :style のオブジェクトはキーと値に割れるので、綴りでは当たらない
-const OUTLINE_KEY = '/^outline(?:-?(?:style|width|color))?$/i'
-const OUTLINE_RESET_KEY = '/^(?:all|outline(?:-?style)?)$/i'
-const styleObject = (key) =>
-	`VAttribute[directive=true][key.argument.name='style'] :matches(Property[key.name=${key}], Property[key.value=${key}])`
-// 値は条件式やテンプレート文字列の中にも入るので子孫まで見る。
-// 比較の被演算子（`kind === 'none'`）は値ではないので外す
-const outlineValue = (value) =>
-	`:matches(Literal[value=/${value}/i], TemplateElement[value.cooked=/${value}/i]):not(BinaryExpression > *)`
-
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
 
 const STDIN_MESSAGE =
@@ -179,6 +165,89 @@ const WEB_FONT = [
 	},
 ]
 
+const INLINE_STYLE_MESSAGE =
+	'スタイルを style 属性と el.style に書かない。宣言を置けるのは Tailwind のクラスと <style> / .css だけ。JS から渡すのは CSS カスタムプロパティの値にし、それを読む宣言を <style> に置く。'
+const STYLESHEET_MESSAGE =
+	'script でスタイルシートを組み立てない。規則の置き場は .vue の <style> と .css だけで、lint が読むのもそこだけ。'
+
+// 名乗るキーだけを通す。`[key]` も `...styles` もカスタムプロパティである保証が無い
+const CUSTOM_PROPERTY = '/^--/'
+const STYLE_BINDING = "VAttribute[directive=true][key.argument.name='style'] > VExpressionContainer"
+// 添字と引用符で綴りが変わるので、名前と文字列の両方を見る。
+// 代入先は el.style そのものと、その下のプロパティの2通り
+const STYLE_WRITE = [
+	"[left.object.property.name='style']",
+	"[left.object.property.value='style']",
+	"[left.property.name='style']",
+	"[left.property.value='style']",
+].join(', ')
+const STYLE_CALL =
+	"CallExpression:matches([callee.object.property.name='style'], [callee.object.property.value='style'])"
+
+const INLINE_STYLE = [
+	{
+		selector: "VAttribute[directive=false][key.name='style']",
+		message: INLINE_STYLE_MESSAGE,
+	},
+	// 配列・文字列・変数は宣言そのものを持つので、キーを見る前に落とす
+	{
+		selector: `${STYLE_BINDING} > *:not(ObjectExpression)`,
+		message: INLINE_STYLE_MESSAGE,
+	},
+	{
+		selector: `${STYLE_BINDING} > ObjectExpression > :not(Property[key.value=${CUSTOM_PROPERTY}])`,
+		message: INLINE_STYLE_MESSAGE,
+	},
+	// 読み取りは通すので、書き込む経路だけを見る
+	{
+		selector: `AssignmentExpression:matches(${STYLE_WRITE})`,
+		message: INLINE_STYLE_MESSAGE,
+	},
+	{
+		selector: `${STYLE_CALL}:not([callee.property.name='setProperty'])`,
+		message: INLINE_STYLE_MESSAGE,
+	},
+	{
+		selector: `${STYLE_CALL}[callee.property.name='setProperty']:not([arguments.0.value=${CUSTOM_PROPERTY}])`,
+		message: INLINE_STYLE_MESSAGE,
+	},
+	// 宣言の並びをまとめて渡す経路。書き込む先の綴りは引数の側が持つ
+	{
+		selector: `CallExpression[callee.property.name='assign'] > MemberExpression:matches([property.name='style'], [property.value='style'])`,
+		message: INLINE_STYLE_MESSAGE,
+	},
+	{
+		selector: "CallExpression[callee.property.name='setAttribute'] > Literal[value=/^style$/i]",
+		message: INLINE_STYLE_MESSAGE,
+	},
+]
+
+// 規則を持てるオブジェクトと、規則を差し込む呼び出し
+const STYLESHEET_API =
+	'/^(?:styleSheets|adoptedStyleSheets|sheet|insertRule|deleteRule|addRule|removeRule)$/'
+
+const STYLESHEET_ASSEMBLY = [
+	{
+		selector: `MemberExpression:matches([property.name=${STYLESHEET_API}], [property.value=${STYLESHEET_API}])`,
+		message: STYLESHEET_MESSAGE,
+	},
+	{
+		selector: "NewExpression[callee.name='CSSStyleSheet']",
+		message: STYLESHEET_MESSAGE,
+	},
+	{
+		selector:
+			'CallExpression[callee.property.name=/^createElement(?:NS)?$/] > Literal[value=/^style$/i]',
+		message: STYLESHEET_MESSAGE,
+	},
+	// 文字列から差し込む経路。要素の綴りだけが共通なので、そこを見る
+	{
+		selector:
+			':matches(Literal[value=/<style[\\s/>]/i], TemplateElement[value.cooked=/<style[\\s/>]/i])',
+		message: STYLESHEET_MESSAGE,
+	},
+]
+
 const AREA_DIRECTORY_MESSAGE = `components/ の直下にファイルを置かない。layout / article / content / common / error のいずれかに入れる。 ${ARCHITECTURE_URL}`
 
 const PAGE_CONTEXT_ROUTE_MESSAGE = `route を読むのは入口（pages/ layouts/ app.vue error.vue）だけ。ここでは props か引数で受け取る。 ${ARCHITECTURE_URL}`
@@ -278,14 +347,6 @@ const TEMPLATE_RESTRICTIONS = [
 		message: IMPORTANT_MESSAGE,
 	},
 	{
-		selector: `VAttribute[directive=false][key.name='style'] > VLiteral[value=/${INLINE_IMPORTANT}/i]`,
-		message: IMPORTANT_MESSAGE,
-	},
-	{
-		selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Literal[value=/${INLINE_IMPORTANT}/i], TemplateElement[value.cooked=/${INLINE_IMPORTANT}/i])`,
-		message: IMPORTANT_MESSAGE,
-	},
-	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${OUTLINE_REMOVAL_CLASS}/]`,
 		message: OUTLINE_MESSAGE,
 	},
@@ -293,35 +354,9 @@ const TEMPLATE_RESTRICTIONS = [
 		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${OUTLINE_REMOVAL_CLASS}/], TemplateElement[value.cooked=/${OUTLINE_REMOVAL_CLASS}/])`,
 		message: OUTLINE_MESSAGE,
 	},
-	{
-		selector: `VAttribute[directive=false][key.name='style'] > VLiteral[value=/${OUTLINE_REMOVAL_PROPERTY}/i]`,
-		message: OUTLINE_MESSAGE,
-	},
-	{
-		selector: `VAttribute[directive=true][key.argument.name='style'] :matches(Literal[value=/${OUTLINE_REMOVAL_PROPERTY}/i], TemplateElement[value.cooked=/${OUTLINE_REMOVAL_PROPERTY}/i])`,
-		message: OUTLINE_MESSAGE,
-	},
-	{
-		selector: `${styleObject(OUTLINE_KEY)} ${outlineValue(OUTLINE_REMOVAL_VALUE)}`,
-		message: OUTLINE_MESSAGE,
-	},
-	{
-		selector: `${styleObject(OUTLINE_RESET_KEY)} ${outlineValue(OUTLINE_RESET_VALUE)}`,
-		message: OUTLINE_MESSAGE,
-	},
-	// 数値の 0 は esquery の正規表現が文字列にしか当たらないので別に見る。
-	// 添字や条件の 0 まで拾わないよう値そのものだけを見て、文字列の '0' は上の綴りに任せる
-	{
-		selector: `${styleObject(OUTLINE_KEY)} > Literal[value=0][value=type(number)]`,
-		message: OUTLINE_MESSAGE,
-	},
 	...PAGE_SCROLL,
 	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${SCROLL_BEHAVIOR_CLASS}/]`,
-		message: SCROLL_BEHAVIOR_MESSAGE,
-	},
-	{
-		selector: `VAttribute[directive=false][key.name='style'] > VLiteral[value=/${SCROLL_BEHAVIOR_PROPERTY}/i]`,
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
 	// テンプレートに直接書く <link href>。属性を限らず、読み込む先の綴りで見る
@@ -333,6 +368,8 @@ const TEMPLATE_RESTRICTIONS = [
 		selector: `VAttribute[directive=true] :matches(Literal[value=/${WEB_FONT_RESOURCE}/i], TemplateElement[value.cooked=/${WEB_FONT_RESOURCE}/i])`,
 		message: WEB_FONT_MESSAGE,
 	},
+	...INLINE_STYLE,
+	...STYLESHEET_ASSEMBLY,
 ]
 
 const restrictions = {
@@ -400,6 +437,8 @@ const restrictions = {
 		...SCROLL_SUBSCRIPTION,
 		...PAGE_SCROLL,
 		...WEB_FONT,
+		...INLINE_STYLE,
+		...STYLESHEET_ASSEMBLY,
 	],
 }
 
@@ -463,7 +502,7 @@ export default [
 	},
 	{
 		files: withTest('app/**/*.ts'),
-		plugins: { imports: importLayers, style: styleTokens, queries: articleQueries },
+		plugins: { imports: importLayers, queries: articleQueries },
 		languageOptions: {
 			parser: tsParser,
 			parserOptions: {
@@ -473,7 +512,6 @@ export default [
 		},
 		rules: {
 			...restrictions,
-			...styleRules,
 			'imports/order': 'error',
 			'queries/published': 'error',
 			'no-restricted-syntax': [
