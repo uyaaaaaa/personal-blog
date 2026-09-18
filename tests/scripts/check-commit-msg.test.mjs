@@ -21,6 +21,8 @@ const errorsOf = (subject) => {
 // 落ちる理由が字数や日本語の検査に移っても気づけるよう、見る指摘を文言で絞る
 const rejectsPrefix = (subject) => /接頭辞/.test(errorsOf(subject))
 const rejectsEnding = (subject) => /体言止め/.test(errorsOf(subject))
+const rejectsScript = (subject) => /日本語がない/.test(errorsOf(subject))
+const rejectsGap = (message) => /空行/.test(errorsOf(message))
 
 describe('分類の接頭辞', () => {
 	it('型・スコープ・破壊的変更の印が付いた件名を落とす', () => {
@@ -68,5 +70,30 @@ describe('体言止めの語尾', () => {
 
 	it('定型の件名は見ない', () => {
 		expect(rejectsEnding('Revert "ヘッダーのナビゲーションの色を調整対応"')).toBe(false)
+	})
+})
+
+describe('件名の日本語', () => {
+	it('日本語のない件名を落とす', () => {
+		expect(rejectsScript('add rel attribute to external links')).toBe(true)
+		expect(rejectsScript('View All pagination fix')).toBe(true)
+	})
+
+	it('日本語の混じった件名は通す', () => {
+		expect(rejectsScript('外部リンクのrelを足して参照元の漏れを防ぐ')).toBe(false)
+		expect(rejectsScript('起動指定からrun_in_background: trueの重複記述を消す')).toBe(false)
+	})
+})
+
+describe('件名と本文の間の空行', () => {
+	const subject = '外部リンクのrelを足して参照元の漏れを防ぐ'
+
+	it('件名の次の行から本文が続くメッセージを落とす', () => {
+		expect(rejectsGap(`${subject}\n参照元が漏れるため`)).toBe(true)
+	})
+
+	it('空行を挟んだ本文は通す', () => {
+		expect(rejectsGap(`${subject}\n\n参照元が漏れるため`)).toBe(false)
+		expect(rejectsGap(subject)).toBe(false)
 	})
 })
