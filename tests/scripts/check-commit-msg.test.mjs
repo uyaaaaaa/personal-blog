@@ -23,6 +23,11 @@ const rejectsPrefix = (subject) => /接頭辞/.test(errorsOf(subject))
 const rejectsEnding = (subject) => /体言止め/.test(errorsOf(subject))
 const rejectsScript = (subject) => /日本語がない/.test(errorsOf(subject))
 const rejectsGap = (message) => /空行/.test(errorsOf(message))
+const rejectsLength = (subject) => /件名が\d+字/.test(errorsOf(subject))
+const rejectsPeriod = (subject) => /句点/.test(errorsOf(subject))
+
+// 条件を1つだけ崩した件名を作る土台。他の条件は満たしている
+const VALID = '外部リンクのrelを足して参照元の漏れを防ぐ'
 
 describe('分類の接頭辞', () => {
 	it('型・スコープ・破壊的変更の印が付いた件名を落とす', () => {
@@ -80,20 +85,45 @@ describe('件名の日本語', () => {
 	})
 
 	it('日本語の混じった件名は通す', () => {
-		expect(rejectsScript('外部リンクのrelを足して参照元の漏れを防ぐ')).toBe(false)
-		expect(rejectsScript('起動指定からrun_in_background: trueの重複記述を消す')).toBe(false)
+		expect(rejectsScript(VALID)).toBe(false)
 	})
 })
 
 describe('件名と本文の間の空行', () => {
-	const subject = '外部リンクのrelを足して参照元の漏れを防ぐ'
-
 	it('件名の次の行から本文が続くメッセージを落とす', () => {
-		expect(rejectsGap(`${subject}\n参照元が漏れるため`)).toBe(true)
+		expect(rejectsGap(`${VALID}\n参照元が漏れるため`)).toBe(true)
 	})
 
 	it('空行を挟んだ本文は通す', () => {
-		expect(rejectsGap(`${subject}\n\n参照元が漏れるため`)).toBe(false)
-		expect(rejectsGap(subject)).toBe(false)
+		expect(rejectsGap(`${VALID}\n\n参照元が漏れるため`)).toBe(false)
+		expect(rejectsGap(VALID)).toBe(false)
+	})
+})
+
+describe('件名の字数', () => {
+	it('短すぎる件名を落とす', () => {
+		expect(rejectsLength('目次を直す')).toBe(true)
+	})
+
+	it('長すぎる件名を落とす', () => {
+		expect(
+			rejectsLength(
+				'記事一覧のページングの判定をutilsの純粋関数に出して、幅ごとに実際に見えている件数と突き合わせるテストで守る',
+			),
+		).toBe(true)
+	})
+
+	it('収まった件名は通す', () => {
+		expect(rejectsLength(VALID)).toBe(false)
+	})
+})
+
+describe('末尾の句点', () => {
+	it('句点で終わる件名を落とす', () => {
+		expect(rejectsPeriod(`${VALID}。`)).toBe(true)
+	})
+
+	it('句点の無い件名は通す', () => {
+		expect(rejectsPeriod(VALID)).toBe(false)
 	})
 })
