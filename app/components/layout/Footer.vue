@@ -43,6 +43,7 @@
 			links: [
 				{ path: '/article', label: 'All Articles' },
 				{ path: '/tags', label: 'Tags' },
+				{ path: '/profile', label: 'Profile' },
 			],
 		},
 		{

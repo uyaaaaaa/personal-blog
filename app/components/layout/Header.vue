@@ -125,6 +125,12 @@
 				</button>
 
 				<ThemeToggle class="self-center" />
+				<NuxtLink
+					to="/profile"
+					class="profile-link hidden items-center font-mono text-sm font-medium transition-color hover:text-accent md:flex"
+					prefetch-on="interaction"
+					>Profile</NuxtLink
+				>
 				<Navigation
 					:is-open="isMenuOpen"
 					:location="location"
@@ -225,6 +231,16 @@
 <style>
 	body.scroll-locked {
 		overflow: hidden;
+	}
+</style>
+
+<style scoped>
+	.profile-link {
+		color: var(--color-main);
+	}
+
+	.profile-link.router-link-active {
+		color: var(--color-accent);
 	}
 </style>
 
