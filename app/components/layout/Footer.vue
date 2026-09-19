@@ -1,7 +1,8 @@
 <template>
 	<footer class="border-t border-border px-5 md:px-10">
 		<nav
-			class="mx-auto flex max-w-column flex-wrap gap-x-16 gap-y-8 py-10 md:py-12"
+			class="mx-auto flex flex-wrap gap-x-16 gap-y-8 py-10 md:py-12"
+			:class="measure"
 			aria-label="Footer"
 		>
 			<div
@@ -33,6 +34,8 @@
 
 <script setup lang="ts">
 	import { useArticleCategories } from '~/composables/useArticleCategories'
+
+	defineProps<{ measure: string }>()
 
 	const { data: categories } = useArticleCategories()
 

@@ -1,5 +1,5 @@
 <template>
-	<div class="mx-auto w-full max-w-column space-y-8">
+	<div class="space-y-8">
 		<div class="flex items-baseline gap-4">
 			<h1 class="font-mono text-heading font-bold text-main">
 				<span class="text-accent">#</span>{{ tagName }}
