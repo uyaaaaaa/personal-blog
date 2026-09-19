@@ -366,6 +366,34 @@ describe('判定と event', () => {
 		expect(decide(dispatch(), ask({ review: bare }))?.reason).toMatch(/先頭行/)
 	})
 
+	it('先頭行が空でも、本文があるなら判定を要求する', () => {
+		const led = review({ body: '\n前置きだけ' })
+		expect(decide(dispatch(), ask({ review: led }))?.reason).toMatch(/先頭行/)
+	})
+
+	it('body の無い Approve は event 側の検証だけで通す', () => {
+		const clean = review({ event: 'APPROVE', body: '', comments: [] })
+		expect(decide(dispatch(), ask({ review: clean }))).toBeNull()
+	})
+
+	it('Approve 以外は body が無くても免除しない', () => {
+		const empty = review({
+			event: 'COMMENT',
+			body: '',
+			comments: [inline(`${IMO} **見出し**\n\n理由。`)],
+		})
+		expect(decide(dispatch(), ask({ review: empty }))?.reason).toMatch(/先頭行/)
+	})
+
+	it('body が無くても、件数に対して緩い event は落とす', () => {
+		const understated = review({
+			event: 'APPROVE',
+			body: '',
+			comments: [inline(`${MUST} **見出し**\n\n理由。`)],
+		})
+		expect(decide(dispatch(), ask({ review: understated }))?.reason).toMatch(/REQUEST_CHANGES/)
+	})
+
 	it('判定の名前でない event を落とす', () => {
 		const wrong = review({ event: 'DISMISS' })
 		expect(decide(dispatch(), ask({ review: wrong }))?.reason).toMatch(/REQUEST_CHANGES/)
