@@ -201,9 +201,12 @@ const PAGE_HELPERS = `
 		const label = (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\\s+/g, ' ')
 		return el.tagName + (label ? \` "\${label.slice(0, 24)}"\` : '') + ($shown(el) ? '' : ' (見えない)')
 	}
+	// 検索の入力欄は目印を枠に出すので、輪郭を探す先も枠にする
+	const $ringHost = (el) =>
+		(el.matches?.('.search-input') && el.closest('.search-field')) || el
 	const $ring = (el) => {
 		if (!el || el === document.body) return ${JSON.stringify(NO_RING)}
-		const style = getComputedStyle(el)
+		const style = getComputedStyle($ringHost(el))
 		if (style.outlineStyle === 'none' || parseFloat(style.outlineWidth) === 0)
 			return ${JSON.stringify(NO_RING)}
 		return style.outlineStyle + ' ' + style.outlineWidth

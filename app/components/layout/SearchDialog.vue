@@ -184,6 +184,8 @@
 		},
 		{ flush: 'post' },
 	)
+
+	/* eslint-disable style/no-outline-removal -- キーボードの目印は入力欄ではなく枠が持つ */
 </script>
 
 <style scoped>
@@ -244,6 +246,16 @@
 
 	.search-field:focus-within {
 		border-bottom-color: var(--color-accent);
+	}
+
+	.search-input:focus-visible {
+		outline: none;
+	}
+
+	/* ダイアログが overflow: hidden なので、外に出した輪郭は切れる。内側に引く */
+	.search-field:has(.search-input:focus-visible:not([data-pointer-focus])) {
+		outline: 2px solid var(--color-accent);
+		outline-offset: -2px;
 	}
 
 	.search-field-icon {

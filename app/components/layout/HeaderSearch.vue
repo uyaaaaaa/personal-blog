@@ -242,6 +242,8 @@
 	onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPointerdown))
 
 	defineExpose({ focus, close, isVisible })
+
+	/* eslint-disable style/no-outline-removal -- キーボードの目印は入力欄ではなく枠が持つ */
 </script>
 
 <style scoped>
@@ -269,6 +271,15 @@
 
 	.search-input::placeholder {
 		color: var(--color-sub);
+	}
+
+	.search-input:focus-visible {
+		outline: none;
+	}
+
+	.search-field:has(.search-input:focus-visible:not([data-pointer-focus])) {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
 	}
 
 	.search-panel-layer {
