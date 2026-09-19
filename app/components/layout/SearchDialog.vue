@@ -184,6 +184,8 @@
 		},
 		{ flush: 'post' },
 	)
+
+	/* eslint-disable style/no-outline-removal -- この入力欄はフォーカス位置を下線（.search-field:focus-within）で示すため、開き方によらずリングを出さない */
 </script>
 
 <style scoped>
@@ -244,6 +246,10 @@
 
 	.search-field:focus-within {
 		border-bottom-color: var(--color-accent);
+	}
+
+	.search-input:focus-visible {
+		outline: none;
 	}
 
 	.search-field-icon {
