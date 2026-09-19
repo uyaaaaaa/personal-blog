@@ -1533,6 +1533,33 @@ const probes = [
 		},
 	},
 	{
+		// フォーカスが外れると、候補を出したまま入力欄だけ閉じた幅に戻る
+		name: 'inline-パネルの素の部分を押しても幅とフォーカスが動かない',
+		opensByInput: true,
+		run: async (p) => {
+			await p.open()
+			const open = await p.evaluate('return $state()')
+			const point = await p.evaluate(`
+				const box = document.querySelector(OVERLAY).getBoundingClientRect()
+				return { x: Math.round(box.left + 8), y: Math.round(box.bottom - 6) }
+			`)
+			sent('パネルの素の部分を実クリック')
+			await p.mouse('mousePressed', point, 1)
+			await p.mouse('mouseReleased', point, 0)
+			await sleep(TRANSITION)
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
+			return {
+				observed: `${show(state, ['overlay', 'active', 'query'])} 幅=${open.width}→${state.width}`,
+				ok: state.overlay === 'visible' && state.inInput && state.width === open.width,
+			}
+		},
+	},
+	{
 		name: 'inline-打つと候補とスクリムが出て背後が止まる',
 		opensByInput: true,
 		run: async (p) => {

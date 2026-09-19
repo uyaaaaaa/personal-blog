@@ -1,7 +1,10 @@
 <template>
 	<div
 		ref="trapRef"
-		class="header-search mx-8 hidden max-w-search-trigger flex-1 items-center self-stretch focus-within:max-w-search-open md:flex"
+		class="header-search mx-8 hidden flex-1 items-center self-stretch md:flex"
+		:class="
+			isOpen ? 'max-w-search-open' : 'max-w-search-trigger focus-within:max-w-search-open'
+		"
 	>
 		<label
 			class="search-field flex w-full items-center gap-2 rounded-md border border-border bg-surface-subtle px-4 py-2 transition-color focus-within:border-accent"
@@ -59,6 +62,7 @@
 		<div
 			class="search-panel-layer"
 			:class="{ 'is-open': isOpen }"
+			@pointerdown="onPanelPointerdown"
 		>
 			<div
 				class="search-panel max-h-search-panel rounded-card border border-border bg-surface shadow-lg"
@@ -146,6 +150,13 @@
 	const onPointerdown = (event: PointerEvent) => {
 		if (event.target !== inputRef.value) event.preventDefault()
 		focusByGesture(inputRef.value)
+	}
+
+	// 素の部分を押すとフォーカスが body に落ち、候補を出したまま入力欄だけ閉じた幅に戻る
+	const onPanelPointerdown = (event: PointerEvent) => {
+		if ((event.target as HTMLElement).closest('a')) return
+
+		event.preventDefault()
 	}
 
 	const isVisible = () => (inputRef.value?.getClientRects().length ?? 0) > 0
