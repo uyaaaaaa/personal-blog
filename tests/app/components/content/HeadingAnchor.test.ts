@@ -41,7 +41,6 @@ const click = async (init: MouseEventInit = {}, headingId = 'section') => {
 }
 
 describe('HeadingAnchor', () => {
-	// 見出しの中にあるので、名前を持つと見出しの読み上げ名に混ざる
 	it('読み上げと Tab からは外す', async () => {
 		const wrapper = await mountSuspended(HeadingAnchor, { props: { headingId: 'section' } })
 
@@ -56,7 +55,6 @@ describe('HeadingAnchor', () => {
 		expect(writeText).toHaveBeenCalledWith(`${location.origin}${location.pathname}#section`)
 	})
 
-	// 組み立てた文字列だと、日本語の id が素のまま残る
 	it('非 ASCII の id は、ブラウザと同じ percent-encode された形で入れる', async () => {
 		await click({}, '概要')
 

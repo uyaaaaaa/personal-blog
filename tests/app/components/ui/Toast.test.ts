@@ -12,7 +12,6 @@ afterEach(() => {
 })
 
 describe('Toast', () => {
-	// v-if で消すと、出す側が触れる要素が SSR の HTML に無くなる
 	it('出していない間も要素は残し、見えなくするだけにする', async () => {
 		const wrapper = await mountSuspended(Toast)
 

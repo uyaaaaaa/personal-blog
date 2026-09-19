@@ -51,8 +51,6 @@ describe.each([
 		expect(wrapper.find('a').exists()).toBe(false)
 	})
 
-	// remark-gfm が脚注に置く見出しは sr-only なので、Tab の行き先を作ると輪郭が見えないまま止まる。
-	// relative を残すと sr-only の position を打ち消して、1px の箱が流れに残る
 	it('sr-only の見出しには、リンクも relative も置かない', async () => {
 		const wrapper = await mountHidden(component)
 

@@ -44,7 +44,6 @@ describe('isScreenReaderOnly', () => {
 		},
 	)
 
-	// 綴りが重なるだけのクラスまで拾うと、出ている見出しからアイコンが消える
 	it.each([['group relative'], ['not-sr-only'], ['sr-only-label'], [undefined]])(
 		'%s は画面に出る見出しとして見る',
 		(className) => {

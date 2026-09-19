@@ -24,7 +24,6 @@ describe('useToast', () => {
 		expect(isVisible.value).toBe(false)
 	})
 
-	// 消える時刻を持ち越すと、2回目が出てすぐ引っ込む
 	it('引っ込む前に出し直したら、そこから数え直す', () => {
 		vi.useFakeTimers()
 

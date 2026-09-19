@@ -28,8 +28,7 @@ export default defineNuxtConfig({
 		classSuffix: '',
 	},
 	content: {
-		// 既定では見出しのテキスト全体がアンカーになる。テキストを選びにくくなるので h2 / h3 では止め、
-		// 節への移動は ProseH2 / ProseH3 が click で持つ（選択中の click は移動に使わない）
+		// 既定では見出しのテキスト全体がアンカーになる。テキストを選びにくくなるので h2 / h3 では止める
 		renderer: {
 			anchorLinks: { h2: false, h3: false, h4: true },
 		},
