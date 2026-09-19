@@ -71,6 +71,21 @@ describe.each([
 		expect(scrollIntoView).not.toHaveBeenCalled()
 	})
 
+	// remark-gfm が脚注に置く見出しは sr-only なので、Tab の行き先を作ると輪郭が見えないまま止まる
+	it('sr-only の見出しにはリンクを置かず、押しても動かない', async () => {
+		const wrapper = await mountSuspended(component, {
+			props: { id: 'footnote-label' },
+			attrs: { class: 'sr-only' },
+			slots: { default: () => 'Footnotes' },
+		})
+
+		expect(wrapper.find('a').exists()).toBe(false)
+
+		await wrapper.get(tag).trigger('click')
+
+		expect(scrollIntoView).not.toHaveBeenCalled()
+	})
+
 	it('id が無ければ押しても動かない', async () => {
 		const wrapper = await mount(component)
 
