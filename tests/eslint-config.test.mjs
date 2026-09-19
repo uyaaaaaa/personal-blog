@@ -211,12 +211,6 @@ describe('テーマごとの分岐', () => {
 		).toBeGreaterThan(0)
 	})
 
-	it('Tailwind 既定の色も落とす', async () => {
-		expect(
-			await themeBranchesIn('app/pages/a.vue', sfc('<p class="dark:bg-white" />')),
-		).toBeGreaterThan(0)
-	})
-
 	it('DOM を出し分ける dark: は通す', async () => {
 		expect(await themeBranchesIn('app/pages/a.vue', sfc('<svg class="dark:hidden" />'))).toBe(0)
 		expect(

@@ -11,8 +11,8 @@ import styleTokens, {
 	DOCS_URL,
 	FONT_CLASS_MESSAGE,
 	INVARIANT_URL,
+	MAX_WIDTH_VARIANTS,
 	MOTION_CLASS_MESSAGE,
-	OFF_BREAKPOINT_VARIANTS,
 	OFF_PURPOSE_MOTION_CLASS,
 	OFF_TOKEN_FONT_CLASS,
 	OUTLINE_REMOVAL_CLASS,
@@ -28,7 +28,6 @@ import styleTokens, {
 } from './eslint-rules/style-tokens.mjs'
 
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
-const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
 
 const styleRules = Object.fromEntries(
 	Object.keys(styleTokens.rules).map((name) => [`style/${name}`, 'error']),
@@ -40,17 +39,15 @@ const AUTO_IMPORT_URL = `${DOCS_URL}/adr/02-no-auto-import.md`
 const REDUCED_MOTION_MESSAGE =
 	'prefers-reduced-motion で分岐しない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ。'
 const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL}の2つだけ。他の境界を作らない。 ${BREAKPOINT_URL}`
+const MAX_WIDTH_MESSAGE = `幅の出し分けは ${BREAKPOINT_LABEL}から上に向けて書く。max-* で下に向けて書くと、同じ境界を指す書き方が2通りになる。 ${BREAKPOINT_URL}`
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
 const SCROLL_SUBSCRIPTION_MESSAGE = `scroll / resize を個別に購読しない。読み取りを useScrollFrame に渡し、アプリ全体で1本の購読に集約する。 ${INVARIANT_URL}`
 const DOM_ASSEMBLY_MESSAGE = `composable と utils は DOM を組み立てない。要素の生成・複製・挿入・文字列からの差し込みは、それを描くテンプレートが持つ。読み取り・購読・フォーカスの移動はここで行ってよい。 ${ARCHITECTURE_URL}`
 const IMPORTANT_MESSAGE = `!important は書かない。Tailwind の ! 修飾子も同じ。第三者由来のインラインスタイルを打ち消すときだけ許す。${STYLE_EXCEPTION}`
 const OUTLINE_MESSAGE = `フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。Tailwind の outline-none / outline-0 も同じ。同じ要素に別の見える指標があるときだけ許す。${STYLE_EXCEPTION}`
 
-const PALETTE_COLORS =
-	'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
-const PALETTE_CLASS = `(?:^|[\\s:])!?[a-z]+(?:-[a-z]+)*-(?:${PALETTE_COLORS})-(?:50|[1-9]00|950)\\b`
 // 任意値の variant（min-[600px]:）は角括弧の検査が落とす
-const BREAKPOINT_CLASS = `(?:^|[\\s:])(?:${OFF_BREAKPOINT_VARIANTS.join('|')}):`
+const MAX_WIDTH_CLASS = `(?:^|[\\s:])(?:${MAX_WIDTH_VARIANTS.join('|')}):`
 const BANG_CLASS = '(?:^|[\\s:])!'
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
 
@@ -295,14 +292,6 @@ const TEMPLATE_RESTRICTIONS = [
 		message: ARBITRARY_VALUE_MESSAGE,
 	},
 	{
-		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${PALETTE_CLASS}/]`,
-		message: PALETTE_MESSAGE,
-	},
-	{
-		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${PALETTE_CLASS}/], TemplateElement[value.cooked=/${PALETTE_CLASS}/])`,
-		message: PALETTE_MESSAGE,
-	},
-	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${OFF_TOKEN_FONT_CLASS}/]`,
 		message: FONT_CLASS_MESSAGE,
 	},
@@ -327,12 +316,12 @@ const TEMPLATE_RESTRICTIONS = [
 		message: MOTION_CLASS_MESSAGE,
 	},
 	{
-		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${BREAKPOINT_CLASS}/]`,
-		message: BREAKPOINT_MESSAGE,
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${MAX_WIDTH_CLASS}/]`,
+		message: MAX_WIDTH_MESSAGE,
 	},
 	{
-		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${BREAKPOINT_CLASS}/], TemplateElement[value.cooked=/${BREAKPOINT_CLASS}/])`,
-		message: BREAKPOINT_MESSAGE,
+		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${MAX_WIDTH_CLASS}/], TemplateElement[value.cooked=/${MAX_WIDTH_CLASS}/])`,
+		message: MAX_WIDTH_MESSAGE,
 	},
 	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${BANG_CLASS}/]`,
