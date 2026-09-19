@@ -115,6 +115,18 @@ describe('useTocActive', () => {
 		expect(activeId.value).toBe('b')
 	})
 
+	it('丸めで着地位置を少し超えて止まっても、その見出しを選ぶ', () => {
+		placeHeadings({ a: -300, b: OFFSET + 0.5, c: 300 })
+
+		const { activeId } = mountToc([
+			{ id: 'a', text: 'A' },
+			{ id: 'b', text: 'B' },
+			{ id: 'c', text: 'C' },
+		])
+
+		expect(activeId.value).toBe('b')
+	})
+
 	it('選んだ後に見出しが着地位置より下へ戻ったら、選択を外す', () => {
 		placeHeadings({ a: -300, b: 500 })
 
