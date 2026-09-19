@@ -81,5 +81,5 @@ $ npm run dev &  -- `&`を付与するとバックグラウンド実行
 
 ## おわりに
 
-Have a good Linux life!!! 😍
+Have a good Linux life!!!
 
