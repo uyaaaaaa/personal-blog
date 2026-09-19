@@ -49,7 +49,7 @@ describe.each([
 	it('見出しを押したら節へ移動する', async () => {
 		const wrapper = await mount(component, { id: 'section' })
 
-		await wrapper.get(tag).trigger('click')
+		await wrapper.get(`${tag} > span`).trigger('click')
 
 		expect(scrollIntoView).toHaveBeenCalledTimes(1)
 	})
@@ -67,7 +67,7 @@ describe.each([
 		getSelection.mockReturnValue({ isCollapsed: false } as Selection)
 		const wrapper = await mount(component, { id: 'section' })
 
-		await wrapper.get(tag).trigger('click')
+		await wrapper.get(`${tag} > span`).trigger('click')
 
 		expect(scrollIntoView).not.toHaveBeenCalled()
 	})
@@ -82,15 +82,36 @@ describe.each([
 
 		expect(wrapper.find('a').exists()).toBe(false)
 
+		await wrapper.get(`${tag} > span`).trigger('click')
+
+		expect(scrollIntoView).not.toHaveBeenCalled()
+	})
+
+	// 見出しの箱は列の幅いっぱいまである。文字の外を押して動くと、履歴が知らぬ間に伸びる
+	it('文字を包む要素の外は押しても動かない', async () => {
+		const wrapper = await mount(component, { id: 'section' })
+
 		await wrapper.get(tag).trigger('click')
 
 		expect(scrollIntoView).not.toHaveBeenCalled()
 	})
 
+	it('アイコンを置かない見出しには relative を付けない', async () => {
+		const hidden = await mountSuspended(component, {
+			props: { id: 'footnote-label' },
+			attrs: { class: 'sr-only' },
+			slots: { default: () => 'Footnotes' },
+		})
+		const shown = await mount(component, { id: 'section' })
+
+		expect(hidden.get(tag).classes()).not.toContain('relative')
+		expect(shown.get(tag).classes()).toContain('relative')
+	})
+
 	it('id が無ければ押しても動かない', async () => {
 		const wrapper = await mount(component)
 
-		await wrapper.get(tag).trigger('click')
+		await wrapper.get(`${tag} > span`).trigger('click')
 
 		expect(scrollIntoView).not.toHaveBeenCalled()
 	})

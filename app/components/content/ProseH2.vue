@@ -1,10 +1,10 @@
 <template>
 	<h2
 		:id="props.id"
-		class="group relative"
-		@click.exact="jump"
+		class="group"
+		:class="{ relative: !isHidden }"
 	>
-		<slot />
+		<span @click.exact="jump"><slot /></span>
 		<HeadingAnchor
 			v-if="props.id && !isHidden"
 			:heading-id="props.id"

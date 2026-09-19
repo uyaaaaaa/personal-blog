@@ -29,8 +29,8 @@ afterEach(() => {
 	target.remove()
 })
 
-const click = async (init: MouseEventInit = {}) => {
-	const wrapper = await mountSuspended(HeadingAnchor, { props: { headingId: 'section' } })
+const click = async (init: MouseEventInit = {}, headingId = 'section') => {
+	const wrapper = await mountSuspended(HeadingAnchor, { props: { headingId } })
 	const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...init })
 
 	wrapper.get('a').element.dispatchEvent(event)
@@ -54,6 +54,13 @@ describe('HeadingAnchor', () => {
 
 		expect(scrollIntoView).toHaveBeenCalled()
 		expect(writeText).toHaveBeenCalledWith(`${location.origin}${location.pathname}#section`)
+	})
+
+	// 組み立てた文字列だと、日本語の id が素のまま残る
+	it('非 ASCII の id は、ブラウザと同じ percent-encode された形で入れる', async () => {
+		await click({}, '概要')
+
+		expect(writeText).toHaveBeenCalledWith(expect.stringContaining('#%E6%A6%82%E8%A6%81'))
 	})
 
 	it('入ったことを知らせる', async () => {

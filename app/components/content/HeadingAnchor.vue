@@ -1,6 +1,7 @@
 <template>
 	<!-- 見出しの中にあるので、名前を持つと見出しの読み上げ名に混ざる。読み上げと Tab からは外す -->
 	<a
+		ref="anchor"
 		:href="`#${props.headingId}`"
 		aria-hidden="true"
 		tabindex="-1"
@@ -33,18 +34,23 @@
 		headingId: string
 	}>()
 
+	const anchor = ref<HTMLAnchorElement | null>(null)
+
 	const { scrollTo } = useScrollTo()
 	const { show } = useToast()
 
 	const copyAndJump = async () => {
 		scrollTo(props.headingId)
 
+		// 組み立てた文字列だと非 ASCII の id が素のまま残る。ブラウザが「リンクをコピー」で
+		// 出す形に揃えるため、要素が解決した href を渡す
+		const url = anchor.value?.href
+		if (!url) return
+
 		// navigator.clipboard は非セキュアコンテキストと権限の拒否で使えない。
 		// 入っていないものを入ったと知らせないため、失敗したときは何も出さない
 		try {
-			await navigator.clipboard.writeText(
-				`${location.origin}${location.pathname}#${props.headingId}`,
-			)
+			await navigator.clipboard.writeText(url)
 		} catch {
 			return
 		}
