@@ -167,7 +167,6 @@
 
 		event.preventDefault()
 
-		// PC は入力欄がヘッダーに出ている。開き直す先が無いので、寄せて選ぶだけ
 		if (inlineSearchRef.value?.isVisible()) {
 			inlineSearchRef.value.focus()
 			return
@@ -246,7 +245,6 @@
 		display: block;
 	}
 
-	/* ヘッダーより下の層に置く。入力欄と候補は落とさず、ページ側だけを落とす */
 	.search-scrim {
 		position: fixed;
 		top: 0;

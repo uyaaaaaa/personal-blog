@@ -29,7 +29,7 @@
 					y2="16.65"
 				/>
 			</svg>
-			<!-- WebKit は type="search" にクリアボタンを足す。クラスを付けられない擬似要素なので、type では出させず、役割は role、仮想キーボードの検索キーは enterkeyhint で補う -->
+			<!-- WebKit が type="search" に足すクリアボタンは擬似要素でクラスを付けられない。type では出させない -->
 			<input
 				ref="inputRef"
 				v-model="query"
@@ -99,8 +99,7 @@
 
 	const LIST_ID = 'header-search-results'
 
-	// Tailwind の md。この入れ物を出し分ける幅と同じで、ずれると隠れたまま開いたことになり、
-	// 背後を止めたまま誰も閉じられなくなる
+	// Tailwind の md。この入れ物を出し分ける幅とずれると、隠れたまま開いて誰も閉じられなくなる
 	const INLINE_SEARCH_QUERY = '(min-width: 768px)'
 
 	const emit = defineEmits<{
@@ -121,7 +120,6 @@
 
 	const inputRef = ref<HTMLInputElement | null>(null)
 
-	// Escape で閉じた後も語は残す。打ち直しで開き直すので、開いているかは語だけでは決まらない
 	const dismissed = ref(false)
 
 	const isOpen = computed(() => !dismissed.value && query.value.trim() !== '')
@@ -143,7 +141,7 @@
 		input.select()
 	}
 
-	// 押して開くボタンを挟まず直にフォーカスされるので、ポインタで移した目印は自分で付ける
+	// ボタンを挟まず直にフォーカスされるので、ポインタで移した目印は自分で付ける
 	const onPointerdown = () => focusByGesture(inputRef.value)
 
 	const isVisible = () => (inputRef.value?.getClientRects().length ?? 0) > 0
@@ -159,7 +157,7 @@
 	const onKeydown = (event: KeyboardEvent) => {
 		if (isComposingKey(event)) return
 
-		// 開いている間の Escape は閉じ込めの listener が受ける。2度目だけがここに届く
+		// 開いている間の Escape は閉じ込めの listener が受ける
 		if (event.key === 'Escape') {
 			if (isOpen.value) return
 
@@ -189,7 +187,7 @@
 
 	watch(isOpen, (open) => emit('update:open', open))
 
-	// ヘッダーの外を押したら閉じる。スクリムの外側（ヘッダーの中）は覆えない
+	// スクリムはヘッダーの中までは覆えないので、外を押した判定は document で持つ
 	const onDocumentPointerdown = (event: PointerEvent) => {
 		if (!trapRef.value?.contains(event.target as Node)) dismiss()
 	}
@@ -252,8 +250,6 @@
 		opacity: 0;
 		visibility: hidden;
 		transform: translateY(-4px);
-		/* 閉じる側だけ遅らせる。開く側も遅らせると、算出値が hidden のままの
-		   1フレームが空き、そこに focus() を出しても黙って効かない */
 		transition:
 			opacity 0.2s ease-in-out,
 			transform 0.2s ease-in-out,

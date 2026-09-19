@@ -35,7 +35,6 @@ export const OVERLAYS = {
 		restoresOnOutsideClick: true,
 		widths: [375],
 	},
-	// PC の入口。ボタンを押して開くのではなく、ヘッダーの入力欄に打つと候補が出る
 	'search-inline': {
 		trigger: '.header-search .search-input',
 		shortcutFocus: 'K',
