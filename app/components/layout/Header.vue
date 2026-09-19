@@ -49,7 +49,7 @@
 				<button
 					ref="desktopSearchRef"
 					type="button"
-					class="group flex w-full items-center justify-between rounded-md border border-border bg-surface-subtle px-4 py-2 text-sub transition-colors hover:border-accent"
+					class="group flex w-full items-center justify-between rounded-md border border-border bg-surface-subtle px-4 py-2 text-sub transition-color hover:border-accent"
 					aria-haspopup="dialog"
 					:aria-expanded="isSearchOpen"
 					@click="openSearch"
@@ -92,7 +92,7 @@
 				<button
 					ref="mobileSearchRef"
 					type="button"
-					class="flex h-8 w-8 items-center justify-center self-center rounded-md text-sub transition-colors hover:text-accent md:hidden"
+					class="flex h-8 w-8 items-center justify-center self-center rounded-md text-sub transition-color hover:text-accent md:hidden"
 					aria-label="Search"
 					aria-haspopup="dialog"
 					:aria-expanded="isSearchOpen"
@@ -209,7 +209,7 @@
 	onBeforeUnmount(() => window.removeEventListener('keydown', onSearchShortcut))
 
 	watch([isMenuOpen, isSearchOpen], ([menuOpen, searchOpen]) => {
-		document.body.style.overflow = menuOpen || searchOpen ? 'hidden' : ''
+		document.body.classList.toggle('scroll-locked', menuOpen || searchOpen)
 	})
 
 	// リンクを踏まない移動（ブラウザバック）でも、被せたものは残さない
@@ -221,6 +221,12 @@
 		},
 	)
 </script>
+
+<style>
+	body.scroll-locked {
+		overflow: hidden;
+	}
+</style>
 
 <style scoped>
 	.global-header {

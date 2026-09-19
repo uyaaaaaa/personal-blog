@@ -8,6 +8,7 @@ import { state } from './state.mjs'
 const SKILL = '.claude/skills/dispatch/SKILL.md'
 const SCRIPT = 'scripts/session-args.mjs'
 const KEY = 'dispatch'
+const FRESH = { sessions: 0, posts: 0 }
 
 const SESSIONS = /最大(\d+)本/
 const POSTS = /1回の発火につき最大(\d+)つ/
@@ -86,6 +87,11 @@ const mismatch = (input) => {
 const failed = (input) => Boolean(input.tool_response?.isError || input.tool_response?.is_error)
 
 export const decide = (input, ask = ASK) => {
+	if (input.hook_event_name === 'UserPromptSubmit') {
+		ask.state(KEY, { session_id: input.session_id }).write(FRESH)
+		return null
+	}
+
 	const tool = NAMED.exec(input.tool_name ?? '')?.[1] ?? ''
 	if (tool !== STARTING && !POSTING.has(tool) && tool !== DRAFTING) return null
 
@@ -94,7 +100,7 @@ export const decide = (input, ask = ASK) => {
 
 	// 兄弟セッションも Slack も、投げた先ではなく起こした回で数える
 	const box = ask.state(KEY, { session_id: input.session_id })
-	const held = { sessions: 0, posts: 0, ...box.read() }
+	const held = { ...FRESH, ...box.read() }
 
 	if (input.hook_event_name === 'PostToolUse') {
 		if (failed(input)) return null
@@ -107,7 +113,7 @@ export const decide = (input, ask = ASK) => {
 		return (
 			mismatch(input.tool_input ?? {}) ??
 			(held.sessions >= it.sessions
-				? `このセッションで既に ${held.sessions} 本起こしている。1回の発火に最大${it.sessions}本`
+				? `この発火で既に ${held.sessions} 本起こしている。1回の発火に最大${it.sessions}本`
 				: null)
 		)
 	}
@@ -117,7 +123,7 @@ export const decide = (input, ask = ASK) => {
 		return `Slack に出すのは ${it.room}（${it.channel}）だけ。${channel ?? 'なし'} には出さない`
 	}
 	return POSTING.has(tool) && held.posts >= it.posts
-		? `このセッションで既に ${held.posts} つ投稿している。1回の発火に最大${it.posts}つ`
+		? `この発火で既に ${held.posts} つ投稿している。1回の発火に最大${it.posts}つ`
 		: null
 }
 

@@ -4,7 +4,7 @@
 			<h2 class="font-mono text-sm uppercase tracking-marker text-main">
 				<NuxtLink
 					:to="viewAllPath"
-					class="transition-colors hover:text-accent"
+					class="transition-color hover:text-accent"
 					>{{ title }}</NuxtLink
 				>
 			</h2>

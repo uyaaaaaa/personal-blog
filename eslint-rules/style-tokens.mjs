@@ -1,10 +1,9 @@
 import postcss from 'postcss'
 import resolveConfig from 'tailwindcss/resolveConfig.js'
-import { colors, fontFamily, sizes } from '../theme/tokens.ts'
+import { colors, durations, fontFamily, motionProperties, sizes } from '../theme/tokens.ts'
 
 export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
-export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#a-単一情報源`
-export const MOTION_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#原則`
+export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#原則`
 export const BREAKPOINT_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#原則`
 export const INVARIANT_URL = `${DOCS_URL}/ARCHITECTURE.md#不変条件`
 
@@ -15,6 +14,12 @@ export const STYLE_EXCEPTION =
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
 
+// フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
+// 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
+const FONT_FILE = '\\.(?:woff2?|otf|ttf|eot)\\b'
+const FONT_HOST = '\\b(?:(?:fontsource|fonts?)(?:[./]|$)|(?:typeface|typekit)[./-])'
+export const WEB_FONT_RESOURCE = `(?:${FONT_FILE}|${FONT_HOST})`
+
 export const THEME_BRANCH_MESSAGE =
 	'テーマごとに宣言を分岐しない。差は theme/tokens.ts の darkColors が作る。.dark と .light に書けるのはカスタムプロパティの再定義だけ。'
 
@@ -24,10 +29,13 @@ export const COLOR_SCHEME_MESSAGE =
 export const THEME_CLASS_MESSAGE =
 	'dark: で色を分岐しない。テーマの差は theme/tokens.ts の darkColors が作る。dark: を書くのはテーマで DOM を出し分けるときだけ。'
 
+export const DISPLAY_NONE_MESSAGE =
+	'display: none を宣言に書かない。表示・非表示の切り替えは template のクラス（hidden / md:block）か v-show で行う。クラスを付けられない UA の擬似要素は、それを作らない要素に変えて出させない。'
+
 export const SCROLL_BEHAVIOR_MESSAGE = `scroll-behavior は宣言しない。ページ遷移とブラウザバックの位置復元までアニメーションする。滑らかに送るのは useScrollTo が呼び出しごとに指定する。 ${INVARIANT_URL}`
 
 // overscroll-behavior / overscroll-contain と綴りが重なるので、前が区切りか終端のものだけを見る
-export const SCROLL_BEHAVIOR_PROPERTY = '(?<![a-z-])scroll-behavior'
+const SCROLL_BEHAVIOR_PROPERTY = '(?<![a-z-])scroll-behavior'
 export const SCROLL_BEHAVIOR_CLASS = '(?:^|[\\s:])(?:[a-z-]+:)*!?scroll-(?:smooth|auto)(?![a-z-])'
 
 export const OUTLINE_REMOVAL_MESSAGE = `フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。同じ要素に別の見える指標があるときだけ許す。${STYLE_EXCEPTION}`
@@ -39,16 +47,10 @@ export const OUTLINE_REMOVAL_CLASS =
 const WORD_EDGE = '[\\w.%#-]'
 // 輪郭が消える値。線を持たない語か透明な色が1つでも入る。
 // 関数の中（`rgb(0 0 0)`）は色の一部なので数えない
-export const OUTLINE_REMOVAL_VALUE = `(?<!${WORD_EDGE})(?:none|0[a-z%]*|transparent)(?!${WORD_EDGE})(?![^()]*\\))`
+const OUTLINE_REMOVAL_VALUE = `(?<!${WORD_EDGE})(?:none|0[a-z%]*|transparent)(?!${WORD_EDGE})(?![^()]*\\))`
 // 初期値に戻す語。初期値が none なのは outline-style なので、輪郭が消えるのは
 // 一括指定と outline-style と all のときだけ（outline-color は色、outline-width は medium に戻る）
-export const OUTLINE_RESET_VALUE = `(?<!${WORD_EDGE})(?:unset|initial)(?!${WORD_EDGE})(?![^()]*\\))`
-// カスタムプロパティ（--outline）と綴りが重なるので、前が区切りか終端のものだけを見る
-export const OUTLINE_REMOVAL_PROPERTY = [
-	`(?<![\\w-])outline(?:-(?:style|width|color))?\\s*:[^;]*${OUTLINE_REMOVAL_VALUE}`,
-	`(?<![\\w-])(?:all|outline(?:-style)?)\\s*:[^;]*${OUTLINE_RESET_VALUE}`,
-].join('|')
-
+const OUTLINE_RESET_VALUE = `(?<!${WORD_EDGE})(?:unset|initial)(?!${WORD_EDGE})(?![^()]*\\))`
 // 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる
 const COLOR_PREFIX =
 	'text|bg|border|divide|outline|ring|ring-offset|shadow|accent|caret|decoration|fill|stroke|placeholder|from|via|to'
@@ -100,8 +102,6 @@ const FONT_KEYWORDS = new Set(
 )
 
 const FONT_PROPERTY = /^font(?:-family)?$/i
-// style 属性は宣言の並びなので、綴りから font の宣言を取り出す
-const FONT_DECLARATION = /(?<![\w-])font(?:-family)?\s*:([^;]*)/gi
 // 引用符で囲った名前と、区切りから始まる語。数に続く単位（1.5rem の rem）は語ではない
 const FONT_WORD = /'[^']*'|"[^"]*"|(?<![\w-])-?[a-zA-Z][\w-]*/g
 
@@ -168,9 +168,16 @@ const breakpoints = buildBreakpoints()
 
 export const BREAKPOINT_LABEL = breakpoints.label
 
-export const BREAKPOINT_WIDTHS = [...breakpoints.pixels].flatMap((px) =>
+const BREAKPOINT_WIDTHS = [...breakpoints.pixels].flatMap((px) =>
 	Object.entries(PIXELS_PER).map(([unit, scale]) => `${px / scale}${unit}`),
 )
+
+const WIDTHS = BREAKPOINT_WIDTHS.join('|')
+// 宣言（max-width: 36rem）と混ざらないよう、括弧から見る
+const WIDTH_BY_LENGTH = `\\((?=[^()]*width)[^()]*?(?<![\\d.])(?!(?:${WIDTHS})\\b)\\d*\\.?\\d+[a-z%]+`
+// 組み立てた文字列は長さが別のリテラルに出るので、綴りからも見る
+const WIDTH_BY_SPELLING = `\\((?:min|max)-width\\s*:(?!\\s*(?:${WIDTHS})\\s*\\))`
+const BREAKPOINT_MEDIA = `(?:${WIDTH_BY_SPELLING}|${WIDTH_BY_LENGTH})`
 
 // tokens の fontFamily が theme を上書きするので、残るのは Tailwind の既定の family だけ
 const OFF_TOKEN_FONTS = Object.keys(theme.fontFamily).filter((name) => !(name in fontFamily))
@@ -183,6 +190,116 @@ export const OFF_BREAKPOINT_VARIANTS = [
 	...Object.keys(theme.screens).filter((name) => !BREAKPOINTS.includes(name)),
 	...Object.keys(theme.screens).map((name) => `max-${name}`),
 ]
+
+const TIME = /(?<![\w.-])(\d*\.?\d+)(m?s)(?![\w-])/gi
+
+const toMilliseconds = (number, unit) => Number(number) * (unit.toLowerCase() === 's' ? 1000 : 1)
+
+const millisecondsOf = (value) => {
+	const [[, number, unit]] = value.matchAll(TIME)
+	return toMilliseconds(number, unit)
+}
+
+// 用途ごとの長さ。綴りが違っても同じ長さ（0.2s と 200ms）は同じものとして見る
+const DURATION = Object.fromEntries(
+	Object.entries(durations).map(([purpose, value]) => [purpose, millisecondsOf(value)]),
+)
+const DECIDED = new Set(Object.values(DURATION))
+
+const DURATION_LABEL = Object.entries(durations)
+	.map(([purpose, value]) => `${purpose} は ${value}`)
+	.join('、')
+
+// 用途は2つ。色だけが変わるものと、それ以外の動き。
+// 辺ごとの色（border-top-color）も色なので、綴りの末尾でも読む
+const COLOR_PROPERTY = new RegExp(`^(?:${motionProperties.color.join('|')})$|-color$`, 'i')
+
+const purposeOf = (property) => (COLOR_PROPERTY.test(property) ? 'color' : 'move')
+
+// 短縮形は対象・長さ・遅延・緩急を順不同で持つ。緩急の語と関数を外した最初の語が対象になる
+const TIMING_WORDS = new Set(
+	'ease ease-in ease-out ease-in-out linear step-start step-end normal allow-discrete inherit initial unset revert revert-layer'.split(
+		' ',
+	),
+)
+// 関数は名前ごと外す。中の語（steps(4, end) の end）は対象の名前ではない
+const FUNCTION_CALL = /[\w-]*\([^()]*\)/g
+const SEGMENT_WORD = /(?<![\w.-])(?:--[\w-]+|[a-zA-Z][\w-]*)/g
+
+// 対象を書かない短縮形は all と同じ
+const ALL = 'all'
+
+function propertyOf(segment) {
+	for (const [word] of segment.replace(FUNCTION_CALL, ' ').matchAll(SEGMENT_WORD)) {
+		if (TIMING_WORDS.has(word.toLowerCase())) continue
+		return word.toLowerCase()
+	}
+	return ALL
+}
+
+// 緩急の関数（cubic-bezier(0.4, 0, 0.2, 1)）が持つカンマと混ざらないよう、括弧の外だけで割る
+function segmentsOf(value) {
+	const segments = ['']
+	let depth = 0
+	for (const character of value) {
+		if (character === '(') depth += 1
+		else if (character === ')') depth -= 1
+		else if (character === ',' && depth === 0) {
+			segments.push('')
+			continue
+		}
+		segments[segments.length - 1] += character
+	}
+	return segments
+}
+
+// カスタムプロパティは var() で長さとして参照されるので、モーションの宣言と同じ判定で見る
+const MOTION_PROPERTY = /^(?:(?:transition|animation)(?:-[\w-]+)?|--[\w-]+)$/i
+const TRANSITION_TARGET = /^transition(?:-property)?$/i
+
+// 宣言1つ分の指摘。置き場所は呼ぶ側が足す
+function motionFindings(property, value) {
+	const found = []
+	if (TRANSITION_TARGET.test(property)) {
+		for (const segment of segmentsOf(value)) {
+			const target = propertyOf(segment)
+			if (target === ALL) {
+				found.push({ messageId: 'mixed' })
+				continue
+			}
+			const purpose = purposeOf(target)
+			for (const [literal, number, unit] of segment.matchAll(TIME)) {
+				// 0 は動かさない指定なので、どの用途でも通す
+				const milliseconds = toMilliseconds(number, unit)
+				if (milliseconds === 0 || milliseconds === DURATION[purpose]) continue
+				const data = { literal, property: target, expected: durations[purpose], purpose }
+				found.push({ messageId: 'offPurpose', data })
+			}
+		}
+		return found
+	}
+	if (!MOTION_PROPERTY.test(property)) return found
+
+	// 対象が別の宣言にあるので用途は決まらない。決めた長さのどれかであることだけを見る
+	for (const [literal, number, unit] of value.matchAll(TIME)) {
+		const milliseconds = toMilliseconds(number, unit)
+		if (milliseconds === 0 || DECIDED.has(milliseconds)) continue
+		found.push({ messageId: 'anyPurpose', data: { literal } })
+	}
+	return found
+}
+
+const MOTION_PURPOSES = Object.keys(durations).join('|')
+const MOTION_CLASSES = Object.keys(durations).map((purpose) => `transition-${purpose}`)
+// 長さを別に書くクラスの接頭辞
+const LENGTH_CLASSES = ['duration', 'delay', 'animate']
+
+export const MOTION_CLASS_MESSAGE = `モーションのクラスは用途の名前で書く（${MOTION_CLASSES.join(' / ')}）。長さは用途のクラスが持つので、長さを別に書くクラス（${LENGTH_CLASSES.map((name) => `${name}-`).join(' / ')}）は無い。`
+
+// 用途のクラス以外の transition-* は theme から消してあり、書いても何も出ない
+export const OFF_PURPOSE_MOTION_CLASS = `(?:^|[\\s:])(?:[a-z-]+:)*!?(?:transition(?!-(?:${MOTION_PURPOSES})(?![\\w-]))|(?:${LENGTH_CLASSES.join('|')})-)`
+
+const OFF_PURPOSE_MOTION = new RegExp(OFF_PURPOSE_MOTION_CLASS)
 
 function offsetsOf(css) {
 	const offsets = [0]
@@ -268,134 +385,6 @@ function eachStyleBlock(context, visit) {
 	}
 }
 
-function* elements(node) {
-	if (node.type !== 'VElement') return
-	yield node
-	for (const child of node.children) yield* elements(child)
-}
-
-const kebab = (name) => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
-
-function propertyName(property) {
-	if (property.type !== 'Property') return null
-	if (property.key.type === 'Identifier' && !property.computed) return kebab(property.key.name)
-	if (property.key.type === 'Literal' && typeof property.key.value === 'string')
-		return kebab(property.key.value)
-	return null
-}
-
-// :style は宣言そのものを持たないので、キーと文字列から宣言を組み直す。
-// 辿るのはどの枝も値になる形だけ。呼び出しの引数・添字・比較の被演算子は値ではない
-function* declarations(node, property = '') {
-	if (!node || typeof node.type !== 'string') return
-	const declare = (text) => (property ? `${property}: ${text}` : text)
-	switch (node.type) {
-		case 'ObjectExpression':
-			for (const entry of node.properties) {
-				// 名乗らないキー（[key] や ...styles）の値も、綴りを持たない値として読む
-				const target = entry.type === 'SpreadElement' ? entry.argument : entry.value
-				yield* declarations(target, propertyName(entry) ?? '')
-			}
-			return
-		case 'Literal':
-			if (typeof node.value === 'string') yield { text: declare(node.value), node }
-			return
-		case 'TemplateLiteral':
-			for (const quasi of node.quasis)
-				yield { text: declare(quasi.value.cooked), node: quasi }
-			return
-		case 'ArrayExpression':
-			for (const element of node.elements) yield* declarations(element, property)
-			return
-		case 'ConditionalExpression':
-			yield* declarations(node.consequent, property)
-			yield* declarations(node.alternate, property)
-			return
-		case 'LogicalExpression':
-			// && の左は条件で、|| と ?? の左は値
-			if (node.operator !== '&&') yield* declarations(node.left, property)
-			yield* declarations(node.right, property)
-			return
-	}
-}
-
-// style 属性は宣言の並びなので、<style> と同じ判定に通す。
-// テンプレートに eslint-disable は届かない（→ ADR 20）ので、例外は <style> に移すことになる
-function eachStyleAttribute(context, visit) {
-	const services = context.sourceCode.parserServices ?? context.parserServices
-	const document = services?.getDocumentFragment?.()
-	if (!document) return
-
-	for (const root of document.children) {
-		for (const element of elements(root)) {
-			for (const attribute of element.startTag.attributes) {
-				const { key, value } = attribute
-				if (!value) continue
-				if (!attribute.directive) {
-					if (key.name === 'style') visit(value.value, value)
-					continue
-				}
-				if (key.name.name !== 'bind' || key.argument?.name !== 'style') continue
-				for (const { text, node } of declarations(value.expression)) visit(text, node)
-			}
-		}
-	}
-}
-
-const isString = (node) => node?.type === 'Literal' && typeof node.value === 'string'
-
-// 名乗らない綴り（el.style[name]）は空。綴りを持たない値として読む
-function memberName(node) {
-	if (!node.computed && node.property.type === 'Identifier') return node.property.name
-	if (isString(node.property)) return node.property.value
-	return ''
-}
-
-// dataset の下に並ぶのは data 属性で、CSS ではない
-const isStyleObject = (node) =>
-	node?.type === 'MemberExpression' &&
-	memberName(node) === 'style' &&
-	!(node.object.type === 'MemberExpression' && memberName(node.object) === 'dataset')
-
-// cssText は宣言の並びをまるごと受けるので、プロパティの綴りは値の側が持つ
-const CSS_TEXT = 'css-text'
-
-// script から要素のスタイルへ書く経路。書いた先は宣言になるので、style 属性と同じ判定に通す
-function* styleWrites(node) {
-	if (node.type === 'AssignmentExpression') {
-		const target = node.left
-		if (target.type !== 'MemberExpression') return
-		if (isStyleObject(target)) {
-			yield* declarations(node.right)
-			return
-		}
-		if (!isStyleObject(target.object)) return
-		const property = kebab(memberName(target))
-		yield* declarations(node.right, property === CSS_TEXT ? '' : property)
-		return
-	}
-	const callee = node.callee
-	if (callee?.type !== 'MemberExpression') return
-	const method = memberName(callee)
-	const [first, second] = node.arguments
-	if (method === 'setProperty' && isStyleObject(callee.object)) {
-		yield* declarations(second, isString(first) ? kebab(first.value) : '')
-		return
-	}
-	if (method === 'setAttribute' && isString(first) && /^style$/i.test(first.value)) {
-		yield* declarations(second)
-		return
-	}
-	if (
-		method === 'assign' &&
-		callee.object.type === 'Identifier' &&
-		callee.object.name === 'Object' &&
-		isStyleObject(first)
-	) {
-		for (const source of node.arguments.slice(1)) yield* declarations(source)
-	}
-}
-
 const REDUCED_MOTION = /prefers-reduced-motion/i
 const MEDIA_CONDITION = /\(([^()]*)\)/g
 const WIDTH_FEATURE = /\bwidth\b/i
@@ -405,13 +394,28 @@ const THEME_SELECTOR = /\.(?:dark|light)(?![\w-])/
 const COLOR_SCHEME = /prefers-color-scheme/i
 const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
 const SCROLL_BEHAVIOR = new RegExp(SCROLL_BEHAVIOR_CLASS)
+const DISPLAY_PROPERTY = /^display$/i
+// display が消すのは none のときだけ。flex と grid は並べ方で、出し分けではない
+const HIDDEN_DISPLAY = /(?<![\w-])none(?![\w-])/i
+// @apply hidden も宣言に開くと display: none になる。variant が前に付く
+const HIDDEN_CLASS = /(?:^|[\s:])(?:[a-z-]+:)*!?hidden(?![\w-])/
 const OUTLINE_PROPERTY = /^outline(?:-(?:style|width|color))?$/i
 const OUTLINE_RESET_PROPERTY = /^(?:all|outline(?:-style)?)$/i
-// 宣言と style 属性で判定が割れないよう、値は綴りも同じものを使う
 const NO_OUTLINE_VALUE = new RegExp(OUTLINE_REMOVAL_VALUE, 'i')
 const RESET_OUTLINE_VALUE = new RegExp(OUTLINE_RESET_VALUE, 'i')
 const OUTLINE_REMOVAL = new RegExp(OUTLINE_REMOVAL_CLASS)
 const OFF_TOKEN_FONT = new RegExp(OFF_TOKEN_FONT_CLASS)
+
+const SCRIPT_SPELLING = {
+	'no-scroll-behavior': `${SCROLL_BEHAVIOR_PROPERTY}|${SCROLL_BEHAVIOR_CLASS}`,
+	'no-reduced-motion': REDUCED_MOTION.source,
+	'no-theme-branch': COLOR_SCHEME.source,
+	'no-web-font': WEB_FONT_RESOURCE,
+	'no-custom-breakpoint': BREAKPOINT_MEDIA,
+}
+
+export const scriptSpellingSelector = (name) =>
+	`:matches(Literal[value=/${SCRIPT_SPELLING[name]}/i], TemplateElement[value.cooked=/${SCRIPT_SPELLING[name]}/i])`
 
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
 const CHECKS = {
@@ -428,12 +432,6 @@ const CHECKS = {
 			root.walkDecls((decl) => check(decl.value, decl))
 			root.walkAtRules((rule) => check(rule.params, rule))
 			return found
-		},
-		fromAttribute(text) {
-			return untokenizedLengths(text).map((literal) => ({
-				messageId: 'untokenized',
-				data: { literal },
-			}))
 		},
 	},
 
@@ -452,12 +450,6 @@ const CHECKS = {
 			// 他の at-rule まで見ると、@keyframes の名前が色の名前に当たる
 			root.walkAtRules('apply', (rule) => check(rule.params, rule))
 			return found
-		},
-		fromAttribute(text) {
-			return colorLiterals(text).map((literal) => ({
-				messageId: 'literal',
-				data: { literal },
-			}))
 		},
 	},
 
@@ -479,13 +471,6 @@ const CHECKS = {
 			})
 			return found
 		},
-		fromAttribute(text) {
-			const found = []
-			for (const [, value] of text.matchAll(FONT_DECLARATION))
-				for (const literal of fontLiterals(value))
-					found.push({ messageId: 'literal', data: { literal } })
-			return found
-		},
 	},
 
 	'no-important': {
@@ -501,9 +486,32 @@ const CHECKS = {
 		},
 	},
 
+	'no-off-purpose-motion': {
+		messages: {
+			offPurpose:
+				'{{literal}} は {{property}} に決めた長さではない。{{property}} は {{expected}}（theme/tokens.ts の durations.{{purpose}}）で書く。',
+			mixed: 'transition の対象に all を書かない。用途ごとに長さが変わるので、動かすプロパティを挙げる。',
+			anyPurpose: `{{literal}} は決めた長さではない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ（${DURATION_LABEL}）。`,
+			motionClass: MOTION_CLASS_MESSAGE,
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				for (const one of motionFindings(decl.prop, decl.value))
+					found.push({ node: decl, ...one })
+			})
+			root.walkAtRules('apply', (rule) => {
+				if (OFF_PURPOSE_MOTION.test(rule.params))
+					found.push({ node: rule, messageId: 'motionClass' })
+			})
+			return found
+		},
+	},
+
 	'no-reduced-motion': {
 		messages: {
-			reducedMotion: `prefers-reduced-motion で分岐しない。モーションの長さは用途ごとに1つ決める。 ${MOTION_URL}`,
+			reducedMotion:
+				'prefers-reduced-motion で分岐しない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ。',
 		},
 		find(root) {
 			const found = []
@@ -602,6 +610,24 @@ const CHECKS = {
 		},
 	},
 
+	'no-display-none': {
+		messages: {
+			displayNone: DISPLAY_NONE_MESSAGE,
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				if (DISPLAY_PROPERTY.test(decl.prop) && HIDDEN_DISPLAY.test(decl.value))
+					found.push({ node: decl, messageId: 'displayNone' })
+			})
+			root.walkAtRules('apply', (rule) => {
+				if (HIDDEN_CLASS.test(rule.params))
+					found.push({ node: rule, messageId: 'displayNone' })
+			})
+			return found
+		},
+	},
+
 	'no-scroll-behavior': {
 		messages: {
 			scrollBehavior: SCROLL_BEHAVIOR_MESSAGE,
@@ -638,41 +664,16 @@ export function findings(root) {
 
 const ruleOf = (check) => ({
 	meta: { type: 'problem', schema: [], messages: check.messages },
-	create(context) {
-		const report = (text, node) => {
-			for (const found of check.fromAttribute(text)) {
-				context.report({ loc: node.loc, ...found })
-			}
-		}
-		const visitors = {
-			Program() {
-				eachStyleBlock(context, (root, locate) => {
-					for (const { node, messageId, data } of check.find(root)) {
-						context.report({ loc: locate(node), messageId, data })
-					}
-				})
-				if (!check.fromAttribute) return
-				eachStyleAttribute(context, report)
-			},
-		}
-		if (!check.fromAttribute) return visitors
-
-		const write = (node) => {
-			for (const { text, node: value } of styleWrites(node)) report(text, value)
-		}
-		const script = { ...visitors, AssignmentExpression: write, CallExpression: write }
-		// 素の visitor は <script> しか歩かない。行内ハンドラは template 側に渡して同じ判定に通す
-		const services = context.sourceCode.parserServices ?? context.parserServices
-		if (!services?.defineTemplateBodyVisitor) return script
-		return services.defineTemplateBodyVisitor(
-			{ AssignmentExpression: write, CallExpression: write },
-			script,
-		)
-	},
+	create: (context) => ({
+		Program() {
+			eachStyleBlock(context, (root, locate) => {
+				for (const { node, messageId, data } of check.find(root)) {
+					context.report({ loc: locate(node), messageId, data })
+				}
+			})
+		},
+	}),
 })
-
-// 宣言を読む判定。style 属性と script の書き込みを見るので、.vue の外でも要る
-export const DECLARATION_RULES = Object.keys(CHECKS).filter((name) => CHECKS[name].fromAttribute)
 
 export default {
 	rules: Object.fromEntries(Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(check)])),

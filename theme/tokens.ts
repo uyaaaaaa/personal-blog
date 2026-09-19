@@ -59,6 +59,18 @@ export const fontFamily = {
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 }
 
+export const durations = {
+	color: '0.15s',
+	move: '0.2s',
+} as const
+
+// 用途のクラス（transition-color / transition-move）が動かすプロパティ。
+// color は Tailwind の transition-colors と同じ並び
+export const motionProperties: Record<keyof typeof durations, string[]> = {
+	color: ['color', 'background-color', 'border-color', 'text-decoration-color', 'fill', 'stroke'],
+	move: ['transform', 'opacity', 'visibility'],
+}
+
 const TOC_TOP = '100px'
 
 export const sizes = {

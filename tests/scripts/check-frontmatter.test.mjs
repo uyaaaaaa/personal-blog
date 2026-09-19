@@ -42,8 +42,16 @@ const check = () => spawnSync(process.execPath, [SCRIPT, root], { encoding: 'utf
 describe('check-frontmatter', () => {
 	it('スキーマに合うフロントマターを通す', () => {
 		write('a.md', ...article())
-		write('b.md', ...article('emoji: "📘"', 'image: "/og/b.png"', 'tags:', '  - nuxt'))
+		write('b.md', ...article('tags:', '  - nuxt'))
 		expect(check().status).toBe(0)
+	})
+
+	it('絵文字やサムネイルを宣言したものを落とす', () => {
+		write('a.md', ...article('emoji: "📘"'))
+		expect(check().status).toBe(1)
+
+		write('a.md', ...article('image: "/og/a.png"'))
+		expect(check().status).toBe(1)
 	})
 
 	it('スキーマに無いキーを落とす', () => {

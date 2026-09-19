@@ -9,7 +9,7 @@
 
 			<component
 				:is="`h${headingLevel}`"
-				class="text-list-title font-medium text-main transition-colors group-hover:text-accent"
+				class="text-list-title font-medium text-main transition-color group-hover:text-accent"
 			>
 				{{ title }}
 			</component>
