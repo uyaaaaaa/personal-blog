@@ -6,7 +6,11 @@ interface TocLink {
 	children?: TocLink[]
 }
 
-export const useTocActive = (links: Ref<TocLink[]>, offset: number, enabled: Ref<boolean>) => {
+// 着地はスクロール位置の丸めで scroll-margin-top をまたぐ（実測で 115.6〜116.2）。
+// ちょうどで切ると、上に出た側の見出しが選ばれない
+const SUBPIXEL_SLACK = 1
+
+export const useTocActive = (links: Ref<TocLink[]>, enabled: Ref<boolean>) => {
 	const activeId = ref('')
 
 	const ids = computed(() => {
@@ -20,11 +24,20 @@ export const useTocActive = (links: Ref<TocLink[]>, offset: number, enabled: Ref
 		return result
 	})
 
+	// 見出しが着地する位置は scroll-margin-top が持つ。判定にその数値を写すと、
+	// 着地位置を変えたときに片方だけ残って1つ前の見出しが選ばれ続ける
+	const landingOffset = (el: HTMLElement) =>
+		(parseFloat(getComputedStyle(el).scrollMarginTop) || 0) + SUBPIXEL_SLACK
+
 	const update = () => {
 		let current = ''
+		let offset: number | undefined
+
 		for (const id of ids.value) {
 			const el = document.getElementById(id)
 			if (!el) continue
+
+			offset ??= landingOffset(el)
 			if (el.getBoundingClientRect().top <= offset) {
 				current = id
 			} else {

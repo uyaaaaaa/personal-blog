@@ -74,7 +74,6 @@
 	const { isDesktop } = useIsDesktop()
 	const { activeId } = useTocActive(
 		computed(() => props.links),
-		100,
 		isDesktop,
 	)
 

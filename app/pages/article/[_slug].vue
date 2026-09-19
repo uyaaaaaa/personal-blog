@@ -176,12 +176,12 @@
 	}
 
 	.prose {
-		--landing-offset: 76px;
+		--landing-offset: 116px;
 	}
 
 	@media (min-width: 768px) {
 		.prose {
-			--landing-offset: 84px;
+			--landing-offset: 124px;
 		}
 	}
 
