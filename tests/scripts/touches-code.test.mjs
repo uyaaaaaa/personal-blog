@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 const SCRIPT = fileURLToPath(new URL('../../scripts/touches-code.mjs', import.meta.url))
 const WORKFLOWS = fileURLToPath(new URL('../../.github/workflows', import.meta.url))
+const GITHOOKS = fileURLToPath(new URL('../../.githooks', import.meta.url))
 
 const ARTICLE = 'content'
 const CODE_WORKFLOWS = ['lint.yml', 'test.yml', 'typecheck.yml']
@@ -54,10 +55,13 @@ const committed = (stage, ...range) => {
 	return run(repo, ...range).status === 0
 }
 
-const lines = (name) =>
-	readFileSync(join(WORKFLOWS, name), 'utf8')
+const linesOf = (directory, name) =>
+	readFileSync(join(directory, name), 'utf8')
 		.split('\n')
 		.map((line) => line.trim())
+
+const lines = (name) => linesOf(WORKFLOWS, name)
+const hook = (name) => linesOf(GITHOOKS, name)
 
 const pathKeys = (name) =>
 	lines(name).filter((line) => line.startsWith('paths:') || line.startsWith('paths-ignore:'))
@@ -138,9 +142,20 @@ describe('workflow の振り分け', () => {
 	it('コードのための workflow は、記事だけだと判定できた回にジョブを飛ばす', () => {
 		for (const name of CODE_WORKFLOWS) {
 			expect(lines(name)).toContain(`uses: ./.github/workflows/${GATE}`)
+			// needs が無いと outputs.code が空になり、ゲートが開いたままになる
+			expect(lines(name)).toContain('needs: changes')
 			expect(lines(name)).toContain(
 				"if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}",
 			)
+		}
+	})
+})
+
+describe('フックの振り分け', () => {
+	it('記事だけの 2 でだけ飛ばし、script が落ちた回はコードの検査を回す', () => {
+		for (const name of ['pre-commit', 'commit-msg']) {
+			expect(hook(name)).not.toContain('if node scripts/touches-code.mjs; then')
+			expect(hook(name)).toContain('if [ "$status" -ne 2 ]; then')
 		}
 	})
 })

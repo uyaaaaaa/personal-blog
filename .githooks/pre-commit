@@ -5,6 +5,8 @@ set -e
 	exit 1
 }
 npm run lint:article
-if node scripts/touches-code.mjs; then
+status=0
+node scripts/touches-code.mjs || status=$?
+if [ "$status" -ne 2 ]; then
 	npm run lint:code
 fi

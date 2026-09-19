@@ -1,4 +1,6 @@
 #!/bin/sh
-if node scripts/touches-code.mjs; then
+status=0
+node scripts/touches-code.mjs || status=$?
+if [ "$status" -ne 2 ]; then
 	node scripts/check-commit-msg.mjs "$1"
 fi
