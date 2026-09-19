@@ -223,7 +223,7 @@
 							<span class="drawer-row-label">Profile</span>
 						</NuxtLink>
 
-						<p class="drawer-section-label">Explore</p>
+						<p class="drawer-section-label tracking-marker">Explore</p>
 
 						<button
 							type="button"
@@ -815,7 +815,6 @@
 		padding: 0 0.75rem;
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
-		letter-spacing: 0.08em;
 		color: var(--color-sub);
 	}
 

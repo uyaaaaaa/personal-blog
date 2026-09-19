@@ -22,7 +22,8 @@ describe('no-untokenized-size', () => {
 				},
 				{ filename: 'a.vue', code: sfc('.a { width: 960px; max-width: 1200px; }') },
 				{ filename: 'a.vue', code: sfc('.a { transform: translateY(-4px); }') },
-				{ filename: 'a.vue', code: sfc('.a { letter-spacing: 0.08em; height: 60vh; }') },
+				{ filename: 'a.vue', code: sfc('.a { letter-spacing: 0.12em; height: 60vh; }') },
+				{ filename: 'a.vue', code: sfc('.a { letter-spacing: -0.025em; }') },
 				{ filename: 'a.vue', code: sfc(".a { content: '17px'; }") },
 				{
 					filename: 'a.vue',
@@ -33,6 +34,22 @@ describe('no-untokenized-size', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('@media (min-width: 1024px) { .a { width: 1rem; } }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@media (width >= 64em) { .a { top: 0; } }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply tracking-[0.12em]; }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@keyframes drift-2em { from { opacity: 0; } }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation-name: drift-2em; max-width: var(--panel-2em); }'),
 				},
 			],
 			invalid: [
@@ -48,7 +65,27 @@ describe('no-untokenized-size', () => {
 				},
 				{
 					filename: 'a.vue',
+					code: sfc('.a { letter-spacing: 0.08em; }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
 					code: sfc('@media (min-width: 900px) { .a { width: 1rem; } }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@media (width >= 56.25em) { .a { top: 0; } }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply tracking-[0.08em]; }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { width: 64em; }'),
 					errors: [{ messageId: 'untokenized' }],
 				},
 				{
