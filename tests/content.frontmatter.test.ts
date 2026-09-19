@@ -40,10 +40,13 @@ describe('readFrontMatter', () => {
 		).toEqual({ title: 'a: b # c', date: '2026-09-12', tags: ['nuxt'] })
 	})
 
-	it('CRLF で書いたものも通す', () => {
-		expect(
-			readFrontMatter('---\r\ntitle: a\r\ndate: 2026-09-12\r\n---\r\n\r\n## 見出し\r\n'),
-		).toEqual({ title: 'a', date: '2026-09-12' })
+	// remark-mdc は行頭の `---` を閉じと見るので、後ろの綴りも改行の種類も揃っていない
+	it.each([
+		['CRLF で揃ったもの', '---\r\ntitle: a\r\ndate: 2026-09-12\r\n---\r\n\r\n## 見出し\r\n'],
+		['改行の種類が混ざったもの', '---\r\ntitle: a\r\ndate: 2026-09-12\r\n---\n\n## 見出し\n'],
+		['閉じの後ろに空白があるもの', '---\ntitle: a\ndate: 2026-09-12\n--- \n\n## 見出し\n'],
+	])('%s も、閉じを剥がして通す', (_, body) => {
+		expect(readFrontMatter(body)).toEqual({ title: 'a', date: '2026-09-12' })
 	})
 
 	it('フロントマターの無い本文は空で返す', () => {
