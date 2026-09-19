@@ -47,6 +47,12 @@ export const darkColors: Record<keyof typeof colors, string> = {
 	'diff-remove-word-bg': 'rgba(248, 81, 73, 0.4)',
 }
 
+// Tailwind の既定の md / lg と同じ値。既定を閉じるのが目的で、境界そのものは動かさない
+export const screens = {
+	md: '768px',
+	lg: '1024px',
+}
+
 export const fontFamily = {
 	sans: [
 		'system-ui',
@@ -163,10 +169,17 @@ export function toDarkCssVariables(): Record<string, string> {
 
 // Tailwindが不透明度修飾子(bg-accent/10 等)を解決できるのは<alpha-value>プレースホルダを含む定義のみ
 export function toTailwindColors(): Record<string, string> {
-	return Object.fromEntries(
-		Object.entries(colors).map(([name, value]) => [
-			name,
-			isHex(value) ? `rgb(var(--color-${name}-rgb) / <alpha-value>)` : `var(--color-${name})`,
-		]),
-	)
+	return {
+		// 既定のパレットごと置き換えるので、トークンの外にあるこの2つもここが配る
+		transparent: 'transparent',
+		current: 'currentColor',
+		...Object.fromEntries(
+			Object.entries(colors).map(([name, value]) => [
+				name,
+				isHex(value)
+					? `rgb(var(--color-${name}-rgb) / <alpha-value>)`
+					: `var(--color-${name})`,
+			]),
+		),
+	}
 }

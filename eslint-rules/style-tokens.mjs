@@ -1,6 +1,13 @@
 import postcss from 'postcss'
 import resolveConfig from 'tailwindcss/resolveConfig.js'
-import { colors, durations, fontFamily, motionProperties, sizes } from '../theme/tokens.ts'
+import {
+	durations,
+	fontFamily,
+	motionProperties,
+	screens,
+	sizes,
+	toTailwindColors,
+} from '../theme/tokens.ts'
 
 export const DOCS_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/docs'
 export const TOKEN_URL = `${DOCS_URL}/DESIGN_GUIDELINE.md#原則`
@@ -54,8 +61,7 @@ const OUTLINE_RESET_VALUE = `(?<!${WORD_EDGE})(?:unset|initial)(?!${WORD_EDGE})(
 // 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる
 const COLOR_PREFIX =
 	'text|bg|border|divide|outline|ring|ring-offset|shadow|accent|caret|decoration|fill|stroke|placeholder|from|via|to'
-// white / black / transparent / current は Tailwind が既定で持つ
-const COLOR_NAME = [...Object.keys(colors), 'white', 'black', 'transparent', 'current'].join('|')
+const COLOR_NAME = Object.keys(toTailwindColors()).join('|')
 // dark: の後ろにも variant が続く。辺を指す指定（border-t）は1文字
 export const THEME_COLOR_CLASS = `(?:^|[\\s:])dark:(?:[a-z-]+:)*!?(?:${COLOR_PREFIX})(?:-[a-z])?-(?:${COLOR_NAME})(?![a-z-])`
 
@@ -127,7 +133,7 @@ function collectStrings(value, into) {
 }
 
 // tailwind.config.ts 自体は node が型注釈を落とせず読めないため、ここで組み直す
-const theme = resolveConfig({ content: [], theme: { extend: { ...sizes } } }).theme
+const theme = resolveConfig({ content: [], theme: { screens, extend: { ...sizes } } }).theme
 
 // 語彙は Tailwind の既定の theme に sizes を重ねて作る。sizes に名前を足せば通る
 function buildVocabulary() {
@@ -146,8 +152,6 @@ function buildVocabulary() {
 
 const vocabulary = buildVocabulary()
 
-const BREAKPOINTS = ['md', 'lg']
-
 const MEDIA_AT_RULE = /^media$/i
 const MEDIA_LENGTH = /(\d*\.?\d+)([a-z]+)\b/gi
 // メディアクエリの em は初期フォントサイズが基準なので rem と同じ
@@ -158,8 +162,8 @@ const toPixels = (number, unit) => Number(number) * PIXELS_PER[unit.toLowerCase(
 function buildBreakpoints() {
 	const pixels = new Set()
 	const labels = []
-	for (const name of BREAKPOINTS) {
-		const value = String(theme.screens[name])
+	for (const [name, width] of Object.entries(theme.screens)) {
+		const value = String(width)
 		const [[, number, unit]] = value.matchAll(MEDIA_LENGTH)
 		pixels.add(toPixels(number, unit))
 		labels.push(`${name}（${value}）`)
@@ -189,10 +193,8 @@ export const FONT_CLASS_MESSAGE = `${OFF_TOKEN_FONTS.map((name) => `font-${name}
 
 export const OFF_TOKEN_FONT_CLASS = `(?:^|[\\s:])(?:[a-z-]+:)*!?font-(?:${OFF_TOKEN_FONTS.join('|')})(?![\\w-])`
 
-export const OFF_BREAKPOINT_VARIANTS = [
-	...Object.keys(theme.screens).filter((name) => !BREAKPOINTS.includes(name)),
-	...Object.keys(theme.screens).map((name) => `max-${name}`),
-]
+// 上向きの variant は screens が閉じているが、max-* は screens から自動で生えるので閉じられない
+export const MAX_WIDTH_VARIANTS = Object.keys(theme.screens).map((name) => `max-${name}`)
 
 const TIME = /(?<![\w.-])(\d*\.?\d+)(m?s)(?![\w-])/gi
 
