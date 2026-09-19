@@ -557,6 +557,13 @@ describe('表示・非表示の出し分け', () => {
 		expect(await displaysIn('app/pages/a.vue', sfc('<p class="hidden md:block" />'))).toBe(0)
 	})
 
+	// v-show は許す側に決めた経路。判定が template まで広がるとここが落ちる
+	it('実行時に display を書く v-show は通す', async () => {
+		const code = sfc('<p v-show="open" />', 'const open = false')
+		expect(await displaysIn('app/pages/a.vue', code)).toBe(0)
+		expect(await inlineStylesIn('app/pages/a.vue', code)).toBe(0)
+	})
+
 	it('<style> の宣言と @apply を落とす', async () => {
 		const style = (css) => `${sfc('<p class="a" />')}\n<style scoped>${css}</style>`
 		expect(await displaysIn('app/pages/a.vue', style('.a { display: none; }'))).toBe(1)
