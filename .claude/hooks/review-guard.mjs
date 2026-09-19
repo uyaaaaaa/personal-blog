@@ -193,6 +193,8 @@ const repeated = (seen, it) =>
 		: null
 
 const unjudged = (head, counts, it) => {
+	// body が無い APPROVE は書きようがないので、mismatched の event 側の検証に任せる
+	if (head.trim() === '') return null
 	const want = judged(it.judgments, counts)
 	const written = it.judgments.find(({ name }) => head.includes(name))
 	if (!written) return `サマリの先頭行に判定（${want.name}）を置く`

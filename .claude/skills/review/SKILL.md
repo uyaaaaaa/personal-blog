@@ -64,7 +64,7 @@ effort は `medium` を渡す。生成物・ルーティング・データ取得
 
 ## 5. 書く
 
-### サマリコメント（1本。`Approve` のときは書かない）
+### サマリコメント（1本。`Approve` かつ実測が通っていれば書かない）
 
 ```md
 **判定: Request changes** — 目次の開閉が生成 HTML に出ず、初期表示が閉じたままになる。
@@ -76,7 +76,8 @@ effort は `medium` を渡す。生成物・ルーティング・データ取得
 - 先頭行は **判定 + ダッシュ + 理由1文**
 - 続けるのは**グレードごとの件数**と**実測の状態**の2行まで。0件のグレードは書かない
 - 前置き、総評、褒め言葉、差分の要約は書かない
-- **判定が `Approve` なら、この節は書かない。**指摘が無いか `imo`/`nits` だけの Approve に文章は要らない
+- **判定が `Approve` かつ実測が通っていれば、この節は書かない。**指摘が無いか `imo`/`nits` だけの Approve に文章は要らない
+- **実測が未実施なら、`Approve` でもその1行だけは書く。** 書く場所が無くなると、確かめていないことが伝わらない
 
 ### インラインコメント（1件1論点）
 
@@ -113,7 +114,7 @@ CSS で出し分けるか、初期値を props で受ける。
 
 - 渡す先は `mcp__github__actions_run_trigger`。`gh` はこの環境に無いので、あるときだけ `gh workflow run review.yml -f pr=<番号> -F review=@review.json` でも同じ
 - `review` は `/pulls/{n}/reviews` に渡す形そのまま。サマリは `body`、インラインは `comments` に `path` と `line` を付けて並べる
-- **判定が `Approve` なら `body` を渡さない。** GitHub API 上 `body` は `APPROVE` では任意
+- **5 でサマリを書かなかったなら `body` を渡さない。** GitHub API 上 `body` は `APPROVE` では任意
 - `event` は 4 の判定を大文字にしたもの（`Approve` → `APPROVE` / `Request changes` → `REQUEST_CHANGES` / `Comment` → `COMMENT`）
 - **走らせたら結果を見る。** `mcp__github__actions_list` の `list_workflow_runs`（`resource_id` に `review.yml`）で最新の run が `success` でなければ投稿できていない。失敗したまま報告しない
 - API からは saved reply を挿入できない。3 の表の本文を1文字も変えずに先頭へ写す
