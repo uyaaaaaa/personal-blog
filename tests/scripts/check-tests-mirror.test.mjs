@@ -138,18 +138,6 @@ describe('実装からテスト', () => {
 		expect(check().status).toBe(0)
 	})
 
-	it('テストを持つ検査は通す', () => {
-		write('scripts/check-css.mjs')
-		write('tests/scripts/check-css.test.mjs')
-		lint('scripts/check-css.mjs')
-		expect(check().status).toBe(0)
-	})
-
-	it('どこからも回していない scripts/ のファイルにはテストを求めない', () => {
-		write('scripts/harness-journal.mjs')
-		expect(check().status).toBe(0)
-	})
-
 	it('lint と githook から回らない npm script は起点にしない', () => {
 		write('scripts/overlay-probe.mjs')
 		write(

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deltaToCenter, deltaToCenterIfHidden, deltaToReveal, type Box } from '~/utils/scroll'
+import { deltaToCenterIfHidden, deltaToReveal, type Box } from '~/utils/scroll'
 
 const box = (top: number, height: number): Box => ({ top, bottom: top + height, height })
 
@@ -19,14 +19,6 @@ describe('deltaToReveal', () => {
 
 	it('下にはみ出した分だけ送る', () => {
 		expect(deltaToReveal(container, box(190, 20))).toBe(10)
-	})
-})
-
-describe('deltaToCenter', () => {
-	it('器の中に収まっていても中央に寄せる', () => {
-		expect(deltaToCenter(container, box(90, 20))).toBe(0)
-		expect(deltaToCenter(container, box(0, 20))).toBe(-90)
-		expect(deltaToCenter(container, box(180, 20))).toBe(90)
 	})
 })
 

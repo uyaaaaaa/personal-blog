@@ -1,17 +1,18 @@
 export const colors = {
-	bg: '#F9F9F9',
+	bg: '#FAFAF8',
 	main: '#1A1A1A',
-	sub: '#888888',
-	accent: '#8B5CF6',
-	'accent-hover': '#7C3AED',
+	sub: '#5F5F5C',
+	accent: '#7C3AED',
+	'accent-hover': '#6D28D9',
 	'accent-contrast': '#FFFFFF',
-	border: '#E5E5E5',
+	border: '#E6E4DF',
+	'border-strong': '#1A1A1A',
 	surface: '#FFFFFF',
-	'surface-subtle': '#F5F5F5',
-	'surface-muted': '#F3F4F6',
-	'header-bg': 'rgba(255, 255, 255, 0.9)',
+	'surface-subtle': '#F3F2EE',
+	'surface-muted': '#ECEAE4',
+	'header-bg': 'rgba(250, 250, 248, 0.9)',
 	overlay: 'rgba(0, 0, 0, 0.5)',
-	scrollbar: '#D1D5DB',
+	scrollbar: '#D1D0CC',
 	'code-text': '#24292E',
 	// github-lightがdiffのトークンに持つ背景色
 	'diff-add-bg': '#F0FFF4',
@@ -22,21 +23,21 @@ export const colors = {
 } as const
 
 export const darkColors: Record<keyof typeof colors, string> = {
-	bg: '#121212',
-	main: '#E8E8E8',
-	sub: '#A0A0A0',
+	bg: '#141414',
+	main: '#D4D4D0',
+	sub: '#8A8A86',
 	accent: '#A78BFA',
 	'accent-hover': '#C4B5FD',
-	'accent-contrast': '#121212',
+	'accent-contrast': '#141414',
 	border: '#2E2E2E',
+	'border-strong': '#8A8A86',
 	surface: '#1A1A1A',
 	'surface-subtle': '#1E1E1E',
 	'surface-muted': '#262626',
-	'header-bg': 'rgba(18, 18, 18, 0.85)',
+	'header-bg': 'rgba(20, 20, 20, 0.85)',
 	overlay: 'rgba(0, 0, 0, 0.5)',
 	scrollbar: '#3A3A3A',
-	// github-darkの前景色
-	'code-text': '#E6EDF3',
+	'code-text': '#E1E4E8',
 	// GitHubのdiff表示の行背景（github-darkのトークン背景は帯が強すぎる）
 	'diff-add-bg': 'rgba(46, 160, 67, 0.15)',
 	'diff-remove-bg': 'rgba(248, 81, 73, 0.15)',
@@ -56,34 +57,65 @@ export const fontFamily = {
 		'sans-serif',
 	],
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+}
+
+export const durations = {
+	color: '0.15s',
+	move: '0.2s',
 } as const
+
+// 用途のクラス（transition-color / transition-move）が動かすプロパティ。
+// color は Tailwind の transition-colors と同じ並び
+export const motionProperties: Record<keyof typeof durations, string[]> = {
+	color: ['color', 'background-color', 'border-color', 'text-decoration-color', 'fill', 'stroke'],
+	move: ['transform', 'opacity', 'visibility'],
+}
+
+const TOC_TOP = '100px'
 
 export const sizes = {
 	borderRadius: {
+		kbd: '3px',
 		card: '10px',
 	},
 	fontSize: {
-		emoji: '28px',
+		'2xs': '11px',
+		code: ['13px', '1.7'],
+		'list-title': ['16px', '1.4'],
+		'title-sm': ['23px', '1.35'],
+		heading: ['24px', '1.3'],
+		'hero-sm': ['26px', '1.3'],
+		title: ['32px', '1.35'],
+		hero: ['38px', '1.25'],
+	} as Record<string, string | [string, string]>,
+	gridTemplateColumns: {
+		article: 'minmax(0, 680px) 224px',
+		list: '36px 1fr 110px',
+		'list-sm': '30px 1fr',
+		pickup: '96px 1fr',
+	},
+	height: {
+		'header-sm': '52px',
+		header: '60px',
+	},
+	letterSpacing: {
+		marker: '0.12em',
 	},
 	maxHeight: {
-		'sticky-column': 'calc(100vh - 6rem)',
-		'toc-dropdown': '60vh',
+		'sticky-column': `calc(100vh - ${TOC_TOP})`,
 	},
 	maxWidth: {
+		'search-trigger': '200px',
+		column: '680px',
+		article: '960px',
 		container: '1200px',
 	},
-	minHeight: {
-		'card-title': '2.6em',
-	},
 	spacing: {
-		'toc-guide': '3px',
-		'below-header': '74px',
-		'landing-offset': '88px',
-		'landing-offset-lg': '96px',
-		'toc-hidden': '120px',
-		'hero-media': '230px',
-		'shelf-card': '264px',
-		sidebar: '300px',
+		'logo-mark': '26px',
+		'landing-offset-sm': '76px',
+		'landing-offset': '84px',
+		'landing-offset-lg': '92px',
+		'toc-top': TOC_TOP,
 		'menu-panel': '960px',
 	},
 }

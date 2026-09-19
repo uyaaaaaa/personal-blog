@@ -2,6 +2,7 @@
 // 大きいファイルの丸読みを止め、下位モデルのサブエージェント（read）に読ませる。
 // 小さいファイルと範囲を絞った読みは通す。委譲の往復のほうが高くつく。
 import { statSync } from 'node:fs'
+import { read } from '../../scripts/stdin.mjs'
 
 const MIN_BYTES = Number(process.env.CLAUDE_DELEGATE_READ_MIN_BYTES) || 16000
 
@@ -53,15 +54,7 @@ export const decide = (input, sizeOf = bytesOf) => {
 	return `${bytes} バイト。Agent(subagent_type: "read") に聞く。原文が要るなら Read に offset / limit を付ける。`
 }
 
-const read = async () => {
-	let buf = ''
-	for await (const chunk of process.stdin) buf += chunk
-	return buf
-}
-
-// テストから import したときは走らせない
 if (process.argv[1]?.endsWith('delegate-read.mjs')) {
-	// 判定できないときは黙って通す。フックがツール呼び出しを止めない
 	try {
 		const input = JSON.parse((await read()) || '{}')
 		const reason = decide(input)
@@ -76,7 +69,5 @@ if (process.argv[1]?.endsWith('delegate-read.mjs')) {
 				}),
 			)
 		}
-	} catch {
-		// 握りつぶす
-	}
+	} catch {}
 }

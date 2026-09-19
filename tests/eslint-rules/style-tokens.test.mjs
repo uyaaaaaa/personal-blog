@@ -53,7 +53,7 @@ describe('no-untokenized-size', () => {
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { max-width: var(--fallback, 13px); }'),
+					code: sfc('.a { max-width: var(--fallback, 17px); }'),
 					errors: [{ messageId: 'untokenized' }],
 				},
 			],
@@ -92,6 +92,119 @@ describe('no-reduced-motion', () => {
 						'@media (prefers-reduced-motion: reduce) { .a { transition: none; } }',
 					),
 					errors: [{ messageId: 'reducedMotion' }],
+				},
+			],
+		})
+	})
+})
+
+describe('no-off-purpose-motion', () => {
+	it('用途に決めた長さだけを通す', () => {
+		tester.run('no-off-purpose-motion', styleTokens.rules['no-off-purpose-motion'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { transition: color 0.15s ease; }') },
+				// 同じ長さの別の綴り
+				{ filename: 'a.vue', code: sfc('.a { transition: background-color 150ms; }') },
+				{ filename: 'a.vue', code: sfc('.a { transition: border-top-color 0.15s; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: color 0.15s, transform 0.2s; }'),
+				},
+				// 動かさない 0 は、どの用途でも通す
+				{
+					filename: 'a.vue',
+					code: sfc(
+						'.a { transition: opacity 0.2s ease-out, visibility 0s linear 0.2s; }',
+					),
+				},
+				// 緩急の関数が持つカンマと数は、区切りでも長さでもない
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { transition: none; }') },
+				// 関数の中の語は対象の名前ではない
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: transform 0.2s steps(4, end); }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { --panel: 0.2s; transition: opacity var(--panel); }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { animation: spin 0.2s linear; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition-property: opacity; transition-duration: 0.2s; }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-color md:transition-move; }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { border-radius: 0.2s; }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: color 0.2s; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: opacity 0.16s ease-out; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: border-top-color 0.2s; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: grid-template-rows 0.25s ease-in-out; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: all 0.3s ease-in-out; }'),
+					errors: [{ messageId: 'mixed' }],
+				},
+				// 対象を書かない短縮形は all と同じ
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: 0.2s ease; }'),
+					errors: [{ messageId: 'mixed' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: 0.2s steps(4, end); }'),
+					errors: [{ messageId: 'mixed' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation: spin 0.42s; }'),
+					errors: [{ messageId: 'anyPurpose' }],
+				},
+				// var() で長さを渡す経路も塞ぐ
+				{
+					filename: 'a.vue',
+					code: sfc('.a { --panel: 0.42s; transition: opacity var(--panel); }'),
+					errors: [{ messageId: 'anyPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition-duration: 0.42s; }'),
+					errors: [{ messageId: 'anyPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply duration-200; }'),
+					errors: [{ messageId: 'motionClass' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-transform; }'),
+					errors: [{ messageId: 'motionClass' }],
 				},
 			],
 		})
@@ -236,6 +349,51 @@ describe('no-color-literal', () => {
 	})
 })
 
+describe('no-font-literal', () => {
+	it('トークン由来の書体だけを通す', () => {
+		tester.run('no-font-literal', styleTokens.rules['no-font-literal'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { font-family: var(--font-mono); }') },
+				{ filename: 'a.vue', code: sfc('.a { font-family: inherit; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { font: italic bold 1rem/1.5 var(--font-sans); }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { font-weight: 600; font-size: 1rem; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply font-mono md:font-sans; }') },
+				{ filename: 'a.vue', code: sfc(".a { font-feature-settings: 'tnum'; }") },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc(".a { font-family: 'Comic Sans MS'; }"),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { font-family: Georgia, serif; }'),
+					errors: [{ messageId: 'literal' }, { messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { font-family: var(--font-mono), monospace; }'),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { FONT: bold 1rem Georgia; }'),
+					errors: [{ messageId: 'literal' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply font-serif; }'),
+					errors: [{ messageId: 'fontClass' }],
+				},
+			],
+		})
+	})
+})
+
 describe('no-web-font', () => {
 	it('@font-face と @import を落とす', () => {
 		tester.run('no-web-font', styleTokens.rules['no-web-font'], {
@@ -371,6 +529,91 @@ describe('no-theme-branch', () => {
 	})
 })
 
+describe('no-outline-removal', () => {
+	it('フォーカスの輪郭を消す宣言とクラスを落とす', () => {
+		tester.run('no-outline-removal', styleTokens.rules['no-outline-removal'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { outline: 2px solid var(--color-accent); }') },
+				{ filename: 'a.vue', code: sfc('.a { outline: 0.5rem solid currentColor; }') },
+				{ filename: 'a.vue', code: sfc('.a { outline: 2px solid rgb(0 0 0); }') },
+				{ filename: 'a.vue', code: sfc('.a { outline-offset: 2px; }') },
+				{ filename: 'a.vue', code: sfc('.a { outline-color: initial; }') },
+				{ filename: 'a.vue', code: sfc('.a { outline: 2px solid #0ff; }') },
+				{ filename: 'a.vue', code: sfc('.a { outline-width: initial; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply outline-offset-0; }') },
+				{ filename: 'a.vue', code: sfc('.a { border: none; }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: none; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a:focus-visible { OUTLINE: 0; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline-style: none; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline-width: 0px; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: 2px solid transparent; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: unset; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: initial; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline-style: initial; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { all: unset; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline: 0 solid currentColor; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { outline-color: transparent; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply outline-none; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply focus-visible:outline-0; }'),
+					errors: [{ messageId: 'outlineRemoval' }],
+				},
+			],
+		})
+	})
+})
+
 describe('no-scroll-behavior', () => {
 	it('scroll-behavior の宣言を落とす', () => {
 		tester.run('no-scroll-behavior', styleTokens.rules['no-scroll-behavior'], {
@@ -402,6 +645,60 @@ describe('no-scroll-behavior', () => {
 					filename: 'a.vue',
 					code: sfc('.a { @apply md:scroll-auto; }'),
 					errors: [{ messageId: 'scrollBehavior' }],
+				},
+			],
+		})
+	})
+})
+
+describe('no-display-none', () => {
+	it('display で消す宣言とクラスを落とし、並べ方の display は通す', () => {
+		tester.run('no-display-none', styleTokens.rules['no-display-none'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { display: flex; }') },
+				{ filename: 'a.vue', code: sfc('.a { display: inline-block; }') },
+				{ filename: 'a.vue', code: sfc('.a { display: -webkit-box; }') },
+				{ filename: 'a.vue', code: sfc('.a { border: none; outline: none; }') },
+				{ filename: 'a.vue', code: sfc('.a { --display: none; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply md:block; }') },
+				// 綴りの重なる overflow-hidden / truncate は display を持たない
+				{ filename: 'a.vue', code: sfc('.a { @apply md:overflow-hidden truncate; }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { display: none; }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { DISPLAY: NONE; }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { display: none; } .a.is-open { display: block; }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@media (min-width: 768px) { .a { display: none; } }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a::-webkit-search-cancel-button { display: none; }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply hidden; }'),
+					errors: [{ messageId: 'displayNone' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply md:hidden; }'),
+					errors: [{ messageId: 'displayNone' }],
 				},
 			],
 		})

@@ -1,16 +1,14 @@
 <template>
-	<header class="global-header">
-		<div class="header-inner container">
+	<header class="global-header h-header-sm md:h-header">
+		<div class="header-inner mx-auto max-w-container px-4">
 			<NuxtLink
 				to="/"
 				class="logo"
 				@click="closeMenu"
 			>
 				<svg
-					class="logo-mark"
+					class="logo-mark h-6 w-6 md:h-logo-mark md:w-logo-mark"
 					viewBox="0 0 32 32"
-					width="26"
-					height="26"
 					aria-hidden="true"
 					focusable="false"
 				>
@@ -47,11 +45,11 @@
 				<span>Tech Blog</span>
 			</NuxtLink>
 
-			<div class="mx-8 hidden max-w-md flex-1 md:flex">
+			<div class="mx-8 hidden max-w-search-trigger flex-1 md:flex">
 				<button
 					ref="desktopSearchRef"
 					type="button"
-					class="group flex w-full items-center justify-between rounded-md border border-border bg-surface-subtle px-4 py-2 text-sub transition-colors hover:border-accent"
+					class="group flex w-full items-center justify-between rounded-md border border-border bg-surface-subtle px-4 py-2 text-sub transition-color hover:border-accent"
 					aria-haspopup="dialog"
 					:aria-expanded="isSearchOpen"
 					@click="openSearch"
@@ -84,17 +82,17 @@
 						<span class="text-sm">Search...</span>
 					</span>
 					<span
-						class="rounded border border-border bg-surface px-1.5 py-0.5 text-xs text-sub"
-						>Cmd+K</span
+						class="rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-xs text-sub"
+						>⌘K</span
 					>
 				</button>
 			</div>
 
-			<div class="flex items-stretch gap-3 self-stretch md:gap-5">
+			<div class="flex items-stretch gap-1 self-stretch md:gap-5">
 				<button
 					ref="mobileSearchRef"
 					type="button"
-					class="flex h-8 w-8 items-center justify-center self-center rounded-md text-sub transition-colors hover:text-accent md:hidden"
+					class="flex h-8 w-8 items-center justify-center self-center rounded-md text-sub transition-color hover:text-accent md:hidden"
 					aria-label="Search"
 					aria-haspopup="dialog"
 					:aria-expanded="isSearchOpen"
@@ -147,6 +145,7 @@
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
+	import { focusByGesture } from '~/composables/gestureFocus'
 	import { isSearchShortcut } from '~/utils/shortcut'
 
 	const props = defineProps<{
@@ -172,7 +171,7 @@
 	const openSearchFrom = (opener: HTMLElement | null) => {
 		searchOpener = opener
 		// Safari と Firefox は click で button にフォーカスを移さないので、開く前に寄せる
-		opener?.focus()
+		focusByGesture(opener)
 		isSearchOpen.value = true
 	}
 
@@ -182,7 +181,7 @@
 
 	const closeSearch = () => {
 		isSearchOpen.value = false
-		searchOpener?.focus()
+		focusByGesture(searchOpener)
 		searchOpener = null
 	}
 
@@ -210,7 +209,7 @@
 	onBeforeUnmount(() => window.removeEventListener('keydown', onSearchShortcut))
 
 	watch([isMenuOpen, isSearchOpen], ([menuOpen, searchOpen]) => {
-		document.body.style.overflow = menuOpen || searchOpen ? 'hidden' : ''
+		document.body.classList.toggle('scroll-locked', menuOpen || searchOpen)
 	})
 
 	// リンクを踏まない移動（ブラウザバック）でも、被せたものは残さない
@@ -223,6 +222,12 @@
 	)
 </script>
 
+<style>
+	body.scroll-locked {
+		overflow: hidden;
+	}
+</style>
+
 <style scoped>
 	.global-header {
 		position: sticky;
@@ -231,7 +236,6 @@
 		background-color: var(--color-header-bg);
 		backdrop-filter: blur(10px);
 		border-bottom: 1px solid var(--color-border);
-		height: 4rem;
 		display: flex;
 		align-items: center;
 	}
@@ -249,7 +253,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		font-weight: 700;
-		font-size: 1.25rem;
+		font-size: 1.125rem;
 		font-family: var(--font-mono);
 		letter-spacing: -0.025em;
 	}

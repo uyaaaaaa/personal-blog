@@ -1,6 +1,5 @@
 ---
 title: "ESLintとPrettierをBiomeやoxlintに乗り換えられるか試す"
-emoji: "🦀"
 description: "速度だけ見て決めると痛い目に遭います"
 published: true
 date: 2026-09-07

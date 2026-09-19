@@ -36,10 +36,13 @@
 						y2="16.65"
 					/>
 				</svg>
+				<!-- WebKit は type="search" にクリアボタンを足す。クラスを付けられない擬似要素なので、type では出させず、役割は role、仮想キーボードの検索キーは enterkeyhint で補う -->
 				<input
 					ref="inputRef"
 					v-model="query"
-					type="search"
+					type="text"
+					role="searchbox"
+					enterkeyhint="search"
 					class="search-input"
 					placeholder="Search articles by title or tag"
 					aria-label="Search articles by title or tag"
@@ -83,13 +86,22 @@
 					</NuxtLink>
 				</li>
 			</ul>
+
+			<p
+				v-if="results.length > 0"
+				class="search-keys hidden md:block"
+			>
+				↑↓ to move, ⏎ to open, esc to close
+			</p>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
+	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
+	import { usePublishedArticles } from '~/composables/usePublishedArticles'
 	import { formatDate } from '~/utils/date'
 	import { searchArticles } from '~/utils/search'
 	import { deltaToReveal } from '~/utils/scroll'
@@ -102,20 +114,14 @@
 		(e: 'close'): void
 	}>()
 
-	const { data: articles } = useAsyncData('search-articles', () =>
-		queryCollection('article')
-			.where('published', '=', true)
-			.order('date', 'DESC')
-			.select('path', 'title', 'date', 'tags')
-			.all(),
-	)
+	const { data: articles } = usePublishedArticles()
 
 	const query = ref('')
 	const activeIndex = ref(0)
 	const inputRef = ref<HTMLInputElement | null>(null)
 	const resultsRef = ref<HTMLElement | null>(null)
 
-	const results = computed(() => searchArticles(articles.value ?? [], query.value))
+	const results = computed(() => searchArticles(articles.value, query.value))
 
 	const emptyMessage = computed(() =>
 		query.value.trim() === ''
@@ -189,7 +195,8 @@
 	const isComposingKey = (event: KeyboardEvent) => event.isComposing || composing
 
 	// Tailwind の md。ヘッダーが検索の入口を PC 用と SP 用に出し分けるのと同じ幅で、
-	// テンプレートが選択中の縦線を出すのもここから。ずれると見えない選択にキーが効く
+	// テンプレートが選択中の縦線とキーの案内を出すのもここから。ずれると見えない選択に
+	// キーが効き、効かないキーを名乗る
 	const KEYBOARD_SELECT_QUERY = '(min-width: 768px)'
 
 	const canSelectByKey = () => window.matchMedia(KEYBOARD_SELECT_QUERY).matches
@@ -226,7 +233,7 @@
 
 			composing = false
 			query.value = ''
-			inputRef.value?.focus()
+			focusByGesture(inputRef.value)
 		},
 		{ flush: 'post' },
 	)
@@ -307,15 +314,10 @@
 		font-family: inherit;
 		font-size: 1rem;
 		color: var(--color-main);
-		outline: none;
 	}
 
 	.search-input::placeholder {
 		color: var(--color-sub);
-	}
-
-	.search-input::-webkit-search-cancel-button {
-		display: none;
 	}
 
 	.search-note {
@@ -359,6 +361,17 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	/* 出し分けはTailwindの md: に統一しているため、displayはここで指定しない */
+	.search-keys {
+		flex: none;
+		margin: 0;
+		padding: 0.5rem 1rem;
+		border-top: 1px solid var(--color-border);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--color-sub);
 	}
 
 	.search-result-date {

@@ -1,6 +1,5 @@
 ---
 title: "render-markdown.nvimでlinkがうまくレンダリングされなくなった"
-emoji: "📝"
 description: ""
 published: true
 date: 2026-01-18

@@ -122,7 +122,7 @@
 					class="mobile-drawer"
 					@click.stop
 				>
-					<div class="drawer-header">
+					<div class="drawer-header h-header-sm">
 						<button
 							type="button"
 							class="drawer-close"
@@ -397,10 +397,12 @@
 <script setup lang="ts">
 	import HeaderMenuPanel from '~/components/layout/HeaderMenuPanel.vue'
 	import HeaderMenuColumn from '~/components/layout/HeaderMenuColumn.vue'
+	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useArticleCategories } from '~/composables/useArticleCategories'
 	import { useArticleTags } from '~/composables/useArticleTags'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useHoverPanel } from '~/composables/useHoverPanel'
+	import { useLatestArticles } from '~/composables/useLatestArticles'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 	import { formatRelativeDate } from '~/utils/date'
 
@@ -421,7 +423,7 @@
 
 	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる
 	const closeDrawer = () => {
-		menuButtonRef.value?.focus()
+		focusByGesture(menuButtonRef.value)
 		emit('close')
 	}
 
@@ -438,14 +440,7 @@
 	const { data: tags } = useArticleTags()
 	const topTags = computed(() => (tags.value ?? []).slice(0, TOP_TAGS_LIMIT))
 
-	const { data: latestArticles } = useAsyncData('header-latest-articles', () =>
-		queryCollection('article')
-			.where('published', '=', true)
-			.order('date', 'DESC')
-			.limit(LATEST_ARTICLES_LIMIT)
-			.select('path', 'title', 'date')
-			.all(),
-	)
+	const { data: latestArticles } = useLatestArticles(LATEST_ARTICLES_LIMIT)
 
 	const now = ref<number | null>(null)
 
@@ -488,12 +483,12 @@
 		padding: 0;
 		border: none;
 		background: none;
-		font-family: inherit;
-		font-size: 1rem;
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
 		font-weight: 500;
 		color: var(--color-main);
 		cursor: pointer;
-		transition: color 0.2s;
+		transition: color 0.15s;
 	}
 
 	.explore-trigger:hover,
@@ -627,7 +622,6 @@
 		height: 2px;
 		background-color: var(--color-main);
 		border-radius: 2px;
-		transition: all 0.3s ease-in-out;
 	}
 
 	.mobile-menu-overlay {
@@ -643,8 +637,8 @@
 		visibility: hidden;
 		overflow: hidden;
 		transition:
-			opacity 0.3s ease-in-out,
-			visibility 0.3s ease-in-out;
+			opacity 0.2s ease-in-out,
+			visibility 0.2s ease-in-out;
 	}
 
 	.mobile-menu-overlay.is-open {
@@ -665,7 +659,7 @@
 		overflow-y: auto;
 		overscroll-behavior: contain;
 		transform: translateX(100%);
-		transition: transform 0.3s ease-in-out;
+		transition: transform 0.2s ease-in-out;
 	}
 
 	.mobile-menu-overlay.is-open .mobile-drawer {
@@ -679,7 +673,6 @@
 		display: flex;
 		justify-content: flex-end;
 		align-items: center;
-		height: 4rem;
 		margin: 0 -0.75rem 0.5rem;
 		padding: 0 0.5rem;
 		background-color: var(--color-surface);
@@ -731,8 +724,8 @@
 		text-decoration: none;
 		cursor: pointer;
 		transition:
-			background-color 0.2s,
-			color 0.2s;
+			background-color 0.15s,
+			color 0.15s;
 	}
 
 	.drawer-row:hover {
@@ -781,7 +774,7 @@
 	.drawer-collapse {
 		display: grid;
 		grid-template-rows: 0fr;
-		transition: grid-template-rows 0.25s ease-in-out;
+		transition: grid-template-rows 0.2s ease-in-out;
 	}
 
 	.drawer-collapse.is-open {
@@ -796,7 +789,7 @@
 		overflow: hidden;
 		border-left: 1px solid var(--color-border);
 		visibility: hidden;
-		transition: visibility 0.25s ease-in-out;
+		transition: visibility 0.2s ease-in-out;
 	}
 
 	.drawer-collapse.is-open .drawer-sublist {
@@ -811,8 +804,8 @@
 		color: var(--color-main);
 		text-decoration: none;
 		transition:
-			background-color 0.2s,
-			color 0.2s;
+			background-color 0.15s,
+			color 0.15s;
 	}
 
 	.drawer-subrow:hover {

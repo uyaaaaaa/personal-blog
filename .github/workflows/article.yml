@@ -1,0 +1,26 @@
+name: Article
+
+on:
+    pull_request:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: article-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    article:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci --ignore-scripts
+            - run: npm run lint:article

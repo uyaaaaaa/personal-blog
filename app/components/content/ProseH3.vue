@@ -1,15 +1,3 @@
-<script setup lang="ts">
-	import HeadingAnchor from './HeadingAnchor.vue'
-
-	const props = defineProps<{
-		id?: string
-	}>()
-
-	defineOptions({
-		name: 'ProseH3',
-	})
-</script>
-
 <template>
 	<h3
 		:id="props.id"
@@ -22,3 +10,15 @@
 		/>
 	</h3>
 </template>
+
+<script setup lang="ts">
+	import HeadingAnchor from './HeadingAnchor.vue'
+
+	const props = defineProps<{
+		id?: string
+	}>()
+
+	defineOptions({
+		name: 'ProseH3',
+	})
+</script>

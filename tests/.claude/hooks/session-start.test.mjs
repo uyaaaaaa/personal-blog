@@ -20,6 +20,19 @@ describe('setup', () => {
 		expect(report).toMatch('npm ci 済み')
 	})
 
+	it('新しいセッションのときだけ証跡を作り直す', () => {
+		const remake = vi.fn()
+		const report = setup({ has: () => true, run: vi.fn(), remake, source: 'startup' })
+
+		expect(remake.mock.calls).toEqual([['.verify']])
+		expect(report).toMatch('.verify/ 作り直し')
+
+		for (const source of ['resume', 'compact', undefined]) {
+			setup({ has: () => true, run: vi.fn(), remake, source })
+		}
+		expect(remake).toHaveBeenCalledTimes(1)
+	})
+
 	it('落ちた側の理由を1行で出し、もう片方は続ける', () => {
 		const run = vi.fn((command) => {
 			if (command === 'git') throw new Error('not a git repository')
@@ -33,5 +46,12 @@ describe('setup', () => {
 		})
 		expect(setup({ has: () => false, run: broken })).toMatch('npm ci が落ち')
 		expect(setup({ has: () => false, run: broken })).toMatch('E404')
+
+		const fails = () => {
+			throw new Error('EACCES')
+		}
+		expect(setup({ has: () => true, run: vi.fn(), remake: fails, source: 'clear' })).toMatch(
+			'.verify/ を作り直せない（EACCES）',
+		)
 	})
 })

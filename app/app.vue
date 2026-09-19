@@ -18,9 +18,7 @@
 		meta: [
 			{
 				name: 'theme-color',
-				content: computed(() =>
-					colorMode.value === 'dark' ? darkColors.bg : colors.surface,
-				),
+				content: computed(() => (colorMode.value === 'dark' ? darkColors.bg : colors.bg)),
 			},
 		],
 	})

@@ -3,7 +3,7 @@
 		class="menu-panel-layer"
 		:class="{ 'is-open': isOpen }"
 	>
-		<div class="menu-panel-anchor container">
+		<div class="menu-panel-anchor mx-auto max-w-container px-4">
 			<div
 				class="menu-panel w-menu-panel shadow-lg"
 				v-bind="$attrs"
@@ -52,9 +52,9 @@
 		visibility: hidden;
 		transform: translateY(-4px);
 		transition:
-			opacity 0.16s ease-out,
-			transform 0.16s ease-out,
-			visibility 0.16s;
+			opacity 0.2s ease-out,
+			transform 0.2s ease-out,
+			visibility 0.2s;
 	}
 
 	.is-open .menu-panel {

@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { withSetup } from './withSetup.test-helper'
 
-// Sidebar・TocMobile・ScrollToTopButton の lg: と同じ幅
+// Toc・TocInline・ScrollToTopButton の lg: と同じ幅
 const DESKTOP_QUERY = '(min-width: 1024px)'
 
 type ChangeListener = (event: { matches: boolean }) => void

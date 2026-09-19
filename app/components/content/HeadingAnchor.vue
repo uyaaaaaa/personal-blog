@@ -1,22 +1,8 @@
-<script setup lang="ts">
-	import { useScrollTo } from '~/composables/useScrollTo'
-
-	const props = defineProps<{
-		headingId: string
-	}>()
-
-	const { scrollTo } = useScrollTo()
-
-	defineOptions({
-		name: 'HeadingAnchor',
-	})
-</script>
-
 <template>
 	<a
 		:href="`#${props.headingId}`"
 		aria-label="Link to this section"
-		class="heading-anchor ml-2 hidden align-middle opacity-0 transition-opacity duration-200 focus-visible:opacity-100 group-hover:opacity-100 lg:inline-block"
+		class="heading-anchor ml-2 hidden align-middle opacity-0 transition-move focus-visible:opacity-100 group-hover:opacity-100 lg:inline-block"
 		@click.exact.prevent="scrollTo(props.headingId)"
 	>
 		<svg
@@ -36,6 +22,20 @@
 		</svg>
 	</a>
 </template>
+
+<script setup lang="ts">
+	import { useScrollTo } from '~/composables/useScrollTo'
+
+	const props = defineProps<{
+		headingId: string
+	}>()
+
+	const { scrollTo } = useScrollTo()
+
+	defineOptions({
+		name: 'HeadingAnchor',
+	})
+</script>
 
 <style scoped>
 	/* 本文のリンクとして prose 側の規則も当たるため、色と下線はここで決め切る */

@@ -27,8 +27,18 @@ const check = () => spawnSync(process.execPath, [SCRIPT, root], { encoding: 'utf
 
 describe('check-css', () => {
 	it('語彙とトークンで書いた CSS を通す', () => {
-		write('a.css', '.a {\n\tcolor: var(--color-ink);\n\tpadding: 0.75rem;\n}\n')
+		write(
+			'a.css',
+			'.a {\n\tcolor: var(--color-ink);\n\tfont-family: var(--font-mono);\n\tpadding: 0.75rem;\n}\n',
+		)
 		expect(check().status).toBe(0)
+	})
+
+	it('書体の名前を落とす', () => {
+		write('a.css', ".a {\n\tfont-family: 'Comic Sans MS';\n}\n")
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/書体の名前/)
 	})
 
 	it('@font-face と @import を落とす', () => {
@@ -40,6 +50,30 @@ describe('check-css', () => {
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/Web フォントを読み込まない/)
 		expect(stderr).toMatch(/@import を書かない/)
+	})
+
+	it('display で消す宣言を落とす', () => {
+		write('a.css', '.a {\n\tdisplay: none;\n}\n')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/display: none を宣言に書かない/)
+	})
+
+	it('並べ方の display は通す', () => {
+		write('a.css', '.a {\n\tdisplay: grid;\n}\n')
+		expect(check().status).toBe(0)
+	})
+
+	it('用途に決めた長さでないモーションを落とす', () => {
+		write('a.css', '.a {\n\ttransition: color 0.42s;\n}\n')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/決めた長さではない/)
+	})
+
+	it('用途に決めた長さのモーションは通す', () => {
+		write('a.css', '.a {\n\ttransition: color 0.15s;\n\tanimation: spin 0.2s;\n}\n')
+		expect(check().status).toBe(0)
 	})
 
 	it('大文字の綴りと、入れ子にした at-rule も落とす', () => {

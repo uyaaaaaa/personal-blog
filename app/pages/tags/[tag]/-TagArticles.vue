@@ -1,3 +1,25 @@
+<template>
+	<div class="mx-auto w-full max-w-column space-y-8">
+		<div class="flex items-baseline gap-4">
+			<h1 class="font-mono text-heading font-bold text-main">
+				<span class="text-accent">#</span>{{ tagName }}
+			</h1>
+			<span class="font-mono text-base text-sub">{{ filteredArticles.length }}</span>
+		</div>
+
+		<ArticleList
+			:articles="pagedItems"
+			:start-number="startNumber"
+		/>
+
+		<Pagination
+			:page="page"
+			:total-pages="totalPages"
+			:base-path="basePath"
+		/>
+	</div>
+</template>
+
 <script setup lang="ts">
 	import ArticleList from '~/components/article/ArticleList.vue'
 	import Pagination from '~/components/ui/Pagination.vue'
@@ -12,7 +34,7 @@
 		queryCollection('article')
 			.where('published', '=', true)
 			.order('date', 'DESC')
-			.select('path', 'title', 'date', 'emoji', 'tags')
+			.select('path', 'title', 'date', 'tags')
 			.all(),
 	)
 
@@ -34,10 +56,13 @@
 		throw createError({ statusCode: 404, statusMessage: 'Tag not found', fatal: true })
 	}
 
-	const { page, totalPages, pagedItems, basePath } = usePagination(filteredArticles, {
-		pageParam: () => route.params.page,
-		path: () => route.path,
-	})
+	const { page, totalPages, pagedItems, startNumber, basePath } = usePagination(
+		filteredArticles,
+		{
+			pageParam: () => route.params.page,
+			path: () => route.path,
+		},
+	)
 
 	usePageSeo({
 		path: () => route.path,
@@ -48,27 +73,3 @@
 		description: () => `${tagName.value} タグが付いた記事の一覧。`,
 	})
 </script>
-
-<template>
-	<div class="space-y-8">
-		<header class="border-b border-border pb-8">
-			<h1 class="mb-2 text-3xl font-bold text-main">
-				<span class="font-mono text-accent">#</span> {{ tagName }}
-			</h1>
-			<p class="text-sub">
-				{{ filteredArticles.length }} article{{
-					filteredArticles.length === 1 ? '' : 's'
-				}}
-				tagged with "{{ tagName }}".
-			</p>
-		</header>
-
-		<ArticleList :articles="pagedItems" />
-
-		<Pagination
-			:page="page"
-			:total-pages="totalPages"
-			:base-path="basePath"
-		/>
-	</div>
-</template>

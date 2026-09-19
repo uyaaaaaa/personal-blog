@@ -211,7 +211,7 @@
 		background: none;
 		color: var(--color-sub);
 		cursor: pointer;
-		transition: color 0.2s;
+		transition: color 0.15s;
 	}
 
 	.theme-trigger:hover,
@@ -232,9 +232,9 @@
 		visibility: hidden;
 		transform: translateY(-4px);
 		transition:
-			opacity 0.16s ease-out,
-			transform 0.16s ease-out,
-			visibility 0.16s;
+			opacity 0.2s ease-out,
+			transform 0.2s ease-out,
+			visibility 0.2s;
 	}
 
 	.theme-panel.is-open {

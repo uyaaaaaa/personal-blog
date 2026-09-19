@@ -1,8 +1,9 @@
 import { execFileSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { readFileSync, rmSync } from 'node:fs'
+import { rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { read } from './stdin.mjs'
 
 const REMOTE = 'origin'
 const JOURNAL = 'harness/journal'
@@ -84,8 +85,8 @@ const push = (branch, build, message) => {
 	}
 }
 
-const stdin = () => {
-	const text = readFileSync(0, 'utf8').trim()
+const stdin = async () => {
+	const text = (await read()).trim()
 	if (text === '') fail('本文が空。標準入力から渡す。', '', ...USAGE)
 	return `${text}\n`
 }
@@ -105,11 +106,11 @@ const consumed = () => {
 	return { ledger, journal: state === null ? null : (JSON.parse(state).journal ?? null) }
 }
 
-const append = ([number, ...extra]) => {
+const append = async ([number, ...extra]) => {
 	if (!/^[1-9][0-9]*$/.test(number ?? '') || extra.length > 0) {
 		fail('append に渡すのは PR の番号1つだけ。', '', ...USAGE)
 	}
-	const body = stdin()
+	const body = await stdin()
 	const { dir, time } = stamp()
 	const path = `${dir}/${time}-pr${number}.md`
 	push(JOURNAL, () => ({ [path]: body }), `PR #${number} で受けた指摘を書き留める`)
@@ -138,11 +139,11 @@ const ledger = (extra) => {
 	if (body !== null) process.stdout.write(body)
 }
 
-const save = ([sha, ...extra]) => {
+const save = async ([sha, ...extra]) => {
 	if (!/^[0-9a-f]{7,40}$/.test(sha ?? '') || extra.length > 0) {
 		fail('save に渡すのは pending が出した journal の SHA1つだけ。', '', ...USAGE)
 	}
-	const body = stdin()
+	const body = await stdin()
 	push(
 		LEDGER,
 		() => ({
@@ -157,4 +158,4 @@ const save = ([sha, ...extra]) => {
 const [command, ...rest] = process.argv.slice(2)
 const commands = { append, pending, ledger, save }
 if (!Object.hasOwn(commands, command ?? '')) fail(...USAGE)
-commands[command](rest)
+await commands[command](rest)

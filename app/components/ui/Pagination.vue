@@ -1,19 +1,3 @@
-<script setup lang="ts">
-	import { pageLink, paginationItems } from '~/utils/pagination'
-
-	const props = defineProps<{
-		page: number
-		totalPages: number
-		basePath: string
-	}>()
-
-	const WINDOW_RADIUS = 1
-
-	const items = computed(() => paginationItems(props.page, props.totalPages, WINDOW_RADIUS))
-
-	const linkFor = (target: number) => pageLink(props.basePath, target)
-</script>
-
 <template>
 	<nav
 		v-if="totalPages > 1"
@@ -118,6 +102,22 @@
 	</nav>
 </template>
 
+<script setup lang="ts">
+	import { pageLink, paginationItems } from '~/utils/pagination'
+
+	const props = defineProps<{
+		page: number
+		totalPages: number
+		basePath: string
+	}>()
+
+	const WINDOW_RADIUS = 1
+
+	const items = computed(() => paginationItems(props.page, props.totalPages, WINDOW_RADIUS))
+
+	const linkFor = (target: number) => pageLink(props.basePath, target)
+</script>
+
 <style scoped>
 	.page-item {
 		display: inline-flex;
@@ -126,25 +126,20 @@
 		min-width: 2.25rem;
 		height: 2.25rem;
 		padding: 0 0.5rem;
-		border: 1px solid var(--color-border);
-		border-radius: 0.25rem;
-		background-color: var(--color-surface);
 		color: var(--color-main);
 		font-family: var(--font-mono);
 		font-size: 0.875rem;
-		transition:
-			border-color 0.2s ease,
-			color 0.2s ease;
+		transition: color 0.15s ease;
 	}
 
 	a.page-item:hover {
-		border-color: var(--color-accent);
 		color: var(--color-accent);
 	}
 
 	.page-item-current {
-		border-color: var(--color-accent);
 		color: var(--color-accent);
+		text-decoration: underline;
+		text-underline-offset: 0.25rem;
 	}
 
 	.page-item-disabled {

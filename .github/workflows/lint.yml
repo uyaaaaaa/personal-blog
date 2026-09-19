@@ -2,8 +2,10 @@ name: Lint
 
 on:
     pull_request:
+        paths-ignore: ['content/**']
     push:
         branches: [main]
+        paths-ignore: ['content/**']
     workflow_dispatch:
 
 permissions:
@@ -23,4 +25,4 @@ jobs:
                   node-version: 22
                   cache: npm
             - run: npm ci --ignore-scripts
-            - run: npm run lint
+            - run: npm run lint:code

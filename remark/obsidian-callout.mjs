@@ -1,6 +1,4 @@
 /**
- * Obsidian風callout記法をcalloutコンポーネントに変換するremarkプラグイン
- *
  * ```md
  * > [!note] タイトル（省略可）
  * > 本文

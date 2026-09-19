@@ -1,6 +1,5 @@
 ---
 title: "【書評】アーキテクトの教科書"
-emoji: "📘"
 description: ""
 published: true
 date: 2026-01-30

@@ -1,7 +1,7 @@
 <template>
 	<div class="layout-container">
 		<Header :location="route.fullPath" />
-		<main class="main-content container">
+		<main class="flex-1 px-5 pb-16 pt-7 md:px-10 md:pb-24 md:pt-14">
 			<slot />
 		</main>
 		<Footer />
@@ -13,6 +13,8 @@
 	import Footer from '~/components/layout/Footer.vue'
 
 	const route = useRoute()
+
+	/* eslint-disable style/no-outline-removal -- 目印が付くのはポインタで移したフォーカスだけ */
 </script>
 
 <style>
@@ -21,7 +23,16 @@
 		font-family: var(--font-sans);
 		background-color: var(--color-bg);
 		color: var(--color-main);
-		line-height: 1.6;
+		line-height: 1.5;
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+	}
+
+	[data-pointer-focus]:focus-visible {
+		outline: none;
 	}
 
 	*,
@@ -33,17 +44,11 @@
 	a {
 		text-decoration: none;
 		color: inherit;
-		transition: color 0.2s ease;
+		transition: color 0.15s ease;
 	}
 
 	a:hover {
 		color: var(--color-accent);
-	}
-
-	.container {
-		max-width: 1200px;
-		margin: 0 auto;
-		padding: 0 1rem;
 	}
 </style>
 
@@ -52,12 +57,5 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
-	}
-
-	.main-content {
-		flex: 1;
-		padding-top: 2rem;
-		padding-bottom: 4rem;
-		width: 100%;
 	}
 </style>

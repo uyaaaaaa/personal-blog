@@ -4,8 +4,8 @@
 	"description": "Functional Minimalism for Experts. Technical articles on software engineering, architecture, and design.",
 	"start_url": "/",
 	"display": "standalone",
-	"theme_color": "#FFFFFF",
-	"background_color": "#F9F9F9",
+	"theme_color": "#FAFAF8",
+	"background_color": "#FAFAF8",
 	"icons": [
 		{
 			"src": "/icon-192.png",
