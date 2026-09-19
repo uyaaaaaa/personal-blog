@@ -2,64 +2,58 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useScrollTo } from '~/composables/useScrollTo'
 
-const { scrollTo, scrollToTop, isSending } = useScrollTo()
+const frames = new Map<number, FrameRequestCallback>()
+let lastFrameId = 0
 
-const scrollIntoView = vi.fn()
+const setScrollY = (y: number) => {
+	Object.defineProperty(window, 'scrollY', { value: y, configurable: true })
+}
 
-let target: HTMLElement
+const runFrame = () => {
+	const callbacks = [...frames.values()]
+	frames.clear()
+	for (const callback of callbacks) callback(0)
+}
+
+const runFrames = (count: number) => {
+	for (let i = 0; i < count; i++) runFrame()
+}
 
 beforeEach(() => {
-	vi.useFakeTimers()
-
-	scrollIntoView.mockReset()
-	target = document.createElement('div')
-	target.id = 'section'
-	target.scrollIntoView = scrollIntoView
-	document.body.append(target)
-
-	window.scrollTo = vi.fn()
+	frames.clear()
+	lastFrameId = 0
+	setScrollY(0)
+	document.body.innerHTML = '<div id="target"></div>'
+	vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+		frames.set(++lastFrameId, callback)
+		return lastFrameId
+	})
+	vi.stubGlobal('cancelAnimationFrame', (id: number) => {
+		frames.delete(id)
+	})
 })
 
 afterEach(() => {
-	vi.runAllTimers()
-	vi.useRealTimers()
-	target.remove()
+	// 送りの追従はモジュールスコープに残る。止めずに終わると、次のテストが送っている最中から始まる
+	while (frames.size > 0) runFrame()
+
+	vi.unstubAllGlobals()
 })
 
 describe('useScrollTo', () => {
-	it('送っている間だけ、自分で動かしている印を立てる', () => {
-		expect(isSending.value).toBe(false)
+	it('滑り込みが止まるまで送っている扱いにする', () => {
+		const { scrollTo, isJumping } = useScrollTo()
 
-		scrollTo('section')
+		scrollTo('target')
+		expect(isJumping.value).toBe(true)
 
-		expect(scrollIntoView).toHaveBeenCalled()
-		expect(isSending.value).toBe(true)
+		for (const y of [100, 200, 300, 400, 500, 600]) {
+			setScrollY(y)
+			runFrame()
+		}
+		expect(isJumping.value).toBe(true)
 
-		window.dispatchEvent(new Event('scrollend'))
-
-		expect(isSending.value).toBe(false)
-	})
-
-	// scrollend を出さないブラウザでは、印が立ったまま戻らなくなる
-	it('scrollend が来なくても、待ち切ったら印を下ろす', () => {
-		scrollTo('section')
-		expect(isSending.value).toBe(true)
-
-		vi.runAllTimers()
-
-		expect(isSending.value).toBe(false)
-	})
-
-	it('先頭へ戻すときも印を立てる', () => {
-		scrollToTop()
-
-		expect(isSending.value).toBe(true)
-	})
-
-	it('行き先が無ければ動かさず、印も立てない', () => {
-		scrollTo('missing')
-
-		expect(scrollIntoView).not.toHaveBeenCalled()
-		expect(isSending.value).toBe(false)
+		runFrames(6)
+		expect(isJumping.value).toBe(false)
 	})
 })

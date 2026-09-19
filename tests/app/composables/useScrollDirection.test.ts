@@ -13,14 +13,17 @@ const setScrollY = (y: number) => {
 	Object.defineProperty(window, 'scrollY', { value: y, configurable: true })
 }
 
+const runFrame = () => {
+	const callbacks = [...frames.values()]
+	frames.clear()
+	for (const callback of callbacks) callback(0)
+}
+
 // scroll が来てからフレームが走るまでを1つにまとめる。読み取りはフレームでしか走らない
 const scrollTo = (y: number) => {
 	setScrollY(y)
 	window.dispatchEvent(new Event('scroll'))
-
-	const callbacks = [...frames.values()]
-	frames.clear()
-	for (const callback of callbacks) callback(0)
+	runFrame()
 }
 
 const mountDirection = (threshold: number, startY = 0) => {
@@ -33,6 +36,7 @@ const mountDirection = (threshold: number, startY = 0) => {
 beforeEach(() => {
 	frames.clear()
 	lastFrameId = 0
+	document.body.innerHTML = '<div id="target"></div>'
 	vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
 		frames.set(++lastFrameId, callback)
 		return lastFrameId
@@ -43,6 +47,9 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+	// 送りの追従はモジュールスコープに残る。止めずに終わると、次のテストが送っている最中から始まる
+	while (frames.size > 0) runFrame()
+
 	for (const unmount of mounted.splice(0)) unmount()
 	vi.unstubAllGlobals()
 })
@@ -77,38 +84,25 @@ describe('useScrollDirection', () => {
 		expect(direction.value).toBe('down')
 	})
 
-	// 見出しへ送るのも下向きの移動になる。読者が下へスクロールしたと読むと、
-	// 送っている最中に吸着した帯が引っ込み、着地したときに帯1本ぶんの空きが出る
-	it('自分で送っている間は、読者の向きが無い状態に戻す', () => {
-		const { direction } = mountDirection(10)
-
-		const target = document.createElement('div')
-		target.id = 'section'
-		target.scrollIntoView = () => {}
-		document.body.append(target)
-
-		scrollTo(50)
-		expect(direction.value).toBe('down')
-
-		useScrollTo().scrollTo('section')
-		scrollTo(400)
-
-		expect(direction.value).toBe('up')
-
-		window.dispatchEvent(new Event('scrollend'))
-
-		scrollTo(500)
-		expect(direction.value).toBe('down')
-
-		target.remove()
-	})
-
 	it('scrollY が負に振れても 0 として持ち、戻りを下向きと読まない', () => {
 		const { direction } = mountDirection(10)
 
 		// ラバーバンドで負まで行った位置をそのまま覚えると、0 付近に戻るだけで下向きになる
 		scrollTo(-100)
 		scrollTo(5)
+
+		expect(direction.value).toBe('up')
+	})
+
+	it('送っている間の移動は、下へ運んでいても下向きにしない', () => {
+		const { direction } = mountDirection(10)
+
+		scrollTo(50)
+		expect(direction.value).toBe('down')
+
+		// 下の見出しへ送っている間も下向きのままだと、着地の時点で隠す側が消えている
+		useScrollTo().scrollTo('target')
+		scrollTo(2000)
 
 		expect(direction.value).toBe('up')
 	})

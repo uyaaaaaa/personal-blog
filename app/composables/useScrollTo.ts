@@ -1,24 +1,34 @@
-// scrollend を出さないブラウザがあるので、時間でも終わりにする。滑らかな送りが届く上限
-const SETTLE_TIMEOUT = 1000
+const SETTLED_FRAMES = 4
+const JUMP_LIMIT_MS = 1200
 
-// 送っている間の移動は読者の操作ではない。向きを読む側が、自分で起こした移動を数えないために出す
-const isSending = ref(false)
+const isJumping = ref(false)
 
-let settle: ReturnType<typeof setTimeout> | undefined
+let frame: number | undefined
 
-const stopSending = () => {
-	clearTimeout(settle)
-	window.removeEventListener('scrollend', stopSending)
-	isSending.value = false
-}
+const trackJump = () => {
+	if (frame !== undefined) cancelAnimationFrame(frame)
 
-const startSending = () => {
-	isSending.value = true
+	isJumping.value = true
 
-	clearTimeout(settle)
-	window.removeEventListener('scrollend', stopSending)
-	window.addEventListener('scrollend', stopSending, { once: true })
-	settle = setTimeout(stopSending, SETTLE_TIMEOUT)
+	const startedAt = performance.now()
+	let lastY: number | undefined
+	let stillFrames = 0
+
+	const step = () => {
+		const currentY = window.scrollY
+		stillFrames = currentY === lastY ? stillFrames + 1 : 0
+		lastY = currentY
+
+		if (stillFrames >= SETTLED_FRAMES || performance.now() - startedAt > JUMP_LIMIT_MS) {
+			frame = undefined
+			isJumping.value = false
+			return
+		}
+
+		frame = requestAnimationFrame(step)
+	}
+
+	frame = requestAnimationFrame(step)
 }
 
 export const useScrollTo = () => {
@@ -26,15 +36,15 @@ export const useScrollTo = () => {
 		const element = document.getElementById(id)
 		if (!element) return
 
-		startSending()
 		element.scrollIntoView({ behavior: 'smooth' })
+		trackJump()
 
 		history.pushState(null, '', `#${id}`)
 	}
 
 	const scrollToTop = () => {
-		startSending()
 		window.scrollTo({ top: 0, behavior: 'smooth' })
+		trackJump()
 	}
 
 	const clearHash = () => {
@@ -45,6 +55,6 @@ export const useScrollTo = () => {
 		scrollTo,
 		scrollToTop,
 		clearHash,
-		isSending,
+		isJumping,
 	}
 }

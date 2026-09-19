@@ -99,14 +99,21 @@ CSS で出し分けるか、初期値を props で受ける。
 ## 6. 出す
 
 - **投稿は `Review` ワークフローに渡す。** 自分のトークンで直接 submit しない。GitHub は PR の作者による `APPROVE` と `REQUEST_CHANGES` を拒むので、判定が黙って COMMENT に落ちる
+- **判定を本文に書いた通常コメントで代えない。** それはレビューではないので、Approve も Request changes も付かない
 
-```sh
-gh workflow run review.yml -f pr=<番号> -F review=@review.json
+```json
+{
+	"method": "run_workflow",
+	"workflow_id": "review.yml",
+	"ref": "main",
+	"inputs": { "pr": "<番号>", "review": "<レビューの JSON を文字列にしたもの>" }
+}
 ```
 
-- `review.json` は `/pulls/{n}/reviews` に渡す形そのまま。サマリは `body`、インラインは `comments` に `path` と `line` を付けて並べる
+- 渡す先は `mcp__github__actions_run_trigger`。`gh` はこの環境に無いので、あるときだけ `gh workflow run review.yml -f pr=<番号> -F review=@review.json` でも同じ
+- `review` は `/pulls/{n}/reviews` に渡す形そのまま。サマリは `body`、インラインは `comments` に `path` と `line` を付けて並べる
 - `event` は 4 の判定を大文字にしたもの（`Approve` → `APPROVE` / `Request changes` → `REQUEST_CHANGES` / `Comment` → `COMMENT`）
-- **走らせたら結果を見る。** `gh run list --workflow=review.yml --limit 1` が成功していなければ投稿できていない。失敗したまま報告しない
+- **走らせたら結果を見る。** `mcp__github__actions_list` の `list_workflow_runs`（`resource_id` に `review.yml`）で最新の run が `success` でなければ投稿できていない。失敗したまま報告しない
 - API からは saved reply を挿入できない。3 の表の本文を1文字も変えずに先頭へ写す
 - 作業ツリーのレビュー（PR が無い）は投稿せず、同じ型で会話に返す
 - **投稿したら、判定と件数だけを報告して終わり**
