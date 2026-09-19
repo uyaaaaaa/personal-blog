@@ -1,0 +1,60 @@
+import { usePublishedArticles } from '~/composables/usePublishedArticles'
+import { searchArticles } from '~/utils/search'
+
+export const useArticleSearch = () => {
+	const { data: articles } = usePublishedArticles()
+
+	const query = ref('')
+	const activeIndex = ref(0)
+
+	const results = computed(() => searchArticles(articles.value, query.value))
+	const activeArticle = computed(() => results.value[activeIndex.value])
+
+	const moveActive = (delta: number) => {
+		const count = results.value.length
+		if (count === 0) return
+
+		activeIndex.value = (activeIndex.value + delta + count) % count
+	}
+
+	watch(query, () => {
+		activeIndex.value = 0
+	})
+
+	// 変換中のキーは IME のもの。横取りすると変換の確定も取り消しも奪う。
+	// Safari は compositionend を keydown より先に出すため確定と取り消しは
+	// isComposing が false で届き、変換の終わり際は自前で覚えておくしかない
+	let composing = false
+	let endFrame = 0
+
+	// 変換が切れてすぐ次が始まる IME もあり、待たせたフレームは始まりで取り消す
+	const startComposition = () => {
+		cancelAnimationFrame(endFrame)
+		composing = true
+	}
+
+	const endComposition = () => {
+		endFrame = requestAnimationFrame(() => {
+			composing = false
+		})
+	}
+
+	const isComposingKey = (event: KeyboardEvent) => event.isComposing || composing
+
+	const clear = () => {
+		composing = false
+		query.value = ''
+	}
+
+	return {
+		query,
+		results,
+		activeIndex,
+		activeArticle,
+		moveActive,
+		startComposition,
+		endComposition,
+		isComposingKey,
+		clear,
+	}
+}
