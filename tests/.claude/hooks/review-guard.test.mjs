@@ -376,6 +376,15 @@ describe('判定と event', () => {
 		expect(decide(dispatch(), ask({ review: clean }))).toBeNull()
 	})
 
+	it('Approve 以外は body が無くても免除しない', () => {
+		const empty = review({
+			event: 'COMMENT',
+			body: '',
+			comments: [inline(`${IMO} **見出し**\n\n理由。`)],
+		})
+		expect(decide(dispatch(), ask({ review: empty }))?.reason).toMatch(/先頭行/)
+	})
+
 	it('body が無くても、件数に対して緩い event は落とす', () => {
 		const understated = review({
 			event: 'APPROVE',

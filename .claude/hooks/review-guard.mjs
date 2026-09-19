@@ -192,9 +192,10 @@ const repeated = (seen, it) =>
 		? `この PR に${it.rounds}回出し直している。残った論点を1コメントにまとめ、判断を書き手に渡す`
 		: null
 
-const unjudged = (body, counts, it) => {
-	// body が無い APPROVE は書きようがないので、mismatched の event 側の検証に任せる
-	if (body.trim() === '') return null
+const unjudged = (body, event, counts, it) => {
+	// body が無い APPROVE は書きようがないので、mismatched の event 側の検証に任せる。
+	// Approve 以外はサマリを必ず出す（→ SKILL の5）ので、免除は event で絞る
+	if (body.trim() === '' && event === 'APPROVE') return null
 	const head = body.split('\n')[0]
 	const want = judged(it.judgments, counts)
 	const written = it.judgments.find(({ name }) => head.includes(name))
@@ -235,7 +236,7 @@ const validated = (payload, it, seen) => {
 	return (
 		repeated(seen, it) ??
 		over(counts, it) ??
-		unjudged(body, counts, it) ??
+		unjudged(body, payload.event, counts, it) ??
 		mismatched(payload.event, counts, it)
 	)
 }
