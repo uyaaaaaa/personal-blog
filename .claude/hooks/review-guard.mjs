@@ -335,7 +335,7 @@ const TOOLED = /^mcp__.*pull_request_review/
 const TRIGGER = /^mcp__.*actions_run_trigger$/
 // レビューの体裁を持ったまま、ワークフローを通らずに出られる投稿先
 const POSTED =
-	/^mcp__.*(add_issue_comment|add_comment_to_pending_review|add_reply_to_pull_request_comment)$/
+	/^mcp__.*(add_issue_comment|update_issue_comment|add_comment_to_pending_review|add_reply_to_pull_request_comment)$/
 
 const direct = (it) => ({
 	reason: `自分のトークンで submit しない。${it.workflow} の発火に渡す（→ ${SKILL} の6）`,
@@ -345,7 +345,7 @@ const VERDICT = /^\s*\**判定\**\s*[:：]/m
 
 const shaped = (text, it) =>
 	(VERDICT.test(text) && it.judgments.some(({ name }) => text.includes(name))) ||
-	[...it.grades.values()].some((badge) => text.trimStart().startsWith(badge))
+	[...it.grades.values()].some((badge) => text.includes(badge))
 
 const posted = (input, it) => {
 	const body = input.tool_input?.body

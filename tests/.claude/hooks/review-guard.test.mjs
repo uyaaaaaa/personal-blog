@@ -235,7 +235,15 @@ describe('通常コメントへの逃げ', () => {
 		expect(decide(posted(summary), ask())?.reason).toMatch(/review\.yml/)
 	})
 
-	it('バッジで始まるコメントを落とす', () => {
+	it('前置きを置いたバッジも、置いた後の書き替えも落とす', () => {
+		const led = posted(`レビューしました。\n\n${MUST} **見出し**`)
+		expect(decide(led, ask())?.reason).toMatch(/review\.yml/)
+
+		const edited = posted('**判定: Approve**', 'mcp__github__update_issue_comment')
+		expect(decide(edited, ask())?.reason).toMatch(/review\.yml/)
+	})
+
+	it('バッジを含むコメントを落とす', () => {
 		const body = `${MUST} **静的生成の HTML では閉じたままになる**`
 		const tools = [
 			'mcp__github__add_comment_to_pending_review',

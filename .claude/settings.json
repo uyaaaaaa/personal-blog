@@ -23,7 +23,7 @@
 		],
 		"PreToolUse": [
 			{
-				"matcher": "Skill|Bash|mcp__.*(pull_request_review|actions_run_trigger|add_issue_comment|add_comment_to_pending_review|add_reply_to_pull_request_comment)",
+				"matcher": "Skill|Bash|mcp__.*(pull_request_review|actions_run_trigger|add_issue_comment|update_issue_comment|add_comment_to_pending_review|add_reply_to_pull_request_comment)",
 				"hooks": [
 					{
 						"type": "command",
