@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useScrollDirection } from '~/composables/useScrollDirection'
+import { useScrollTo } from '~/composables/useScrollTo'
 import { withSetup } from './withSetup.test-helper'
 
 const mounted: Array<() => void> = []
@@ -74,6 +75,32 @@ describe('useScrollDirection', () => {
 
 		scrollTo(10)
 		expect(direction.value).toBe('down')
+	})
+
+	// 見出しへ送るのも下向きの移動になる。読者が下へスクロールしたと読むと、
+	// 送っている最中に吸着した帯が引っ込み、着地したときに帯1本ぶんの空きが出る
+	it('自分で送っている間は、読者の向きが無い状態に戻す', () => {
+		const { direction } = mountDirection(10)
+
+		const target = document.createElement('div')
+		target.id = 'section'
+		target.scrollIntoView = () => {}
+		document.body.append(target)
+
+		scrollTo(50)
+		expect(direction.value).toBe('down')
+
+		useScrollTo().scrollTo('section')
+		scrollTo(400)
+
+		expect(direction.value).toBe('up')
+
+		window.dispatchEvent(new Event('scrollend'))
+
+		scrollTo(500)
+		expect(direction.value).toBe('down')
+
+		target.remove()
 	})
 
 	it('scrollY が負に振れても 0 として持ち、戻りを下向きと読まない', () => {
