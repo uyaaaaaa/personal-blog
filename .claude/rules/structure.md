@@ -1,7 +1,6 @@
 ---
 paths:
   - "app/**"
-  - "tests/**"
 ---
 
 # 置き場とデータの流れ
@@ -16,4 +15,3 @@ paths:
 - **ビルド時刻が焼き付く値はクライアントで計算する。** 静的生成なので、ビルド時に決めた値はページの寿命の間そのまま出る。
 - **`components/ui/` に置くのは題材を知らない部品だけ。** 記事・サイト構造・Markdown 記法・エラー状態のどれかを知っているものは、それを知る領域に置く。領域をまたいで使いたくなったら、題材を知っている部分を props に追い出してから `ui/` へ出す（理由は [ADR 07](../../docs/adr/07-ui-knows-no-domain.md)）。
 - **1コンポーネント1ファイル。** ページ番号の分だけルートファイルが増える一覧（[ADR 01](../../docs/adr/01-page-number-in-path.md)）は、本体を `pages/` 配下に `-` 始まりのファイル名（Nuxt のスキャン除外規則）で置き、ルートファイルはそれを import して描画する。
-- **テストは `tests/` に実装の構成をミラーして置く。** `app/utils/date.ts` なら `tests/app/utils/date.test.ts`。理由は [ADR 04](../../docs/adr/04-tests-mirrored-under-tests.md)。
