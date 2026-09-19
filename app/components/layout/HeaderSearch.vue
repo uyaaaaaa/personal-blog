@@ -3,8 +3,9 @@
 		ref="trapRef"
 		class="header-search mx-8 hidden max-w-search-trigger flex-1 items-center self-stretch focus-within:max-w-search-open md:flex"
 	>
-		<div
+		<label
 			class="search-field flex w-full items-center gap-2 rounded-md border border-border bg-surface-subtle px-4 py-2 transition-color focus-within:border-accent"
+			@pointerdown="onPointerdown"
 		>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
@@ -40,22 +41,20 @@
 				placeholder="Search..."
 				aria-label="Search articles by title or tag"
 				aria-autocomplete="list"
-				:aria-expanded="isOpen"
-				:aria-controls="isOpen ? LIST_ID : undefined"
-				:aria-activedescendant="
-					isOpen && results.length > 0 ? `${LIST_ID}-${activeIndex}` : undefined
-				"
+				:aria-expanded="hasList"
+				:aria-controls="hasList ? LIST_ID : undefined"
+				:aria-activedescendant="hasList ? `${LIST_ID}-${activeIndex}` : undefined"
 				autocomplete="off"
-				@pointerdown="onPointerdown"
 				@keydown="onKeydown"
 				@input="dismissed = false"
 				@compositionstart="startComposition"
 				@compositionend="endComposition"
 			/>
-			<span class="rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-xs text-sub"
+			<span
+				class="search-kbd rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-xs text-sub"
 				>⌘K</span
 			>
-		</div>
+		</label>
 
 		<div
 			class="search-panel-layer"
@@ -76,7 +75,7 @@
 					:id="LIST_ID"
 					:results="results"
 					:active-index="activeIndex"
-					@select="close"
+					@select="dismiss"
 					@activate="activeIndex = $event"
 				/>
 
@@ -123,6 +122,7 @@
 	const dismissed = ref(false)
 
 	const isOpen = computed(() => !dismissed.value && query.value.trim() !== '')
+	const hasList = computed(() => isOpen.value && results.value.length > 0)
 
 	const dismiss = () => {
 		dismissed.value = true
@@ -141,8 +141,12 @@
 		input.select()
 	}
 
-	// ボタンを挟まず直にフォーカスされるので、ポインタで移した目印は自分で付ける
-	const onPointerdown = () => focusByGesture(inputRef.value)
+	// ボタンを挟まず直にフォーカスされるので、ポインタで移した目印は自分で付ける。
+	// label の肩代わりは目印を落とすので止め、入力欄の上だけキャレットのために残す
+	const onPointerdown = (event: PointerEvent) => {
+		if (event.target !== inputRef.value) event.preventDefault()
+		focusByGesture(inputRef.value)
+	}
 
 	const isVisible = () => (inputRef.value?.getClientRects().length ?? 0) > 0
 
@@ -150,7 +154,7 @@
 		const article = activeArticle.value
 		if (!article) return
 
-		close()
+		dismiss()
 		navigateTo(article.path)
 	}
 
@@ -181,8 +185,18 @@
 		}
 	}
 
+	// 隠れた要素に乗ったフォーカスはブラウザが外し、次の Tab が文書の先頭から始まる
+	const returnFocus = () => {
+		const active = document.activeElement
+		if (active === inputRef.value) return
+		if (trapRef.value?.contains(active)) focusByGesture(inputRef.value)
+	}
+
 	const { trapRef } = useFocusTrap(isOpen, (event) => {
-		if (!isComposingKey(event)) dismiss()
+		if (isComposingKey(event)) return
+
+		returnFocus()
+		dismiss()
 	})
 
 	watch(isOpen, (open) => emit('update:open', open))

@@ -1440,6 +1440,63 @@ const probes = [
 		},
 	},
 	{
+		// SP で開いたまま幅が広がると、ヘッダーの入力欄が裏に現れる
+		name: 'shortcut-ダイアログを開いたまま md を跨いだ Cmd+K',
+		shortcut: true,
+		dialog: true,
+		widths: [375],
+		run: async (p) => {
+			await p.open()
+			await p.typeQuery()
+			sent('幅を 1280 に広げる')
+			await p.setWidth(1280)
+			await p.evaluate('await $frames(3)')
+			const key = await p.pressShortcut(META)
+			await sleep(TRANSITION)
+			const state = await p.evaluate(`
+				const active = document.activeElement
+				return {
+					...$state(),
+					inDialog: !!document.querySelector(TRAP)?.contains(active),
+					scrims: [...document.querySelectorAll('.search-scrim')].filter(
+						(el) => getComputedStyle(el).visibility === 'visible',
+					).length,
+				}
+			`)
+			await p.setWidth(375)
+			return {
+				observed: `${show(state, ['overlay', 'active', 'query'])} ダイアログの中=${state.inDialog} 見えているスクリム=${state.scrims}件 prevented=${key?.prevented}`,
+				ok:
+					state.overlay === 'visible' &&
+					state.inDialog &&
+					state.scrims === 0 &&
+					key?.prevented === true,
+			}
+		},
+	},
+	{
+		name: 'inline-候補に移ってから Escape で入力欄に戻る',
+		opensByInput: true,
+		run: async (p) => {
+			await p.open()
+			await p.pressKey('Tab')
+			await p.evaluate('await $frames(2)')
+			const onLink = await p.evaluate('return $state()')
+			await p.pressKey('Escape')
+			await p.waitClosed()
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
+			return {
+				observed: `Tab の先=${onLink.active} / Escape 後: ${show(state, ['overlay', 'active', 'ring'])}`,
+				ok: state.overlay === 'hidden' && state.inInput && state.ring !== NO_RING,
+			}
+		},
+	},
+	{
 		name: 'inline-空の入力では何も出さず、幅だけ伸びる',
 		opensByInput: true,
 		run: async (p) => {
@@ -1454,6 +1511,24 @@ const probes = [
 					state.scrim === 'hidden' &&
 					state.overflow !== 'hidden' &&
 					state.width > closed.width,
+			}
+		},
+	},
+	{
+		name: 'inline-箱の端（⌘K の上）を押しても入力欄に入る',
+		opensByInput: true,
+		run: async (p) => {
+			await p.click('.header-search .search-kbd', '⌘K の表示')
+			await p.evaluate('await $frames(2)')
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					inInput: document.activeElement === document.querySelector(INPUT),
+				}
+			`)
+			return {
+				observed: show(state, ['active', 'activeShown', 'ring']),
+				ok: state.inInput && state.ring === NO_RING,
 			}
 		},
 	},
