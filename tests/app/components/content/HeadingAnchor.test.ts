@@ -1,26 +1,54 @@
 // @vitest-environment nuxt
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import HeadingAnchor from '~/components/content/HeadingAnchor.vue'
 
-const click = async (init: MouseEventInit) => {
+const COPY_LABEL = 'Copy link to this section'
+const COPIED_LABEL = 'Link copied'
+
+const writeText = vi.fn<(text: string) => Promise<void>>()
+
+beforeEach(() => {
+	writeText.mockReset()
+	writeText.mockResolvedValue()
+	Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+})
+
+afterEach(() => {
+	vi.useRealTimers()
+})
+
+const click = async () => {
 	const wrapper = await mountSuspended(HeadingAnchor, { props: { headingId: 'section' } })
-	const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...init })
 
-	wrapper.get('a').element.dispatchEvent(event)
+	await wrapper.get('button').trigger('click')
+	await nextTick()
 
-	return event
+	return () => wrapper.get('button').attributes('aria-label')
 }
 
 describe('HeadingAnchor', () => {
-	it('修飾キー無しのクリックは既定の遷移を止めて自前で移動する', async () => {
-		expect((await click({})).defaultPrevented).toBe(true)
+	it('押すとその見出しの URL をクリップボードに入れる', async () => {
+		await click()
+
+		expect(writeText).toHaveBeenCalledWith(`${location.origin}${location.pathname}#section`)
 	})
 
-	it.each([['ctrlKey'], ['metaKey'], ['shiftKey']])(
-		'%s 付きのクリックはブラウザに渡す',
-		async (modifier) => {
-			expect((await click({ [modifier]: true })).defaultPrevented).toBe(false)
-		},
-	)
+	it('入ったことを知らせ、しばらくすると元に戻る', async () => {
+		vi.useFakeTimers()
+
+		const label = await click()
+		expect(label()).toBe(COPIED_LABEL)
+
+		vi.runAllTimers()
+		await nextTick()
+
+		expect(label()).toBe(COPY_LABEL)
+	})
+
+	it('クリップボードに入らなければ、入ったと見せない', async () => {
+		writeText.mockRejectedValue(new Error('NotAllowedError'))
+
+		expect((await click())()).toBe(COPY_LABEL)
+	})
 })

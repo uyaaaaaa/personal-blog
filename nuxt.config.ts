@@ -28,8 +28,8 @@ export default defineNuxtConfig({
 		classSuffix: '',
 	},
 	content: {
-		// 既定では見出しのテキスト全体がアンカーになる。テキストを選びにくくなるので h2 / h3 では止め、
-		// 節へのリンクは ProseH2 / ProseH3 が置くアイコンだけが持つ
+		// 既定では見出しのテキスト全体がアンカーになる。テキストを選びにくくなるので h2 / h3 では止める。
+		// 節への移動は目次が持ち、ProseH2 / ProseH3 が置くアイコンは URL のコピーだけを持つ
 		renderer: {
 			anchorLinks: { h2: false, h3: false, h4: true },
 		},

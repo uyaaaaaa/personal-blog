@@ -1,7 +1,7 @@
 <template>
 	<h2
 		:id="props.id"
-		class="group"
+		class="relative"
 	>
 		<slot />
 		<HeadingAnchor

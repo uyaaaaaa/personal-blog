@@ -1,7 +1,7 @@
 <template>
 	<h3
 		:id="props.id"
-		class="group"
+		class="relative"
 	>
 		<slot />
 		<HeadingAnchor

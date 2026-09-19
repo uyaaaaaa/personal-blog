@@ -11,17 +11,18 @@ describe.each([
 	['ProseH2', ProseH2, 'h2'],
 	['ProseH3', ProseH3, 'h3'],
 ])('%s', (_name, component, tag) => {
-	it('見出しのテキストはリンクにせず、節へのリンクを別に置く', async () => {
+	it('見出しのテキストはリンクにせず、URL をコピーするボタンを別に置く', async () => {
 		const wrapper = await mount(component, { id: 'section' })
 
 		expect(wrapper.get(tag).text()).toBe('見出し')
-		expect(wrapper.get(`${tag} > a`).attributes('href')).toBe('#section')
-		expect(wrapper.get(`${tag} > a`).text()).toBe('')
+		expect(wrapper.get(`${tag} > button`).attributes('aria-label')).toBe(
+			'Copy link to this section',
+		)
 	})
 
-	it('id が無ければリンクを置かない', async () => {
+	it('id が無ければボタンを置かない', async () => {
 		const wrapper = await mount(component)
 
-		expect(wrapper.find('a').exists()).toBe(false)
+		expect(wrapper.find('button').exists()).toBe(false)
 	})
 })
