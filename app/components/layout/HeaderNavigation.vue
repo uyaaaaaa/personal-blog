@@ -667,9 +667,14 @@
 		background: none;
 		border: none;
 		border-radius: 0.375rem;
-		color: var(--color-main);
+		color: var(--color-sub);
 		cursor: pointer;
 		padding: 0;
+		transition: color 0.15s;
+	}
+
+	.mobile-menu-btn:hover {
+		color: var(--color-accent);
 	}
 
 	.mobile-menu-overlay {
