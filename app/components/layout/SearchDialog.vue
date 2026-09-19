@@ -180,8 +180,6 @@
 			if (!isOpen) return
 
 			clear()
-			// 開き方（クリック/ショートカット/Enter）に関わらず、この入力欄はフォーカス位置を
-			// 下線（.search-field:focus-within）で示すため、開いた直後のリングは出さない
 			focusByGesture(inputRef.value, { asPointer: true })
 		},
 		{ flush: 'post' },
