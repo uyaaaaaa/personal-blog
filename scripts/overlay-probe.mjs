@@ -192,7 +192,7 @@ const PAGE_HELPERS = `
 	}
 	const $state = () => ({
 		overlay: getComputedStyle(document.querySelector(OVERLAY)).visibility,
-		overflow: document.body.style.overflow,
+		overflow: getComputedStyle(document.body).overflow,
 		active: $name(document.activeElement),
 		activeShown: $shown(document.activeElement) && document.activeElement !== document.body,
 		ring: $ring(document.activeElement),
@@ -585,6 +585,21 @@ const probes = [
 			return {
 				observed: show(state, ['overlay', 'overflow', 'active']),
 				ok: state.overlay === 'hidden',
+			}
+		},
+	},
+	{
+		name: 'scroll-lock-開いている間は背後が止まる',
+		dialog: true,
+		run: async (p) => {
+			await p.open()
+			const open = await p.evaluate('return $state()')
+			await p.pressKey('Escape')
+			await p.waitClosed()
+			const closed = await p.evaluate('return $state()')
+			return {
+				observed: `開="${open.overflow}" 閉="${closed.overflow}"`,
+				ok: open.overflow === 'hidden' && closed.overflow !== 'hidden',
 			}
 		},
 	},
@@ -1102,7 +1117,7 @@ const probes = [
 				}
 				return {
 					observed: show(state, ['overlay', 'overflow', 'path']),
-					ok: state.overlay === 'hidden' && state.overflow === '',
+					ok: state.overlay === 'hidden' && state.overflow !== 'hidden',
 				}
 			}
 			throw new Error('同じ文書に戻らない（フルロードになる）')

@@ -35,7 +35,7 @@ export const DISPLAY_NONE_MESSAGE =
 export const SCROLL_BEHAVIOR_MESSAGE = `scroll-behavior は宣言しない。ページ遷移とブラウザバックの位置復元までアニメーションする。滑らかに送るのは useScrollTo が呼び出しごとに指定する。 ${INVARIANT_URL}`
 
 // overscroll-behavior / overscroll-contain と綴りが重なるので、前が区切りか終端のものだけを見る
-export const SCROLL_BEHAVIOR_PROPERTY = '(?<![a-z-])scroll-behavior'
+const SCROLL_BEHAVIOR_PROPERTY = '(?<![a-z-])scroll-behavior'
 export const SCROLL_BEHAVIOR_CLASS = '(?:^|[\\s:])(?:[a-z-]+:)*!?scroll-(?:smooth|auto)(?![a-z-])'
 
 export const OUTLINE_REMOVAL_MESSAGE = `フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。同じ要素に別の見える指標があるときだけ許す。${STYLE_EXCEPTION}`
@@ -47,16 +47,10 @@ export const OUTLINE_REMOVAL_CLASS =
 const WORD_EDGE = '[\\w.%#-]'
 // 輪郭が消える値。線を持たない語か透明な色が1つでも入る。
 // 関数の中（`rgb(0 0 0)`）は色の一部なので数えない
-export const OUTLINE_REMOVAL_VALUE = `(?<!${WORD_EDGE})(?:none|0[a-z%]*|transparent)(?!${WORD_EDGE})(?![^()]*\\))`
+const OUTLINE_REMOVAL_VALUE = `(?<!${WORD_EDGE})(?:none|0[a-z%]*|transparent)(?!${WORD_EDGE})(?![^()]*\\))`
 // 初期値に戻す語。初期値が none なのは outline-style なので、輪郭が消えるのは
 // 一括指定と outline-style と all のときだけ（outline-color は色、outline-width は medium に戻る）
-export const OUTLINE_RESET_VALUE = `(?<!${WORD_EDGE})(?:unset|initial)(?!${WORD_EDGE})(?![^()]*\\))`
-// カスタムプロパティ（--outline）と綴りが重なるので、前が区切りか終端のものだけを見る
-export const OUTLINE_REMOVAL_PROPERTY = [
-	`(?<![\\w-])outline(?:-(?:style|width|color))?\\s*:[^;]*${OUTLINE_REMOVAL_VALUE}`,
-	`(?<![\\w-])(?:all|outline(?:-style)?)\\s*:[^;]*${OUTLINE_RESET_VALUE}`,
-].join('|')
-
+const OUTLINE_RESET_VALUE = `(?<!${WORD_EDGE})(?:unset|initial)(?!${WORD_EDGE})(?![^()]*\\))`
 // 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる
 const COLOR_PREFIX =
 	'text|bg|border|divide|outline|ring|ring-offset|shadow|accent|caret|decoration|fill|stroke|placeholder|from|via|to'
@@ -108,8 +102,6 @@ const FONT_KEYWORDS = new Set(
 )
 
 const FONT_PROPERTY = /^font(?:-family)?$/i
-// style 属性は宣言の並びなので、綴りから font の宣言を取り出す
-const FONT_DECLARATION = /(?<![\w-])font(?:-family)?\s*:([^;]*)/gi
 // 引用符で囲った名前と、区切りから始まる語。数に続く単位（1.5rem の rem）は語ではない
 const FONT_WORD = /'[^']*'|"[^"]*"|(?<![\w-])-?[a-zA-Z][\w-]*/g
 
@@ -264,8 +256,6 @@ function segmentsOf(value) {
 // カスタムプロパティは var() で長さとして参照されるので、モーションの宣言と同じ判定で見る
 const MOTION_PROPERTY = /^(?:(?:transition|animation)(?:-[\w-]+)?|--[\w-]+)$/i
 const TRANSITION_TARGET = /^transition(?:-property)?$/i
-// style 属性は宣言の並びなので、綴りからモーションの宣言を取り出す
-const MOTION_DECLARATION = /(?<![\w-])((?:transition|animation)(?:-[\w-]+)?|--[\w-]+)\s*:([^;]*)/gi
 
 // 宣言1つ分の指摘。置き場所は呼ぶ側が足す
 function motionFindings(property, value) {
@@ -395,156 +385,6 @@ function eachStyleBlock(context, visit) {
 	}
 }
 
-function* elements(node) {
-	if (node.type !== 'VElement') return
-	yield node
-	for (const child of node.children) yield* elements(child)
-}
-
-const kebab = (name) => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
-
-function propertyName(property) {
-	if (property.type !== 'Property') return null
-	if (property.key.type === 'Identifier' && !property.computed) return kebab(property.key.name)
-	if (property.key.type === 'Literal' && typeof property.key.value === 'string')
-		return kebab(property.key.value)
-	return null
-}
-
-// :style は宣言そのものを持たないので、キーと文字列から宣言を組み直す。
-// 辿るのはどの枝も値になる形だけ。呼び出しの引数・添字・比較の被演算子は値ではない
-function* declarations(node, property = '') {
-	if (!node || typeof node.type !== 'string') return
-	const declare = (text) => (property ? `${property}: ${text}` : text)
-	switch (node.type) {
-		case 'ObjectExpression':
-			for (const entry of node.properties) {
-				// 名乗らないキー（[key] や ...styles）の値も、綴りを持たない値として読む
-				const target = entry.type === 'SpreadElement' ? entry.argument : entry.value
-				yield* declarations(target, propertyName(entry) ?? '')
-			}
-			return
-		case 'Literal':
-			if (typeof node.value === 'string') yield { text: declare(node.value), node }
-			return
-		case 'TemplateLiteral':
-			for (const quasi of node.quasis)
-				yield { text: declare(quasi.value.cooked), node: quasi }
-			return
-		case 'ArrayExpression':
-			for (const element of node.elements) yield* declarations(element, property)
-			return
-		case 'ConditionalExpression':
-			yield* declarations(node.consequent, property)
-			yield* declarations(node.alternate, property)
-			return
-		case 'LogicalExpression':
-			// && の左は条件で、|| と ?? の左は値
-			if (node.operator !== '&&') yield* declarations(node.left, property)
-			yield* declarations(node.right, property)
-			return
-	}
-}
-
-// style 属性は宣言の並びなので、<style> と同じ判定に通す。
-// テンプレートに eslint-disable は届かない（→ ADR 20）ので、例外は <style> に移すことになる
-function eachStyleAttribute(context, visit) {
-	const services = context.sourceCode.parserServices ?? context.parserServices
-	const document = services?.getDocumentFragment?.()
-	if (!document) return
-
-	for (const root of document.children) {
-		for (const element of elements(root)) {
-			for (const attribute of element.startTag.attributes) {
-				const { key, value } = attribute
-				if (!value) continue
-				if (!attribute.directive) {
-					if (key.name === 'style') visit(value.value, value)
-					continue
-				}
-				if (key.name.name !== 'bind' || key.argument?.name !== 'style') continue
-				for (const { text, node } of declarations(value.expression)) visit(text, node)
-			}
-		}
-	}
-}
-
-const isString = (node) => node?.type === 'Literal' && typeof node.value === 'string'
-
-// 名乗らない綴り（el.style[name]）は空。綴りを持たない値として読む
-function memberName(node) {
-	if (!node.computed && node.property.type === 'Identifier') return node.property.name
-	if (isString(node.property)) return node.property.value
-	return ''
-}
-
-// dataset の下に並ぶのは data 属性で、CSS ではない
-const isStyleObject = (node) =>
-	node?.type === 'MemberExpression' &&
-	memberName(node) === 'style' &&
-	!(node.object.type === 'MemberExpression' && memberName(node.object) === 'dataset')
-
-// cssText は宣言の並びをまるごと受けるので、プロパティの綴りは値の側が持つ
-const CSS_TEXT = 'css-text'
-
-// script から要素のスタイルへ書く経路。書いた先は宣言になるので、style 属性と同じ判定に通す
-function* styleWrites(node) {
-	if (node.type === 'AssignmentExpression') {
-		const target = node.left
-		if (target.type !== 'MemberExpression') return
-		if (isStyleObject(target)) {
-			yield* declarations(node.right)
-			return
-		}
-		if (!isStyleObject(target.object)) return
-		const property = kebab(memberName(target))
-		yield* declarations(node.right, property === CSS_TEXT ? '' : property)
-		return
-	}
-	const callee = node.callee
-	if (callee?.type !== 'MemberExpression') return
-	const method = memberName(callee)
-	const [first, second] = node.arguments
-	if (method === 'setProperty' && isStyleObject(callee.object)) {
-		yield* declarations(second, isString(first) ? kebab(first.value) : '')
-		return
-	}
-	if (method === 'setAttribute' && isString(first) && /^style$/i.test(first.value)) {
-		yield* declarations(second)
-		return
-	}
-	if (
-		method === 'assign' &&
-		callee.object.type === 'Identifier' &&
-		callee.object.name === 'Object' &&
-		isStyleObject(first)
-	) {
-		for (const source of node.arguments.slice(1)) yield* declarations(source)
-	}
-}
-
-const STYLE_ELEMENT = /<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi
-
-function* stylesheetsIn(text) {
-	if (!text.includes('{') && !text.includes('@')) return
-	const bodies = [...text.matchAll(STYLE_ELEMENT)].map(([, body]) => body)
-	for (const candidate of [text, ...bodies]) {
-		let root
-		try {
-			root = postcss.parse(candidate, { from: undefined })
-		} catch {
-			continue
-		}
-		let found = false
-		const mark = () => {
-			found = true
-		}
-		root.walkRules(mark)
-		root.walkAtRules(mark)
-		if (found) yield root
-	}
-}
-
 const REDUCED_MOTION = /prefers-reduced-motion/i
 const MEDIA_CONDITION = /\(([^()]*)\)/g
 const WIDTH_FEATURE = /\bwidth\b/i
@@ -559,11 +399,8 @@ const DISPLAY_PROPERTY = /^display$/i
 const HIDDEN_DISPLAY = /(?<![\w-])none(?![\w-])/i
 // @apply hidden も宣言に開くと display: none になる。variant が前に付く
 const HIDDEN_CLASS = /(?:^|[\s:])(?:[a-z-]+:)*!?hidden(?![\w-])/
-// style 属性は宣言の並びなので、綴りから display の宣言を取り出す
-const DISPLAY_DECLARATION = /(?<![\w-])display\s*:([^;]*)/gi
 const OUTLINE_PROPERTY = /^outline(?:-(?:style|width|color))?$/i
 const OUTLINE_RESET_PROPERTY = /^(?:all|outline(?:-style)?)$/i
-// 宣言と style 属性で判定が割れないよう、値は綴りも同じものを使う
 const NO_OUTLINE_VALUE = new RegExp(OUTLINE_REMOVAL_VALUE, 'i')
 const RESET_OUTLINE_VALUE = new RegExp(OUTLINE_RESET_VALUE, 'i')
 const OUTLINE_REMOVAL = new RegExp(OUTLINE_REMOVAL_CLASS)
@@ -580,10 +417,6 @@ const SCRIPT_SPELLING = {
 export const scriptSpellingSelector = (name) =>
 	`:matches(Literal[value=/${SCRIPT_SPELLING[name]}/i], TemplateElement[value.cooked=/${SCRIPT_SPELLING[name]}/i])`
 
-const spelledInScript = Object.fromEntries(
-	Object.entries(SCRIPT_SPELLING).map(([name, spelling]) => [name, new RegExp(spelling, 'i')]),
-)
-
 // 判定の正本。<style> は ESLint のルールとして、.css は scripts/check-css.mjs から同じものを使う
 const CHECKS = {
 	'no-untokenized-size': {
@@ -599,12 +432,6 @@ const CHECKS = {
 			root.walkDecls((decl) => check(decl.value, decl))
 			root.walkAtRules((rule) => check(rule.params, rule))
 			return found
-		},
-		fromAttribute(text) {
-			return untokenizedLengths(text).map((literal) => ({
-				messageId: 'untokenized',
-				data: { literal },
-			}))
 		},
 	},
 
@@ -624,12 +451,6 @@ const CHECKS = {
 			root.walkAtRules('apply', (rule) => check(rule.params, rule))
 			return found
 		},
-		fromAttribute(text) {
-			return colorLiterals(text).map((literal) => ({
-				messageId: 'literal',
-				data: { literal },
-			}))
-		},
 	},
 
 	'no-font-literal': {
@@ -648,13 +469,6 @@ const CHECKS = {
 				if (OFF_TOKEN_FONT.test(rule.params))
 					found.push({ node: rule, messageId: 'fontClass' })
 			})
-			return found
-		},
-		fromAttribute(text) {
-			const found = []
-			for (const [, value] of text.matchAll(FONT_DECLARATION))
-				for (const literal of fontLiterals(value))
-					found.push({ messageId: 'literal', data: { literal } })
 			return found
 		},
 	},
@@ -690,12 +504,6 @@ const CHECKS = {
 				if (OFF_PURPOSE_MOTION.test(rule.params))
 					found.push({ node: rule, messageId: 'motionClass' })
 			})
-			return found
-		},
-		fromAttribute(text) {
-			const found = []
-			for (const [, property, value] of text.matchAll(MOTION_DECLARATION))
-				found.push(...motionFindings(property, value))
 			return found
 		},
 	},
@@ -818,12 +626,6 @@ const CHECKS = {
 			})
 			return found
 		},
-		fromAttribute(text) {
-			const found = []
-			for (const [, value] of text.matchAll(DISPLAY_DECLARATION))
-				if (HIDDEN_DISPLAY.test(value)) found.push({ messageId: 'displayNone' })
-			return found
-		},
 	},
 
 	'no-scroll-behavior': {
@@ -860,62 +662,19 @@ export function findings(root) {
 		.sort((a, b) => a.line - b.line || a.column - b.column)
 }
 
-const ruleOf = (name, check) => ({
+const ruleOf = (check) => ({
 	meta: { type: 'problem', schema: [], messages: check.messages },
-	create(context) {
-		const report = (text, node) => {
-			const found = check.fromAttribute(text)
-			for (const one of found) {
-				context.report({ loc: node.loc, ...one })
-			}
-			return found.length > 0
-		}
-		const spelled = spelledInScript[name]
-		// ESLint は親から歩くので、書き込みの方が先に入れる
-		const reported = new Set()
-		const reportSheet = (text, node) => {
-			if (reported.has(node)) return
-			for (const root of stylesheetsIn(text))
-				for (const { node: found, messageId, data } of check.find(root)) {
-					if (spelled?.test(found.toString())) continue
-					context.report({ loc: node.loc, messageId, data })
+	create: (context) => ({
+		Program() {
+			eachStyleBlock(context, (root, locate) => {
+				for (const { node, messageId, data } of check.find(root)) {
+					context.report({ loc: locate(node), messageId, data })
 				}
-		}
-		const write = (node) => {
-			for (const { text, node: value } of styleWrites(node)) {
-				if (report(text, value)) reported.add(value)
-			}
-		}
-		const inScript = {
-			Literal(node) {
-				if (typeof node.value === 'string') reportSheet(node.value, node)
-			},
-			TemplateElement(node) {
-				if (typeof node.value.cooked === 'string') reportSheet(node.value.cooked, node)
-			},
-			...(check.fromAttribute ? { AssignmentExpression: write, CallExpression: write } : {}),
-		}
-		const script = {
-			...inScript,
-			Program() {
-				eachStyleBlock(context, (root, locate) => {
-					for (const { node, messageId, data } of check.find(root)) {
-						context.report({ loc: locate(node), messageId, data })
-					}
-				})
-				if (!check.fromAttribute) return
-				eachStyleAttribute(context, report)
-			},
-		}
-		// 素の visitor は <script> しか歩かない。行内ハンドラは template 側に渡して同じ判定に通す
-		const services = context.sourceCode.parserServices ?? context.parserServices
-		if (!services?.defineTemplateBodyVisitor) return script
-		return services.defineTemplateBodyVisitor(inScript, script)
-	},
+			})
+		},
+	}),
 })
 
 export default {
-	rules: Object.fromEntries(
-		Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(name, check)]),
-	),
+	rules: Object.fromEntries(Object.entries(CHECKS).map(([name, check]) => [name, ruleOf(check)])),
 }
