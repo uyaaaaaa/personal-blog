@@ -106,7 +106,7 @@
 				@click="emit('toggle')"
 				aria-label="Open menu"
 			>
-				<!-- 線の端は Lucide の menu の 4..20 ではなく 3..21。丸い端と stroke-width 2 で 2..22 まで塗られ、隣の検索・テーマが塗る幅に揃う -->
+				<!-- 線の端は Lucide の menu の 4..20 ではなく 3..21。丸い端と stroke-width 2 で 2..22 まで塗られ、検索とライトのテーマが塗る幅に揃う（ダークの太陽は 1..23 を塗るので少し広い） -->
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					width="20"
@@ -724,7 +724,8 @@
 		justify-content: flex-end;
 		align-items: center;
 		margin: 0 -0.75rem 0.5rem;
-		padding: 0 0.5rem;
+		/* 閉じるは押したハンバーガーの位置に出す。ヘッダーの px-4 と同じ内寄せに、同じ大きさの箱を右端から並べる */
+		padding: 0 1rem;
 		background-color: var(--color-surface);
 		border-bottom: 1px solid var(--color-border);
 	}
@@ -733,8 +734,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 2.25rem;
-		height: 2.25rem;
+		width: 2rem;
+		height: 2rem;
 		padding: 0;
 		border: none;
 		border-radius: 0.5rem;
