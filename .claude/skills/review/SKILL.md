@@ -101,13 +101,13 @@ CSS で出し分けるか、初期値を props で受ける。
 - **投稿は `Review` ワークフローに渡す。** 自分のトークンで直接 submit しない。GitHub は PR の作者による `APPROVE` と `REQUEST_CHANGES` を拒むので、判定が黙って COMMENT に落ちる
 
 ```sh
-gh workflow run review.yml -f pr=<番号> -f review="$(cat review.json)"
+gh workflow run review.yml -f pr=<番号> -F review=@review.json
 ```
 
-- `review.json` は `/pulls/{n}/reviews` に渡す形そのまま。`event` は 4 の判定に対応させる（`Approve` → `APPROVE` / `Request changes` → `REQUEST_CHANGES` / `Comment` → `COMMENT`）
+- `review.json` は `/pulls/{n}/reviews` に渡す形そのまま。サマリは `body`、インラインは `comments` に `path` と `line` を付けて並べる
+- `event` は 4 の判定を大文字にしたもの（`Approve` → `APPROVE` / `Request changes` → `REQUEST_CHANGES` / `Comment` → `COMMENT`）
 - **走らせたら結果を見る。** `gh run list --workflow=review.yml --limit 1` が成功していなければ投稿できていない。失敗したまま報告しない
 - API からは saved reply を挿入できない。3 の表の本文を1文字も変えずに先頭へ写す
-- サマリは `body`、インラインは `comments` に `path` と `line` を付けて並べる
 - 作業ツリーのレビュー（PR が無い）は投稿せず、同じ型で会話に返す
 - **投稿したら、判定と件数だけを報告して終わり**
 
