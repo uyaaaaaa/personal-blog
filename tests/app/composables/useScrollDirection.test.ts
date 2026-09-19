@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useScrollDirection } from '~/composables/useScrollDirection'
+import { useScrollTo } from '~/composables/useScrollTo'
 import { withSetup } from './withSetup.test-helper'
 
 const mounted: Array<() => void> = []
@@ -32,6 +33,7 @@ const mountDirection = (threshold: number, startY = 0) => {
 beforeEach(() => {
 	frames.clear()
 	lastFrameId = 0
+	document.body.innerHTML = '<div id="target"></div>'
 	vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
 		frames.set(++lastFrameId, callback)
 		return lastFrameId
@@ -82,6 +84,19 @@ describe('useScrollDirection', () => {
 		// ラバーバンドで負まで行った位置をそのまま覚えると、0 付近に戻るだけで下向きになる
 		scrollTo(-100)
 		scrollTo(5)
+
+		expect(direction.value).toBe('up')
+	})
+
+	it('送っている間の移動は、下へ運んでいても下向きにしない', () => {
+		const { direction } = mountDirection(10)
+
+		scrollTo(50)
+		expect(direction.value).toBe('down')
+
+		// 下の見出しへ送っている間も下向きのままだと、着地の時点で隠す側が消えている
+		useScrollTo().scrollTo('target')
+		scrollTo(2000)
 
 		expect(direction.value).toBe('up')
 	})
