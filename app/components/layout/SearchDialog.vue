@@ -180,7 +180,7 @@
 			if (!isOpen) return
 
 			clear()
-			focusByGesture(inputRef.value)
+			focusByGesture(inputRef.value, { asPointer: true })
 		},
 		{ flush: 'post' },
 	)

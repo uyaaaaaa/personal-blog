@@ -25,7 +25,7 @@
 		route.meta.sideColumn ? 'max-w-column lg:max-w-article' : 'max-w-column',
 	)
 
-	/* eslint-disable style/no-outline-removal -- 目印が付くのはポインタで移したフォーカスだけ */
+	/* eslint-disable style/no-outline-removal -- 目印が付くのはポインタで移したフォーカスと、開いた直後に自動で寄せたフォーカスだけ */
 </script>
 
 <style>
