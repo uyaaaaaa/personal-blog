@@ -1,22 +1,28 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { decide, rules } from '~~/.claude/hooks/review-guard.mjs'
+import { decide, resolve, rules } from '~~/.claude/hooks/review-guard.mjs'
 
 const SOURCE = readFileSync(
 	new URL('../../../.claude/skills/review/SKILL.md', import.meta.url),
 	'utf8',
 )
 
-const MUST = '![must](https://img.shields.io/badge/must-d73a4a)'
-const SUGGESTION = '![suggestion](https://img.shields.io/badge/suggestion-fbca04)'
-const NITS = '![nits](https://img.shields.io/badge/nits-cfd3d7)'
+const MUST = '![must-badge](https://img.shields.io/badge/review-must-d73a4a)'
+const IMO = '![imo-badge](https://img.shields.io/badge/review-imo-0075ca)'
+const NITS = '![nits-badge](https://img.shields.io/badge/review-nits-cfd3d7)'
 
-const WHERE = { owner: 'uyaaaaaa', repo: 'personal-blog', pullNumber: 294 }
+const PATH = 'review.json'
 
-const ask = ({ evidence = ['lint.log', 'test.log'], held = null, source = SOURCE } = {}) => {
+const ask = ({
+	evidence = ['lint.log', 'test.log'],
+	held = null,
+	source = SOURCE,
+	review,
+} = {}) => {
 	const box = { value: held }
 	return {
 		skill: () => source,
+		payload: () => (typeof review === 'string' ? review : JSON.stringify(review)),
 		evidence: () => evidence,
 		state: () => ({
 			read: () => box.value,
@@ -34,46 +40,28 @@ const skill = (args) => ({
 	tool_input: { skill: 'code-review', ...(args !== undefined && { args }) },
 })
 
-const comment = (body, event = 'PreToolUse') => ({
+const run = (command, event = 'PreToolUse') => ({
 	hook_event_name: event,
-	tool_name: 'mcp__github__add_comment_to_pending_review',
-	tool_input: { ...WHERE, path: 'app/app.vue', subjectType: 'LINE', body },
+	tool_name: 'Bash',
+	tool_input: { command },
 })
 
-const bundle = (body, event = 'PreToolUse') => ({
-	hook_event_name: event,
-	tool_name: 'mcp__github__add_issue_comment',
-	tool_input: { owner: WHERE.owner, repo: WHERE.repo, issue_number: WHERE.pullNumber, body },
-})
+const dispatch = (event = 'PreToolUse', pr = 294) =>
+	run(`gh workflow run review.yml -f pr=${pr} -F review=@${PATH}`, event)
 
-const reply = (body) => ({
-	hook_event_name: 'PreToolUse',
-	tool_name: 'mcp__github__add_reply_to_pull_request_comment',
-	tool_input: { ...WHERE, commentID: 12, body },
-})
+const inline = (body, place = {}) => ({ path: 'app/app.vue', line: 12, body, ...place })
 
-const REVIEW = [
-	'**判定: Request changes** — 目次の開閉が生成 HTML に出ない。',
-	'',
-	'- must 1',
-	'',
-	'---',
-	'',
-	`${MUST} **静的生成の HTML では閉じたままになる**`,
-	'',
-	'初期状態がビルド時に焼き付く。',
-].join('\n')
+const review = (over = {}) => ({
+	event: 'REQUEST_CHANGES',
+	body: '**判定: Request changes** — 目次の開閉が生成 HTML に出ない。\n\n- must 1',
+	comments: [inline(`${MUST} **静的生成の HTML では閉じたままになる**\n\n初期状態が焼き付く。`)],
+	...over,
+})
 
 const dropped = (body) => body.replaceAll('![', '[')
 
-const submit = (event, body = '', method = 'submit_pending', name = 'PreToolUse') => ({
-	hook_event_name: name,
-	tool_name: 'mcp__github__pull_request_review_write',
-	tool_input: { ...WHERE, method, event, body },
-})
-
 describe('rules', () => {
-	it('バッジも判定も件数も手順書から読む', () => {
+	it('バッジも判定も件数も投稿先も手順書から読む', () => {
 		const it_ = rules(SOURCE)
 		expect([...it_.grades.keys()]).toEqual(['must', 'suggestion', 'imo', 'nits'])
 		expect(it_.grades.get('must')).toBe(MUST)
@@ -90,6 +78,7 @@ describe('rules', () => {
 			lines: 6,
 			rounds: 3,
 			effort: 'medium',
+			workflow: 'review.yml',
 			forbidden: ['--comment', '--fix'],
 			required: ['test', 'lint'],
 		})
@@ -127,238 +116,222 @@ describe('code-review の呼び出し', () => {
 	})
 })
 
-describe('インラインコメントの型', () => {
-	it('型に合うコメントは通す', () => {
-		expect(
-			decide(comment(`${MUST} **静的生成では閉じたままになる**\n\n理由\n代案`), ask()),
-		).toBeNull()
+describe('投稿の呼び出し', () => {
+	it('型に合うレビューは通す', () => {
+		expect(decide(dispatch(), ask({ review: review() }))).toBeNull()
 	})
 
+	it('番号もファイルも渡さない呼び出しを落とす', () => {
+		const bare = run('gh workflow run review.yml')
+		expect(decide(bare, ask({ review: review() }))?.reason).toMatch(/pr=/)
+	})
+
+	it('他のワークフローは見ない', () => {
+		expect(decide(run('gh workflow run lint.yml'), ask({ review: review() }))).toBeNull()
+	})
+
+	it('綴りの違う発火も同じ判定で見る', () => {
+		const loose = review({ event: 'COMMENT' })
+		for (const name of ['Review', '"review.yml"', '.github/workflows/review.yml']) {
+			const called = run(`gh workflow run ${name} -f pr=294 -F review=@${PATH}`)
+			expect(decide(called, ask({ review: loose }))?.reason).toMatch(/REQUEST_CHANGES/)
+		}
+	})
+
+	it('ワークフローを通らない投稿を落とす', () => {
+		const api = run('gh api --method POST repos/o/r/pulls/294/reviews --input review.json')
+		expect(decide(api, ask())?.reason).toMatch(/review\.yml/)
+		expect(decide(run('gh pr review 294 --approve'), ask())?.reason).toMatch(/review\.yml/)
+
+		const tooled = {
+			hook_event_name: 'PreToolUse',
+			tool_name: 'mcp__github__pull_request_review_write',
+			tool_input: { pullNumber: 294, method: 'submit_pending', event: 'APPROVE' },
+		}
+		expect(decide(tooled, ask())?.reason).toMatch(/review\.yml/)
+	})
+
+	it('投稿でない Bash は見ない', () => {
+		const quoted = run(`echo "gh workflow run review.yml -f pr=294" >> notes.md`)
+		expect(decide(quoted, ask({ review: review() }))).toBeNull()
+
+		const told = run("git commit -m 'gh pr review をやめる'")
+		expect(decide(told, ask())).toBeNull()
+
+		const listed = run('gh api repos/o/r/pulls/294/reviews')
+		expect(decide(listed, ask())).toBeNull()
+	})
+
+	it('区切りの直後の発火は見る', () => {
+		const chained = run(`npm test && gh workflow run review.yml -f pr=294 -F review=@${PATH}`)
+		const loose = review({ event: 'COMMENT' })
+		expect(decide(chained, ask({ review: loose }))?.reason).toMatch(/REQUEST_CHANGES/)
+	})
+
+	it('gh が受ける他の綴りの引数も読む', () => {
+		const loose = review({ event: 'COMMENT' })
+		for (const args of ['-F pr=294 -F review=@', '--field pr=294 --field review=@']) {
+			const called = run(`gh workflow run review.yml ${args}${PATH}`)
+			expect(decide(called, ask({ review: loose }))?.reason).toMatch(/REQUEST_CHANGES/)
+		}
+	})
+
+	it('読めない JSON は黙って通す', () => {
+		expect(decide(dispatch(), ask({ review: '{' }))).toBeNull()
+	})
+})
+
+describe('payload の置き場', () => {
+	it('絶対パスはそのまま、相対パスだけ根に足す', () => {
+		expect(resolve('/tmp/review.json', '/repo')).toBe('/tmp/review.json')
+		expect(resolve('review.json', '/repo')).toBe('/repo/review.json')
+	})
+})
+
+describe('インラインコメントの型', () => {
+	const only = (body, place) => review({ comments: [inline(body, place)] })
+
 	it('バッジの無いコメントと2つ付いたコメントを落とす', () => {
-		expect(decide(comment('**見出し**\n本文'), ask())?.reason).toMatch(/バッジが無い/)
-		expect(decide(comment(`${MUST}${NITS} **見出し**`), ask())?.reason).toMatch(/2つ/)
+		const none = ask({ review: only('**見出し**\n本文') })
+		expect(decide(dispatch(), none)?.reason).toMatch(/バッジが無い/)
+
+		const both = ask({ review: only(`${MUST}${NITS} **見出し**`) })
+		expect(decide(dispatch(), both)?.reason).toMatch(/2つ/)
 	})
 
 	it('先頭に無いバッジと、見出しの無いコメントを落とす', () => {
-		expect(decide(comment(`**見出し** ${MUST}`), ask())?.reason).toMatch(/先頭/)
-		expect(decide(comment(`${MUST}\n本文`), ask())?.reason).toMatch(/見出し/)
-	})
+		const tail = ask({ review: only(`**見出し** ${MUST}`) })
+		expect(decide(dispatch(), tail)?.reason).toMatch(/先頭/)
 
-	it('綴りの違うバッジを正本に直して通す', () => {
-		const body = dropped(`${MUST} **見出し**\n\n理由`)
-		expect(decide(comment(body), ask())).toEqual({
-			updatedInput: {
-				...comment(body).tool_input,
-				body: `${MUST} **見出し**\n\n理由`,
-			},
-		})
-	})
-
-	it('バッジでないリンクは書き換えない', () => {
-		const body = `${MUST} **見出し**\n\n[ADR 03](../../docs/adr/03-flat-directory-by-type.md) のとおり`
-		expect(decide(comment(body), ask())).toBeNull()
+		const wrapped = ask({ review: only(`${MUST}\n本文`) })
+		expect(decide(dispatch(), wrapped)?.reason).toMatch(/見出し/)
 	})
 
 	it('6行を超えるコメントを落とす', () => {
-		const body = `${MUST} **見出し**\n\n1\n2\n3\n4\n5\n6`
-		expect(decide(comment(body), ask())?.reason).toMatch(/6行以内/)
+		const long = ask({ review: only(`${MUST} **見出し**\n\n1\n2\n3\n4\n5\n6`) })
+		expect(decide(dispatch(), long)?.reason).toMatch(/6行以内/)
 	})
 
+	it('置き場所の無いコメントを落とす', () => {
+		const placeless = ask({ review: only(`${MUST} **見出し**`, { line: undefined }) })
+		expect(decide(dispatch(), placeless)?.reason).toMatch(/line/)
+	})
+
+	it('インラインの無いレビューを通す', () => {
+		const summary = review({ event: 'APPROVE', body: '**判定: Approve**', comments: [] })
+		expect(decide(dispatch(), ask({ review: summary }))).toBeNull()
+	})
+})
+
+describe('バッジの綴り', () => {
+	it('綴りの違うバッジを落とす', () => {
+		const body = dropped(`${MUST} **見出し**`)
+		const broken = ask({ review: review({ comments: [inline(body)] }) })
+		expect(decide(dispatch(), broken)?.reason).toMatch(/綴り/)
+
+		const summary = ask({ review: review({ body: dropped(MUST) }) })
+		expect(decide(dispatch(), summary)?.reason).toMatch(/綴り/)
+	})
+
+	it('バッジでないリンクは見ない', () => {
+		const body = `${MUST} **見出し**\n\n[ADR 03](../../docs/adr/03-flat-directory-by-type.md)`
+		expect(decide(dispatch(), ask({ review: review({ comments: [inline(body)] }) }))).toBeNull()
+	})
+})
+
+describe('件数の上限', () => {
+	const many = (badge, times) =>
+		Array.from({ length: times }, () => inline(`${badge} **見出し**`))
+
 	it('6件目を落とす', () => {
-		const held = { grades: { must: 3, suggestion: 2 }, submits: 0 }
-		expect(decide(comment(`${MUST} **見出し**`), ask({ held }))?.reason).toMatch(/5件/)
-		held.grades.suggestion = 1
-		expect(decide(comment(`${MUST} **見出し**`), ask({ held }))).toBeNull()
+		const over = review({ comments: many(MUST, 6) })
+		expect(decide(dispatch(), ask({ review: over }))?.reason).toMatch(/5件/)
+
+		const edge = review({ comments: many(MUST, 5) })
+		expect(decide(dispatch(), ask({ review: edge }))).toBeNull()
 	})
 
 	it('imo と nits の3件目だけを落とす', () => {
-		const held = { grades: { imo: 1, nits: 1 }, submits: 0 }
-		expect(decide(comment(`${NITS} **見出し**`), ask({ held }))?.reason).toMatch(/合わせて2件/)
-		expect(decide(comment(`${MUST} **見出し**`), ask({ held }))).toBeNull()
+		const soft = review({
+			event: 'APPROVE',
+			body: '**判定: Approve**',
+			comments: [...many(IMO, 2), ...many(NITS, 1)],
+		})
+		expect(decide(dispatch(), ask({ review: soft }))?.reason).toMatch(/合わせて2件/)
+	})
+
+	it('サマリにまとめたレビューも数える', () => {
+		const head = '**判定: Request changes** — 理由'
+		const bundled = review({
+			body: `${head}\n\n${`${MUST} **見出し**\n`.repeat(6)}`,
+			comments: [],
+		})
+		expect(decide(dispatch(), ask({ review: bundled }))?.reason).toMatch(/5件/)
 	})
 })
 
-describe('submit の判定', () => {
-	it('件数に合う判定は通す', () => {
-		const held = { grades: { must: 1, suggestion: 1 }, submits: 0 }
-		expect(
-			decide(submit('REQUEST_CHANGES', '**判定: Request changes** — 理由'), ask({ held })),
-		).toBeNull()
-	})
-
+describe('判定と event', () => {
 	it('件数より緩い判定を落とす', () => {
-		const held = { grades: { must: 1 }, submits: 0 }
-		expect(decide(submit('COMMENT', '**判定: Comment**'), ask({ held }))?.reason).toMatch(
-			/Request changes/,
-		)
-
-		const soft = { grades: { suggestion: 1 }, submits: 0 }
-		expect(decide(submit('APPROVE', '**判定: Approve**'), ask({ held: soft }))?.reason).toMatch(
-			/Comment/,
-		)
+		const loose = review({ event: 'COMMENT', body: '**判定: Comment**' })
+		expect(decide(dispatch(), ask({ review: loose }))?.reason).toMatch(/Request changes/)
 	})
 
-	it('数えた件数より厳しい判定は通す', () => {
-		const held = { grades: {}, submits: 1 }
-		expect(
-			decide(submit('COMMENT', '**判定: Request changes** — 未対応 2件'), ask({ held })),
-		).toBeNull()
-	})
-
-	it('自分の PR で REQUEST_CHANGES を返せない submit を通す', () => {
-		const held = { grades: { must: 1 }, submits: 0 }
-		expect(decide(submit('COMMENT', '**判定: Request changes**'), ask({ held }))).toBeNull()
+	it('件数より緩い event を落とす', () => {
+		const loose = review({ event: 'COMMENT' })
+		expect(decide(dispatch(), ask({ review: loose }))?.reason).toMatch(/REQUEST_CHANGES/)
 	})
 
 	it('判定を書いていないサマリを落とす', () => {
-		const held = { grades: { suggestion: 1 }, submits: 0 }
-		expect(decide(submit('COMMENT', '直せば良くなる'), ask({ held }))?.reason).toMatch(/先頭行/)
+		const bare = review({ body: '直せば良くなる' })
+		expect(decide(dispatch(), ask({ review: bare }))?.reason).toMatch(/先頭行/)
+	})
+
+	it('判定の名前でない event を落とす', () => {
+		const wrong = review({ event: 'DISMISS' })
+		expect(decide(dispatch(), ask({ review: wrong }))?.reason).toMatch(/REQUEST_CHANGES/)
+	})
+
+	it('数えた件数より厳しい判定は通す', () => {
+		const strict = review({
+			event: 'REQUEST_CHANGES',
+			body: '**判定: Request changes** — 未対応 2件',
+			comments: [],
+		})
+		expect(decide(dispatch(), ask({ review: strict }))).toBeNull()
 	})
 
 	it('3回の出し直しを通し、その次を落とす', () => {
-		const passing = { grades: {}, submits: 3 }
-		expect(decide(submit('APPROVE', '**判定: Approve**'), ask({ held: passing }))).toBeNull()
+		expect(decide(dispatch(), ask({ review: review(), held: { submits: 3 } }))).toBeNull()
 
-		const held = { grades: {}, submits: 4 }
-		expect(decide(submit('APPROVE', '**判定: Approve**'), ask({ held }))?.reason).toMatch(/3回/)
-	})
-
-	it('サマリの無い submit を落とす', () => {
-		const held = { grades: {}, submits: 0 }
-		expect(decide(submit('APPROVE'), ask({ held }))?.reason).toMatch(/先頭行/)
-	})
-
-	it('body を持たない呼び出しに空の body を足さない', () => {
-		const bodiless = (method, event) => ({
-			hook_event_name: 'PreToolUse',
-			tool_name: 'mcp__github__pull_request_review_write',
-			tool_input: { ...WHERE, method, ...(event !== undefined && { event }) },
-		})
-		const held = { grades: {}, submits: 0 }
-		expect(decide(bodiless('delete_pending'), ask({ held }))).toBeNull()
-		expect(decide(bodiless('resolve_thread'), ask({ held }))).toBeNull()
-		expect(decide(bodiless('submit_pending', 'APPROVE'), ask({ held }))?.reason).toMatch(
-			/先頭行/,
-		)
-	})
-
-	it('数えていない PR の submit は通す', () => {
-		expect(decide(submit('APPROVE'), ask())).toBeNull()
-		expect(decide(submit('COMMENT'), ask())).toBeNull()
-	})
-
-	it('submit でない呼び出しは見ない', () => {
-		expect(
-			decide(submit(undefined, '', 'create'), ask({ held: { grades: { must: 1 } } })),
-		).toBeNull()
-		expect(
-			decide(submit('APPROVE', '', 'delete_pending'), ask({ held: { grades: { must: 1 } } })),
-		).toBeNull()
+		const held = { submits: 4 }
+		expect(decide(dispatch(), ask({ review: review(), held }))?.reason).toMatch(/3回/)
 	})
 })
 
-describe('件数を数える', () => {
-	it('出したコメントのグレードを数える', () => {
-		const it_ = ask()
-		expect(decide(comment(`${MUST} **見出し**`, 'PostToolUse'), it_)).toBeNull()
-		decide(comment(`${SUGGESTION} **見出し**`, 'PostToolUse'), it_)
-		expect(it_.box.value).toEqual({ grades: { must: 1, suggestion: 1 }, submits: 1 - 1 })
+describe('出し直しを数える', () => {
+	it('投稿ごとに回数を足す', () => {
+		const it_ = ask({ review: review(), held: { submits: 1 } })
+		decide(dispatch('PostToolUse'), it_)
+		expect(it_.box.value).toEqual({ submits: 2 })
 	})
 
 	it('落ちた呼び出しは数えない', () => {
-		const it_ = ask()
-		decide(
-			{ ...comment(`${MUST} **見出し**`, 'PostToolUse'), tool_response: { isError: true } },
-			it_,
-		)
+		const it_ = ask({ review: review() })
+		decide({ ...dispatch('PostToolUse'), tool_response: { isError: true } }, it_)
 		expect(it_.box.value).toBeNull()
-	})
-
-	it('submit で件数を畳んで回数を足す', () => {
-		const it_ = ask({ held: { grades: { must: 2 }, submits: 1 } })
-		decide(submit('REQUEST_CHANGES', '', 'submit_pending', 'PostToolUse'), it_)
-		expect(it_.box.value).toEqual({ grades: {}, submits: 2 })
-	})
-
-	it('取り下げたレビューは件数だけ畳む', () => {
-		const it_ = ask({ held: { grades: { must: 2 }, submits: 1 } })
-		decide(submit(undefined, '', 'delete_pending', 'PostToolUse'), it_)
-		expect(it_.box.value).toEqual({ grades: {}, submits: 1 })
 	})
 })
 
 describe('読み取れないとき', () => {
 	it('手順書から判定を組み立てられなければ黙って通す', () => {
-		const broken = ask({ source: '# レビュー\n\n何も表が無い' })
-		expect(decide(comment('本文だけ'), broken)).toBeNull()
+		const broken = ask({ source: '# レビュー\n\n何も表が無い', review: review() })
+		expect(decide(dispatch(), broken)).toBeNull()
 		expect(decide(skill(), broken)).toBeNull()
 	})
 
-	it('他のツールは見ない', () => {
-		expect(decide({ tool_name: 'Bash', tool_input: { command: 'ls' } }, ask())).toBeNull()
+	it('他のツールと他のコマンドは見ない', () => {
+		expect(decide(run('ls'), ask())).toBeNull()
+		expect(decide({ tool_name: 'Read', tool_input: { file_path: 'a' } }, ask())).toBeNull()
 		expect(decide({}, ask())).toBeNull()
-	})
-})
-
-describe('コメント1本で返したレビュー', () => {
-	it('綴りを直し、件数に合う判定を通す', () => {
-		expect(decide(bundle(dropped(REVIEW)), ask())).toEqual({
-			updatedInput: { ...bundle(REVIEW).tool_input, body: REVIEW },
-		})
-		expect(decide(bundle(REVIEW), ask())).toBeNull()
-	})
-
-	it('件数より緩い判定を落とす', () => {
-		const body = REVIEW.replace('Request changes', 'Comment')
-		expect(decide(bundle(body), ask())?.reason).toMatch(/Request changes/)
-	})
-
-	it('判定の無いサマリを落とす', () => {
-		expect(
-			decide(bundle(REVIEW.replace('**判定: Request changes** — ', '')), ask())?.reason,
-		).toMatch(/先頭行/)
-	})
-
-	it('本文のバッジを数えて上限を見る', () => {
-		const many = REVIEW + `\n\n${MUST} **見出し**`.repeat(5)
-		expect(decide(bundle(many), ask())?.reason).toMatch(/5件/)
-
-		const soft = REVIEW.replace(MUST, NITS) + `\n\n${NITS} **見出し**`.repeat(2)
-		expect(decide(bundle(soft), ask())?.reason).toMatch(/合わせて2件/)
-	})
-
-	it('インラインで出した件数と合わせて見る', () => {
-		const held = { grades: { must: 3, suggestion: 2 }, submits: 0 }
-		expect(decide(bundle(REVIEW), ask({ held }))?.reason).toMatch(/5件/)
-	})
-
-	it('4回目の出し直しを落とす', () => {
-		const held = { grades: {}, submits: 4 }
-		expect(decide(bundle(REVIEW), ask({ held }))?.reason).toMatch(/3回/)
-	})
-
-	it('バッジの無いコメントは見ない', () => {
-		expect(decide(bundle('直して push しました'), ask())).toBeNull()
-	})
-
-	it('1回の出し直しとして数え、件数を畳む', () => {
-		const it_ = ask({ held: { grades: { must: 2 }, submits: 1 } })
-		decide(bundle(REVIEW, 'PostToolUse'), it_)
-		expect(it_.box.value).toEqual({ grades: {}, submits: 2 })
-	})
-
-	it('バッジの無いコメントは数えない', () => {
-		const it_ = ask({ held: { grades: { must: 2 }, submits: 1 } })
-		decide(bundle('直して push しました', 'PostToolUse'), it_)
-		expect(it_.box.value).toEqual({ grades: { must: 2 }, submits: 1 })
-	})
-})
-
-describe('スレッドへの返信', () => {
-	it('綴りだけ直し、インラインの型は見ない', () => {
-		expect(decide(reply(dropped(`${NITS} 見出し`)), ask())).toEqual({
-			updatedInput: { ...reply('').tool_input, body: `${NITS} 見出し` },
-		})
-		expect(decide(reply('直しました'), ask())).toBeNull()
 	})
 })

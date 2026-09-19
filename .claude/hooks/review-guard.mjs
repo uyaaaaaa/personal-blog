@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
 const SKILL = '.claude/skills/review/SKILL.md'
 const EVIDENCE = '.verify'
-const COMMENT_TOOL = 'mcp__github__add_comment_to_pending_review'
-const ISSUE_TOOL = 'mcp__github__add_issue_comment'
-const REPLY_TOOL = 'mcp__github__add_reply_to_pull_request_comment'
-const REVIEW_TOOL = 'mcp__github__pull_request_review_write'
 
 const GRADE = /^\|\s*`([a-z]+)`\s*\|[^|]*\|\s*`(!\[[^\]]*\]\([^)]*\))`\s*\|/gm
 const JUDGMENT = /^\|\s*`([A-Za-z][A-Za-z ]*)`\s*\|\s*([^|]+?)\s*\|\s*$/gm
@@ -19,6 +15,7 @@ const SOFT = /うち((?:\s*`[a-z]+`\s*(?:と\s*)?)+)は合わせて(\d+)件ま�
 const LINES = /合わせて(\d+)行以内/
 const ROUNDS = /再レビューが(\d+)回に達した/
 const EFFORT = /effort は\s*`([a-z]+)`\s*を渡す/
+const WORKFLOW = /gh workflow run\s+(\S+)/
 const FLAG = /`(--[a-z-]+)`/g
 const NAMED = /`([a-z]+)`/g
 const COMMAND = /npm (?:run )?([a-z:]+)/g
@@ -56,6 +53,7 @@ export const rules = (source) => {
 		lines: Number(LINES.exec(source)?.[1]),
 		rounds: Number(ROUNDS.exec(source)?.[1]),
 		effort: EFFORT.exec(source)?.[1],
+		workflow: WORKFLOW.exec(source)?.[1],
 		forbidden,
 		required,
 	}
@@ -67,7 +65,8 @@ const complete = (it) =>
 	it.judgments.some(({ needs }) => needs.length === 0) &&
 	[it.total, it.softTotal, it.lines, it.rounds].every(Number.isFinite) &&
 	it.soft.length > 0 &&
-	typeof it.effort === 'string'
+	typeof it.effort === 'string' &&
+	typeof it.workflow === 'string'
 
 const satisfied = (needs, counts) =>
 	needs.every(({ grade, count, orMore }) =>
@@ -81,8 +80,7 @@ const judged = (judgments, counts) =>
 // API の event は判定の名前を大文字にしたもの。表を2つ持たずに突き合わせる
 const eventOf = (name) => name.toUpperCase().replace(/\s+/g, '_')
 
-const key = ({ owner, repo, pullNumber, issue_number: issue }) =>
-	`review.${owner}.${repo}.${pullNumber ?? issue}`
+const key = (pr) => `review.${pr}`
 
 // code-review が受け取る effort の綴り。手順書ではなく呼ぶ側の語彙
 const LEVELS = new Set(['low', 'medium', 'high', 'xhigh', 'max'])
@@ -152,12 +150,10 @@ const tally = (counts) =>
 		.map(([name, count]) => `${name} ${count}`)
 		.join(' / ') || '0件'
 
-const over = (adding, counts, it) => {
-	if (sum(counts) + sum(adding) > it.total) {
-		return `この PR に${it.total}件出している。捨てる側で絞る`
-	}
-	if (sum(counts, it.soft) + sum(adding, it.soft) > it.softTotal) {
-		return `${it.soft.join(' と ')} は合わせて${it.softTotal}件まで出している`
+const over = (counts, it) => {
+	if (sum(counts) > it.total) return `${sum(counts)}件ある。捨てる側で${it.total}件まで絞る`
+	if (sum(counts, it.soft) > it.softTotal) {
+		return `${it.soft.join(' と ')} が${sum(counts, it.soft)}件ある。合わせて${it.softTotal}件まで`
 	}
 	return null
 }
@@ -169,7 +165,7 @@ const graded = (body, grades) => {
 	return { name, badge, head: body.startsWith(badge) }
 }
 
-const commented = (text, it, seen) => {
+const commented = (text, it) => {
 	const grade = graded(text, it.grades)
 	if (!grade.name) {
 		return grade.names.length === 0
@@ -184,10 +180,8 @@ const commented = (text, it, seen) => {
 	const rows = text.split('\n').filter((line) => line.trim() !== '').length
 	if (rows > it.lines) return `${rows}行ある。見出しも本文も含めて${it.lines}行以内`
 
-	return over({ [grade.name]: 1 }, seen?.grades ?? {}, it)
+	return null
 }
-
-const SUBMITTING = new Set(['create', 'submit_pending'])
 
 // 表は厳しい順に並ぶ。前の回から持ち越した未対応は数えられないので、
 // 数えた件数より緩い側に倒した判定だけを落とす
@@ -207,70 +201,99 @@ const unjudged = (head, counts, it) => {
 		: null
 }
 
-const submitted = (text, it, seen, input) => {
-	const { method, event } = input.tool_input ?? {}
-	if (!SUBMITTING.has(method) || typeof event !== 'string' || seen === null) return null
-
-	const counts = seen.grades ?? {}
-	const reason = repeated(seen, it) ?? unjudged(text.split('\n')[0], counts, it)
-	if (reason) return reason
-
+const mismatched = (event, counts, it) => {
 	const want = judged(it.judgments, counts)
-	const softest = it.judgments.find(({ needs }) => needs.length === 0)
-	// 自分の PR には REQUEST_CHANGES を返せないので、event は最も緩いものだけ見る
-	return event === eventOf(softest.name) && want !== softest
-		? `件数（${tally(counts)}）に対する判定は ${want.name}`
+	const written = it.judgments.find(({ name }) => eventOf(name) === event)
+	if (!written) return `event は判定を大文字にしたもの（${eventOf(want.name)}）を渡す`
+	return looser(it.judgments, written, want)
+		? `件数（${tally(counts)}）に対する event は ${eventOf(want.name)}`
 		: null
 }
 
-// 自分の PR に REQUEST_CHANGES を返せない回は、レビュー1本がコメント1本で来る
-const bundled = (text, it, seen) => {
-	const adding = counted(text, it.grades)
-	if (sum(adding) === 0) return null
+const PLACED = ({ path, line }) => typeof path === 'string' && Number.isFinite(line)
 
+const validated = (payload, it, seen) => {
+	const body = typeof payload.body === 'string' ? payload.body : ''
+	const comments = Array.isArray(payload.comments) ? payload.comments : []
+	const bodies = comments.map((one) => (typeof one?.body === 'string' ? one.body : ''))
+
+	if ([body, ...bodies].some((text) => respelled(text, it.grades) !== text)) {
+		return `バッジの綴りが正本と違う。${SKILL} の表の本文をそのまま写す`
+	}
+	if (!comments.every(PLACED)) return 'インラインには `path` と `line` を付ける'
+
+	const reason = bodies.map((text) => commented(text, it)).find(Boolean)
+	if (reason) return reason
+
+	const counts = [body, ...bodies].reduce(
+		(found, text) => merged(found, counted(text, it.grades)),
+		{},
+	)
 	return (
 		repeated(seen, it) ??
-		over(adding, seen?.grades ?? {}, it) ??
-		unjudged(text.split('\n')[0], merged(seen?.grades ?? {}, adding), it)
+		over(counts, it) ??
+		unjudged(body.split('\n')[0], counts, it) ??
+		mismatched(payload.event, counts, it)
 	)
+}
+
+const PR = /(?:-f|-F|--raw-field|--field)\s+["']?pr=(\d+)/
+// @ でファイルを読むのは -F と --field だけ。-f は "@review.json" を値として送る
+const PAYLOAD = /(?:-F|--field)\s+["']?review=@([^\s"']+)/
+
+// コマンドの先頭か区切りの直後だけを見る。引用符の中やコミットメッセージの
+// 言及に当たると、投稿でない Bash を落とす
+const LEAD = String.raw`(?:^\s*|[\n;&|(]\s*)`
+const RUN = new RegExp(`${LEAD}gh\\s+workflow\\s+run\\s+["']?([^\\s"']+)["']?`)
+
+// gh は同じワークフローをファイル名でも ID でも表示名でも受ける
+const plain = (name) =>
+	name
+		.replace(/^.*\//, '')
+		.replace(/\.ya?ml$/, '')
+		.toLowerCase()
+
+const dispatched = (command, it) => {
+	const found = RUN.exec(command)?.[1]
+	if (found === undefined || plain(found) !== plain(it.workflow)) return null
+	return { pr: PR.exec(command)?.[1], path: PAYLOAD.exec(command)?.[1] }
+}
+
+const reviewed = (input, it, ask) => {
+	const found = dispatched(input.tool_input?.command ?? '', it)
+	if (!found) return null
+	if (!found.pr || !found.path) {
+		return { reason: '`-f pr=<番号>` と `-F review=@<ファイル>` の両方を渡す' }
+	}
+
+	let payload
+	try {
+		payload = JSON.parse(ask.payload(found.path))
+	} catch {
+		// 読めない回に止めると、フック自身の不具合でセッションが進まなくなる
+		return null
+	}
+
+	const reason = validated(payload, it, ask.state(key(found.pr), input).read())
+	return reason ? { reason } : null
 }
 
 const recorded = (input, it, ask) => {
 	if (input.tool_response?.isError || input.tool_response?.is_error) return
-	const { method, event, body, ...where } = input.tool_input ?? {}
-	const text = typeof body === 'string' ? body : ''
-	const box = ask.state(key(where), input)
-	const held = () => box.read() ?? { grades: {}, submits: 0 }
+	const found = dispatched(input.tool_input?.command ?? '', it)
+	if (!found?.pr) return
 
-	if (input.tool_name === COMMENT_TOOL) {
-		const grade = graded(text, it.grades)
-		if (!grade.name) return
-		const seen = held()
-		box.write({
-			...seen,
-			grades: { ...seen.grades, [grade.name]: (seen.grades?.[grade.name] ?? 0) + 1 },
-		})
-		return
-	}
-
-	if (input.tool_name === ISSUE_TOOL) {
-		if (sum(counted(text, it.grades)) === 0) return
-		box.write({ grades: {}, submits: (held().submits ?? 0) + 1 })
-		return
-	}
-
-	if (method === 'delete_pending' || (SUBMITTING.has(method) && typeof event === 'string')) {
-		box.write({
-			grades: {},
-			submits: (held().submits ?? 0) + (method === 'delete_pending' ? 0 : 1),
-		})
-	}
+	const box = ask.state(key(found.pr), input)
+	box.write({ submits: (box.read()?.submits ?? 0) + 1 })
 }
 
 const root = () => process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
 
+export const resolve = (path, base) => (isAbsolute(path) ? path : join(base, path))
+
 const ASK = {
 	skill: () => readFileSync(join(root(), SKILL), 'utf8'),
+	payload: (path) => readFileSync(resolve(path, root()), 'utf8'),
 	evidence: () => {
 		try {
 			return readdirSync(join(root(), EVIDENCE))
@@ -281,36 +304,38 @@ const ASK = {
 	state,
 }
 
-// バッジを載せられる口はどれも綴りを正本に直す。型と件数は手順書が出し先を決めている口だけ
-const JUDGED = {
-	[COMMENT_TOOL]: commented,
-	[ISSUE_TOOL]: bundled,
-	[REVIEW_TOOL]: submitted,
-	[REPLY_TOOL]: () => null,
-}
+const DISPATCH = new RegExp(`${LEAD}gh\\s+workflow\\s+run\\b`)
+// ワークフロー以外から /pulls/N/reviews に届く経路。どれも書き手自身のトークンで submit する
+const DIRECT = new RegExp(
+	`${LEAD}gh\\s+(?:api\\b(?=[^\\n]*\\bPOST\\b)[^\\n]*/pulls/\\d+/reviews\\b|pr\\s+review\\b)`,
+)
+const TOOLED = /^mcp__.*pull_request_review/
+
+const direct = (it) => ({
+	reason: `自分のトークンで submit しない。${it.workflow} の発火に渡す（→ ${SKILL} の6）`,
+})
 
 export const decide = (input, ask = ASK) => {
 	const tool = input.tool_name ?? ''
-	if (tool !== 'Skill' && !Object.hasOwn(JUDGED, tool)) return null
+	const command = input.tool_input?.command ?? ''
+	const bash = tool === 'Bash'
+	const seen =
+		tool === 'Skill' ||
+		TOOLED.test(tool) ||
+		(bash && (DISPATCH.test(command) || DIRECT.test(command)))
+	if (!seen) return null
 
 	const it = rules(ask.skill())
 	if (!complete(it)) return null
 
 	if (input.hook_event_name === 'PostToolUse') {
-		if (tool !== 'Skill') recorded(input, it, ask)
+		if (bash) recorded(input, it, ask)
 		return null
 	}
 
 	if (tool === 'Skill') return skilled(input, it, ask)
-
-	const { body, ...where } = input.tool_input ?? {}
-	const written = typeof body === 'string'
-	if (!written && tool !== REVIEW_TOOL) return null
-
-	const text = respelled(written ? body : '', it.grades)
-	const reason = JUDGED[tool](text, it, ask.state(key(where), input).read(), input)
-	if (reason) return { reason }
-	return written && text !== body ? { updatedInput: { ...input.tool_input, body: text } } : null
+	if (TOOLED.test(tool) || DIRECT.test(command)) return direct(it)
+	return reviewed(input, it, ask)
 }
 
 if (process.argv[1]?.endsWith('review-guard.mjs')) {
