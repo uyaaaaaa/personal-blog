@@ -142,7 +142,7 @@
 		const input = inputRef.value
 		if (!input) return
 
-		focusByGesture(input)
+		focusByGesture(input, { asPointer: true })
 		input.select()
 	}
 

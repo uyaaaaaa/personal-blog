@@ -29,6 +29,7 @@ export const OVERLAYS = {
 		trap: '.search-dialog',
 		// 入力欄も結果もヘッダーの検索と同じクラスで出るので、被せた側に限って引く
 		input: '.search-dialog .search-input',
+		field: '.search-dialog .search-field',
 		link: '.search-dialog .search-result',
 		scroller: '.search-dialog .search-results',
 		dialog: true,
@@ -43,6 +44,7 @@ export const OVERLAYS = {
 		scrim: '.search-scrim',
 		trap: '.header-search',
 		input: '.header-search .search-input',
+		field: '.header-search .search-field',
 		link: '.header-search .search-result',
 		scroller: '.header-search .search-results',
 		dialog: false,
@@ -188,6 +190,7 @@ const PAGE_HELPERS = `
 	const TRAP = ${JSON.stringify(config.trap)}
 	const SCRIM = ${JSON.stringify(config.scrim ?? null)}
 	const INPUT = ${JSON.stringify(config.input)}
+	const FIELD = ${JSON.stringify(config.field ?? null)}
 	const LINK = ${JSON.stringify(config.link)}
 	const COVER = ${JSON.stringify(covering?.overlay ?? null)}
 	const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -211,6 +214,7 @@ const PAGE_HELPERS = `
 		active: $name(document.activeElement),
 		activeShown: $shown(document.activeElement) && document.activeElement !== document.body,
 		ring: $ring(document.activeElement),
+		underline: FIELD ? getComputedStyle(document.querySelector(FIELD)).borderBottomColor : null,
 		path: $path(),
 		query: INPUT ? (document.querySelector(INPUT)?.value ?? null) : null,
 		scrim: SCRIM ? getComputedStyle(document.querySelector(SCRIM)).visibility : null,
@@ -871,11 +875,43 @@ const probes = [
 		name: 'focus-ring/ショートカットで開く',
 		shortcut: true,
 		run: async (p) => {
+			const before = await p.evaluate('return $state()')
 			const { opened } = await p.openByShortcut(META)
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: show(state, ['active', 'activeShown', 'ring']),
-				ok: opened && state.activeShown && state.ring !== NO_RING,
+				observed: show(state, ['active', 'activeShown', 'ring', 'underline']),
+				ok:
+					opened &&
+					state.activeShown &&
+					state.ring === NO_RING &&
+					state.underline !== before.underline,
+			}
+		},
+	},
+	{
+		name: 'focus-ring/ショートカットで入力欄に寄る',
+		shortcutFocus: true,
+		run: async (p) => {
+			const before = await p.evaluate('return $state()')
+			sent('activeElement を blur')
+			await p.evaluate('document.activeElement?.blur()')
+
+			let inInput = false
+			for (let attempt = 0; attempt < 8 && !inInput; attempt++) {
+				await p.pressShortcut(META)
+				inInput = await p.evaluate(
+					'return document.activeElement === document.querySelector(INPUT)',
+				)
+			}
+
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['active', 'activeShown', 'ring', 'underline']),
+				ok:
+					inInput &&
+					state.activeShown &&
+					state.ring === NO_RING &&
+					state.underline !== before.underline,
 			}
 		},
 	},
