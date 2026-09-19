@@ -1,5 +1,5 @@
 import { defineCollectionSource } from '@nuxt/content'
-import { parseFrontMatter } from 'remark-mdc'
+import { readFrontMatter } from './content.frontmatter'
 import { digestSchema } from './content.schema'
 
 export type RemoteStore = {
@@ -12,7 +12,7 @@ const reason = (error: unknown) => (error instanceof Error ? error.message : Str
 const validated = (key: string, body: string) => {
 	let data
 	try {
-		;({ data } = parseFrontMatter(body))
+		data = readFrontMatter(body)
 	} catch (error) {
 		throw new Error(`${key}: フロントマターを読み取れない（${reason(error)}）`)
 	}

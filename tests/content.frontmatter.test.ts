@@ -1,0 +1,62 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import { readFrontMatter } from '../content.frontmatter'
+import { articleSchema } from '../content.schema'
+import { articleFiles } from '../scripts/article-files.mjs'
+
+const md = (...lines: string[]) => `---\n${lines.join('\n')}\n---\n\n## 見出し\n`
+
+describe('readFrontMatter', () => {
+	it.each([
+		[
+			'重複したキー',
+			md('title: 集めたもの', 'published: false', 'published: true'),
+			'4行目: Map keys must be unique',
+		],
+		[
+			'タブで字下げした行',
+			md('title: 集めたもの', 'tags:', '\t- nuxt'),
+			'4行目: Tabs are not allowed as indentation',
+		],
+		[
+			'閉じていない引用符',
+			md('title: "集めたもの', 'date: 2026-09-12'),
+			'3行目: Missing closing "quote',
+		],
+	])('%s は復元した値を返さず、行と理由を出して投げる', (_, body, reason) => {
+		expect(() => readFrontMatter(body)).toThrow(reason)
+	})
+
+	it('解決できない alias も投げる', () => {
+		expect(() => readFrontMatter(md('title: *missing', 'date: 2026-09-12'))).toThrow(
+			'Unresolved alias',
+		)
+	})
+
+	it('壊れていない YAML はそのまま読む', () => {
+		expect(
+			readFrontMatter(md('title: "a: b # c"', 'date: 2026-09-12', 'tags:', '  - nuxt')),
+		).toEqual({ title: 'a: b # c', date: '2026-09-12', tags: ['nuxt'] })
+	})
+
+	it('CRLF で書いたものも通す', () => {
+		expect(
+			readFrontMatter('---\r\ntitle: a\r\ndate: 2026-09-12\r\n---\r\n\r\n## 見出し\r\n'),
+		).toEqual({ title: 'a', date: '2026-09-12' })
+	})
+
+	it('フロントマターの無い本文は空で返す', () => {
+		expect(readFrontMatter('## 見出し\n')).toEqual({})
+	})
+
+	it('いまある記事は通る', () => {
+		const { dir, files } = articleFiles()
+		expect(files.length).toBeGreaterThan(0)
+
+		for (const name of files) {
+			const data = readFrontMatter(readFileSync(join(dir, name), 'utf8'))
+			expect(articleSchema.safeParse(data).success, name).toBe(true)
+		}
+	})
+})

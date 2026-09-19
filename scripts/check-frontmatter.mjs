@@ -1,32 +1,41 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { parseFrontMatter } from 'remark-mdc'
+import { readFrontMatter } from '../content.frontmatter.ts'
 import { articleSchema } from '../content.schema.ts'
 import { articleFiles, fail } from './article-files.mjs'
 
 const { dir, files } = articleFiles(process.argv[2])
 
-const errors = []
-try {
-	for (const name of files) {
-		const { data } = parseFrontMatter(readFileSync(join(dir, name), 'utf8'))
-		const result = articleSchema.safeParse(data)
-		if (result.success) continue
+const unreadable = []
+const mismatched = []
 
-		for (const issue of result.error.issues) {
-			const where = issue.path.join('.')
-			errors.push(`${name}: ${where === '' ? '' : `${where}: `}${issue.message}`)
-		}
+for (const name of files) {
+	let data
+	try {
+		data = readFrontMatter(readFileSync(join(dir, name), 'utf8'))
+	} catch (error) {
+		unreadable.push(`${name}: ${error.message}`)
+		continue
 	}
-} catch (error) {
-	fail('記事を読み取れない:', `  ${error.message}`)
+
+	const result = articleSchema.safeParse(data)
+	if (result.success) continue
+
+	for (const issue of result.error.issues) {
+		const where = issue.path.join('.')
+		mismatched.push(`${name}: ${where === '' ? '' : `${where}: `}${issue.message}`)
+	}
 }
 
-if (errors.length > 0) {
-	fail(
-		'フロントマターがスキーマ（content.schema.ts）に合わない:',
-		...errors.map((error) => `  ${error}`),
-	)
-}
+const indented = (lines) => lines.map((line) => `  ${line}`)
+
+const report = [
+	...(unreadable.length > 0 ? ['記事を読み取れない:', ...indented(unreadable)] : []),
+	...(mismatched.length > 0
+		? ['フロントマターがスキーマ（content.schema.ts）に合わない:', ...indented(mismatched)]
+		: []),
+]
+
+if (report.length > 0) fail(...report)
 
 console.log(`✔ all frontmatter matches the schema (${files.length} articles)`)

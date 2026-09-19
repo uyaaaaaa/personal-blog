@@ -66,9 +66,15 @@ describe('getItem', () => {
 		[
 			'壊れた YAML が別の型に復元される',
 			md('title: [閉じていない', 'date: 2026-09-12'),
-			SCHEMA,
+			UNREADABLE,
 		],
 		['YAML を読み取れない', md('title: *missing', 'date: 2026-09-12'), UNREADABLE],
+		[
+			'重複したキー',
+			md('title: 集めたもの', 'date: 2026-09-11', 'date: 2026-09-12'),
+			UNREADABLE,
+		],
+		['タブで字下げした行', md('title: 集めたもの', 'date:', '\t- 2026-09-12'), UNREADABLE],
 	])('%s 1件は落とし、キーと理由を1行で出す', async (_, body, reason) => {
 		const store = storeOf({ 'digest/2026-09-12/broken.md': body })
 
