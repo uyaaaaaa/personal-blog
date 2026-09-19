@@ -15,7 +15,7 @@ const SOFT = /うち((?:\s*`[a-z]+`\s*(?:と\s*)?)+)は合わせて(\d+)件ま�
 const LINES = /合わせて(\d+)行以内/
 const ROUNDS = /再レビューが(\d+)回に達した/
 const EFFORT = /effort は\s*`([a-z]+)`\s*を渡す/
-const WORKFLOW = /gh workflow run\s+(\S+)/
+const WORKFLOW = /"workflow_id":\s*"([^"]+)"/
 const FLAG = /`(--[a-z-]+)`/g
 const NAMED = /`([a-z]+)`/g
 const COMMAND = /npm (?:run )?([a-z:]+)/g
@@ -253,22 +253,44 @@ const plain = (name) =>
 		.replace(/\.ya?ml$/, '')
 		.toLowerCase()
 
-const dispatched = (command, it) => {
+const fromCommand = (input, it, ask) => {
+	const command = input.tool_input?.command ?? ''
 	const found = RUN.exec(command)?.[1]
 	if (found === undefined || plain(found) !== plain(it.workflow)) return null
-	return { pr: PR.exec(command)?.[1], path: PAYLOAD.exec(command)?.[1] }
+
+	const pr = PR.exec(command)?.[1]
+	const path = PAYLOAD.exec(command)?.[1]
+	if (!pr || !path) return { missing: '`-f pr=<番号>` と `-F review=@<ファイル>` の両方を渡す' }
+	try {
+		return { pr, text: ask.payload(path) }
+	} catch {
+		return { pr }
+	}
 }
 
-const reviewed = (input, it, ask) => {
-	const found = dispatched(input.tool_input?.command ?? '', it)
-	if (!found) return null
-	if (!found.pr || !found.path) {
-		return { reason: '`-f pr=<番号>` と `-F review=@<ファイル>` の両方を渡す' }
+const fromTool = (input, it) => {
+	const { method, workflow_id: workflow, inputs } = input.tool_input ?? {}
+	if (method !== 'run_workflow' || plain(String(workflow ?? '')) !== plain(it.workflow))
+		return null
+
+	const pr = inputs?.pr === undefined ? undefined : String(inputs.pr)
+	if (!pr || typeof inputs?.review !== 'string') {
+		return { missing: '`inputs` に `pr` と、レビューの JSON を文字列にした `review` を渡す' }
 	}
+	return { pr, text: inputs.review }
+}
+
+const dispatched = (input, it, ask) =>
+	input.tool_name === 'Bash' ? fromCommand(input, it, ask) : fromTool(input, it)
+
+const reviewed = (input, it, ask) => {
+	const found = dispatched(input, it, ask)
+	if (!found) return null
+	if (found.missing) return { reason: found.missing }
 
 	let payload
 	try {
-		payload = JSON.parse(ask.payload(found.path))
+		payload = JSON.parse(found.text)
 	} catch {
 		// 読めない回に止めると、フック自身の不具合でセッションが進まなくなる
 		return null
@@ -280,7 +302,7 @@ const reviewed = (input, it, ask) => {
 
 const recorded = (input, it, ask) => {
 	if (input.tool_response?.isError || input.tool_response?.is_error) return
-	const found = dispatched(input.tool_input?.command ?? '', it)
+	const found = dispatched(input, it, ask)
 	if (!found?.pr) return
 
 	const box = ask.state(key(found.pr), input)
@@ -310,10 +332,28 @@ const DIRECT = new RegExp(
 	`${LEAD}gh\\s+(?:api\\b(?=[^\\n]*\\bPOST\\b)[^\\n]*/pulls/\\d+/reviews\\b|pr\\s+review\\b)`,
 )
 const TOOLED = /^mcp__.*pull_request_review/
+const TRIGGER = /^mcp__.*actions_run_trigger$/
+// レビューの体裁を持ったまま、ワークフローを通らずに出られる投稿先
+const POSTED =
+	/^mcp__.*(add_issue_comment|add_comment_to_pending_review|add_reply_to_pull_request_comment)$/
 
 const direct = (it) => ({
 	reason: `自分のトークンで submit しない。${it.workflow} の発火に渡す（→ ${SKILL} の6）`,
 })
+
+const VERDICT = /^\s*\**判定\**\s*[:：]/m
+
+const shaped = (text, it) =>
+	(VERDICT.test(text) && it.judgments.some(({ name }) => text.includes(name))) ||
+	[...it.grades.values()].some((badge) => text.trimStart().startsWith(badge))
+
+const posted = (input, it) => {
+	const body = input.tool_input?.body
+	if (typeof body !== 'string' || !shaped(body, it)) return null
+	return {
+		reason: `判定もグレードも通常コメントでは付かない。${it.workflow} の発火に渡す（→ ${SKILL} の6）`,
+	}
+}
 
 export const decide = (input, ask = ASK) => {
 	const tool = input.tool_name ?? ''
@@ -322,6 +362,8 @@ export const decide = (input, ask = ASK) => {
 	const seen =
 		tool === 'Skill' ||
 		TOOLED.test(tool) ||
+		TRIGGER.test(tool) ||
+		POSTED.test(tool) ||
 		(bash && (DISPATCH.test(command) || DIRECT.test(command)))
 	if (!seen) return null
 
@@ -329,12 +371,13 @@ export const decide = (input, ask = ASK) => {
 	if (!complete(it)) return null
 
 	if (input.hook_event_name === 'PostToolUse') {
-		if (bash) recorded(input, it, ask)
+		if (bash || TRIGGER.test(tool)) recorded(input, it, ask)
 		return null
 	}
 
 	if (tool === 'Skill') return skilled(input, it, ask)
 	if (TOOLED.test(tool) || DIRECT.test(command)) return direct(it)
+	if (POSTED.test(tool)) return posted(input, it)
 	return reviewed(input, it, ask)
 }
 

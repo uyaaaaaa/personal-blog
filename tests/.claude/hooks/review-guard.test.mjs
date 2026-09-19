@@ -49,6 +49,23 @@ const run = (command, event = 'PreToolUse') => ({
 const dispatch = (event = 'PreToolUse', pr = 294) =>
 	run(`gh workflow run review.yml -f pr=${pr} -F review=@${PATH}`, event)
 
+const trigger = (payload, { event = 'PreToolUse', pr = 294, workflow = 'review.yml' } = {}) => ({
+	hook_event_name: event,
+	tool_name: 'mcp__github__actions_run_trigger',
+	tool_input: {
+		method: 'run_workflow',
+		workflow_id: workflow,
+		ref: 'main',
+		inputs: { pr: String(pr), review: JSON.stringify(payload) },
+	},
+})
+
+const posted = (body, tool = 'mcp__github__add_issue_comment') => ({
+	hook_event_name: 'PreToolUse',
+	tool_name: tool,
+	tool_input: { pullNumber: 294, body },
+})
+
 const inline = (body, place = {}) => ({ path: 'app/app.vue', line: 12, body, ...place })
 
 const review = (over = {}) => ({
@@ -178,6 +195,61 @@ describe('投稿の呼び出し', () => {
 
 	it('読めない JSON は黙って通す', () => {
 		expect(decide(dispatch(), ask({ review: '{' }))).toBeNull()
+	})
+})
+
+describe('ツールからの発火', () => {
+	it('型に合うレビューは通し、緩い event を落とす', () => {
+		expect(decide(trigger(review()), ask())).toBeNull()
+		expect(decide(trigger(review({ event: 'COMMENT' })), ask())?.reason).toMatch(
+			/REQUEST_CHANGES/,
+		)
+	})
+
+	it('番号もレビューも渡さない発火を落とす', () => {
+		const bare = trigger(review())
+		bare.tool_input.inputs = {}
+		expect(decide(bare, ask())?.reason).toMatch(/`pr`/)
+	})
+
+	it('他のワークフローと他の method は見ない', () => {
+		expect(
+			decide(trigger(review({ event: 'COMMENT' }), { workflow: 'lint.yml' }), ask()),
+		).toBeNull()
+
+		const rerun = trigger(review({ event: 'COMMENT' }))
+		rerun.tool_input.method = 'rerun_workflow_run'
+		expect(decide(rerun, ask())).toBeNull()
+	})
+
+	it('出し直しを数える', () => {
+		const held = ask()
+		decide(trigger(review(), { event: 'PostToolUse' }), held)
+		expect(held.box.value).toEqual({ submits: 1 })
+	})
+})
+
+describe('通常コメントへの逃げ', () => {
+	it('判定を書いたコメントを落とす', () => {
+		const summary = '**判定: Approve**\n\n- 実測: `npm run lint` は終了コード 0'
+		expect(decide(posted(summary), ask())?.reason).toMatch(/review\.yml/)
+	})
+
+	it('バッジで始まるコメントを落とす', () => {
+		const body = `${MUST} **静的生成の HTML では閉じたままになる**`
+		const tools = [
+			'mcp__github__add_comment_to_pending_review',
+			'mcp__github__add_reply_to_pull_request_comment',
+		]
+		for (const tool of tools)
+			expect(decide(posted(body, tool), ask())?.reason).toMatch(/review\.yml/)
+	})
+
+	it('レビューでないコメントは通す', () => {
+		const asked =
+			'トーストに替えるなら、この PR で作り直します。今の形でよければ ready にします。'
+		expect(decide(posted(asked), ask())).toBeNull()
+		expect(decide(posted(`判定の材料が揃っていません`), ask())).toBeNull()
 	})
 })
 
