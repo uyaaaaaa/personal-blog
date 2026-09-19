@@ -78,7 +78,8 @@ const LENGTH_SECTIONS = [
 	'screens',
 ]
 
-const LENGTH = /(-?)(\d*\.?\d+)(px|r?em)\b/gi
+// 左端は TIME と同じく閉じる。閉じないと drift-2em や --panel-2em の尻尾が長さになる
+const LENGTH = /(?<![\w.-])(-?)(\d*\.?\d+)(px|r?em)\b/gi
 const HEX = /#[0-9a-f]{3,8}\b/gi
 const COLOR_FUNCTION = /\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix)\(\s*[^)]*\)/gi
 const QUOTED = /'[^']*'|"[^"]*"/g

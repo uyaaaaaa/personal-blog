@@ -43,6 +43,14 @@ describe('no-untokenized-size', () => {
 					filename: 'a.vue',
 					code: sfc('.a { @apply tracking-[0.12em]; }'),
 				},
+				{
+					filename: 'a.vue',
+					code: sfc('@keyframes drift-2em { from { opacity: 0; } }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation-name: drift-2em; max-width: var(--panel-2em); }'),
+				},
 			],
 			invalid: [
 				{
