@@ -102,21 +102,45 @@ CSS で出し分けるか、初期値を props で受ける。
 - **投稿は `Review` ワークフローに渡す。** 自分のトークンで直接 submit しない。GitHub は PR の作者による `APPROVE` と `REQUEST_CHANGES` を拒むので、判定が黙って COMMENT に落ちる
 - **判定を本文に書いた通常コメントで代えない。** それはレビューではないので、Approve も Request changes も付かない
 
+**渡す形は `scripts/review-args.mjs` が組み立てる。** グレードと理由と実測だけを書いて渡す。
+
+```sh
+node scripts/review-args.mjs < review.json
+```
+
+```json
+{
+	"pr": 123,
+	"reason": "判定の理由1文",
+	"verified": "`npm run lint` `npm test` は終了コード 0",
+	"comments": [
+		{
+			"grade": "must",
+			"path": "app/components/Toc.vue",
+			"line": 12,
+			"heading": "静的生成の HTML では閉じたままになる",
+			"body": "理由。\n代案。"
+		}
+	]
+}
+```
+
+出てくるのは、発火にそのまま渡せる形。
+
 ```json
 {
 	"method": "run_workflow",
 	"workflow_id": "review.yml",
 	"ref": "main",
-	"inputs": { "pr": "<番号>", "review": "<レビューの JSON を文字列にしたもの>" }
+	"inputs": { "pr": "123", "review": "<レビューの JSON を文字列にしたもの>" }
 }
 ```
 
+- **判定・バッジ・件数の上限・サマリの組み立ては、この手順書を読んでスクリプトが決める。**手で書き写さない
+- 上限を超えた件数や、欠けた `path` / `line` / 見出しは組み立てずに落ちる。落ちたら 2〜5 に戻る
+- `review` は `/pulls/{n}/reviews` に渡す形そのまま。判定が `Approve` なら `body` は入らない
 - 渡す先は `mcp__github__actions_run_trigger`。`gh` はこの環境に無いので、あるときだけ `gh workflow run review.yml -f pr=<番号> -F review=@review.json` でも同じ
-- `review` は `/pulls/{n}/reviews` に渡す形そのまま。サマリは `body`、インラインは `comments` に `path` と `line` を付けて並べる
-- **判定が `Approve` なら `body` を渡さない。** GitHub API 上 `body` は `APPROVE` では任意
-- `event` は 4 の判定を大文字にしたもの（`Approve` → `APPROVE` / `Request changes` → `REQUEST_CHANGES` / `Comment` → `COMMENT`）
 - **走らせたら結果を見る。** `mcp__github__actions_list` の `list_workflow_runs`（`resource_id` に `review.yml`）で最新の run が `success` でなければ投稿できていない。失敗したまま報告しない
-- API からは saved reply を挿入できない。3 の表の本文を1文字も変えずに先頭へ写す
 - 作業ツリーのレビュー（PR が無い）は投稿せず、同じ型で会話に返す
 - **投稿したら、判定と件数だけを報告して終わり**
 
