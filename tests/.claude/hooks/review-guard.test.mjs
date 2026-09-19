@@ -7,9 +7,9 @@ const SOURCE = readFileSync(
 	'utf8',
 )
 
-const MUST = '![must](https://img.shields.io/badge/must-d73a4a)'
-const SUGGESTION = '![suggestion](https://img.shields.io/badge/suggestion-fbca04)'
-const NITS = '![nits](https://img.shields.io/badge/nits-cfd3d7)'
+const MUST = '![must-badge](https://img.shields.io/badge/review-must-red)'
+const SUGGESTION = '![suggestion-badge](https://img.shields.io/badge/review-suggestion-blueviolet)'
+const NITS = '![nits-badge](https://img.shields.io/badge/review-nits-lightgrey)'
 
 const WHERE = { owner: 'uyaaaaaa', repo: 'personal-blog', pullNumber: 294 }
 
