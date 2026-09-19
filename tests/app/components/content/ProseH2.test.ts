@@ -37,6 +37,7 @@ describe.each([
 		expect(wrapper.get(tag).text()).toBe('見出し')
 		expect(wrapper.get(`${tag} > a`).attributes('href')).toBe('#section')
 		expect(wrapper.get(`${tag} > a`).text()).toBe('')
+		expect(wrapper.get(`${tag} > a`).attributes('aria-hidden')).toBe('true')
 	})
 
 	it('id が無ければリンクを置かない', async () => {

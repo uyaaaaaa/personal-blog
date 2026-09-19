@@ -41,6 +41,14 @@ const click = async (init: MouseEventInit = {}) => {
 }
 
 describe('HeadingAnchor', () => {
+	// 見出しの中にあるので、名前を持つと見出しの読み上げ名に混ざる
+	it('読み上げと Tab からは外す', async () => {
+		const wrapper = await mountSuspended(HeadingAnchor, { props: { headingId: 'section' } })
+
+		expect(wrapper.get('a').attributes('aria-hidden')).toBe('true')
+		expect(wrapper.get('a').attributes('tabindex')).toBe('-1')
+	})
+
 	it('押すと節へ移動し、その見出しの URL をクリップボードに入れる', async () => {
 		expect((await click()).defaultPrevented).toBe(true)
 

@@ -1,8 +1,10 @@
 <template>
+	<!-- 見出しの中にあるので、名前を持つと見出しの読み上げ名に混ざる。読み上げと Tab からは外す -->
 	<a
 		:href="`#${props.headingId}`"
-		aria-label="Copy link to this section and jump to it"
-		class="heading-anchor ml-2 inline-flex items-center justify-center align-middle transition-move lg:absolute lg:right-full lg:top-0 lg:ml-0 lg:mr-2 lg:opacity-0 lg:focus-visible:opacity-100 lg:group-hover:opacity-100"
+		aria-hidden="true"
+		tabindex="-1"
+		class="heading-anchor ml-2 inline-flex items-center justify-center align-middle transition-move lg:absolute lg:right-full lg:top-0 lg:ml-0 lg:mr-2 lg:opacity-0 lg:group-hover:opacity-100"
 		@click.exact.prevent="copyAndJump"
 	>
 		<svg
