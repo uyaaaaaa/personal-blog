@@ -5,6 +5,7 @@ import {
 	durations,
 	fontFamily,
 	motionProperties,
+	screens,
 	sizes,
 	toCssVariables,
 	toDarkCssVariables,
@@ -49,6 +50,10 @@ export default <Config>{
 	safelist: ['sr-only'],
 	darkMode: 'class',
 	theme: {
+		// extend の下ではなくここに置き、Tailwind 既定のパレットと境界ごと置き換える。
+		// extend だと既定が残り、トークンに無い色（bg-red-500）と境界（sm: / xl: / 2xl:）が生まれる
+		colors: toTailwindColors(),
+		screens,
 		// 長さを別に書くクラス（duration- / delay- / animate-）と、用途の決まらない transition-*
 		// を消す。モーションのクラスは motion が用途ごとに1つずつ持つ
 		transitionProperty: {},
@@ -56,7 +61,6 @@ export default <Config>{
 		transitionDelay: {},
 		animation: {},
 		extend: {
-			colors: toTailwindColors(),
 			typography: {
 				DEFAULT: {
 					css: {
