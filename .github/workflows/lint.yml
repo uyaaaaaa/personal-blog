@@ -19,7 +19,6 @@ jobs:
 
     lint:
         needs: changes
-        # 記事だけだと判定できた回にだけ飛ばす。!cancelled() が無いと changes が落ちた回も飛ぶ
         if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
         runs-on: ubuntu-latest
         steps:

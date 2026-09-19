@@ -25,7 +25,6 @@ jobs:
                   PUSH_BASE: ${{ github.event.before }}
               run: |
                   base="${PULL_REQUEST_BASE:-$PUSH_BASE}"
-                  # workflow_dispatch と force push には比べる相手がいない
                   if ! git rev-parse --verify --quiet "$base^{commit}" >/dev/null; then
                       echo 'code=true' >> "$GITHUB_OUTPUT"
                       exit 0
