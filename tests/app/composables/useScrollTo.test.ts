@@ -47,7 +47,6 @@ describe('useScrollTo', () => {
 		scrollTo('target')
 		expect(isJumping.value).toBe(true)
 
-		// 動いている間は、止まったとみなすフレーム数を超えても下ろさない
 		for (const y of [100, 200, 300, 400, 500, 600]) {
 			setScrollY(y)
 			runFrame()

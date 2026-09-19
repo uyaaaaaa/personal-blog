@@ -1,9 +1,11 @@
 import { useScrollFrame } from './useScrollFrame'
 import { useScrollTo } from './useScrollTo'
 
+const RESTING = 'up'
+
 // threshold: 方向を更新する最小スクロール量（px）。微小なスクロールによるちらつきを防ぐ
 export const useScrollDirection = (threshold: number, enabled: Ref<boolean>) => {
-	const direction = ref<'up' | 'down'>('up')
+	const direction = ref<'up' | 'down'>(RESTING)
 
 	const { isJumping } = useScrollTo()
 
@@ -17,10 +19,8 @@ export const useScrollDirection = (threshold: number, enabled: Ref<boolean>) => 
 			return
 		}
 
-		// 送っている間の移動は利用者のスクロールではない。向きを持たせると、下の見出しへ
-		// 飛ぶだけで下向きになり、下向きで隠す側が着地の時点で消えている
 		if (isJumping.value) {
-			direction.value = 'up'
+			direction.value = RESTING
 			lastY = currentY
 			return
 		}

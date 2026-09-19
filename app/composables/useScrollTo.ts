@@ -1,9 +1,6 @@
-// 滑り込みが終わったとみなすまでの、位置が動かないフレーム数
 const SETTLED_FRAMES = 4
-// 途中で指が割り込んで動き続けても、いつまでも送っている扱いにしないための上限（ms）
-const JUMP_LIMIT = 1200
+const JUMP_LIMIT_MS = 1200
 
-// 送っている間の移動は利用者のスクロールではない。向きを読む側がこれを見る
 const isJumping = ref(false)
 
 let frame: number | undefined
@@ -15,14 +12,14 @@ const trackJump = () => {
 
 	const startedAt = performance.now()
 	let lastY: number | undefined
-	let still = 0
+	let stillFrames = 0
 
 	const step = () => {
 		const currentY = window.scrollY
-		still = currentY === lastY ? still + 1 : 0
+		stillFrames = currentY === lastY ? stillFrames + 1 : 0
 		lastY = currentY
 
-		if (still >= SETTLED_FRAMES || performance.now() - startedAt > JUMP_LIMIT) {
+		if (stillFrames >= SETTLED_FRAMES || performance.now() - startedAt > JUMP_LIMIT_MS) {
 			frame = undefined
 			isJumping.value = false
 			return
