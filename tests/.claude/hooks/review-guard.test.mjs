@@ -7,9 +7,9 @@ const SOURCE = readFileSync(
 	'utf8',
 )
 
-const MUST = '![must-badge](https://img.shields.io/badge/review-must-red)'
-const IMO = '![imo-badge](https://img.shields.io/badge/review-imo-orange)'
-const NITS = '![nits-badge](https://img.shields.io/badge/review-nits-lightgrey)'
+const MUST = '![must-badge](https://img.shields.io/badge/review-must-d73a4a)'
+const IMO = '![imo-badge](https://img.shields.io/badge/review-imo-0075ca)'
+const NITS = '![nits-badge](https://img.shields.io/badge/review-nits-cfd3d7)'
 
 const PATH = 'review.json'
 
@@ -168,6 +168,14 @@ describe('投稿の呼び出し', () => {
 		expect(decide(chained, ask({ review: loose }))?.reason).toMatch(/REQUEST_CHANGES/)
 	})
 
+	it('gh が受ける他の綴りの引数も読む', () => {
+		const loose = review({ event: 'COMMENT' })
+		for (const args of ['-F pr=294 -F review=@', '--field pr=294 --field review=@']) {
+			const called = run(`gh workflow run review.yml ${args}${PATH}`)
+			expect(decide(called, ask({ review: loose }))?.reason).toMatch(/REQUEST_CHANGES/)
+		}
+	})
+
 	it('読めない JSON は黙って通す', () => {
 		expect(decide(dispatch(), ask({ review: '{' }))).toBeNull()
 	})
@@ -250,6 +258,15 @@ describe('件数の上限', () => {
 			comments: [...many(IMO, 2), ...many(NITS, 1)],
 		})
 		expect(decide(dispatch(), ask({ review: soft }))?.reason).toMatch(/合わせて2件/)
+	})
+
+	it('サマリにまとめたレビューも数える', () => {
+		const head = '**判定: Request changes** — 理由'
+		const bundled = review({
+			body: `${head}\n\n${`${MUST} **見出し**\n`.repeat(6)}`,
+			comments: [],
+		})
+		expect(decide(dispatch(), ask({ review: bundled }))?.reason).toMatch(/5件/)
 	})
 })
 

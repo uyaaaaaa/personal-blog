@@ -225,7 +225,10 @@ const validated = (payload, it, seen) => {
 	const reason = bodies.map((text) => commented(text, it)).find(Boolean)
 	if (reason) return reason
 
-	const counts = bodies.reduce((found, text) => merged(found, counted(text, it.grades)), {})
+	const counts = [body, ...bodies].reduce(
+		(found, text) => merged(found, counted(text, it.grades)),
+		{},
+	)
 	return (
 		repeated(seen, it) ??
 		over(counts, it) ??
@@ -234,8 +237,9 @@ const validated = (payload, it, seen) => {
 	)
 }
 
-const PR = /-f\s+pr=(\d+)/
-const PAYLOAD = /-F\s+review=@(\S+)/
+const PR = /(?:-f|-F|--raw-field|--field)\s+["']?pr=(\d+)/
+// @ でファイルを読むのは -F と --field だけ。-f は "@review.json" を値として送る
+const PAYLOAD = /(?:-F|--field)\s+["']?review=@([^\s"']+)/
 
 // コマンドの先頭か区切りの直後だけを見る。引用符の中やコミットメッセージの
 // 言及に当たると、投稿でない Bash を落とす

@@ -39,10 +39,10 @@ effort は `medium` を渡す。生成物・ルーティング・データ取得
 
 | グレード | 付けるとき | saved reply の本文 |
 | :--- | :--- | :--- |
-| `must` | 壊れる・生成物が変わる・方針に反する。直さないとマージできない | `![must-badge](https://img.shields.io/badge/review-must-red)` |
-| `suggestion` | 直せば良くなる具体案がある。採否は書き手が決める | `![suggestion-badge](https://img.shields.io/badge/review-suggestion-blueviolet)` |
-| `imo` | 自分ならこうする、という別案。採らなくてよい | `![imo-badge](https://img.shields.io/badge/review-imo-orange)` |
-| `nits` | 命名・表記の細かい点。直さなくても動く | `![nits-badge](https://img.shields.io/badge/review-nits-lightgrey)` |
+| `must` | 壊れる・生成物が変わる・方針に反する。直さないとマージできない | `![must-badge](https://img.shields.io/badge/review-must-d73a4a)` |
+| `suggestion` | 直せば良くなる具体案がある。採否は書き手が決める | `![suggestion-badge](https://img.shields.io/badge/review-suggestion-fbca04)` |
+| `imo` | 自分ならこうする、という別案。採らなくてよい | `![imo-badge](https://img.shields.io/badge/review-imo-0075ca)` |
+| `nits` | 命名・表記の細かい点。直さなくても動く | `![nits-badge](https://img.shields.io/badge/review-nits-cfd3d7)` |
 
 **グレードはこの4本の saved reply でだけ表す。** GitHub の Settings → Saved replies に、グレード名をタイトル・右列を本文として登録しておき、コメントの先頭はそこから挿入する。手で書くのは見出しから下だけ。
 
@@ -80,7 +80,7 @@ effort は `medium` を渡す。生成物・ルーティング・データ取得
 ### インラインコメント（1件1論点）
 
 ```md
-![must-badge](https://img.shields.io/badge/review-must-red) **静的生成の HTML では閉じたままになる**
+![must-badge](https://img.shields.io/badge/review-must-d73a4a) **静的生成の HTML では閉じたままになる**
 
 `onMounted` 後にしか開閉が決まらないため、初期状態がビルド時に焼き付く。
 CSS で出し分けるか、初期値を props で受ける。
