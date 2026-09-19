@@ -2,53 +2,72 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import HeadingAnchor from '~/components/content/HeadingAnchor.vue'
-
-const COPY_LABEL = 'Copy link to this section'
-const COPIED_LABEL = 'Link copied'
+import { useToast } from '~/composables/useToast'
 
 const writeText = vi.fn<(text: string) => Promise<void>>()
+const scrollIntoView = vi.fn()
+const { message, isVisible } = useToast()
+
+let target: HTMLElement
 
 beforeEach(() => {
 	writeText.mockReset()
 	writeText.mockResolvedValue()
 	Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+
+	scrollIntoView.mockReset()
+	target = document.createElement('div')
+	target.id = 'section'
+	target.scrollIntoView = scrollIntoView
+	document.body.append(target)
+
+	message.value = ''
+	isVisible.value = false
 })
 
 afterEach(() => {
-	vi.useRealTimers()
+	target.remove()
 })
 
-const click = async () => {
+const click = async (init: MouseEventInit = {}) => {
 	const wrapper = await mountSuspended(HeadingAnchor, { props: { headingId: 'section' } })
+	const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...init })
 
-	await wrapper.get('button').trigger('click')
+	wrapper.get('a').element.dispatchEvent(event)
+	await nextTick()
 	await nextTick()
 
-	return () => wrapper.get('button').attributes('aria-label')
+	return event
 }
 
 describe('HeadingAnchor', () => {
-	it('押すとその見出しの URL をクリップボードに入れる', async () => {
-		await click()
+	it('押すと節へ移動し、その見出しの URL をクリップボードに入れる', async () => {
+		expect((await click()).defaultPrevented).toBe(true)
 
+		expect(scrollIntoView).toHaveBeenCalled()
 		expect(writeText).toHaveBeenCalledWith(`${location.origin}${location.pathname}#section`)
 	})
 
-	it('入ったことを知らせ、しばらくすると元に戻る', async () => {
-		vi.useFakeTimers()
+	it('入ったことを知らせる', async () => {
+		await click()
 
-		const label = await click()
-		expect(label()).toBe(COPIED_LABEL)
-
-		vi.runAllTimers()
-		await nextTick()
-
-		expect(label()).toBe(COPY_LABEL)
+		expect(message.value).toBe('Link copied')
+		expect(isVisible.value).toBe(true)
 	})
 
-	it('クリップボードに入らなければ、入ったと見せない', async () => {
+	it('クリップボードに入らなければ、入ったと知らせない', async () => {
 		writeText.mockRejectedValue(new Error('NotAllowedError'))
 
-		expect((await click())()).toBe(COPY_LABEL)
+		await click()
+
+		expect(isVisible.value).toBe(false)
 	})
+
+	it.each([['ctrlKey'], ['metaKey'], ['shiftKey']])(
+		'%s 付きのクリックはブラウザに渡す',
+		async (modifier) => {
+			expect((await click({ [modifier]: true })).defaultPrevented).toBe(false)
+			expect(writeText).not.toHaveBeenCalled()
+		},
+	)
 })
