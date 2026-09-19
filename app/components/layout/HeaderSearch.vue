@@ -2,6 +2,7 @@
 	<div
 		ref="trapRef"
 		class="header-search mx-8 hidden flex-1 items-center self-stretch md:flex"
+		@focusout="onFocusout"
 		:class="
 			isOpen ? 'max-w-search-open' : 'max-w-search-trigger focus-within:max-w-search-open'
 		"
@@ -159,6 +160,10 @@
 		event.preventDefault()
 	}
 
+	const onFocusout = (event: FocusEvent) => {
+		if (!trapRef.value?.contains(event.relatedTarget as Node | null)) dismiss()
+	}
+
 	const isVisible = () => (inputRef.value?.getClientRects().length ?? 0) > 0
 
 	const openActive = () => {
@@ -172,11 +177,17 @@
 	const onKeydown = (event: KeyboardEvent) => {
 		if (isComposingKey(event)) return
 
-		// 開いている間の Escape は閉じ込めの listener が受ける
+		// 候補が並んでいる間の Escape は閉じ込めの listener が窓で受ける
 		if (event.key === 'Escape') {
-			if (isOpen.value) return
+			if (hasList.value) return
 
 			event.preventDefault()
+
+			if (isOpen.value) {
+				dismiss()
+				return
+			}
+
 			clear()
 			inputRef.value?.blur()
 			return
@@ -203,7 +214,7 @@
 		if (trapRef.value?.contains(active)) focusByGesture(inputRef.value)
 	}
 
-	const { trapRef } = useFocusTrap(isOpen, (event) => {
+	const { trapRef } = useFocusTrap(hasList, (event) => {
 		if (isComposingKey(event)) return
 
 		returnFocus()

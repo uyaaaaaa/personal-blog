@@ -1592,6 +1592,42 @@ const probes = [
 		},
 	},
 	{
+		// 0件のとき閉じ込めると、行き先が入力欄だけになって Tab が進めない
+		name: 'inline-候補0件でも Tab で先へ進み、候補とスクリムが残らない',
+		opensByInput: true,
+		run: async (p) => {
+			await p.click(config.input, '入力欄')
+			sent('候補の出ない語を打つ')
+			await p.evaluate(`
+				const input = document.querySelector(INPUT)
+				input.focus()
+				input.value = 'zzzzzz'
+				input.dispatchEvent(new Event('input', { bubbles: true }))
+				await $frames(2)
+			`)
+			const open = await p.evaluate('return $state()')
+			await p.pressKey('Tab')
+			await sleep(TRANSITION)
+			const state = await p.evaluate(`
+				const active = document.activeElement
+				return {
+					...$state(),
+					inSearch: !!document.querySelector(TRAP)?.contains(active),
+				}
+			`)
+			return {
+				observed: `打った直後: overlay="${open.overlay}" / Tab 後: ${show(state, ['overlay', 'scrim', 'overflow', 'active'])} 検索の中=${state.inSearch}`,
+				ok:
+					open.overlay === 'visible' &&
+					!state.inSearch &&
+					state.activeShown &&
+					state.overlay === 'hidden' &&
+					state.scrim === 'hidden' &&
+					state.overflow !== 'hidden',
+			}
+		},
+	},
+	{
 		name: 'inline-打つと候補とスクリムが出て背後が止まる',
 		opensByInput: true,
 		run: async (p) => {
