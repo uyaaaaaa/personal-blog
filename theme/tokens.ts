@@ -12,6 +12,7 @@ export const colors = {
 	'surface-muted': '#ECEAE4',
 	'header-bg': 'rgba(250, 250, 248, 0.9)',
 	overlay: 'rgba(0, 0, 0, 0.5)',
+	'overlay-subtle': 'rgba(0, 0, 0, 0.25)',
 	scrollbar: '#D1D0CC',
 	'code-text': '#24292E',
 	// github-lightがdiffのトークンに持つ背景色
@@ -36,6 +37,7 @@ export const darkColors: Record<keyof typeof colors, string> = {
 	'surface-muted': '#262626',
 	'header-bg': 'rgba(20, 20, 20, 0.85)',
 	overlay: 'rgba(0, 0, 0, 0.5)',
+	'overlay-subtle': 'rgba(0, 0, 0, 0.35)',
 	scrollbar: '#3A3A3A',
 	'code-text': '#E1E4E8',
 	// GitHubのdiff表示の行背景（github-darkのトークン背景は帯が強すぎる）
@@ -110,9 +112,11 @@ export const sizes = {
 	maxHeight: {
 		'sticky-column': `calc(100vh - ${TOC_TOP})`,
 		'toc-panel': `calc(100dvh - ${TOC_PANEL_TOP})`,
+		'search-panel': `calc(100dvh - ${HEADER} - 1rem)`,
 	},
 	maxWidth: {
 		'search-trigger': '200px',
+		'search-open': '420px',
 		column: '680px',
 		article: '960px',
 		container: '1200px',

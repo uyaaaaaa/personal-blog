@@ -1,7 +1,7 @@
 <template>
 	<div
 		v-if="page"
-		class="mx-auto w-full max-w-column lg:grid lg:max-w-article lg:grid-cols-article lg:gap-14"
+		class="lg:grid lg:grid-cols-article lg:gap-14"
 	>
 		<div class="min-w-0 space-y-12">
 			<article class="space-y-8">
@@ -74,6 +74,8 @@
 	import { CATEGORY_LABELS, isCategory } from '~/utils/category'
 	import { formatDate } from '~/utils/date'
 	import { tagToSlug } from '~/utils/tag'
+
+	definePageMeta({ sideColumn: true })
 
 	const route = useRoute()
 

@@ -2,9 +2,14 @@
 	<div class="layout-container">
 		<Header :location="route.fullPath" />
 		<main class="flex-1 px-5 pb-16 pt-7 md:px-10 md:pb-24 md:pt-14">
-			<slot />
+			<div
+				class="mx-auto w-full"
+				:class="measure"
+			>
+				<slot />
+			</div>
 		</main>
-		<Footer />
+		<Footer :measure="measure" />
 		<Toast />
 	</div>
 </template>
@@ -15,6 +20,10 @@
 	import Toast from '~/components/ui/Toast.vue'
 
 	const route = useRoute()
+
+	const measure = computed(() =>
+		route.meta.sideColumn ? 'max-w-column lg:max-w-article' : 'max-w-column',
+	)
 
 	/* eslint-disable style/no-outline-removal -- 目印が付くのはポインタで移したフォーカスだけ */
 </script>

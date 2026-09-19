@@ -1,5 +1,5 @@
 <template>
-	<div class="mx-auto w-full max-w-column space-y-12">
+	<div class="space-y-12">
 		<header class="space-y-4 border-b border-border pb-8">
 			<h1 class="text-heading font-bold text-main">uyaaaaaa</h1>
 			<p class="leading-relaxed text-sub">
