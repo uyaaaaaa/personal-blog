@@ -6,8 +6,6 @@ paths:
 
 # import と依存のルール
 
-**自作モジュール間の依存は、必ず `import` 文に現れるようにする。** 依存グラフが実態と一致していないと、循環検出や依存方向の lint が無言で無効になる。
-
-- **例外は、フレームワークが名前で解決する領域。** markdown から名前で参照されるコンポーネントは import できない。
+**自作モジュールを import せずに使えるのは、markdown から名前で参照されるコンポーネントだけ。**
 
 auto-import を止めた理由は [docs/adr/02-no-auto-import.md](../../docs/adr/02-no-auto-import.md)。置き場の判定は [structure.md](./structure.md)。
