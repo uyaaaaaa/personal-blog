@@ -55,17 +55,25 @@ describe('getItem', () => {
 		await expect(source(store).getItem!('digest/2026-09-12/first.md')).resolves.toBe(body)
 	})
 
+	const SCHEMA = 'フロントマターがスキーマに合わない'
+	const UNREADABLE = 'フロントマターを読み取れない'
+
 	it.each([
-		['スキーマに無い項目', md(...VALID, 'category: blog')],
-		['項目の型が違う', md('title: 集めたもの', 'date: 2026/09/12')],
-		['項目が足りない', md('title: 集めたもの')],
-		['フロントマターが無い', '## 見出し\n'],
-		['YAML が壊れている', md('title: [閉じていない', 'date: 2026-09-12')],
-	])('%s 1件は落とし、キーと理由を1行で出す', async (_, body) => {
+		['スキーマに無い項目', md(...VALID, 'category: blog'), SCHEMA],
+		['項目の型が違う', md('title: 集めたもの', 'date: 2026/09/12'), SCHEMA],
+		['項目が足りない', md('title: 集めたもの'), SCHEMA],
+		['フロントマターが無い', '## 見出し\n', SCHEMA],
+		[
+			'壊れた YAML が別の型に復元される',
+			md('title: [閉じていない', 'date: 2026-09-12'),
+			SCHEMA,
+		],
+		['YAML を読み取れない', md('title: *missing', 'date: 2026-09-12'), UNREADABLE],
+	])('%s 1件は落とし、キーと理由を1行で出す', async (_, body, reason) => {
 		const store = storeOf({ 'digest/2026-09-12/broken.md': body })
 
 		await expect(source(store).getItem!('digest/2026-09-12/broken.md')).rejects.toThrow(
-			/^digest\/2026-09-12\/broken\.md: [^\n]+$/,
+			new RegExp(`^digest/2026-09-12/broken\\.md: ${reason}[^\\n]*$`),
 		)
 	})
 

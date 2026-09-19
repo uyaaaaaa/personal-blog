@@ -11,6 +11,7 @@ const reason = (error: unknown) => (error instanceof Error ? error.message : Str
 
 const validated = (key: string, body: string) => {
 	let data
+	// parseFrontMatter は大抵の壊れ方を値に復元して返すが、解決できない alias では投げる
 	try {
 		;({ data } = parseFrontMatter(body))
 	} catch (error) {
