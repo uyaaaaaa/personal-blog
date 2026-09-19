@@ -147,6 +147,7 @@ const vocabulary = buildVocabulary()
 
 const BREAKPOINTS = ['md', 'lg']
 
+const MEDIA_AT_RULE = /^media$/i
 const MEDIA_LENGTH = /(\d*\.?\d+)([a-z]+)\b/gi
 // メディアクエリの em は初期フォントサイズが基準なので rem と同じ
 const PIXELS_PER = { px: 1, rem: 16, em: 16 }
@@ -336,13 +337,13 @@ function isWhiteOrBlack(literal) {
 	)
 }
 
-// 条件の em は初期フォントサイズが基準で、宣言の em（その要素の文字サイズ）と別物。
-// PIXELS_PER と同じく rem として引く
-function untokenizedLengths(value, inCondition) {
+// メディアクエリの em は初期フォントサイズが基準で、宣言の em（その要素の文字サイズ）と
+// 別物。PIXELS_PER と同じく rem として引く
+function untokenizedLengths(value, inMedia) {
 	const found = []
 	for (const [literal, , number, unit] of stripNonValues(value).matchAll(LENGTH)) {
 		const spelled = unit.toLowerCase()
-		const section = inCondition && spelled === 'em' ? 'rem' : spelled
+		const section = inMedia && spelled === 'em' ? 'rem' : spelled
 		if (!vocabulary[section].has(Math.abs(Number(number)))) found.push(literal)
 	}
 	return found
@@ -430,12 +431,13 @@ const CHECKS = {
 		},
 		find(root) {
 			const found = []
-			const check = (value, node, inCondition) => {
-				for (const literal of untokenizedLengths(value, inCondition))
+			const check = (value, node, inMedia) => {
+				for (const literal of untokenizedLengths(value, inMedia))
 					found.push({ node, messageId: 'untokenized', data: { literal } })
 			}
 			root.walkDecls((decl) => check(decl.value, decl, false))
-			root.walkAtRules((rule) => check(rule.params, rule, true))
+			// em の基準が変わるのは @media だけ。@apply の任意値は宣言と同じ基準で引く
+			root.walkAtRules((rule) => check(rule.params, rule, MEDIA_AT_RULE.test(rule.name)))
 			return found
 		},
 	},

@@ -39,6 +39,10 @@ describe('no-untokenized-size', () => {
 					filename: 'a.vue',
 					code: sfc('@media (width >= 64em) { .a { top: 0; } }'),
 				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply tracking-[0.12em]; }'),
+				},
 			],
 			invalid: [
 				{
@@ -64,6 +68,11 @@ describe('no-untokenized-size', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('@media (width >= 56.25em) { .a { top: 0; } }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply tracking-[0.08em]; }'),
 					errors: [{ messageId: 'untokenized' }],
 				},
 				{
