@@ -35,6 +35,10 @@ describe('no-untokenized-size', () => {
 					filename: 'a.vue',
 					code: sfc('@media (min-width: 1024px) { .a { width: 1rem; } }'),
 				},
+				{
+					filename: 'a.vue',
+					code: sfc('@media (width >= 64em) { .a { top: 0; } }'),
+				},
 			],
 			invalid: [
 				{
@@ -55,6 +59,16 @@ describe('no-untokenized-size', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('@media (min-width: 900px) { .a { width: 1rem; } }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@media (width >= 56.25em) { .a { top: 0; } }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { width: 64em; }'),
 					errors: [{ messageId: 'untokenized' }],
 				},
 				{

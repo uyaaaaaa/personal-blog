@@ -336,10 +336,14 @@ function isWhiteOrBlack(literal) {
 	)
 }
 
-function untokenizedLengths(value) {
+// 条件の em は初期フォントサイズが基準で、宣言の em（その要素の文字サイズ）と別物。
+// PIXELS_PER と同じく rem として引く
+function untokenizedLengths(value, inCondition) {
 	const found = []
 	for (const [literal, , number, unit] of stripNonValues(value).matchAll(LENGTH)) {
-		if (!vocabulary[unit.toLowerCase()].has(Math.abs(Number(number)))) found.push(literal)
+		const spelled = unit.toLowerCase()
+		const section = inCondition && spelled === 'em' ? 'rem' : spelled
+		if (!vocabulary[section].has(Math.abs(Number(number)))) found.push(literal)
 	}
 	return found
 }
@@ -426,12 +430,12 @@ const CHECKS = {
 		},
 		find(root) {
 			const found = []
-			const check = (value, node) => {
-				for (const literal of untokenizedLengths(value))
+			const check = (value, node, inCondition) => {
+				for (const literal of untokenizedLengths(value, inCondition))
 					found.push({ node, messageId: 'untokenized', data: { literal } })
 			}
-			root.walkDecls((decl) => check(decl.value, decl))
-			root.walkAtRules((rule) => check(rule.params, rule))
+			root.walkDecls((decl) => check(decl.value, decl, false))
+			root.walkAtRules((rule) => check(rule.params, rule, true))
 			return found
 		},
 	},
