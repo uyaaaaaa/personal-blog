@@ -30,7 +30,6 @@ import styleTokens, {
 const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 const PALETTE_MESSAGE = `Tailwind 既定のパレット（text-red-500 等）は使わない。色は theme/tokens.ts のトークンの名前で書く。 ${TOKEN_URL}`
 
-// 見るのは <style> の中だけなので、ブロックを持てる .vue にだけ配る
 const styleRules = Object.fromEntries(
 	Object.keys(styleTokens.rules).map((name) => [`style/${name}`, 'error']),
 )
@@ -170,11 +169,8 @@ const INLINE_STYLE_MESSAGE =
 const STYLESHEET_MESSAGE =
 	'script でスタイルシートを組み立てない。規則の置き場は .vue の <style> と .css だけで、lint が読むのもそこだけ。'
 
-// 名乗るキーだけを通す。`[key]` も `...styles` もカスタムプロパティである保証が無い
 const CUSTOM_PROPERTY = '/^--/'
 const STYLE_BINDING = "VAttribute[directive=true][key.argument.name='style'] > VExpressionContainer"
-// 添字と引用符で綴りが変わるので、名前と文字列の両方を見る。
-// 代入先は el.style そのものと、その下のプロパティの2通り
 const STYLE_WRITE = [
 	"[left.object.property.name='style']",
 	"[left.object.property.value='style']",
@@ -190,7 +186,6 @@ const INLINE_STYLE = [
 		selector: "VAttribute[directive=false][key.name='style']",
 		message: INLINE_STYLE_MESSAGE,
 	},
-	// 配列・文字列・変数は宣言そのものを持つので、キーを見る前に落とす
 	{
 		selector: `${STYLE_BINDING} > *:not(ObjectExpression)`,
 		message: INLINE_STYLE_MESSAGE,
@@ -199,17 +194,15 @@ const INLINE_STYLE = [
 		selector: `${STYLE_BINDING} > ObjectExpression > :not(Property[key.value=${CUSTOM_PROPERTY}])`,
 		message: INLINE_STYLE_MESSAGE,
 	},
-	// 読み取りは通すので、書き込む経路だけを見る
+	// 読み取りは通す。宣言を書き換える経路だけを見る
 	{
 		selector: `AssignmentExpression:matches(${STYLE_WRITE})`,
 		message: INLINE_STYLE_MESSAGE,
 	},
-	// 宣言を書き換えるのはこの2つだけ。読み取り（getPropertyValue 等）は通す
 	{
 		selector: `${STYLE_CALL}[callee.property.name=${PROPERTY_WRITE}]:not([arguments.0.value=${CUSTOM_PROPERTY}])`,
 		message: INLINE_STYLE_MESSAGE,
 	},
-	// 宣言の並びをまとめて渡す経路。書き込む先の綴りは引数の側が持つ
 	{
 		selector: `CallExpression[callee.property.name='assign'] > MemberExpression:matches([property.name='style'], [property.value='style'])`,
 		message: INLINE_STYLE_MESSAGE,
@@ -220,14 +213,10 @@ const INLINE_STYLE = [
 	},
 ]
 
-// 規則を持つ集まりと、規則を差し込む呼び出し。
 // sheet は createElement か CSSStyleSheet を通った先にしかなく、どちらも別の行が落とす
 const STYLESHEET_API =
 	'/^(?:styleSheets|adoptedStyleSheets|insertRule|deleteRule|addRule|removeRule)$/'
 
-// 規則の綴り。宣言の中身は読まず、規則の形をしていることだけを見る。
-// 引用符で囲ったキー（JSON）は宣言ではないので、名前の前が語の縁のものだけを数える。
-// at-rule は本体か終端が続く。語だけを見ると、綴りを含む地の文が落ちる
 const AT_RULE =
 	'@(?:media|supports|font-face|import|keyframes|layer|page|property|charset|namespace)\\b[^{};]*[{;]'
 const RULE_BLOCK = '\\{[^{}]*(?<![\\w"\'-])[a-z-]+\\s*:[^{}]*\\}'
@@ -248,8 +237,7 @@ const STYLESHEET_ASSEMBLY = [
 			'CallExpression[callee.property.name=/^createElement(?:NS)?$/] > Literal[value=/^style$/i]',
 		message: STYLESHEET_MESSAGE,
 	},
-	// 流し込む先（textContent・選んだ要素・Blob）は数え切れないので、流すものの側を見る。
-	// 上の呼び出しに渡すだけの綴りは、その行が落とすので二重に数えない
+	// 流し込む先は数え切れないので、流すものの側を見る
 	{
 		selector: `:matches(Literal[value=/${STYLESHEET_STRING}/i], TemplateElement[value.cooked=/${STYLESHEET_STRING}/i]):not(${INSERT_CALL} *)`,
 		message: STYLESHEET_MESSAGE,

@@ -526,7 +526,6 @@ describe('スタイルの置き場', () => {
 		expect(await stylesheetsIn('app/utils/a.ts', `const t = '{"top": "0"}'`)).toBe(0)
 		expect(await stylesheetsIn('app/utils/a.ts', `const t = 'a[href="#x"]'`)).toBe(0)
 		expect(await stylesheetsIn('app/utils/a.ts', "document.querySelector('style')")).toBe(0)
-		// 規則の綴りを含む地の文。本体も終端も続かない
 		expect(
 			await stylesheetsIn('app/utils/a.ts', "const label = '表示は @media で出し分ける'"),
 		).toBe(0)
