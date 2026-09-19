@@ -11,7 +11,6 @@ const reason = (error: unknown) => (error instanceof Error ? error.message : Str
 
 const validated = (key: string, body: string) => {
 	let data
-	// parseFrontMatter は大抵の壊れ方を値に復元して返すが、解決できない alias では投げる
 	try {
 		;({ data } = parseFrontMatter(body))
 	} catch (error) {
@@ -28,8 +27,6 @@ const validated = (key: string, body: string) => {
 	throw new Error(`${key}: フロントマターがスキーマに合わない（${issues.join(' / ')}）`)
 }
 
-// @nuxt/content は getItem の失敗だけを warn で読み飛ばし、getKeys の失敗はビルドごと落とす。
-// 1件の破損と収集の全滅を同じ扱いにしないため、握る場所をこの2つで分ける
 export const remoteCollection = (store: RemoteStore) =>
 	defineCollectionSource({
 		getKeys: async () => {
@@ -43,7 +40,6 @@ export const remoteCollection = (store: RemoteStore) =>
 		getItem: async (key: string) => validated(key, await store.get(key)),
 	})
 
-// 読む先は #312 が差し替える。それまで digest は空で組み上がる
 export const emptyStore: RemoteStore = {
 	list: async () => [],
 	get: async () => '',
