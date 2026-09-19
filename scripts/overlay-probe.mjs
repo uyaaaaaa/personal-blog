@@ -780,6 +780,38 @@ const probes = [
 		},
 	},
 	{
+		// 跨いだ先ではドロワーが display で消え、開いたままだと背後を止めるものが見えなくなる
+		name: 'shortcut-ドロワーを開いたまま md を跨いだ Cmd+K',
+		covering: true,
+		shortcut: true,
+		widths: [375],
+		run: async (p) => {
+			await p.openCover()
+			sent('幅を 1280 に広げる')
+			await p.setWidth(1280)
+			await p.evaluate('await $frames(3)')
+			const key = await p.pressShortcut(META)
+			await sleep(TRANSITION)
+			const state = await p.evaluate(`
+				return {
+					...$state(),
+					cover: getComputedStyle(document.querySelector(COVER)).visibility,
+					inHeaderInput:
+						document.activeElement === document.querySelector('.header-search .search-input'),
+				}
+			`)
+			await p.setWidth(375)
+			return {
+				observed: `${show(state, ['overflow', 'active'])} ドロワー="${state.cover}" prevented=${key?.prevented}`,
+				ok:
+					state.cover === 'hidden' &&
+					state.overflow !== 'hidden' &&
+					state.inHeaderInput &&
+					key?.prevented === true,
+			}
+		},
+	},
+	{
 		name: 'focus-return/ショートカット',
 		shortcut: true,
 		run: async (p) => {

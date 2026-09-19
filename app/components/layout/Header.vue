@@ -170,13 +170,15 @@
 		// 開き直すと入力済みが消えるので、開いている間はブラウザの検索を止めるだけ
 		if (isSearchOpen.value) return
 
+		// ドロワーは幅を跨いでも開いたまま残る。閉じずに寄せると、背後を止めたまま
+		// 閉じるものが画面から消える。戻し先のボタンを覆うのも同じ
+		closeMenu()
+
 		if (inlineSearchRef.value?.isVisible()) {
 			inlineSearchRef.value.focus()
 			return
 		}
 
-		// ドロワーは検索より下の層に残り、開いたままだと戻し先のボタンを覆う
-		closeMenu()
 		openSearchFrom(mobileSearchRef.value)
 	}
 
