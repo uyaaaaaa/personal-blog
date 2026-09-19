@@ -10,3 +10,10 @@ export const articleSchema = z
 		category: z.enum(['blog', 'book']),
 	})
 	.strict()
+
+export const digestSchema = z
+	.object({
+		title: z.string(),
+		date: z.string().date(),
+	})
+	.strict()
