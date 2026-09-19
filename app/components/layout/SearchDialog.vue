@@ -41,11 +41,17 @@
 					ref="inputRef"
 					v-model="query"
 					type="text"
-					role="searchbox"
+					role="combobox"
 					enterkeyhint="search"
 					class="search-input"
 					placeholder="Search articles by title or tag"
 					aria-label="Search articles by title or tag"
+					aria-autocomplete="list"
+					:aria-expanded="results.length > 0"
+					:aria-controls="results.length > 0 ? LIST_ID : undefined"
+					:aria-activedescendant="
+						results.length > 0 ? `${LIST_ID}-${activeIndex}` : undefined
+					"
 					autocomplete="off"
 					@keydown="onInputKeydown"
 					@compositionstart="startComposition"
@@ -60,32 +66,14 @@
 			>
 				{{ emptyMessage }}
 			</p>
-			<ul
+			<SearchResults
 				v-else
-				ref="resultsRef"
-				class="search-results"
-			>
-				<li
-					v-for="(article, index) in results"
-					:key="article.path"
-				>
-					<NuxtLink
-						:to="article.path"
-						class="search-result border-l-2 border-l-transparent"
-						:class="{ 'is-active md:border-l-accent': index === activeIndex }"
-						prefetch-on="interaction"
-						@click="emit('close')"
-						@pointermove="activeIndex = index"
-					>
-						<span class="search-result-title">{{ article.title }}</span>
-						<time
-							class="search-result-date"
-							:datetime="article.date"
-							>{{ formatDate(article.date) }}</time
-						>
-					</NuxtLink>
-				</li>
-			</ul>
+				:id="LIST_ID"
+				:results="results"
+				:active-index="activeIndex"
+				@select="emit('close')"
+				@activate="activeIndex = $event"
+			/>
 
 			<p
 				v-if="results.length > 0"
@@ -98,13 +86,13 @@
 </template>
 
 <script setup lang="ts">
+	import SearchResults from '~/components/layout/SearchResults.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
+	import { useArticleSearch } from '~/composables/useArticleSearch'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
-	import { usePublishedArticles } from '~/composables/usePublishedArticles'
-	import { formatDate } from '~/utils/date'
-	import { searchArticles } from '~/utils/search'
-	import { deltaToReveal } from '~/utils/scroll'
+
+	const LIST_ID = 'search-dialog-results'
 
 	const props = defineProps<{
 		isOpen: boolean
@@ -114,14 +102,19 @@
 		(e: 'close'): void
 	}>()
 
-	const { data: articles } = usePublishedArticles()
+	const {
+		query,
+		results,
+		activeIndex,
+		activeArticle,
+		moveActive,
+		startComposition,
+		endComposition,
+		isComposingKey,
+		clear,
+	} = useArticleSearch()
 
-	const query = ref('')
-	const activeIndex = ref(0)
 	const inputRef = ref<HTMLInputElement | null>(null)
-	const resultsRef = ref<HTMLElement | null>(null)
-
-	const results = computed(() => searchArticles(articles.value, query.value))
 
 	const emptyMessage = computed(() =>
 		query.value.trim() === ''
@@ -129,38 +122,13 @@
 			: 'No articles found.',
 	)
 
-	const moveActive = (delta: number) => {
-		const count = results.value.length
-		if (count === 0) return
-
-		activeIndex.value = (activeIndex.value + delta + count) % count
-	}
-
 	const openActive = () => {
-		const article = results.value[activeIndex.value]
+		const article = activeArticle.value
 		if (!article) return
 
 		emit('close')
 		navigateTo(article.path)
 	}
-
-	watch(query, () => {
-		activeIndex.value = 0
-		if (resultsRef.value) resultsRef.value.scrollTop = 0
-	})
-
-	watch(activeIndex, async () => {
-		await nextTick()
-
-		const container = resultsRef.value
-		const active = container?.querySelector<HTMLElement>('.is-active')
-		if (!container || !active) return
-
-		container.scrollTop += deltaToReveal(
-			container.getBoundingClientRect(),
-			active.getBoundingClientRect(),
-		)
-	})
 
 	// 押した位置が外側のときだけ閉じる。入力欄からドラッグして外で離すと click は
 	// オーバーレイに来るため、click だけで判定すると選択のたびに閉じてしまう
@@ -173,26 +141,6 @@
 	const onOverlayClick = () => {
 		if (pressedOnOverlay) emit('close')
 	}
-
-	// 変換中のキーは IME のもの。横取りすると変換の確定も取り消しも奪う。
-	// Safari は compositionend を keydown より先に出すため確定と取り消しは
-	// isComposing が false で届き、変換の終わり際は自前で覚えておくしかない
-	let composing = false
-	let endFrame = 0
-
-	// 変換が切れてすぐ次が始まる IME もあり、待たせたフレームは始まりで取り消す
-	const startComposition = () => {
-		cancelAnimationFrame(endFrame)
-		composing = true
-	}
-
-	const endComposition = () => {
-		endFrame = requestAnimationFrame(() => {
-			composing = false
-		})
-	}
-
-	const isComposingKey = (event: KeyboardEvent) => event.isComposing || composing
 
 	// Tailwind の md。ヘッダーが検索の入口を PC 用と SP 用に出し分けるのと同じ幅で、
 	// テンプレートが選択中の縦線とキーの案内を出すのもここから。ずれると見えない選択に
@@ -231,8 +179,7 @@
 		(isOpen) => {
 			if (!isOpen) return
 
-			composing = false
-			query.value = ''
+			clear()
 			focusByGesture(inputRef.value)
 		},
 		{ flush: 'post' },
@@ -327,42 +274,6 @@
 		color: var(--color-sub);
 	}
 
-	.search-results {
-		list-style: none;
-		min-height: 0;
-		margin: 0;
-		padding: 0.5rem;
-		overflow-y: auto;
-		overscroll-behavior: contain;
-	}
-
-	.search-result {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 1rem;
-		padding: 0.5rem 0.75rem;
-		/* 縦線は幅で出し分けるので border-left は Tailwind 側だけに置く。ここに書くと
-		   scoped の詳細度が md: のクラスに勝ち、色が黙って出なくなる */
-		border-radius: 0.375rem;
-		color: var(--color-main);
-		transition: background-color 0.15s;
-	}
-
-	.search-result:hover,
-	.search-result.is-active {
-		background-color: var(--color-surface-subtle);
-	}
-
-	.search-result-title {
-		flex: 1;
-		min-width: 0;
-		font-size: 0.875rem;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
 	/* 出し分けはTailwindの md: に統一しているため、displayはここで指定しない */
 	.search-keys {
 		flex: none;
@@ -372,13 +283,5 @@
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
 		color: var(--color-sub);
-	}
-
-	.search-result-date {
-		flex: none;
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		color: var(--color-sub);
-		font-variant-numeric: tabular-nums;
 	}
 </style>

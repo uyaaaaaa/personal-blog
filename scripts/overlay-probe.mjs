@@ -27,12 +27,27 @@ export const OVERLAYS = {
 		covering: 'drawer',
 		overlay: '.search-overlay',
 		trap: '.search-dialog',
-		input: '.search-input',
-		link: '.search-result',
-		scroller: '.search-results',
+		// 入力欄も結果もヘッダーの検索と同じクラスで出るので、被せた側に限って引く
+		input: '.search-dialog .search-input',
+		link: '.search-dialog .search-result',
+		scroller: '.search-dialog .search-results',
 		dialog: true,
 		restoresOnOutsideClick: true,
-		widths: [375, 1280],
+		widths: [375],
+	},
+	// PC の入口。ボタンを押して開くのではなく、ヘッダーの入力欄に打つと候補が出る
+	'search-inline': {
+		trigger: '.header-search .search-input',
+		shortcutFocus: 'K',
+		opensByInput: true,
+		overlay: '.search-panel',
+		scrim: '.search-scrim',
+		trap: '.header-search',
+		input: '.header-search .search-input',
+		link: '.header-search .search-result',
+		scroller: '.header-search .search-results',
+		dialog: false,
+		widths: [1280],
 	},
 	drawer: {
 		trigger: '.mobile-menu-btn',
@@ -172,6 +187,7 @@ const PAGE_HELPERS = `
 	const TRIGGER = ${JSON.stringify(config.trigger)}
 	const OVERLAY = ${JSON.stringify(config.overlay)}
 	const TRAP = ${JSON.stringify(config.trap)}
+	const SCRIM = ${JSON.stringify(config.scrim ?? null)}
 	const INPUT = ${JSON.stringify(config.input)}
 	const LINK = ${JSON.stringify(config.link)}
 	const COVER = ${JSON.stringify(covering?.overlay ?? null)}
@@ -198,6 +214,8 @@ const PAGE_HELPERS = `
 		ring: $ring(document.activeElement),
 		path: $path(),
 		query: INPUT ? (document.querySelector(INPUT)?.value ?? null) : null,
+		scrim: SCRIM ? getComputedStyle(document.querySelector(SCRIM)).visibility : null,
+		width: Math.round(document.querySelector(TRAP).getBoundingClientRect().width),
 	})
 	const $router = () => document.querySelector('#__nuxt')?.__vue_app__?.config?.globalProperties?.$router
 	// URL は popstate で先に変わる。閉じる側が見ているのはルータが移り終えた後の route
@@ -356,7 +374,7 @@ const start = async () => {
 				})
 			}
 		`)
-		await pressKey(config.shortcut, modifiers)
+		await pressKey(config.shortcut ?? config.shortcutFocus, modifiers)
 		await evaluate('await $frames(2)')
 		return evaluate(`
 			const event = window.__shortcutEvent
@@ -437,6 +455,23 @@ const start = async () => {
 
 	// synthetic は click でフォーカスを動かさないブラウザ（Safari / Firefox）と同じ状況を作る。
 	const open = async ({ synthetic = false, touch = false } = {}) => {
+		// 押して開くものではないので、寄せて打つところまでが「開く」
+		if (config.opensByInput) {
+			for (let attempt = 0; attempt < 8; attempt++) {
+				await click(config.input, '入力欄')
+				await typeQuery()
+				const opened = await waitFor(
+					`getComputedStyle(document.querySelector(OVERLAY)).visibility === 'visible'`,
+					1000,
+				)
+				if (opened) {
+					await evaluate('return $settled(OVERLAY)')
+					return
+				}
+			}
+			throw new Error('打っても候補が出ない')
+		}
+
 		for (let attempt = 0; attempt < 8; attempt++) {
 			if (synthetic) {
 				sent('トリガに合成 click（フォーカスを動かさない）')
@@ -492,7 +527,14 @@ const start = async () => {
 
 	const typeQuery = async () => {
 		for (const query of ['a', 'vim', 'e', 'i']) {
-			await evaluate(`document.querySelector(INPUT).focus()`)
+			await evaluate(`
+				const input = document.querySelector(INPUT)
+				input.focus()
+				if (input.value !== '') {
+					input.value = ''
+					input.dispatchEvent(new Event('input', { bubbles: true }))
+				}
+			`)
 			await cdp.send('Input.insertText', { text: query })
 			await evaluate('await $frames(2)')
 			if (await evaluate(`return !!$vis(LINK)`)) {
@@ -509,7 +551,7 @@ const start = async () => {
 	}
 
 	const reveal = async () => {
-		if (config.input) await typeQuery()
+		if (config.input && !config.opensByInput) await typeQuery()
 		if (config.expand) {
 			await click(config.expand, '折りたたみ')
 			if (!(await waitFor(`getComputedStyle($vis(LINK)).visibility === 'visible'`))) {
@@ -1399,6 +1441,127 @@ const probes = [
 		},
 	},
 	{
+		name: 'inline-空の入力では何も出さず、幅だけ伸びる',
+		opensByInput: true,
+		run: async (p) => {
+			const closed = await p.evaluate('return $state()')
+			await p.click(config.input, '入力欄')
+			await sleep(TRANSITION)
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: `${show(state, ['overlay', 'scrim', 'overflow'])} 幅=${closed.width}→${state.width}`,
+				ok:
+					state.overlay === 'hidden' &&
+					state.scrim === 'hidden' &&
+					state.overflow !== 'hidden' &&
+					state.width > closed.width,
+			}
+		},
+	},
+	{
+		name: 'inline-打つと候補とスクリムが出て背後が止まる',
+		opensByInput: true,
+		run: async (p) => {
+			await p.open()
+			const open = await p.evaluate('return $state()')
+			await p.pressKey('Escape')
+			await p.waitClosed()
+			const closed = await p.evaluate('return $state()')
+			return {
+				observed: `開: ${show(open, ['overlay', 'scrim', 'overflow'])} / Escape後: ${show(closed, ['overlay', 'scrim', 'overflow', 'query'])}`,
+				ok:
+					open.overlay === 'visible' &&
+					open.scrim === 'visible' &&
+					open.overflow === 'hidden' &&
+					closed.overlay === 'hidden' &&
+					closed.scrim === 'hidden' &&
+					closed.overflow !== 'hidden' &&
+					closed.query === open.query,
+			}
+		},
+	},
+	{
+		name: 'inline-2度目の Escape で語が消えて幅が戻る',
+		opensByInput: true,
+		run: async (p) => {
+			const before = await p.evaluate('return $state()')
+			await p.open()
+			await p.pressKey('Escape')
+			await p.waitClosed()
+			await p.pressKey('Escape')
+			await sleep(TRANSITION)
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: `${show(state, ['overlay', 'query', 'active'])} 幅=${before.width}→${state.width}`,
+				ok:
+					state.overlay === 'hidden' &&
+					state.query === '' &&
+					state.width === before.width,
+			}
+		},
+	},
+	{
+		name: 'inline-ヘッダーの外を押すと閉じ、語は残る',
+		opensByInput: true,
+		run: async (p) => {
+			await p.open()
+			const open = await p.evaluate('return $state()')
+			const point = await p.evaluate(`
+				const box = document.querySelector(SCRIM).getBoundingClientRect()
+				return { x: box.left + box.width / 2, y: box.bottom - 8 }
+			`)
+			sent('スクリムの下の方を実クリック')
+			await p.mouse('mousePressed', point, 1)
+			await p.mouse('mouseReleased', point, 0)
+			await p.waitClosed()
+			const state = await p.evaluate('return $state()')
+			return {
+				observed: show(state, ['overlay', 'scrim', 'overflow', 'query']),
+				ok:
+					state.overlay === 'hidden' &&
+					state.scrim === 'hidden' &&
+					state.overflow !== 'hidden' &&
+					state.query === open.query,
+			}
+		},
+	},
+	{
+		name: 'shortcut-Cmd+K で入力欄に寄り、打った語を選び直す',
+		shortcutFocus: true,
+		run: async (p) => {
+			await p.open()
+			const open = await p.evaluate('return $state()')
+			sent('activeElement を blur')
+			await p.evaluate(`document.activeElement?.blur()`)
+
+			let key = null
+			for (let attempt = 0; attempt < 8; attempt++) {
+				key = await p.pressShortcut(META)
+				const inInput = await p.evaluate(
+					`return document.activeElement === document.querySelector(INPUT)`,
+				)
+				if (inInput) break
+			}
+
+			const state = await p.evaluate(`
+				const input = document.querySelector(INPUT)
+				return {
+					...$state(),
+					inInput: document.activeElement === input,
+					selected: input.selectionStart === 0 && input.selectionEnd === input.value.length,
+				}
+			`)
+			return {
+				observed: `${show(state, ['active', 'query'])} 全選択=${state.selected} prevented=${key?.prevented}`,
+				ok:
+					state.inInput &&
+					state.selected &&
+					state.query === open.query &&
+					key?.prevented === true,
+			}
+		},
+	},
+	{
 		// 選択だけ動いて器が追わないと、見えていない行を選んだまま確定して飛ぶ
 		name: 'キー-↓↑ でスクローラが選択を追う',
 		input: true,
@@ -1462,6 +1625,8 @@ const main = async () => {
 				if (item.covering && !covering) continue
 				if (item.scroller && !config.scroller) continue
 				if (item.dialog && !config.dialog) continue
+				if (item.opensByInput && !config.opensByInput) continue
+				if (item.shortcutFocus && !config.shortcutFocus) continue
 				if (item.restoresOnOutsideClick && !config.restoresOnOutsideClick) continue
 				if (item.widths && !item.widths.includes(width)) continue
 

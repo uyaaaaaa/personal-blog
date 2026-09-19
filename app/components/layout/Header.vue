@@ -45,48 +45,10 @@
 				<span>Tech Blog</span>
 			</NuxtLink>
 
-			<div class="mx-8 hidden max-w-search-trigger flex-1 md:flex">
-				<button
-					ref="desktopSearchRef"
-					type="button"
-					class="group flex w-full items-center justify-between rounded-md border border-border bg-surface-subtle px-4 py-2 text-sub transition-color hover:border-accent"
-					aria-haspopup="dialog"
-					:aria-expanded="isSearchOpen"
-					@click="openSearch"
-				>
-					<span class="flex items-center gap-2">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="h-4 w-4 group-hover:text-accent"
-						>
-							<circle
-								cx="11"
-								cy="11"
-								r="8"
-							></circle>
-							<line
-								x1="21"
-								y1="21"
-								x2="16.65"
-								y2="16.65"
-							></line>
-						</svg>
-						<span class="text-sm">Search...</span>
-					</span>
-					<span
-						class="rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-xs text-sub"
-						>⌘K</span
-					>
-				</button>
-			</div>
+			<HeaderSearch
+				ref="inlineSearchRef"
+				@update:open="isInlineSearchOpen = $event"
+			/>
 
 			<div class="flex items-stretch gap-1 self-stretch md:gap-5">
 				<button
@@ -141,6 +103,11 @@
 		</div>
 	</header>
 
+	<div
+		class="search-scrim"
+		:class="{ 'is-open': isInlineSearchOpen }"
+	/>
+
 	<SearchDialog
 		:is-open="isSearchOpen"
 		@close="closeSearch"
@@ -148,6 +115,7 @@
 </template>
 
 <script setup lang="ts">
+	import HeaderSearch from '~/components/layout/HeaderSearch.vue'
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
@@ -160,7 +128,8 @@
 
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)
-	const desktopSearchRef = ref<HTMLElement | null>(null)
+	const isInlineSearchOpen = ref(false)
+	const inlineSearchRef = ref<InstanceType<typeof HeaderSearch> | null>(null)
 	const mobileSearchRef = ref<HTMLElement | null>(null)
 
 	// 戻し先はデスクトップとSPで別のボタンになるので、押されたものを覚える
@@ -191,31 +160,32 @@
 		searchOpener = null
 	}
 
-	// 隠れている側に戻すと、閉じた後のフォーカスが見えない要素に乗る
-	const visibleSearchButton = () =>
-		[desktopSearchRef.value, mobileSearchRef.value].find(
-			(button) => button && button.getClientRects().length > 0,
-		) ?? null
-
 	const onSearchShortcut = (event: KeyboardEvent) => {
 		if (!isSearchShortcut(event)) return
 		// 変換中の Ctrl+K は mac の IME がカタカナ変換に使う。横取りしない
 		if (event.isComposing) return
 
 		event.preventDefault()
+
+		// PC は入力欄がヘッダーに出ている。開き直す先が無いので、寄せて選ぶだけ
+		if (inlineSearchRef.value?.isVisible()) {
+			inlineSearchRef.value.focus()
+			return
+		}
+
 		// 開き直すと入力済みが消えるので、開いている間はブラウザの検索を止めるだけ
 		if (isSearchOpen.value) return
 
 		// ドロワーは検索より下の層に残り、開いたままだと戻し先のボタンを覆う
 		closeMenu()
-		openSearchFrom(visibleSearchButton())
+		openSearchFrom(mobileSearchRef.value)
 	}
 
 	onMounted(() => window.addEventListener('keydown', onSearchShortcut))
 	onBeforeUnmount(() => window.removeEventListener('keydown', onSearchShortcut))
 
-	watch([isMenuOpen, isSearchOpen], ([menuOpen, searchOpen]) => {
-		document.body.classList.toggle('scroll-locked', menuOpen || searchOpen)
+	watch([isMenuOpen, isSearchOpen, isInlineSearchOpen], (open) => {
+		document.body.classList.toggle('scroll-locked', open.some(Boolean))
 	})
 
 	// リンクを踏まない移動（ブラウザバック）でも、被せたものは残さない
@@ -224,6 +194,7 @@
 		() => {
 			closeMenu()
 			closeSearch()
+			inlineSearchRef.value?.close()
 		},
 	)
 </script>
@@ -273,5 +244,30 @@
 	.logo-mark {
 		flex: none;
 		display: block;
+	}
+
+	/* ヘッダーより下の層に置く。入力欄と候補は落とさず、ページ側だけを落とす */
+	.search-scrim {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100vh;
+		height: 100dvh;
+		background-color: var(--color-overlay-subtle);
+		z-index: 90;
+		opacity: 0;
+		visibility: hidden;
+		transition:
+			opacity 0.2s ease-in-out,
+			visibility 0s linear 0.2s;
+	}
+
+	.search-scrim.is-open {
+		opacity: 1;
+		visibility: visible;
+		transition:
+			opacity 0.2s ease-in-out,
+			visibility 0s;
 	}
 </style>
