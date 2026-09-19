@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { decide, rules } from '~~/.claude/hooks/review-guard.mjs'
+import { decide, resolve, rules } from '~~/.claude/hooks/review-guard.mjs'
 
 const SOURCE = readFileSync(
 	new URL('../../../.claude/skills/review/SKILL.md', import.meta.url),
@@ -130,8 +130,53 @@ describe('投稿の呼び出し', () => {
 		expect(decide(run('gh workflow run lint.yml'), ask({ review: review() }))).toBeNull()
 	})
 
-	it('読めない JSON を落とす', () => {
-		expect(decide(dispatch(), ask({ review: '{' }))?.reason).toMatch(/JSON/)
+	it('綴りの違う発火も同じ判定で見る', () => {
+		const loose = review({ event: 'COMMENT' })
+		for (const name of ['Review', '"review.yml"', '.github/workflows/review.yml']) {
+			const called = run(`gh workflow run ${name} -f pr=294 -F review=@${PATH}`)
+			expect(decide(called, ask({ review: loose }))?.reason).toMatch(/REQUEST_CHANGES/)
+		}
+	})
+
+	it('ワークフローを通らない投稿を落とす', () => {
+		const api = run('gh api --method POST repos/o/r/pulls/294/reviews --input review.json')
+		expect(decide(api, ask())?.reason).toMatch(/review\.yml/)
+		expect(decide(run('gh pr review 294 --approve'), ask())?.reason).toMatch(/review\.yml/)
+
+		const tooled = {
+			hook_event_name: 'PreToolUse',
+			tool_name: 'mcp__github__pull_request_review_write',
+			tool_input: { pullNumber: 294, method: 'submit_pending', event: 'APPROVE' },
+		}
+		expect(decide(tooled, ask())?.reason).toMatch(/review\.yml/)
+	})
+
+	it('投稿でない Bash は見ない', () => {
+		const quoted = run(`echo "gh workflow run review.yml -f pr=294" >> notes.md`)
+		expect(decide(quoted, ask({ review: review() }))).toBeNull()
+
+		const told = run("git commit -m 'gh pr review をやめる'")
+		expect(decide(told, ask())).toBeNull()
+
+		const listed = run('gh api repos/o/r/pulls/294/reviews')
+		expect(decide(listed, ask())).toBeNull()
+	})
+
+	it('区切りの直後の発火は見る', () => {
+		const chained = run(`npm test && gh workflow run review.yml -f pr=294 -F review=@${PATH}`)
+		const loose = review({ event: 'COMMENT' })
+		expect(decide(chained, ask({ review: loose }))?.reason).toMatch(/REQUEST_CHANGES/)
+	})
+
+	it('読めない JSON は黙って通す', () => {
+		expect(decide(dispatch(), ask({ review: '{' }))).toBeNull()
+	})
+})
+
+describe('payload の置き場', () => {
+	it('絶対パスはそのまま、相対パスだけ根に足す', () => {
+		expect(resolve('/tmp/review.json', '/repo')).toBe('/tmp/review.json')
+		expect(resolve('review.json', '/repo')).toBe('/repo/review.json')
 	})
 })
 

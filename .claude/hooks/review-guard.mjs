@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
@@ -237,9 +237,21 @@ const validated = (payload, it, seen) => {
 const PR = /-f\s+pr=(\d+)/
 const PAYLOAD = /-F\s+review=@(\S+)/
 
+// コマンドの先頭か区切りの直後だけを見る。引用符の中やコミットメッセージの
+// 言及に当たると、投稿でない Bash を落とす
+const LEAD = String.raw`(?:^\s*|[\n;&|(]\s*)`
+const RUN = new RegExp(`${LEAD}gh\\s+workflow\\s+run\\s+["']?([^\\s"']+)["']?`)
+
+// gh は同じワークフローをファイル名でも ID でも表示名でも受ける
+const plain = (name) =>
+	name
+		.replace(/^.*\//, '')
+		.replace(/\.ya?ml$/, '')
+		.toLowerCase()
+
 const dispatched = (command, it) => {
-	const named = new RegExp(`gh\\s+workflow\\s+run\\s+${it.workflow.replace(/\./g, '\\.')}(\\s|$)`)
-	if (!named.test(command)) return null
+	const found = RUN.exec(command)?.[1]
+	if (found === undefined || plain(found) !== plain(it.workflow)) return null
 	return { pr: PR.exec(command)?.[1], path: PAYLOAD.exec(command)?.[1] }
 }
 
@@ -253,8 +265,9 @@ const reviewed = (input, it, ask) => {
 	let payload
 	try {
 		payload = JSON.parse(ask.payload(found.path))
-	} catch (error) {
-		return { reason: `${found.path} を JSON として読めない（${error.message}）` }
+	} catch {
+		// 読めない回に止めると、フック自身の不具合でセッションが進まなくなる
+		return null
 	}
 
 	const reason = validated(payload, it, ask.state(key(found.pr), input).read())
@@ -272,9 +285,11 @@ const recorded = (input, it, ask) => {
 
 const root = () => process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
 
+export const resolve = (path, base) => (isAbsolute(path) ? path : join(base, path))
+
 const ASK = {
 	skill: () => readFileSync(join(root(), SKILL), 'utf8'),
-	payload: (path) => readFileSync(join(root(), path), 'utf8'),
+	payload: (path) => readFileSync(resolve(path, root()), 'utf8'),
 	evidence: () => {
 		try {
 			return readdirSync(join(root(), EVIDENCE))
@@ -285,23 +300,38 @@ const ASK = {
 	state,
 }
 
-// 投稿は1本のワークフローに寄っているので、Bash の中身を見るのはその行だけ
-const DISPATCH = /gh\s+workflow\s+run/
+const DISPATCH = new RegExp(`${LEAD}gh\\s+workflow\\s+run\\b`)
+// ワークフロー以外から /pulls/N/reviews に届く経路。どれも書き手自身のトークンで submit する
+const DIRECT = new RegExp(
+	`${LEAD}gh\\s+(?:api\\b(?=[^\\n]*\\bPOST\\b)[^\\n]*/pulls/\\d+/reviews\\b|pr\\s+review\\b)`,
+)
+const TOOLED = /^mcp__.*pull_request_review/
+
+const direct = (it) => ({
+	reason: `自分のトークンで submit しない。${it.workflow} の発火に渡す（→ ${SKILL} の6）`,
+})
 
 export const decide = (input, ask = ASK) => {
 	const tool = input.tool_name ?? ''
 	const command = input.tool_input?.command ?? ''
-	if (tool !== 'Skill' && !(tool === 'Bash' && DISPATCH.test(command))) return null
+	const bash = tool === 'Bash'
+	const seen =
+		tool === 'Skill' ||
+		TOOLED.test(tool) ||
+		(bash && (DISPATCH.test(command) || DIRECT.test(command)))
+	if (!seen) return null
 
 	const it = rules(ask.skill())
 	if (!complete(it)) return null
 
 	if (input.hook_event_name === 'PostToolUse') {
-		if (tool === 'Bash') recorded(input, it, ask)
+		if (bash) recorded(input, it, ask)
 		return null
 	}
 
-	return tool === 'Skill' ? skilled(input, it, ask) : reviewed(input, it, ask)
+	if (tool === 'Skill') return skilled(input, it, ask)
+	if (TOOLED.test(tool) || DIRECT.test(command)) return direct(it)
+	return reviewed(input, it, ask)
 }
 
 if (process.argv[1]?.endsWith('review-guard.mjs')) {
