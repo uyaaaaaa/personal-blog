@@ -64,6 +64,7 @@ const LENGTH_SECTIONS = [
 	'spacing',
 	'fontSize',
 	'lineHeight',
+	'letterSpacing',
 	'borderRadius',
 	'borderWidth',
 	'outlineWidth',
@@ -77,7 +78,7 @@ const LENGTH_SECTIONS = [
 	'screens',
 ]
 
-const LENGTH = /(-?)(\d*\.?\d+)(px|rem)\b/gi
+const LENGTH = /(-?)(\d*\.?\d+)(px|r?em)\b/gi
 const HEX = /#[0-9a-f]{3,8}\b/gi
 const COLOR_FUNCTION = /\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix)\(\s*[^)]*\)/gi
 const QUOTED = /'[^']*'|"[^"]*"/g
@@ -133,7 +134,7 @@ function buildVocabulary() {
 	for (const section of LENGTH_SECTIONS) collectStrings(theme[section], strings)
 	collectStrings(sizes, strings)
 
-	const vocabulary = { px: new Set(), rem: new Set() }
+	const vocabulary = { px: new Set(), rem: new Set(), em: new Set() }
 	for (const string of strings) {
 		for (const [, , number, unit] of string.matchAll(LENGTH)) {
 			vocabulary[unit.toLowerCase()].add(Number(number))

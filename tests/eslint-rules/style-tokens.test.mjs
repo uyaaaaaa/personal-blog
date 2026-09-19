@@ -22,7 +22,8 @@ describe('no-untokenized-size', () => {
 				},
 				{ filename: 'a.vue', code: sfc('.a { width: 960px; max-width: 1200px; }') },
 				{ filename: 'a.vue', code: sfc('.a { transform: translateY(-4px); }') },
-				{ filename: 'a.vue', code: sfc('.a { letter-spacing: 0.08em; height: 60vh; }') },
+				{ filename: 'a.vue', code: sfc('.a { letter-spacing: 0.12em; height: 60vh; }') },
+				{ filename: 'a.vue', code: sfc('.a { letter-spacing: -0.025em; }') },
 				{ filename: 'a.vue', code: sfc(".a { content: '17px'; }") },
 				{
 					filename: 'a.vue',
@@ -44,6 +45,11 @@ describe('no-untokenized-size', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('.a { font-size: 0.95rem; }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { letter-spacing: 0.08em; }'),
 					errors: [{ messageId: 'untokenized' }],
 				},
 				{
