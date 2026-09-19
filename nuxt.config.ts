@@ -76,7 +76,12 @@ export default defineNuxtConfig({
 		preset: 'cloudflare-pages',
 		prerender: {
 			crawlLinks: true,
-			routes: ['/', '/404.html', ...CATEGORIES.map((category) => `/category/${category}`)],
+			routes: [
+				'/',
+				'/profile',
+				'/404.html',
+				...CATEGORIES.map((category) => `/category/${category}`),
+			],
 		},
 		cloudflare: {
 			pages: {

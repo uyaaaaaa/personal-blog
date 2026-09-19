@@ -168,6 +168,33 @@
 							<span class="drawer-row-label">Home</span>
 						</NuxtLink>
 
+						<NuxtLink
+							to="/profile"
+							class="drawer-row"
+							prefetch-on="interaction"
+							@click="closeDrawer"
+						>
+							<svg
+								class="drawer-icon"
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+							>
+								<circle
+									cx="12"
+									cy="8"
+									r="4"
+								/>
+								<path d="M4 21a8 8 0 0 1 16 0" />
+							</svg>
+							<span class="drawer-row-label">Profile</span>
+						</NuxtLink>
+
 						<p class="drawer-section-label">Explore</p>
 
 						<button
