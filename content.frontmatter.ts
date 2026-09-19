@@ -14,8 +14,10 @@ export const readFrontMatter = (body: string): Record<string, unknown> => {
 
 	const lineCounter = new LineCounter()
 	const options = { prettyErrors: false, lineCounter }
-	const [error] = parseDocument(yamlOf(body, content), options).errors
-	if (error) throw new Error(`${lineCounter.linePos(error.pos[0]).line}行目: ${error.message}`)
+	const { errors, warnings } = parseDocument(yamlOf(body, content), options)
+	const [problem] = [...errors, ...warnings]
+	if (problem)
+		throw new Error(`${lineCounter.linePos(problem.pos[0]).line}行目: ${problem.message}`)
 
 	return data
 }

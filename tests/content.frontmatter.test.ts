@@ -24,6 +24,11 @@ describe('readFrontMatter', () => {
 			md('title: "集めたもの', 'date: 2026-09-12'),
 			'3行目: Missing closing "quote',
 		],
+		[
+			'解決できないタグ',
+			md('title: !foo 集めたもの', 'date: 2026-09-12'),
+			'2行目: Unresolved tag: !foo',
+		],
 	])('%s は復元した値を返さず、行と理由を出して投げる', (_, body, reason) => {
 		expect(() => readFrontMatter(body)).toThrow(reason)
 	})
