@@ -1,15 +1,50 @@
+const SETTLED_FRAMES = 4
+const JUMP_LIMIT_MS = 1200
+
+const isJumping = ref(false)
+
+let frame: number | undefined
+
+const trackJump = () => {
+	if (frame !== undefined) cancelAnimationFrame(frame)
+
+	isJumping.value = true
+
+	const startedAt = performance.now()
+	let lastY: number | undefined
+	let stillFrames = 0
+
+	const step = () => {
+		const currentY = window.scrollY
+		stillFrames = currentY === lastY ? stillFrames + 1 : 0
+		lastY = currentY
+
+		if (stillFrames >= SETTLED_FRAMES || performance.now() - startedAt > JUMP_LIMIT_MS) {
+			frame = undefined
+			isJumping.value = false
+			return
+		}
+
+		frame = requestAnimationFrame(step)
+	}
+
+	frame = requestAnimationFrame(step)
+}
+
 export const useScrollTo = () => {
 	const scrollTo = (id: string) => {
 		const element = document.getElementById(id)
 		if (!element) return
 
 		element.scrollIntoView({ behavior: 'smooth' })
+		trackJump()
 
 		history.pushState(null, '', `#${id}`)
 	}
 
 	const scrollToTop = () => {
 		window.scrollTo({ top: 0, behavior: 'smooth' })
+		trackJump()
 	}
 
 	const clearHash = () => {
@@ -20,5 +55,6 @@ export const useScrollTo = () => {
 		scrollTo,
 		scrollToTop,
 		clearHash,
+		isJumping,
 	}
 }
