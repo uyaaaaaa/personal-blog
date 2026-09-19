@@ -34,6 +34,9 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+	// 送りの追従はモジュールスコープに残る。止めずに終わると、次のテストが送っている最中から始まる
+	while (frames.size > 0) runFrame()
+
 	vi.unstubAllGlobals()
 })
 

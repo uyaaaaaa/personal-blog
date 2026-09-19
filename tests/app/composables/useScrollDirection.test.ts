@@ -13,14 +13,17 @@ const setScrollY = (y: number) => {
 	Object.defineProperty(window, 'scrollY', { value: y, configurable: true })
 }
 
+const runFrame = () => {
+	const callbacks = [...frames.values()]
+	frames.clear()
+	for (const callback of callbacks) callback(0)
+}
+
 // scroll が来てからフレームが走るまでを1つにまとめる。読み取りはフレームでしか走らない
 const scrollTo = (y: number) => {
 	setScrollY(y)
 	window.dispatchEvent(new Event('scroll'))
-
-	const callbacks = [...frames.values()]
-	frames.clear()
-	for (const callback of callbacks) callback(0)
+	runFrame()
 }
 
 const mountDirection = (threshold: number, startY = 0) => {
@@ -44,6 +47,9 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+	// 送りの追従はモジュールスコープに残る。止めずに終わると、次のテストが送っている最中から始まる
+	while (frames.size > 0) runFrame()
+
 	for (const unmount of mounted.splice(0)) unmount()
 	vi.unstubAllGlobals()
 })
