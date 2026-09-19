@@ -58,6 +58,20 @@ describe('findings', () => {
 		])
 	})
 
+	it('指摘の形になっていない要素を理由にして落とす', () => {
+		expect(findings(review({ comments: [null] }), RULES)).toEqual([
+			'1件目: 指摘は { grade, path, line, heading, body } で渡す',
+		])
+	})
+
+	it('空行とコード片は本文の行数に数えない', () => {
+		const spaced = comment({ body: '理由。\n\n代案。' })
+		expect(findings(review({ comments: [spaced] }), RULES)).toEqual([])
+
+		const snippet = comment({ body: '理由。\n\n```js\nconst a = 1\nconst b = 2\n```' })
+		expect(findings(review({ comments: [snippet] }), RULES)).toEqual([])
+	})
+
 	it('コメント1件ごとの欠けと長さを落とす', () => {
 		const broken = comment({ grade: 'blocker', path: '', line: 0, heading: '' })
 		expect(findings(review({ comments: [broken] }), RULES)).toEqual([
@@ -72,6 +86,11 @@ describe('findings', () => {
 		expect(
 			findings(review({ comments: [comment({ body: 'a\nb\nc\nd\ne\nf' })] }), RULES),
 		).toEqual(['1件目: 本文が 6 行（3行以内）', '1件目: コメントが 7 行（6行以内）'])
+
+		const long = comment({ body: '理由。\n\n```js\na\nb\nc\nd\ne\n```' })
+		expect(findings(review({ comments: [long] }), RULES)).toEqual([
+			'1件目: コメントが 9 行（6行以内）',
+		])
 	})
 
 	it('サマリを書く判定では理由と実測を欠かせない', () => {
@@ -145,6 +164,11 @@ describe('review-guard', () => {
 
 	it.each([['must'], ['suggestion'], ['nits']])('組み立てた %s の投稿をガードが通す', (grade) => {
 		expect(decide(guarded({ comments: graded(grade) }))).toBeNull()
+	})
+
+	it('コード片を置いたコメントもガードが通す', () => {
+		const snippet = comment({ body: '理由。\n\n```js\nconst a = 1\n```' })
+		expect(decide(guarded({ comments: [snippet] }))).toBeNull()
 	})
 
 	it('指摘の無い Approve もガードが通す', () => {

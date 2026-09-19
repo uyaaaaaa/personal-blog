@@ -5,7 +5,7 @@ import { read } from './stdin.mjs'
 const SKILL = new URL('../.claude/skills/review/SKILL.md', import.meta.url)
 
 const USAGE = [
-	'使い方: node scripts/review-args.mjs < review.json',
+	'使い方: node scripts/review-args.mjs < findings.json',
 	'',
 	'渡す JSON:',
 	'  { "pr": 123,',
@@ -22,12 +22,30 @@ const USAGE = [
 
 const text = (value) => (typeof value === 'string' ? value.trim() : '')
 
-const lines = (value) => text(value).split('\n').length
+// ガードは空行を数えない。同じ行数を見るために、ここでも落としてから数える
+const rows = (value) =>
+	text(value)
+		.split('\n')
+		.filter((line) => line.trim() !== '')
+
+const FENCE = /^\s*```/
+
+// 本文の上限はコード片の外側に当てる。手順書は本文とコード片を別々に数える
+const prose = (lines) => {
+	let inside = false
+	return lines.filter((line) => {
+		if (!FENCE.test(line)) return !inside
+		inside = !inside
+		return false
+	})
+}
+
+const shaped = (comment) => comment !== null && typeof comment === 'object'
 
 export const counted = (comments, { grades }) =>
 	Object.fromEntries(
 		[...grades.keys()]
-			.map((name) => [name, comments.filter((comment) => comment.grade === name).length])
+			.map((name) => [name, comments.filter((comment) => comment?.grade === name).length])
 			.filter(([, count]) => count > 0),
 	)
 
@@ -40,6 +58,8 @@ const sum = (counts, names) =>
 
 const inComment = (comment, at, it) => {
 	const where = `${at + 1}件目`
+	if (!shaped(comment)) return [`${where}: 指摘は { grade, path, line, heading, body } で渡す`]
+
 	const found = []
 	if (!it.grades.has(comment.grade)) {
 		found.push(`${where}: 型に無いグレード（${[...it.grades.keys()].join(' / ')} から1つ）`)
@@ -49,13 +69,16 @@ const inComment = (comment, at, it) => {
 		found.push(`${where}: line は差分に付く行番号で渡す`)
 	}
 	if (text(comment.heading) === '') found.push(`${where}: 見出しが無い`)
-	if (text(comment.body) === '') found.push(`${where}: 本文が無い`)
-	else if (lines(comment.body) > it.bodyLines) {
-		found.push(`${where}: 本文が ${lines(comment.body)} 行（${it.bodyLines}行以内）`)
+
+	const body = rows(comment.body)
+	if (body.length === 0) found.push(`${where}: 本文が無い`)
+	else if (prose(body).length > it.bodyLines) {
+		found.push(`${where}: 本文が ${prose(body).length} 行（${it.bodyLines}行以内）`)
 	}
-	// バッジと見出しは本文の外側に1行増える。ガードは空行を数えない
-	const rows = lines(comment.body) + 1
-	if (rows > it.lines) found.push(`${where}: コメントが ${rows} 行（${it.lines}行以内）`)
+	// バッジと見出しは本文の外側に1行増える
+	if (body.length + 1 > it.lines) {
+		found.push(`${where}: コメントが ${body.length + 1} 行（${it.lines}行以内）`)
+	}
 	return found
 }
 
