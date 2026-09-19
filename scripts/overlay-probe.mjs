@@ -868,6 +868,8 @@ const probes = [
 		},
 	},
 	{
+		// この入力欄はフォーカス位置を下線（.search-field:focus-within）で示すため、
+		// 開き方に関わらずリングは出ない
 		name: 'focus-ring/ショートカットで開く',
 		shortcut: true,
 		run: async (p) => {
@@ -875,7 +877,7 @@ const probes = [
 			const state = await p.evaluate('return $state()')
 			return {
 				observed: show(state, ['active', 'activeShown', 'ring']),
-				ok: opened && state.activeShown && state.ring !== NO_RING,
+				ok: opened && state.activeShown && state.ring === NO_RING,
 			}
 		},
 	},
