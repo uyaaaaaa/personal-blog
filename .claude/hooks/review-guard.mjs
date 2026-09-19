@@ -77,12 +77,10 @@ const judged = (judgments, counts) =>
 	judgments.find(({ needs }) => needs.length > 0 && satisfied(needs, counts)) ??
 	judgments.find(({ needs }) => needs.length === 0)
 
-// API の event は判定の名前を大文字にしたもの。表を2つ持たずに突き合わせる
 const eventOf = (name) => name.toUpperCase().replace(/\s+/g, '_')
 
 const key = (pr) => `review.${pr}`
 
-// code-review が受け取る effort の綴り。手順書ではなく呼ぶ側の語彙
 const LEVELS = new Set(['low', 'medium', 'high', 'xhigh', 'max'])
 
 const kept = (args, { forbidden, effort }) => {
@@ -183,8 +181,6 @@ const commented = (text, it) => {
 	return null
 }
 
-// 表は厳しい順に並ぶ。前の回から持ち越した未対応は数えられないので、
-// 数えた件数より緩い側に倒した判定だけを落とす
 const looser = (judgments, one, than) => judgments.indexOf(one) > judgments.indexOf(than)
 
 const repeated = (seen, it) =>
@@ -193,10 +189,8 @@ const repeated = (seen, it) =>
 		: null
 
 const unjudged = (body, event, counts, it) => {
-	// body が無い APPROVE は書きようがないので、mismatched の event 側の検証に任せる。
-	// Approve 以外はサマリを必ず出す（→ SKILL の5）ので、免除は event で絞る
-	if (body.trim() === '' && event === 'APPROVE') return null
 	const head = body.split('\n')[0]
+	if (body.trim() === '' && event === 'APPROVE') return null
 	const want = judged(it.judgments, counts)
 	const written = it.judgments.find(({ name }) => head.includes(name))
 	if (!written) return `サマリの先頭行に判定（${want.name}）を置く`
@@ -242,15 +236,11 @@ const validated = (payload, it, seen) => {
 }
 
 const PR = /(?:-f|-F|--raw-field|--field)\s+["']?pr=(\d+)/
-// @ でファイルを読むのは -F と --field だけ。-f は "@review.json" を値として送る
 const PAYLOAD = /(?:-F|--field)\s+["']?review=@([^\s"']+)/
 
-// コマンドの先頭か区切りの直後だけを見る。引用符の中やコミットメッセージの
-// 言及に当たると、投稿でない Bash を落とす
 const LEAD = String.raw`(?:^\s*|[\n;&|(]\s*)`
 const RUN = new RegExp(`${LEAD}gh\\s+workflow\\s+run\\s+["']?([^\\s"']+)["']?`)
 
-// gh は同じワークフローをファイル名でも ID でも表示名でも受ける
 const plain = (name) =>
 	name
 		.replace(/^.*\//, '')
@@ -296,7 +286,6 @@ const reviewed = (input, it, ask) => {
 	try {
 		payload = JSON.parse(found.text)
 	} catch {
-		// 読めない回に止めると、フック自身の不具合でセッションが進まなくなる
 		return null
 	}
 
@@ -331,13 +320,11 @@ const ASK = {
 }
 
 const DISPATCH = new RegExp(`${LEAD}gh\\s+workflow\\s+run\\b`)
-// ワークフロー以外から /pulls/N/reviews に届く経路。どれも書き手自身のトークンで submit する
 const DIRECT = new RegExp(
 	`${LEAD}gh\\s+(?:api\\b(?=[^\\n]*\\bPOST\\b)[^\\n]*/pulls/\\d+/reviews\\b|pr\\s+review\\b)`,
 )
 const TOOLED = /^mcp__.*pull_request_review/
 const TRIGGER = /^mcp__.*actions_run_trigger$/
-// レビューの体裁を持ったまま、ワークフローを通らずに出られる投稿先
 const POSTED =
 	/^mcp__.*(add_issue_comment|update_issue_comment|add_comment_to_pending_review|add_reply_to_pull_request_comment)$/
 
