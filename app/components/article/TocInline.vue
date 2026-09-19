@@ -106,7 +106,6 @@
 	const { isMobile } = useIsDesktop()
 	const { activeId } = useTocActive(
 		computed(() => props.links),
-		100,
 		isMobile,
 	)
 
@@ -136,8 +135,10 @@
 		if (hidden) isOpen.value = false
 	})
 
-	const handleClick = (id: string) => {
+	// 流し込んだパネルを畳むと上が縮む。送り先が決まる前に畳み切らないと、縮んだぶん行き過ぎる
+	const handleClick = async (id: string) => {
 		isOpen.value = false
+		await nextTick()
 		scrollTo(id)
 	}
 </script>

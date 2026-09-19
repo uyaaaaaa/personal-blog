@@ -9,6 +9,7 @@ interface TocLink {
 	children?: TocLink[]
 }
 
+// 本文の見出しに当たっている scroll-margin-top。判定はこれを読む
 const OFFSET = 100
 const VIEWPORT = 800
 const PAGE = 5000
@@ -52,7 +53,7 @@ const scroll = (moved: Record<string, number>, y = 0) => {
 }
 
 const mountToc = (links: TocLink[]) => {
-	const { result, unmount } = withSetup(() => useTocActive(ref(links), OFFSET, ref(true)))
+	const { result, unmount } = withSetup(() => useTocActive(ref(links), ref(true)))
 	mounted.push(unmount)
 	return result
 }
@@ -67,6 +68,8 @@ beforeEach(() => {
 	vi.stubGlobal('cancelAnimationFrame', (id: number) => {
 		frames.delete(id)
 	})
+	// happy-dom はカスケードを持たず、本文に当たっている scroll-margin-top を返せない
+	vi.stubGlobal('getComputedStyle', () => ({ scrollMarginTop: `${OFFSET}px` }))
 
 	Object.defineProperty(window, 'innerHeight', { value: VIEWPORT, configurable: true })
 	Object.defineProperty(document.documentElement, 'scrollHeight', {
@@ -83,7 +86,7 @@ afterEach(() => {
 })
 
 describe('useTocActive', () => {
-	it('上端が offset を超えた見出しのうち、いちばん後ろを選ぶ', () => {
+	it('上端が着地位置を超えた見出しのうち、いちばん後ろを選ぶ', () => {
 		placeHeadings({ a: -300, b: 50, c: 300 })
 
 		const { activeId } = mountToc([
@@ -99,7 +102,7 @@ describe('useTocActive', () => {
 		expect(activeId.value).toBe('c')
 	})
 
-	it('offset ちょうどに乗った見出しも、超えたものとして選ぶ', () => {
+	it('着地位置ちょうどに乗った見出しも、超えたものとして選ぶ', () => {
 		// 目次のリンクを踏んで着地した直後がこの位置になる
 		placeHeadings({ a: -300, b: OFFSET, c: 300 })
 
@@ -112,7 +115,7 @@ describe('useTocActive', () => {
 		expect(activeId.value).toBe('b')
 	})
 
-	it('選んだ後に見出しが offset より下へ戻ったら、選択を外す', () => {
+	it('選んだ後に見出しが着地位置より下へ戻ったら、選択を外す', () => {
 		placeHeadings({ a: -300, b: 500 })
 
 		const { activeId } = mountToc([
