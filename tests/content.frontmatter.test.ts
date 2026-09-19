@@ -45,7 +45,15 @@ describe('readFrontMatter', () => {
 		['CRLF で揃ったもの', '---\r\ntitle: a\r\ndate: 2026-09-12\r\n---\r\n\r\n## 見出し\r\n'],
 		['改行の種類が混ざったもの', '---\r\ntitle: a\r\ndate: 2026-09-12\r\n---\n\n## 見出し\n'],
 		['閉じの後ろに空白があるもの', '---\ntitle: a\ndate: 2026-09-12\n--- \n\n## 見出し\n'],
-	])('%s も、閉じを剥がして通す', (_, body) => {
+		[
+			'CRLF で最後が引用符のもの',
+			'---\r\ndate: 2026-09-12\r\ntitle: "a"\r\n---\r\n\r\n## 見出し\r\n',
+		],
+		[
+			'CRLF で最後が空行のもの',
+			'---\r\ntitle: a\r\ndate: 2026-09-12\r\n\r\n---\r\n\r\n## 見出し\r\n',
+		],
+	])('%s も、閉じと行末を剥がして通す', (_, body) => {
 		expect(readFrontMatter(body)).toEqual({ title: 'a', date: '2026-09-12' })
 	})
 
