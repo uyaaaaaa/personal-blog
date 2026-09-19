@@ -1,7 +1,7 @@
 <template>
-	<footer class="border-t border-border">
+	<footer class="border-t border-border px-5 md:px-10">
 		<nav
-			class="mx-auto flex max-w-container flex-wrap gap-x-16 gap-y-8 px-4 py-10 md:py-12"
+			class="mx-auto flex max-w-column flex-wrap gap-x-16 gap-y-8 py-10 md:py-12"
 			aria-label="Footer"
 		>
 			<div

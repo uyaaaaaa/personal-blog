@@ -106,9 +106,37 @@
 				@click="emit('toggle')"
 				aria-label="Open menu"
 			>
-				<span class="hamburger-line"></span>
-				<span class="hamburger-line"></span>
-				<span class="hamburger-line"></span>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true"
+				>
+					<line
+						x1="3"
+						x2="21"
+						y1="6"
+						y2="6"
+					/>
+					<line
+						x1="3"
+						x2="21"
+						y1="12"
+						y2="12"
+					/>
+					<line
+						x1="3"
+						x2="21"
+						y1="18"
+						y2="18"
+					/>
+				</svg>
 			</button>
 
 			<div
@@ -498,7 +526,6 @@
 </script>
 
 <style scoped>
-	/* 表示・非表示の切り替えはTailwindの md: に統一しているため、displayはここで指定しない */
 	.explore {
 		align-items: stretch;
 	}
@@ -633,22 +660,16 @@
 
 	.mobile-menu-btn {
 		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		width: 1.25rem;
-		height: 1rem;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
 		background: none;
 		border: none;
+		border-radius: 0.375rem;
+		color: var(--color-main);
 		cursor: pointer;
 		padding: 0;
-	}
-
-	.hamburger-line {
-		display: block;
-		width: 100%;
-		height: 2px;
-		background-color: var(--color-main);
-		border-radius: 2px;
 	}
 
 	.mobile-menu-overlay {
@@ -701,7 +722,7 @@
 		justify-content: flex-end;
 		align-items: center;
 		margin: 0 -0.75rem 0.5rem;
-		padding: 0 0.5rem;
+		padding: 0 1rem;
 		background-color: var(--color-surface);
 		border-bottom: 1px solid var(--color-border);
 	}
@@ -710,8 +731,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 2.25rem;
-		height: 2.25rem;
+		width: 2rem;
+		height: 2rem;
 		padding: 0;
 		border: none;
 		border-radius: 0.5rem;
