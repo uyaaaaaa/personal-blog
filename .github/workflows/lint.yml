@@ -2,10 +2,8 @@ name: Lint
 
 on:
     pull_request:
-        paths-ignore: ['content/**']
     push:
         branches: [main]
-        paths-ignore: ['content/**']
     workflow_dispatch:
 
 permissions:
@@ -16,7 +14,13 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+    changes:
+        uses: ./.github/workflows/changes.yml
+
     lint:
+        needs: changes
+        # 記事だけだと判定できた回にだけ飛ばす。!cancelled() が無いと changes が落ちた回も飛ぶ
+        if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7
