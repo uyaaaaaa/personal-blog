@@ -19,6 +19,7 @@ jobs:
 
     test:
         needs: changes
+        # !cancelled() が無いと success() が付き、changes が落ちた回に skipped で緑になる
         if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
         runs-on: ubuntu-latest
         steps:
