@@ -14,8 +14,9 @@
 				{{ title }}
 			</component>
 
+			<!-- 高さを1行に固定して、入りきらないタグを折り返し先ごと隠す -->
 			<div
-				class="col-start-2 mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 lg:col-start-3 lg:row-start-1 lg:mt-0 lg:justify-end"
+				class="col-start-2 mt-1 flex h-5 flex-wrap items-baseline gap-x-3 gap-y-1 overflow-hidden lg:col-start-3 lg:row-start-1 lg:mt-0 lg:h-auto lg:justify-end"
 			>
 				<time
 					class="font-mono text-sm tabular-nums text-sub"
