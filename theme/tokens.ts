@@ -71,7 +71,13 @@ export const motionProperties: Record<keyof typeof durations, string[]> = {
 	move: ['transform', 'opacity', 'visibility'],
 }
 
+const HEADER_SM = '52px'
+const HEADER = '60px'
+
 const TOC_TOP = '100px'
+
+// 吸着した帯（ヘッダー + 見出しの行）の下に残る高さ。畳んだ帯の下端は md で 103px
+const TOC_PANEL_TOP = '140px'
 
 export const sizes = {
 	borderRadius: {
@@ -95,14 +101,15 @@ export const sizes = {
 		pickup: '96px 1fr',
 	},
 	height: {
-		'header-sm': '52px',
-		header: '60px',
+		'header-sm': HEADER_SM,
+		header: HEADER,
 	},
 	letterSpacing: {
 		marker: '0.12em',
 	},
 	maxHeight: {
 		'sticky-column': `calc(100vh - ${TOC_TOP})`,
+		'toc-panel': `calc(100dvh - ${TOC_PANEL_TOP})`,
 	},
 	maxWidth: {
 		'search-trigger': '200px',
@@ -112,9 +119,11 @@ export const sizes = {
 	},
 	spacing: {
 		'logo-mark': '26px',
-		'landing-offset-sm': '76px',
-		'landing-offset': '84px',
+		'landing-offset-sm': '116px',
+		'landing-offset': '124px',
 		'landing-offset-lg': '92px',
+		'below-header-sm': HEADER_SM,
+		'below-header': HEADER,
 		'toc-top': TOC_TOP,
 		'menu-panel': '960px',
 	},

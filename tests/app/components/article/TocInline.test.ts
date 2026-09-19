@@ -36,6 +36,14 @@ describe('TocInline', () => {
 		expect(list(wrapper).style.display).toBe('')
 	})
 
+	it('見出しを押したら畳む', async () => {
+		const wrapper = await mount()
+
+		await wrapper.get('a[href="#intro"]').trigger('click')
+
+		expect(wrapper.get('button').attributes('aria-expanded')).toBe('false')
+	})
+
 	it('見出しに2桁の連番を振る', async () => {
 		const wrapper = await mount()
 
