@@ -10,12 +10,14 @@
 			</div>
 		</main>
 		<Footer :measure="measure" />
+		<Toast />
 	</div>
 </template>
 
 <script setup lang="ts">
 	import Header from '~/components/layout/Header.vue'
 	import Footer from '~/components/layout/Footer.vue'
+	import Toast from '~/components/ui/Toast.vue'
 
 	const route = useRoute()
 

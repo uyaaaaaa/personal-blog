@@ -1,9 +1,12 @@
 <template>
+	<!-- 見出しの中にある要素の名前は、見出しの読み上げ名に足される -->
 	<a
+		ref="anchor"
 		:href="`#${props.headingId}`"
-		aria-label="Link to this section"
-		class="heading-anchor ml-2 hidden align-middle opacity-0 transition-move focus-visible:opacity-100 group-hover:opacity-100 lg:inline-block"
-		@click.exact.prevent="scrollTo(props.headingId)"
+		aria-hidden="true"
+		tabindex="-1"
+		class="heading-anchor ml-2 inline-flex items-center justify-center align-middle transition-move lg:absolute lg:right-full lg:top-0 lg:ml-0 lg:mr-2 lg:opacity-0 lg:group-hover:opacity-100"
+		@click.exact.prevent="copyAndJump"
 	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -25,12 +28,32 @@
 
 <script setup lang="ts">
 	import { useScrollTo } from '~/composables/useScrollTo'
+	import { useToast } from '~/composables/useToast'
 
 	const props = defineProps<{
 		headingId: string
 	}>()
 
+	const anchor = ref<HTMLAnchorElement | null>(null)
+
 	const { scrollTo } = useScrollTo()
+	const { show } = useToast()
+
+	const copyAndJump = async () => {
+		scrollTo(props.headingId)
+
+		const url = anchor.value?.href
+		if (!url) return
+
+		// navigator.clipboard は非セキュアコンテキストと権限の拒否で使えない
+		try {
+			await navigator.clipboard.writeText(url)
+		} catch {
+			return
+		}
+
+		show('Link copied')
+	}
 
 	defineOptions({
 		name: 'HeadingAnchor',
@@ -47,5 +70,11 @@
 	.heading-anchor:hover {
 		color: var(--color-accent);
 		text-decoration: none;
+	}
+
+	@media (min-width: 1024px) {
+		.heading-anchor {
+			height: 1lh;
+		}
 	}
 </style>
