@@ -51,9 +51,8 @@ export default <Config>{
 	safelist: ['sr-only'],
 	darkMode: 'class',
 	theme: {
-		// extend の下ではなくここに置き、Tailwind 既定のパレット・境界・スケールごと置き換える。
-		// extend だと既定が残り、トークンに無い色（bg-red-500）・境界（sm: / xl: / 2xl:）・
-		// 大きさ（text-lg）が生まれる
+		// extend の下だと Tailwind の既定が残り、トークンに無い名前
+		// （bg-red-500 / sm: / text-lg）が書ける。ここに置くと既定ごと置き換わる
 		colors: toTailwindColors(),
 		screens,
 		fontSize,
