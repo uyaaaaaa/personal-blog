@@ -6,7 +6,6 @@ import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
 const EVIDENCE = '.verify'
-const TRUNK = 'origin/main'
 const SHOT = /(?:^|\/)\.verify\/([^/]+\.png)$/
 
 export const opened = ({ tool_name: tool, tool_input: input } = {}) => {
@@ -50,10 +49,10 @@ export const unfinished = ({ shots = [], seen = [], dirty = false, ahead = 0, bl
 
 const root = process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
 
-const git = (...args) => {
+const git = (cwd, ...args) => {
 	try {
 		return execFileSync('git', args, {
-			cwd: root,
+			cwd,
 			encoding: 'utf8',
 			stdio: ['ignore', 'pipe', 'ignore'],
 		}).trim()
@@ -83,10 +82,8 @@ const shots = () => {
 	}
 }
 
-const ahead = () => {
-	const upstream = git('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')
-	return Number(git('rev-list', '--count', `${upstream || TRUNK}..HEAD`)) || 0
-}
+export const ahead = (cwd = root) =>
+	Number(git(cwd, 'rev-list', '--count', 'HEAD', '--not', '--remotes')) || 0
 
 if (process.argv[1]?.endsWith('stop-guard.mjs')) {
 	try {
@@ -100,7 +97,7 @@ if (process.argv[1]?.endsWith('stop-guard.mjs')) {
 				const left = unfinished({
 					...kept,
 					shots: shots(),
-					dirty: git('status', '--porcelain') !== '',
+					dirty: git(root, 'status', '--porcelain') !== '',
 					ahead: ahead(),
 				})
 				if (left) {
