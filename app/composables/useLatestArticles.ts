@@ -1,3 +1,5 @@
+import { publishedArticles } from '~/utils/articleQuery'
+
 export const useLatestArticles = (
 	limit: number,
 	options: { lazy?: boolean; immediate?: boolean } = {},
@@ -5,8 +7,7 @@ export const useLatestArticles = (
 	useAsyncData(
 		`latest-articles-${limit}`,
 		() =>
-			queryCollection('article')
-				.where('published', '=', true)
+			publishedArticles()
 				.order('date', 'DESC')
 				.limit(limit)
 				.select('path', 'title', 'date')

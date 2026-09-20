@@ -21,6 +21,7 @@
 	import Hero from '~/components/article/Hero.vue'
 	import ArticleShelf from '~/components/article/ArticleShelf.vue'
 	import { usePageSeo } from '~/composables/usePageSeo'
+	import { publishedArticles } from '~/utils/articleQuery'
 	import { buildShelves, type ShelfLimits } from '~/utils/shelf'
 
 	const SHELF_LIMITS: ShelfLimits = { blog: 5, book: 3 }
@@ -28,8 +29,7 @@
 	const route = useRoute()
 
 	const { data: articles } = await useAsyncData('home-articles', () =>
-		queryCollection('article')
-			.where('published', '=', true)
+		publishedArticles()
 			.order('date', 'DESC')
 			.select('path', 'title', 'description', 'date', 'tags', 'category')
 			.all(),
