@@ -93,12 +93,30 @@ describe('decide', () => {
 		expect(stop()).toMatch('PR #292')
 	})
 
+	it('投稿先の名前は review スキルから引く', () => {
+		const ask = { skill: () => '"workflow_id": "shipit.yml"' }
+		decide(opened(), store)
+		for (const done of [subscribed(), titled()]) decide(done, store, ask)
+		decide(reviewed(292, 'review.yml'), store, ask)
+
+		expect(stop()).toMatch('Review ワークフロー')
+	})
+
+	it('スキルが指す名前の発火なら数える', () => {
+		const ask = { skill: () => '"workflow_id": "shipit.yml"' }
+		decide(opened(), store)
+		for (const done of [subscribed(), titled()]) decide(done, store, ask)
+		decide(reviewed(292, 'shipit.yml'), store, ask)
+
+		expect(stop()).toBeNull()
+	})
+
 	it('落ちた呼び出しは数えない', () => {
 		decide(opened(), store)
 		for (const done of [subscribed(), titled()]) decide(done, store)
 		decide({ ...reviewed(), tool_response: { isError: true } }, store)
 
-		expect(stop()).toMatch('review.yml の発火')
+		expect(stop()).toMatch('Review ワークフロー')
 	})
 
 	it('PR ごとに数える', () => {
