@@ -2,7 +2,7 @@
 	<div class="space-y-8">
 		<div class="flex items-baseline gap-4">
 			<h1 class="text-heading font-bold text-main">Tags</h1>
-			<span class="font-mono text-base text-sub">{{ tags?.length ?? 0 }}</span>
+			<span class="font-mono text-total text-sub">{{ tags?.length ?? 0 }}</span>
 		</div>
 
 		<div class="flex flex-wrap gap-3">
@@ -10,10 +10,10 @@
 				v-for="tag in tags"
 				:key="tag.slug"
 				:to="`/tags/${tag.slug}`"
-				class="flex items-baseline gap-2 rounded-full border border-border px-3 py-1.5 font-mono text-sm text-main transition-color hover:border-main"
+				class="flex items-baseline gap-2 rounded-full border border-border px-3 py-1.5 font-mono text-ui text-main transition-color hover:border-main"
 			>
 				<span>{{ tag.name }}</span>
-				<span class="text-xs text-accent">{{ tag.count }}</span>
+				<span class="text-meta text-accent">{{ tag.count }}</span>
 			</NuxtLink>
 		</div>
 	</div>

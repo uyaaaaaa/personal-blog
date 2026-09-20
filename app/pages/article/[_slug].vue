@@ -7,7 +7,7 @@
 			<article class="space-y-8">
 				<header class="space-y-4 border-b border-border pb-8">
 					<div
-						class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-sub"
+						class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-meta text-sub"
 					>
 						<time
 							v-if="page.date"

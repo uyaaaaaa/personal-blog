@@ -67,6 +67,25 @@ export const fontFamily = {
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 }
 
+// meta / ui / total / notice-title は Tailwind の既定の xs / sm / base / xl と同じ値。
+// 既定を閉じるのが目的で、大きさそのものは動かさない
+export const fontSize = {
+	'2xs': '11px',
+	meta: ['0.75rem', '1rem'],
+	code: ['13px', '1.7'],
+	ui: ['0.875rem', '1.25rem'],
+	'list-title': ['16px', '1.4'],
+	total: ['1rem', '1.5rem'],
+	// Header の .logo が <style> で書く。クラスにはならないが、語彙に無いと検査が落ちる
+	logo: '1.125rem',
+	'notice-title': ['1.25rem', '1.75rem'],
+	'title-sm': ['23px', '1.35'],
+	heading: ['24px', '1.3'],
+	'hero-sm': ['26px', '1.3'],
+	title: ['32px', '1.35'],
+	hero: ['38px', '1.25'],
+} as Record<string, string | [string, string]>
+
 export const durations = {
 	color: '0.15s',
 	move: '0.2s',
@@ -92,16 +111,6 @@ export const sizes = {
 		kbd: '3px',
 		card: '10px',
 	},
-	fontSize: {
-		'2xs': '11px',
-		code: ['13px', '1.7'],
-		'list-title': ['16px', '1.4'],
-		'title-sm': ['23px', '1.35'],
-		heading: ['24px', '1.3'],
-		'hero-sm': ['26px', '1.3'],
-		title: ['32px', '1.35'],
-		hero: ['38px', '1.25'],
-	} as Record<string, string | [string, string]>,
 	gridTemplateColumns: {
 		article: 'minmax(0, 680px) 224px',
 		list: '36px 1fr 110px',

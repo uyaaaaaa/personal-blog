@@ -21,7 +21,7 @@
 					<a
 						:href="`#${link.id}`"
 						@click.prevent="scrollTo(link.id)"
-						class="-ml-px block break-words border-l-2 py-1 pl-4 text-sm transition-color hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
+						class="-ml-px block break-words border-l-2 py-1 pl-4 text-ui transition-color hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
 						:class="
 							activeId === link.id
 								? 'border-accent font-medium text-main'
@@ -41,7 +41,7 @@
 							<a
 								:href="`#${child.id}`"
 								@click.prevent="scrollTo(child.id)"
-								class="-ml-px block break-words border-l-2 py-1 pl-8 text-xs transition-color hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
+								class="-ml-px block break-words border-l-2 py-1 pl-8 text-meta transition-color hover:border-accent hover:text-accent focus:border-accent focus:text-accent"
 								:class="
 									activeId === child.id
 										? 'border-accent font-medium text-main'

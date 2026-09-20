@@ -4,7 +4,7 @@
 			<h1 class="font-mono text-heading font-bold text-main">
 				<span class="text-accent">#</span>{{ tagName }}
 			</h1>
-			<span class="font-mono text-base text-sub">{{ filteredArticles.length }}</span>
+			<span class="font-mono text-total text-sub">{{ filteredArticles.length }}</span>
 		</div>
 
 		<ArticleList

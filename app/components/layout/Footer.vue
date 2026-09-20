@@ -10,7 +10,7 @@
 				:key="group.label"
 			>
 				<span
-					class="mb-3.5 block font-mono text-xs font-medium uppercase tracking-marker text-sub"
+					class="mb-3.5 block font-mono text-meta font-medium uppercase tracking-marker text-sub"
 					>{{ group.label }}</span
 				>
 
@@ -21,7 +21,7 @@
 					>
 						<NuxtLink
 							:to="link.path"
-							class="font-mono text-sm"
+							class="font-mono text-ui"
 							prefetch-on="interaction"
 							>{{ link.label }}</NuxtLink
 						>

@@ -89,7 +89,7 @@
 				<ThemeToggle class="self-center" />
 				<NuxtLink
 					to="/profile"
-					class="profile-link hidden items-center font-mono text-sm font-medium text-main transition-color hover:text-accent md:flex"
+					class="profile-link hidden items-center font-mono text-ui font-medium text-main transition-color hover:text-accent md:flex"
 					prefetch-on="interaction"
 					>Profile</NuxtLink
 				>

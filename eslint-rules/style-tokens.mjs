@@ -3,6 +3,7 @@ import resolveConfig from 'tailwindcss/resolveConfig.js'
 import {
 	durations,
 	fontFamily,
+	fontSize,
 	motionProperties,
 	screens,
 	sizes,
@@ -133,9 +134,12 @@ function collectStrings(value, into) {
 }
 
 // tailwind.config.ts 自体は node が型注釈を落とせず読めないため、ここで組み直す
-const theme = resolveConfig({ content: [], theme: { screens, extend: { ...sizes } } }).theme
+const theme = resolveConfig({
+	content: [],
+	theme: { screens, fontSize, extend: { ...sizes } },
+}).theme
 
-// 語彙は Tailwind の既定の theme に sizes を重ねて作る。sizes に名前を足せば通る
+// 語彙は Tailwind の既定の theme に tokens を重ねて作る。sizes か fontSize に名前を足せば通る
 function buildVocabulary() {
 	const strings = new Set()
 	for (const section of LENGTH_SECTIONS) collectStrings(theme[section], strings)
@@ -430,7 +434,7 @@ export const scriptSpellingSelector = (name) =>
 const CHECKS = {
 	'no-untokenized-size': {
 		messages: {
-			untokenized: `{{literal}} は Tailwind のスケールにも theme/tokens.ts の sizes にも無い。sizes に名前を足すか、スケールの値で書く。 ${TOKEN_URL}`,
+			untokenized: `{{literal}} は Tailwind のスケールにも theme/tokens.ts の sizes / fontSize にも無い。どちらかに名前を足すか、スケールの値で書く。 ${TOKEN_URL}`,
 		},
 		find(root) {
 			const found = []

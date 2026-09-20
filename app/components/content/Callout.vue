@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="callout my-5 rounded-lg p-3 text-sm"
+		class="callout my-5 rounded-lg p-3 text-ui"
 		:data-callout="normalizedType"
 		:style="{ '--callout-rgb-light': config.rgb, '--callout-rgb-dark': config.darkRgb }"
 	>

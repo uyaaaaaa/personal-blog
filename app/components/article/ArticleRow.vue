@@ -5,7 +5,7 @@
 			class="group grid grid-cols-list-sm items-baseline gap-x-3 py-3 lg:grid-cols-list lg:gap-x-4"
 			prefetch-on="interaction"
 		>
-			<span class="font-mono text-sm tabular-nums text-sub">{{ sequence }}</span>
+			<span class="font-mono text-ui tabular-nums text-sub">{{ sequence }}</span>
 
 			<component
 				:is="`h${headingLevel}`"
@@ -18,14 +18,14 @@
 				class="col-start-2 mt-1 flex h-5 flex-wrap items-baseline gap-x-3 gap-y-1 overflow-clip lg:col-start-3 lg:row-start-1 lg:mt-0 lg:h-auto lg:justify-end"
 			>
 				<time
-					class="font-mono text-sm tabular-nums text-sub"
+					class="font-mono text-ui tabular-nums text-sub"
 					:datetime="date"
 					>{{ formattedDate }}</time
 				>
 				<span
 					v-for="tag in tags"
 					:key="tag"
-					class="tag font-mono text-xs text-sub lg:hidden"
+					class="tag font-mono text-meta text-sub lg:hidden"
 					>#{{ tag }}</span
 				>
 			</div>

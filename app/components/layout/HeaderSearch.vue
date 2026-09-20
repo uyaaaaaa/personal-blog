@@ -55,7 +55,7 @@
 				@compositionend="endComposition"
 			/>
 			<span
-				class="search-kbd rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-xs text-sub"
+				class="search-kbd rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-meta text-sub"
 				>⌘K</span
 			>
 		</label>
