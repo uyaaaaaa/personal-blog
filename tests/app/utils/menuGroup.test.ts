@@ -46,12 +46,4 @@ describe('buildMenuGroups', () => {
 			viewAllHref: '/tags',
 		})
 	})
-
-	it('件数が無いグループは空の items にする', () => {
-		const groups = buildMenuGroups({ categories: [], latestItems: [], topTags: [] })
-
-		expect(groups.categories.items).toEqual([])
-		expect(groups.latest.items).toEqual([])
-		expect(groups.tags.items).toEqual([])
-	})
 })

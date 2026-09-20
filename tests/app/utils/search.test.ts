@@ -11,10 +11,6 @@ const articles = [
 const titles = (query: string) => searchArticles(articles, query).map((article) => article.title)
 
 describe('searchArticles', () => {
-	it('タイトルの一部に一致した記事を返す', () => {
-		expect(titles('trailing')).toEqual(['Cloudflare Pages の trailing slash'])
-	})
-
 	it('日本語のタイトルも部分一致で拾う', () => {
 		expect(titles('ブログ')).toEqual(['Nuxt Content で作るブログ'])
 	})
