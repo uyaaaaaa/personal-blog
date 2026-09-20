@@ -1,4 +1,12 @@
 {
+	"deniedMcpServers": [
+		{ "serverName": "Gmail" },
+		{ "serverName": "Slack" },
+		{ "serverName": "Linear" },
+		{ "serverName": "Google_Drive" },
+		{ "serverName": "Google_Calendar" },
+		{ "serverName": "Cloudflare_Developer_Platform" }
+	],
 	"permissions": {
 		"allow": [
 			"Bash(git status)",
