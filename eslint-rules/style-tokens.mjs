@@ -298,6 +298,19 @@ function motionFindings(property, value) {
 	return found
 }
 
+const MOTION_PURPOSES = Object.keys(durations).join('|')
+const MOTION_CLASSES = Object.keys(durations).map((purpose) => `transition-${purpose}`)
+// 長さを別に書くクラスの接頭辞
+const LENGTH_CLASSES = ['duration', 'delay', 'animate']
+
+const MOTION_CLASS_MESSAGE = `モーションのクラスは用途の名前で書く（${MOTION_CLASSES.join(' / ')}）。長さは用途のクラスが持つので、長さを別に書くクラス（${LENGTH_CLASSES.map((name) => `${name}-`).join(' / ')}）は無い。`
+
+// theme から消した綴りは書いても Tailwind が落とすが、任意値（duration-[200ms]）は
+// theme を通らずに出る。テンプレートの角括弧は別の判定が見るので、ここは @apply だけを見る
+const OFF_PURPOSE_MOTION = new RegExp(
+	`(?:^|[\\s:])(?:[a-z-]+:)*!?(?:transition(?!-(?:${MOTION_PURPOSES})(?![\\w-]))|(?:${LENGTH_CLASSES.join('|')})-)`,
+)
+
 function offsetsOf(css) {
 	const offsets = [0]
 	for (let i = 0; i < css.length; i++) if (css[i] === '\n') offsets.push(i + 1)
@@ -492,12 +505,17 @@ const CHECKS = {
 				'{{literal}} は {{property}} に決めた長さではない。{{property}} は {{expected}}（theme/tokens.ts の durations.{{purpose}}）で書く。',
 			mixed: 'transition の対象に all を書かない。用途ごとに長さが変わるので、動かすプロパティを挙げる。',
 			anyPurpose: `{{literal}} は決めた長さではない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ（${DURATION_LABEL}）。`,
+			motionClass: MOTION_CLASS_MESSAGE,
 		},
 		find(root) {
 			const found = []
 			root.walkDecls((decl) => {
 				for (const one of motionFindings(decl.prop, decl.value))
 					found.push({ node: decl, ...one })
+			})
+			root.walkAtRules('apply', (rule) => {
+				if (OFF_PURPOSE_MOTION.test(rule.params))
+					found.push({ node: rule, messageId: 'motionClass' })
 			})
 			return found
 		},

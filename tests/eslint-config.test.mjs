@@ -19,7 +19,7 @@ const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
 const PUBLISHED = /記事のクエリには公開制御/
 const DOM_ASSEMBLY = /DOM を組み立てない/
 const DISPLAY = /display: none を宣言に書かない/
-const MOTION = /決めた長さではない|transition の対象に all/
+const MOTION = /決めた長さではない|モーションのクラスは用途の名前|transition の対象に all/
 
 // 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
@@ -567,9 +567,10 @@ describe('表示・非表示の出し分け', () => {
 })
 
 describe('モーションの長さ', () => {
-	it('<style> の宣言を落とす', async () => {
+	it('<style> の宣言と任意値の @apply を落とす', async () => {
 		const style = (css) => `${sfc('<p class="a" />')}\n<style scoped>${css}</style>`
 		expect(await motionsIn('app/pages/a.vue', style('.a { transition: all 0.3s; }'))).toBe(1)
+		expect(await motionsIn('app/pages/a.vue', style('.a { @apply duration-[200ms]; }'))).toBe(1)
 		expect(
 			await motionsIn('app/pages/a.vue', style('.a { transition: transform 0.2s; }')),
 		).toBe(0)

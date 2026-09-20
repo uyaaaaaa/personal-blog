@@ -214,6 +214,17 @@ describe('no-off-purpose-motion', () => {
 					code: sfc('.a { transition-duration: 0.42s; }'),
 					errors: [{ messageId: 'anyPurpose' }],
 				},
+				// 任意値は theme を通らずに出るので、@apply の綴りで見る
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply duration-[200ms]; }'),
+					errors: [{ messageId: 'motionClass' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-[color]; }'),
+					errors: [{ messageId: 'motionClass' }],
+				},
 			],
 		})
 	})
