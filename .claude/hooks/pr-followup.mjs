@@ -23,11 +23,13 @@ const STEPS = [
 	},
 	{
 		key: 'review',
-		tool: 'Agent',
-		how: 'レビューのエージェントを起こす（Agent の subagent_type: review）',
+		tool: 'actions_run_trigger',
+		how: 'レビューのエージェントを起こし、返った JSON を review.yml の発火に渡す',
+		// 起こしただけでは済まない。返った JSON を発火に渡したところまでを見届けと数える
 		at: (args, number) =>
-			args.subagent_type === 'review' &&
-			matches(args.prompt, new RegExp(`#\\s*${number}(?!\\d)`)),
+			args.method === 'run_workflow' &&
+			matches(args.workflow_id, /review/) &&
+			String(args.inputs?.pr) === String(number),
 	},
 ]
 

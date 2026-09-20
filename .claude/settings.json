@@ -135,7 +135,7 @@
 				]
 			},
 			{
-				"matcher": "Agent|mcp__.*__(create_pull_request|subscribe_pr_activity|set_session_title)",
+				"matcher": "mcp__.*__(create_pull_request|subscribe_pr_activity|set_session_title|actions_run_trigger)",
 				"hooks": [
 					{
 						"type": "command",
