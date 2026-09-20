@@ -93,6 +93,14 @@ describe('decide', () => {
 		expect(stop()).toMatch('PR #292')
 	})
 
+	it('落ちた呼び出しは数えない', () => {
+		decide(opened(), store)
+		for (const done of [subscribed(), titled()]) decide(done, store)
+		decide({ ...reviewed(), tool_response: { isError: true } }, store)
+
+		expect(stop()).toMatch('review.yml の発火')
+	})
+
 	it('PR ごとに数える', () => {
 		decide(opened(292), store)
 		decide(opened(300), store)

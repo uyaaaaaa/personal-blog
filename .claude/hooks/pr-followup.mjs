@@ -40,7 +40,10 @@ const opened = (response) => {
 	return found ? Number(found[1]) : null
 }
 
+const failed = (input) => Boolean(input.tool_response?.isError || input.tool_response?.is_error)
+
 const recorded = (input, kept) => {
+	if (failed(input)) return null
 	const tool = suffix(input.tool_name ?? '')
 	const args = input.tool_input ?? {}
 
