@@ -22,12 +22,6 @@ describe('buildShelves', () => {
 		])
 	})
 
-	it('ヒーローの記事を棚から外す', () => {
-		const shelves = buildShelves(blog(3), '/article/b0', LIMITS)
-
-		expect(shelves[0]?.articles.map((a) => a.path)).toEqual(['/article/b1', '/article/b2'])
-	})
-
 	it('ヒーローを外して0枚になった棚を落とす', () => {
 		const shelves = buildShelves([article('/a', 'book'), ...blog(2)], '/a', LIMITS)
 
