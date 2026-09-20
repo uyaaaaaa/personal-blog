@@ -15,7 +15,6 @@ const referenced = (dir) => {
 	}
 }
 
-// 表は手順書と参照先に散っている。読む側には1つの正本として渡す
 export const source = (dir) =>
 	[join(dir, STEPS), ...referenced(dir)].map((path) => readFileSync(path, 'utf8')).join('\n')
 
