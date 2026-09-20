@@ -26,13 +26,9 @@ const SOFT = /うち((?:\s*`[a-z]+`\s*(?:と\s*)?)+)は合わせて(\d+)件ま�
 const LINES = /合わせて(\d+)行以内/
 const BODY_LINES = /\|\s*本文\s*\|\s*(\d+)行以内/
 const ROUNDS = /再レビューが(\d+)回に達した/
-const EFFORT = /effort は\s*`([a-z]+)`\s*を渡す/
 const WORKFLOW = /"workflow_id":\s*"([^"]+)"/
 const REF = /"ref":\s*"([^"]+)"/
-const FLAG = /`(--[a-z-]+)`/g
 const NAMED = /`([a-z]+)`/g
-
-const linesWith = (source, word) => source.split('\n').filter((line) => line.includes(word))
 
 export const rules = (source) => {
 	const grades = new Map([...source.matchAll(GRADE)].map(([, name, badge]) => [name, badge]))
@@ -49,9 +45,6 @@ export const rules = (source) => {
 		}))
 
 	const soft = SOFT.exec(source)
-	const forbidden = linesWith(source, '付けない').flatMap((line) =>
-		[...line.matchAll(FLAG)].map(([, flag]) => flag),
-	)
 	return {
 		grades,
 		judgments,
@@ -61,10 +54,8 @@ export const rules = (source) => {
 		lines: Number(LINES.exec(source)?.[1]),
 		bodyLines: Number(BODY_LINES.exec(source)?.[1]),
 		rounds: Number(ROUNDS.exec(source)?.[1]),
-		effort: EFFORT.exec(source)?.[1],
 		workflow: WORKFLOW.exec(source)?.[1],
 		ref: REF.exec(source)?.[1],
-		forbidden,
 	}
 }
 
@@ -74,7 +65,6 @@ export const complete = (it) =>
 	it.judgments.some(({ needs }) => needs.length === 0) &&
 	[it.total, it.softTotal, it.lines, it.rounds].every(Number.isFinite) &&
 	it.soft.length > 0 &&
-	typeof it.effort === 'string' &&
 	typeof it.workflow === 'string'
 
 const satisfied = (needs, counts) =>

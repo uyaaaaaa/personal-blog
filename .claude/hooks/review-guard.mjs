@@ -13,26 +13,6 @@ const GRADES = `${SKILL}/references/grade.md`
 
 const key = (pr) => `review.${pr}`
 
-const LEVELS = new Set(['low', 'medium', 'high', 'xhigh', 'max'])
-
-const kept = (args, { forbidden, effort }) => {
-	const tokens = args.split(/\s+/).filter(Boolean)
-	const left = tokens.filter((token) => !forbidden.includes(token.replace(/=.*$/, '')))
-	const leveled = left.some(
-		(token) => LEVELS.has(token.toLowerCase()) || /^--?effort[=:]/i.test(token),
-	)
-	if (tokens.length === left.length && leveled) return null
-	return [...left, ...(leveled ? [] : [effort])].join(' ')
-}
-
-const skilled = (input, it) => {
-	const { skill, args } = input.tool_input ?? {}
-	if (skill !== 'code-review') return null
-
-	const updated = kept(typeof args === 'string' ? args : '', it)
-	return updated === null ? null : { updatedInput: { ...input.tool_input, args: updated } }
-}
-
 const LINK = /!?\[[^\]]*\]\(([^)]*)\)/g
 const SPELLED = /^!\[[^\]]*\]\(([^)]*)\)$/
 
@@ -269,7 +249,6 @@ export const decide = (input, ask = ASK) => {
 	const command = input.tool_input?.command ?? ''
 	const bash = tool === 'Bash'
 	const seen =
-		tool === 'Skill' ||
 		TOOLED.test(tool) ||
 		TRIGGER.test(tool) ||
 		POSTED.test(tool) ||
@@ -284,7 +263,6 @@ export const decide = (input, ask = ASK) => {
 		return null
 	}
 
-	if (tool === 'Skill') return skilled(input, it)
 	if (TOOLED.test(tool) || DIRECT.test(command)) return direct(it)
 	if (POSTED.test(tool)) return posted(input, it)
 	return reviewed(input, it, ask)
@@ -301,15 +279,6 @@ if (process.argv[1]?.endsWith('review-guard.mjs')) {
 						hookEventName: 'PreToolUse',
 						permissionDecision: 'deny',
 						permissionDecisionReason: found.reason,
-					},
-				}),
-			)
-		} else if (found?.updatedInput) {
-			process.stdout.write(
-				JSON.stringify({
-					hookSpecificOutput: {
-						hookEventName: 'PreToolUse',
-						updatedInput: found.updatedInput,
 					},
 				}),
 			)

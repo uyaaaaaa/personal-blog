@@ -26,12 +26,6 @@ const ask = ({ held = null, source = SOURCE, review } = {}) => {
 	}
 }
 
-const skill = (args) => ({
-	hook_event_name: 'PreToolUse',
-	tool_name: 'Skill',
-	tool_input: { skill: 'code-review', ...(args !== undefined && { args }) },
-})
-
 const run = (command, event = 'PreToolUse') => ({
 	hook_event_name: event,
 	tool_name: 'Bash',
@@ -86,30 +80,8 @@ describe('rules', () => {
 			softTotal: 2,
 			lines: 6,
 			rounds: 3,
-			effort: 'medium',
 			workflow: 'review.yml',
-			forbidden: ['--comment', '--fix'],
 		})
-	})
-})
-
-describe('code-review の呼び出し', () => {
-	it('`--comment` `--fix` を落として effort を補う', () => {
-		expect(decide(skill('--fix --comment 307'), ask())).toEqual({
-			updatedInput: { skill: 'code-review', args: '307 medium' },
-		})
-		expect(decide(skill(), ask())).toEqual({
-			updatedInput: { skill: 'code-review', args: 'medium' },
-		})
-	})
-
-	it('effort だけ渡した呼び出しは触らない', () => {
-		expect(decide(skill('high'), ask())).toBeNull()
-		expect(decide(skill('--effort=high'), ask())).toBeNull()
-	})
-
-	it('他のスキルは見ない', () => {
-		expect(decide({ ...skill(), tool_input: { skill: 'review' } }, ask())).toBeNull()
 	})
 })
 
@@ -414,7 +386,6 @@ describe('読み取れないとき', () => {
 	it('手順書から判定を組み立てられなければ黙って通す', () => {
 		const broken = ask({ source: '# レビュー\n\n何も表が無い', review: review() })
 		expect(decide(dispatch(), broken)).toBeNull()
-		expect(decide(skill(), broken)).toBeNull()
 	})
 
 	it('他のツールと他のコマンドは見ない', () => {
