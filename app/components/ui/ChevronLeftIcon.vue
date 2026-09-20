@@ -1,6 +1,6 @@
 <template>
-	<Icon size="inline">
-		<polyline points="6 9 12 15 18 9" />
+	<Icon size="row">
+		<path d="M15 18l-6-6 6-6" />
 	</Icon>
 </template>
 

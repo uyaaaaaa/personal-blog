@@ -6,42 +6,7 @@
 				class="logo text-logo"
 				@click="closeMenu"
 			>
-				<svg
-					class="logo-mark h-6 w-6 md:h-logo-mark md:w-logo-mark"
-					viewBox="0 0 32 32"
-					aria-hidden="true"
-					focusable="false"
-				>
-					<rect
-						width="32"
-						height="32"
-						rx="7"
-						fill="#1A1A1A"
-					/>
-					<path
-						d="M8.5 10.5 v6.2 a4.6 4.6 0 0 0 9.2 0 v-6.2"
-						fill="none"
-						stroke="#FFFFFF"
-						stroke-width="3.2"
-						stroke-linecap="round"
-					/>
-					<path
-						d="M17.7 10.5 v11"
-						fill="none"
-						stroke="#FFFFFF"
-						stroke-width="3.2"
-						stroke-linecap="round"
-					/>
-					<line
-						x1="26"
-						y1="9.5"
-						x2="22.4"
-						y2="22.5"
-						stroke="#8B5CF6"
-						stroke-width="3"
-						stroke-linecap="round"
-					/>
-				</svg>
+				<LogoMark />
 				<span>Tech Blog</span>
 			</NuxtLink>
 
@@ -60,30 +25,7 @@
 					:aria-expanded="isSearchOpen"
 					@click="openSearch"
 				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="20"
-						height="20"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						aria-hidden="true"
-					>
-						<circle
-							cx="11"
-							cy="11"
-							r="8"
-						></circle>
-						<line
-							x1="21"
-							y1="21"
-							x2="16.65"
-							y2="16.65"
-						></line>
-					</svg>
+					<SearchIcon size="control" />
 				</button>
 
 				<ThemeToggle class="self-center" />
@@ -116,9 +58,11 @@
 
 <script setup lang="ts">
 	import HeaderSearch from '~/components/layout/HeaderSearch.vue'
+	import LogoMark from '~/components/layout/LogoMark.vue'
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
+	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { isSearchShortcut } from '~/utils/shortcut'
 
@@ -239,11 +183,6 @@
 		font-weight: 700;
 		font-family: var(--font-mono);
 		letter-spacing: -0.025em;
-	}
-
-	.logo-mark {
-		flex: none;
-		display: block;
 	}
 
 	.search-scrim {

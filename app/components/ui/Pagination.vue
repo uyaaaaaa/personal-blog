@@ -10,34 +10,14 @@
 			class="page-item"
 			aria-label="Previous page"
 		>
-			<svg
-				class="h-icon w-icon"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<path d="M15 18l-6-6 6-6" />
-			</svg>
+			<ChevronLeftIcon />
 		</NuxtLink>
 		<span
 			v-else
 			class="page-item page-item-disabled"
 			aria-hidden="true"
 		>
-			<svg
-				class="h-icon w-icon"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<path d="M15 18l-6-6 6-6" />
-			</svg>
+			<ChevronLeftIcon />
 		</span>
 
 		<template
@@ -70,39 +50,21 @@
 			class="page-item"
 			aria-label="Next page"
 		>
-			<svg
-				class="h-icon w-icon"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<path d="M9 18l6-6-6-6" />
-			</svg>
+			<ChevronRightIcon />
 		</NuxtLink>
 		<span
 			v-else
 			class="page-item page-item-disabled"
 			aria-hidden="true"
 		>
-			<svg
-				class="h-icon w-icon"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<path d="M9 18l6-6-6-6" />
-			</svg>
+			<ChevronRightIcon />
 		</span>
 	</nav>
 </template>
 
 <script setup lang="ts">
+	import ChevronLeftIcon from '~/components/ui/ChevronLeftIcon.vue'
+	import ChevronRightIcon from '~/components/ui/ChevronRightIcon.vue'
 	import { pageLink, paginationItems } from '~/utils/pagination'
 
 	const props = defineProps<{

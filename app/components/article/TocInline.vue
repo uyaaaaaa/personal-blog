@@ -18,22 +18,10 @@
 				@click="isOpen = !isOpen"
 			>
 				<span>Contents</span>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
+				<ChevronDownIcon
 					class="transition-move"
 					:class="{ 'rotate-180': isOpen }"
-					aria-hidden="true"
-				>
-					<polyline points="6 9 12 15 18 9" />
-				</svg>
+				/>
 			</button>
 
 			<ul
@@ -87,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+	import ChevronDownIcon from '~/components/ui/ChevronDownIcon.vue'
 	import { useScrollTo } from '~/composables/useScrollTo'
 	import { useScrollDirection } from '~/composables/useScrollDirection'
 	import { useScrollFrame } from '~/composables/useScrollFrame'

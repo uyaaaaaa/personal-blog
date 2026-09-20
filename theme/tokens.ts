@@ -136,7 +136,10 @@ export const sizes = {
 		container: '1200px',
 	},
 	spacing: {
+		// アイコンの3つの大きさ。持ち主は Icon.vue で、置く側からは名前でしか選べない
+		'icon-inline': '1rem',
 		icon: '1.125rem',
+		'icon-control': '1.25rem',
 		'logo-mark': '26px',
 		'landing-offset-sm': '116px',
 		'landing-offset': '124px',

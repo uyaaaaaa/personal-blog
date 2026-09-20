@@ -1,6 +1,6 @@
 <template>
-	<Icon size="inline">
-		<polyline points="6 9 12 15 18 9" />
+	<Icon size="row">
+		<polyline points="18 15 12 9 6 15" />
 	</Icon>
 </template>
 

@@ -1,6 +1,14 @@
 <template>
 	<Icon size="inline">
-		<polyline points="6 9 12 15 18 9" />
+		<rect
+			x="2"
+			y="4"
+			width="20"
+			height="13"
+			rx="2"
+		/>
+		<path d="M9 21h6" />
+		<path d="M12 17v4" />
 	</Icon>
 </template>
 

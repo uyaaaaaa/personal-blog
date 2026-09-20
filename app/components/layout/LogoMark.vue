@@ -1,0 +1,45 @@
+<template>
+	<svg
+		class="logo-mark h-6 w-6 md:h-logo-mark md:w-logo-mark"
+		viewBox="0 0 32 32"
+		aria-hidden="true"
+		focusable="false"
+	>
+		<rect
+			width="32"
+			height="32"
+			rx="7"
+			fill="#1A1A1A"
+		/>
+		<path
+			d="M8.5 10.5 v6.2 a4.6 4.6 0 0 0 9.2 0 v-6.2"
+			fill="none"
+			stroke="#FFFFFF"
+			stroke-width="3.2"
+			stroke-linecap="round"
+		/>
+		<path
+			d="M17.7 10.5 v11"
+			fill="none"
+			stroke="#FFFFFF"
+			stroke-width="3.2"
+			stroke-linecap="round"
+		/>
+		<line
+			x1="26"
+			y1="9.5"
+			x2="22.4"
+			y2="22.5"
+			stroke="#8B5CF6"
+			stroke-width="3"
+			stroke-linecap="round"
+		/>
+	</svg>
+</template>
+
+<style scoped>
+	.logo-mark {
+		flex: none;
+		display: block;
+	}
+</style>

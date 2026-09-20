@@ -12,38 +12,17 @@
 			:class="{ 'cursor-pointer': foldable }"
 			@click="foldable && (isOpen = !isOpen)"
 		>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="18"
-				height="18"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
+			<Icon
+				:shape="config.icon"
 				class="shrink-0"
-				aria-hidden="true"
-				v-html="config.icon"
-			></svg>
+			/>
 			<span class="min-w-0">{{ displayTitle }}</span>
-			<svg
+			<ChevronRightIcon
 				v-if="foldable"
-				xmlns="http://www.w3.org/2000/svg"
-				width="16"
-				height="16"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
+				size="inline"
 				class="shrink-0 transition-move"
 				:class="{ 'rotate-90': isOpen }"
-				aria-hidden="true"
-			>
-				<path d="m9 18 6-6-6-6" />
-			</svg>
+			/>
 		</component>
 
 		<div
@@ -56,6 +35,9 @@
 </template>
 
 <script setup lang="ts">
+	import ChevronRightIcon from '~/components/ui/ChevronRightIcon.vue'
+	import Icon from '~/components/ui/Icon.vue'
+
 	const props = defineProps<{
 		type?: string
 		title?: string
