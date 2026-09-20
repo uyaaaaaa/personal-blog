@@ -6,7 +6,7 @@ import { ESLint } from 'eslint'
 const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
 const CONFIG = 'eslint.config.mjs'
 const COMPONENTS = 'app/components'
-const RULE = 'no-restricted-syntax'
+const ERROR = 2
 
 // 規約が成り立つ経路は文面と対象の2つ。対象は拡張子ごとに設定が分かれるので、両方の綴りで見る
 const PLACED = ['Probe.vue', 'probe.ts']
@@ -46,17 +46,17 @@ if (typeof message !== 'string') {
 
 const eslint = new ESLint({ cwd: ROOT })
 
-// 当たる対象は設定の解決そのものに聞く。files の綴りを写すと、写しの側がずれる
-const says = async (path) => {
-	let config
+// 当たる設定ではなく報告そのものを見る。設定だけを見ると severity と selector を緩めても通る
+const reports = async (path) => {
+	let results
 	try {
-		config = await eslint.calculateConfigForFile(join(ROOT, path))
+		results = await eslint.lintText('', { filePath: join(ROOT, path) })
 	} catch (error) {
-		fail(`${path} に当たる設定を読み取れない:`, `  ${error.message}`)
+		fail(`${path} に eslint を当てられない:`, `  ${error.message}`)
 	}
-	// どの設定にも当たらないファイルは config を持たない
-	const [, ...options] = config?.rules?.[RULE] ?? [0]
-	return options.some((option) => option?.message === message)
+	return results
+		.flatMap((result) => result.messages)
+		.filter((found) => found.message === message && found.severity === ERROR).length
 }
 
 const found = directories()
@@ -73,12 +73,14 @@ const errors = [
 ]
 
 for (const name of PLACED) {
-	if (!(await says(`${COMPONENTS}/${name}`))) {
-		errors.push(`${COMPONENTS}/${name}: 直下に置いても文面が当たらない`)
+	const placed = `${COMPONENTS}/${name}`
+	if ((await reports(placed)) !== 1) {
+		errors.push(`${placed}: 直下に置いても文面の error が1件出ない`)
 	}
 	for (const area of found) {
-		if (await says(`${COMPONENTS}/${area}/${name}`)) {
-			errors.push(`${COMPONENTS}/${area}/${name}: 領域の中なのに文面が当たる`)
+		const inside = `${COMPONENTS}/${area}/${name}`
+		if ((await reports(inside)) > 0) {
+			errors.push(`${inside}: 領域の中なのに文面が出る`)
 		}
 	}
 }

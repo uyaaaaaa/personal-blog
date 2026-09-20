@@ -1,13 +1,17 @@
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 const SCRIPT = fileURLToPath(new URL('../../scripts/check-component-areas.mjs', import.meta.url))
 const AREAS = ['layout', 'article', 'content', 'error', 'ui']
 const FILES = ['app/components/*.{vue,ts}']
+
+// 仮の設定は temp に置くので、パーサは名前では解決されない。綴りの解決はここで済ませる
+const PARSER = pathToFileURL(createRequire(import.meta.url).resolve('vue-eslint-parser')).href
 
 let root
 
@@ -18,14 +22,22 @@ const components = (...names) => {
 const sentence = (areas) =>
 	`components/ の直下にファイルを置かない。${areas.join(' / ')} のいずれかに入れる。`
 
-const config = ({ areas = AREAS, message = sentence(areas), files = FILES } = {}) =>
+const config = ({
+	areas = AREAS,
+	message = sentence(areas),
+	files = FILES,
+	severity = 'error',
+	selector = 'Program',
+} = {}) =>
 	writeFileSync(
 		join(root, 'eslint.config.mjs'),
 		[
+			`import parser from ${JSON.stringify(PARSER)}`,
 			`export const COMPONENT_AREAS = ${JSON.stringify(areas)}`,
 			`export const AREA_DIRECTORY_MESSAGE = ${JSON.stringify(message)}`,
-			`export default [{ files: ${JSON.stringify(files)}, rules: { 'no-restricted-syntax':` +
-				` ['error', { selector: 'Program', message: AREA_DIRECTORY_MESSAGE }] } }]`,
+			`export default [{ files: ${JSON.stringify(files)}, languageOptions: { parser },` +
+				` rules: { 'no-restricted-syntax': [${JSON.stringify(severity)},` +
+				` { selector: ${JSON.stringify(selector)}, message: AREA_DIRECTORY_MESSAGE }] } }]`,
 			'',
 		].join('\n'),
 	)
@@ -77,14 +89,28 @@ describe('check-component-areas', () => {
 		config({ files: ['app/components/*.vue'] })
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/probe\.ts: 直下に置いても文面が当たらない/)
+		expect(stderr).toMatch(/probe\.ts: 直下に置いても文面の error が1件出ない/)
 	})
 
 	it('当たる対象を領域の中まで広げれば落とす', () => {
 		config({ files: ['app/components/**/*.{vue,ts}'] })
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/ui\/Probe\.vue: 領域の中なのに文面が当たる/)
+		expect(stderr).toMatch(/ui\/Probe\.vue: 領域の中なのに文面が出る/)
+	})
+
+	it('error から warn に下げれば落とす', () => {
+		config({ severity: 'warn' })
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/Probe\.vue: 直下に置いても文面の error が1件出ない/)
+	})
+
+	it('当たらない selector に変えれば落とす', () => {
+		config({ selector: 'ClassDeclaration' })
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/Probe\.vue: 直下に置いても文面の error が1件出ない/)
 	})
 
 	it('一覧を export していなければ落とす', () => {
