@@ -77,6 +77,17 @@ describe('check-frontmatter', () => {
 		expect(check().status).toBe(1)
 	})
 
+	it.each([
+		['重複したキー', ['published: false']],
+		['タブで字下げした行', ['tags:', '\t- nuxt']],
+	])('%s を、復元された値で通さずに落とす', (_, lines) => {
+		write('a.md', ...article(...lines))
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/記事を読み取れない/)
+		expect(stderr).toMatch(/a\.md/)
+	})
+
 	it('symlink で置いた記事も見る', () => {
 		writeFileSync(`${root}.md`, `---\n${article('author: "uya"').join('\n')}\n---\n`)
 		symlinkSync(`${root}.md`, join(root, 'content/article/a.md'))
