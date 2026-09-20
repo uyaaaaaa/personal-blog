@@ -27,7 +27,7 @@ import styleTokens, {
 	WEB_FONT_RESOURCE,
 } from './eslint-rules/style-tokens.mjs'
 
-const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
+const ARBITRARY_VALUE_MESSAGE = `Tailwindの任意値は使わない。サイズは theme/tokens.ts の sizes / fontSize に名前を足し、その名前のクラスで書く。 ${TOKEN_URL}`
 
 const styleRules = Object.fromEntries(
 	Object.keys(styleTokens.rules).map((name) => [`style/${name}`, 'error']),
