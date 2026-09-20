@@ -31,7 +31,7 @@
 			v-if="variant === 'not-found' && recentArticles?.length"
 			class="mt-10"
 		>
-			<h2 class="mb-3 font-mono text-meta tracking-wider text-sub">Recent Articles</h2>
+			<h2 class="mb-3 font-mono text-meta tracking-marker text-sub">Recent Articles</h2>
 			<ul class="flex flex-col">
 				<li
 					v-for="article in recentArticles"
