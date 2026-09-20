@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 const SCRIPT = fileURLToPath(new URL('../../scripts/check-component-areas.mjs', import.meta.url))
 const AREAS = ['layout', 'article', 'content', 'error', 'ui']
+const FILES = ['app/components/*.{vue,ts}']
 
 let root
 
@@ -14,12 +15,19 @@ const components = (...names) => {
 	for (const name of names) mkdirSync(join(root, 'app/components', name), { recursive: true })
 }
 
-const message = (listed = AREAS) =>
+const sentence = (areas) =>
+	`components/ の直下にファイルを置かない。${areas.join(' / ')} のいずれかに入れる。`
+
+const config = ({ areas = AREAS, message = sentence(areas), files = FILES } = {}) =>
 	writeFileSync(
 		join(root, 'eslint.config.mjs'),
-		'export const AREA_DIRECTORY_MESSAGE = ' +
-			`'components/ の直下にファイルを置かない。${listed.join(' / ')} のいずれかに入れる。 ` +
-			"https://example.com/docs/ARCHITECTURE.md#層と依存方向'\n",
+		[
+			`export const COMPONENT_AREAS = ${JSON.stringify(areas)}`,
+			`export const AREA_DIRECTORY_MESSAGE = ${JSON.stringify(message)}`,
+			`export default [{ files: ${JSON.stringify(files)}, rules: { 'no-restricted-syntax':` +
+				` ['error', { selector: 'Program', message: AREA_DIRECTORY_MESSAGE }] } }]`,
+			'',
+		].join('\n'),
 	)
 
 const check = () => spawnSync(process.execPath, [SCRIPT, root], { encoding: 'utf8' })
@@ -27,7 +35,7 @@ const check = () => spawnSync(process.execPath, [SCRIPT, root], { encoding: 'utf
 beforeEach(() => {
 	root = mkdtempSync(join(tmpdir(), 'check-component-areas-'))
 	components(...AREAS)
-	message()
+	config()
 })
 
 afterEach(() => {
@@ -35,22 +43,8 @@ afterEach(() => {
 })
 
 describe('check-component-areas', () => {
-	it('挙げる行き先が実在する領域と揃っていれば通す', () => {
+	it('挙げる行き先と当たる対象が揃っていれば通す', () => {
 		expect(check().status).toBe(0)
-	})
-
-	it('領域が増えて文面が据え置きなら落とす', () => {
-		components('search')
-		const { status, stderr } = check()
-		expect(status).toBe(1)
-		expect(stderr).toMatch(/search: app\/components\/ にあるが/)
-	})
-
-	it('無い領域を挙げていれば落とす', () => {
-		message([...AREAS, 'common'])
-		const { status, stderr } = check()
-		expect(status).toBe(1)
-		expect(stderr).toMatch(/common: eslint\.config\.mjs が挙げている/)
 	})
 
 	it('直下のファイルは行き先に数えない', () => {
@@ -58,20 +52,45 @@ describe('check-component-areas', () => {
 		expect(check().status).toBe(0)
 	})
 
-	it('並びを読み取れない文面なら落とす', () => {
-		writeFileSync(
-			join(root, 'eslint.config.mjs'),
-			"export const AREA_DIRECTORY_MESSAGE = 'components/ の直下にファイルを置かない。'\n",
-		)
+	it('領域が増えて一覧が据え置きなら落とす', () => {
+		components('search')
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/行き先を読み取れない/)
+		expect(stderr).toMatch(/search: app\/components\/ にあるが/)
 	})
 
-	it('文面を export していなければ落とす', () => {
+	it('無い領域を挙げていれば落とす', () => {
+		config({ areas: [...AREAS, 'common'] })
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/common: eslint\.config\.mjs が挙げている/)
+	})
+
+	it('挙げた領域が文面に出てこなければ落とす', () => {
+		config({ message: 'components/ の直下にファイルを置かない。' })
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/ui: 挙げている領域が文面に出てこない/)
+	})
+
+	it('当たる対象を拡張子で狭めれば落とす', () => {
+		config({ files: ['app/components/*.vue'] })
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/probe\.ts: 直下に置いても文面が当たらない/)
+	})
+
+	it('当たる対象を領域の中まで広げれば落とす', () => {
+		config({ files: ['app/components/**/*.{vue,ts}'] })
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/ui\/Probe\.vue: 領域の中なのに文面が当たる/)
+	})
+
+	it('一覧を export していなければ落とす', () => {
 		writeFileSync(join(root, 'eslint.config.mjs'), 'export default []\n')
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/AREA_DIRECTORY_MESSAGE を export していない/)
+		expect(stderr).toMatch(/COMPONENT_AREAS を文字列の配列として export していない/)
 	})
 })
