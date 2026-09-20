@@ -17,7 +17,7 @@ const USAGE = [
 	'    ] }',
 	'',
 	'判定・バッジ・件数の上限は review スキルから読む。',
-	'出力の JSON をそのまま mcp__github__actions_run_trigger に渡す。',
+	'出力の JSON が発火に渡す値。workflow 名・PR 番号・レビュー本文を、組み替えずに渡す。',
 ]
 
 const text = (value) => (typeof value === 'string' ? value.trim() : '')
