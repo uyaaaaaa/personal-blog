@@ -10,12 +10,7 @@
 		aria-hidden="true"
 		:class="ICON_SIZE_CLASS[size]"
 	>
-		<!-- 形を値で受けるのは、種類で引く一覧のように形が実行時に決まるときだけ -->
-		<g
-			v-if="shape"
-			v-html="shape"
-		/>
-		<slot v-else />
+		<slot />
 	</svg>
 </template>
 
@@ -30,11 +25,5 @@
 </script>
 
 <script setup lang="ts">
-	withDefaults(
-		defineProps<{
-			size?: IconSize
-			shape?: string
-		}>(),
-		{ size: 'base', shape: '' },
-	)
+	withDefaults(defineProps<{ size?: IconSize }>(), { size: 'base' })
 </script>

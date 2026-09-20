@@ -12,10 +12,9 @@
 			:class="{ 'cursor-pointer': foldable }"
 			@click="foldable && (isOpen = !isOpen)"
 		>
-			<Icon
-				:shape="config.icon"
-				class="shrink-0"
-			/>
+			<Icon class="shrink-0">
+				<g v-html="config.icon" />
+			</Icon>
 			<span class="min-w-0">{{ displayTitle }}</span>
 			<ChevronRightIcon
 				v-if="foldable"
