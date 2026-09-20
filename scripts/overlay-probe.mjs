@@ -204,11 +204,13 @@ const PAGE_HELPERS = `
 	// 検索の入力欄は目印を枠に出すので、輪郭を探す先も枠にする
 	const $ringHost = (el) =>
 		(el.matches?.('.search-input') && el.closest('.search-field')) || el
+	const $drawn = (style) => style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0
 	const $ring = (el) => {
 		if (!el || el === document.body) return ${JSON.stringify(NO_RING)}
-		const style = getComputedStyle($ringHost(el))
-		if (style.outlineStyle === 'none' || parseFloat(style.outlineWidth) === 0)
-			return ${JSON.stringify(NO_RING)}
+		const style = [el, $ringHost(el)]
+			.map((target) => getComputedStyle(target))
+			.find($drawn)
+		if (!style) return ${JSON.stringify(NO_RING)}
 		return style.outlineStyle + ' ' + style.outlineWidth
 	}
 	const $state = () => ({

@@ -254,7 +254,7 @@
 
 	/* ダイアログが overflow: hidden なので、外に出した輪郭は切れる。内側に引く */
 	.search-field:has(.search-input:focus-visible:not([data-pointer-focus])) {
-		outline: 2px solid var(--color-accent);
+		outline: var(--focus-ring);
 		outline-offset: -2px;
 	}
 
