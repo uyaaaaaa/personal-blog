@@ -1,6 +1,6 @@
 ---
 name: codify
-description: "PR で受けた指摘のうち、繰り返したものだけを規約か検査に移す。台帳（`harness/journal` / `harness/ledger`）を畳むのもここが持つ。定期の発火から呼ばれる。「同じ指摘を毎回受ける」「レビューの観点を仕組みにして」という依頼でも使う。"
+description: "台帳に溜めたレビュー指摘のうち、繰り返した観点を規約か検査に移す。定期の発火から呼ばれる。「同じ指摘を毎回受ける」「レビューの観点を仕組みにして」という依頼でも使う。"
 ---
 
 # 指摘を次の差分に効かせる
@@ -9,7 +9,7 @@ description: "PR で受けた指摘のうち、繰り返したものだけを規
 
 **ここで足すのは `.claude/rules/` の1行まで。** 検査に落ちるものは issue にして `assign` に渡す。実装は持たない。
 
-**台帳は main の外の orphan ブランチにある。** 読み書きは `scripts/harness-journal.mjs` を通し、中の形を手で決めない。
+**台帳は main の外の orphan ブランチ（`harness/journal` / `harness/ledger`）にある。** 読み書きは `scripts/harness-journal.mjs` を通し、中の形を手で決めない。
 
 ## 1. 畳む
 
