@@ -1,17 +1,13 @@
 <template>
 	<div class="flex items-stretch">
 		<HeaderExploreMenu
-			:categories="categories ?? []"
-			:latest-items="latestItems"
-			:top-tags="topTags"
+			:groups="menuGroups"
 			:location="location"
 		/>
 
 		<HeaderDrawer
 			:is-open="isOpen"
-			:categories="categories ?? []"
-			:latest-items="latestItems"
-			:top-tags="topTags"
+			:groups="menuGroups"
 			@toggle="emit('toggle')"
 			@close="emit('close')"
 		/>
@@ -25,6 +21,7 @@
 	import { useArticleTags } from '~/composables/useArticleTags'
 	import { useLatestArticles } from '~/composables/useLatestArticles'
 	import { formatRelativeDate } from '~/utils/date'
+	import { buildMenuGroups } from '~/utils/menuGroup'
 	import type { MenuArticle } from '~/utils/menuArticle'
 
 	defineProps<{
@@ -59,4 +56,12 @@
 	onMounted(() => {
 		now.value = Date.now()
 	})
+
+	const menuGroups = computed(() =>
+		buildMenuGroups({
+			categories: categories.value ?? [],
+			latestItems: latestItems.value,
+			topTags: topTags.value,
+		}),
+	)
 </script>

@@ -24,72 +24,74 @@
 			aria-label="Explore"
 			:is-open="isPanelOpen"
 		>
-			<HeaderMenuColumn label="Categories">
+			<HeaderMenuColumn :label="groups.categories.heading">
 				<ul class="menu-list">
 					<li
-						v-for="category in categories"
-						:key="category.slug"
+						v-for="item in groups.categories.items"
+						:key="item.key"
 					>
 						<NuxtLink
-							:to="`/category/${category.slug}`"
+							:to="item.href"
 							class="menu-category"
 							prefetch-on="interaction"
 						>
-							<span class="menu-category-name">{{ category.label }}</span>
-							<span class="menu-category-count">{{ category.count }}</span>
+							<span class="menu-category-name">{{ item.primary }}</span>
+							<span class="menu-category-count">{{ item.secondary }}</span>
 						</NuxtLink>
 					</li>
 				</ul>
 			</HeaderMenuColumn>
 
-			<HeaderMenuColumn label="Latest">
+			<HeaderMenuColumn :label="groups.latest.heading">
 				<ul class="menu-list">
 					<li
-						v-for="article in latestItems"
-						:key="article.path"
+						v-for="item in groups.latest.items"
+						:key="item.key"
 					>
 						<NuxtLink
-							:to="article.path"
+							:to="item.href"
 							class="menu-article"
 							prefetch-on="interaction"
 						>
-							<span class="menu-article-title">{{ article.title }}</span>
+							<span class="menu-article-title">{{ item.primary }}</span>
 							<time
 								class="menu-article-date"
-								:datetime="article.date"
-								>{{ article.dateLabel }}</time
+								:datetime="item.datetime"
+								>{{ item.secondary }}</time
 							>
 						</NuxtLink>
 					</li>
 				</ul>
 
 				<NuxtLink
-					to="/article"
+					v-if="groups.latest.viewAllHref"
+					:to="groups.latest.viewAllHref"
 					class="menu-all"
 					prefetch-on="interaction"
 					>View All</NuxtLink
 				>
 			</HeaderMenuColumn>
 
-			<HeaderMenuColumn label="Tags">
+			<HeaderMenuColumn :label="groups.tags.heading">
 				<ul class="menu-list menu-list-split">
 					<li
-						v-for="tag in topTags"
-						:key="tag.slug"
+						v-for="item in groups.tags.items"
+						:key="item.key"
 					>
 						<NuxtLink
-							:to="`/tags/${tag.slug}`"
+							:to="item.href"
 							class="menu-tag"
 							prefetch-on="interaction"
 						>
-							<span class="menu-tag-name">{{ tag.name }}</span>
-							<span class="menu-tag-count">{{ tag.count }}</span>
+							<span class="menu-tag-name">{{ item.primary }}</span>
+							<span class="menu-tag-count">{{ item.secondary }}</span>
 						</NuxtLink>
 					</li>
 				</ul>
 
 				<NuxtLink
-					to="/tags"
+					v-if="groups.tags.viewAllHref"
+					:to="groups.tags.viewAllHref"
 					class="menu-all"
 					prefetch-on="interaction"
 					>View All</NuxtLink
@@ -103,14 +105,10 @@
 	import HeaderMenuColumn from '~/components/layout/HeaderMenuColumn.vue'
 	import HeaderMenuPanel from '~/components/layout/HeaderMenuPanel.vue'
 	import { useHoverPanel } from '~/composables/useHoverPanel'
-	import type { CategorySummary } from '~/utils/category'
-	import type { MenuArticle } from '~/utils/menuArticle'
-	import type { TagSummary } from '~/utils/tag'
+	import type { MenuGroups } from '~/utils/menuGroup'
 
 	const props = defineProps<{
-		categories: CategorySummary[]
-		latestItems: MenuArticle[]
-		topTags: TagSummary[]
+		groups: MenuGroups
 		location: string
 	}>()
 
