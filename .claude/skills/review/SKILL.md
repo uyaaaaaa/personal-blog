@@ -82,7 +82,7 @@ node scripts/review-args.mjs < findings.json
 - 上限を超えた件数や、欠けた `path` / `line` / 見出しは組み立てずに落ちる。落ちたら 2〜5 に戻る
 - `review` は `/pulls/{n}/reviews` に渡す形そのまま。判定が `Approve` なら `body` は入らない
 - **発火は、`.claude/hooks/review-guard.mjs` が検査する経路で打つ。** 検査に当たらない経路だと、バッジも上限も判定も素通りする
-- 渡すのは出力のまま。`workflow_id` と `ref` と `inputs` を組み替えない
+- 渡すのは出力のまま。キーを落とさない、組み替えない
 - **走らせたら結果を見る。** `review.yml` の最新の run が `success` でなければ投稿できていない。失敗したまま報告しない
 - 作業ツリーのレビュー（PR が無い）は投稿せず、同じ型で会話に返す
 - **投稿したら、判定と件数だけを報告して終わり**
