@@ -237,7 +237,8 @@ const STYLESHEET_ASSEMBLY = [
 	},
 ]
 
-const AREA_DIRECTORY_MESSAGE = `components/ の直下にファイルを置かない。layout / article / content / common / error のいずれかに入れる。 ${ARCHITECTURE_URL}`
+// 挙げる行き先は scripts/check-component-areas.mjs が app/components/ と突き合わせるので export する
+export const AREA_DIRECTORY_MESSAGE = `components/ の直下にファイルを置かない。layout / article / content / error / ui のいずれかに入れる。 ${ARCHITECTURE_URL}`
 
 const PAGE_CONTEXT_ROUTE_MESSAGE = `route を読むのは入口（pages/ layouts/ app.vue error.vue）だけ。ここでは props か引数で受け取る。 ${ARCHITECTURE_URL}`
 const PAGE_CONTEXT_404_MESSAGE = `components/ は404を送出しない（createError）。判定は pages/ 側で行う。 ${ARCHITECTURE_URL}`
