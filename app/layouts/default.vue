@@ -37,12 +37,8 @@
 		line-height: 1.5;
 	}
 
-	:root {
-		--focus-ring: 2px solid var(--color-accent);
-	}
-
 	:focus-visible {
-		outline: var(--focus-ring);
+		outline: 2px solid var(--color-accent);
 		outline-offset: 2px;
 	}
 

@@ -243,7 +243,7 @@
 
 	defineExpose({ focus, close, isVisible })
 
-	/* eslint-disable style/no-outline-removal -- キーボードの目印は入力欄ではなく枠が持つ */
+	/* eslint-disable style/no-outline-removal -- 目印は枠のアクセント線が持つ。開き方によらず出る */
 </script>
 
 <style scoped>
@@ -275,11 +275,6 @@
 
 	.search-input:focus-visible {
 		outline: none;
-	}
-
-	.search-field:has(.search-input:focus-visible:not([data-pointer-focus])) {
-		outline: var(--focus-ring);
-		outline-offset: 2px;
 	}
 
 	.search-panel-layer {

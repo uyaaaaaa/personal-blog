@@ -201,16 +201,11 @@ const PAGE_HELPERS = `
 		const label = (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\\s+/g, ' ')
 		return el.tagName + (label ? \` "\${label.slice(0, 24)}"\` : '') + ($shown(el) ? '' : ' (見えない)')
 	}
-	// 検索の入力欄は目印を枠に出すので、輪郭を探す先も枠にする
-	const $ringHost = (el) =>
-		(el.matches?.('.search-input') && el.closest('.search-field')) || el
-	const $drawn = (style) => style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0
 	const $ring = (el) => {
 		if (!el || el === document.body) return ${JSON.stringify(NO_RING)}
-		const style = [el, $ringHost(el)]
-			.map((target) => getComputedStyle(target))
-			.find($drawn)
-		if (!style) return ${JSON.stringify(NO_RING)}
+		const style = getComputedStyle(el)
+		if (style.outlineStyle === 'none' || parseFloat(style.outlineWidth) === 0)
+			return ${JSON.stringify(NO_RING)}
 		return style.outlineStyle + ' ' + style.outlineWidth
 	}
 	const $state = () => ({
@@ -975,13 +970,17 @@ const probes = [
 		name: 'focus-ring/実クリックで開き語を打たずに Tab',
 		input: true,
 		run: async (p) => {
+			const before = await p.evaluate('return $state()')
 			await p.open()
 			await p.pressKey('Tab')
 			await p.evaluate('await $frames(2)')
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: show(state, ['active', 'activeShown', 'ring']),
-				ok: state.activeShown && state.ring !== NO_RING,
+				observed: show(state, ['active', 'activeShown', 'ring', 'underline']),
+				// Tab の先は、入力欄に留まる側では枠の線、候補に出る側では輪郭が目印になる
+				ok:
+					state.activeShown &&
+					(state.ring !== NO_RING || state.underline !== before.underline),
 			}
 		},
 	},
@@ -989,6 +988,7 @@ const probes = [
 		name: 'focus-ring/実クリックで開き Tab で出て Shift+Tab で戻る',
 		input: true,
 		run: async (p) => {
+			const before = await p.evaluate('return $state()')
 			await p.open()
 			await p.reveal()
 			await p.pressKey('Tab')
@@ -996,8 +996,12 @@ const probes = [
 			await p.evaluate('await $frames(2)')
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: show(state, ['active', 'activeShown', 'ring']),
-				ok: state.activeShown && state.active.startsWith('INPUT') && state.ring !== NO_RING,
+				observed: show(state, ['active', 'activeShown', 'ring', 'underline']),
+				ok:
+					state.activeShown &&
+					state.active.startsWith('INPUT') &&
+					state.ring === NO_RING &&
+					state.underline !== before.underline,
 			}
 		},
 	},
@@ -1551,6 +1555,7 @@ const probes = [
 		name: 'inline-候補に移ってから Escape で入力欄に戻る',
 		opensByInput: true,
 		run: async (p) => {
+			const before = await p.evaluate('return $state()')
 			await p.open()
 			await p.pressKey('Tab')
 			await p.evaluate('await $frames(2)')
@@ -1564,8 +1569,12 @@ const probes = [
 				}
 			`)
 			return {
-				observed: `Tab の先=${onLink.active} / Escape 後: ${show(state, ['overlay', 'active', 'ring'])}`,
-				ok: state.overlay === 'hidden' && state.inInput && state.ring !== NO_RING,
+				observed: `Tab の先=${onLink.active} / Escape 後: ${show(state, ['overlay', 'active', 'ring', 'underline'])}`,
+				ok:
+					state.overlay === 'hidden' &&
+					state.inInput &&
+					state.ring === NO_RING &&
+					state.underline !== before.underline,
 			}
 		},
 	},

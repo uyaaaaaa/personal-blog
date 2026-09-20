@@ -185,7 +185,7 @@
 		{ flush: 'post' },
 	)
 
-	/* eslint-disable style/no-outline-removal -- キーボードの目印は入力欄ではなく枠が持つ */
+	/* eslint-disable style/no-outline-removal -- 目印は枠のアクセント線が持つ。開き方によらず出る */
 </script>
 
 <style scoped>
@@ -250,12 +250,6 @@
 
 	.search-input:focus-visible {
 		outline: none;
-	}
-
-	/* ダイアログが overflow: hidden なので、外に出した輪郭は切れる。内側に引く */
-	.search-field:has(.search-input:focus-visible:not([data-pointer-focus])) {
-		outline: var(--focus-ring);
-		outline-offset: -2px;
 	}
 
 	.search-field-icon {
