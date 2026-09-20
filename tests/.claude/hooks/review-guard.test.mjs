@@ -1,11 +1,9 @@
-import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { decide, resolve, rules } from '~~/.claude/hooks/review-guard.mjs'
+import { source } from '~~/scripts/review-rules.mjs'
 
-const SOURCE = readFileSync(
-	new URL('../../../.claude/skills/review/SKILL.md', import.meta.url),
-	'utf8',
-)
+const SOURCE = source(fileURLToPath(new URL('../../../.claude/skills/review', import.meta.url)))
 
 const MUST = '![must-badge](https://img.shields.io/badge/review-must-d73a4a)'
 const IMO = '![imo-badge](https://img.shields.io/badge/review-imo-0075ca)'

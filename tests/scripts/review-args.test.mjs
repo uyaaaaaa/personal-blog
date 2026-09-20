@@ -1,13 +1,10 @@
-import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { decide } from '~~/.claude/hooks/review-guard.mjs'
 import { args, findings, verdict } from '~~/scripts/review-args.mjs'
-import { rules } from '~~/scripts/review-rules.mjs'
+import { rules, source } from '~~/scripts/review-rules.mjs'
 
-const SOURCE = readFileSync(
-	new URL('../../.claude/skills/review/SKILL.md', import.meta.url),
-	'utf8',
-)
+const SOURCE = source(fileURLToPath(new URL('../../.claude/skills/review', import.meta.url)))
 
 const RULES = rules(SOURCE)
 

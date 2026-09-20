@@ -1,8 +1,8 @@
-import { readFileSync } from 'node:fs'
-import { complete, eventOf, judged, rules } from './review-rules.mjs'
+import { fileURLToPath } from 'node:url'
+import { complete, eventOf, judged, rules, source } from './review-rules.mjs'
 import { read } from './stdin.mjs'
 
-const SKILL = new URL('../.claude/skills/review/SKILL.md', import.meta.url)
+const SKILL = '.claude/skills/review'
 
 const USAGE = [
 	'使い方: node scripts/review-args.mjs < findings.json',
@@ -164,9 +164,9 @@ const main = async () => {
 		fail(['レビューの JSON を標準入力に渡す'])
 	}
 
-	const it = rules(readFileSync(SKILL, 'utf8'))
+	const it = rules(source(fileURLToPath(new URL(`../${SKILL}`, import.meta.url))))
 	if (!complete(it) || !Number.isFinite(it.bodyLines) || typeof it.ref !== 'string') {
-		fail([`判定とグレードを ${SKILL.pathname} から読めない`])
+		fail([`判定とグレードを ${SKILL} から読めない`])
 	}
 
 	const built = args(review, it)
