@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { attachments, parse, prompt, summary, turns } from '~~/scripts/session-cost.mjs'
+import { attachments, named, parse, prompt, summary, turns } from '~~/scripts/session-cost.mjs'
 
 const assistant = (id, usage, content = []) => ({
 	type: 'assistant',
@@ -86,5 +86,24 @@ describe('prompt', () => {
 
 	it('記録が無ければ 0', () => {
 		expect(prompt([])).toBe(0)
+	})
+})
+
+describe('named', () => {
+	it('サブエージェントの記録には、どの型で起こしたかを添える', () => {
+		const name = named('/logs/agent-abc.jsonl', (path) => {
+			expect(path).toBe('/logs/agent-abc.meta.json')
+			return JSON.stringify({ agentType: 'measure' })
+		})
+
+		expect(name).toBe('agent-abc.jsonl  [measure]')
+	})
+
+	it('隣に記録が無ければファイル名だけ', () => {
+		expect(
+			named('/logs/session.jsonl', () => {
+				throw new Error('ENOENT')
+			}),
+		).toBe('session.jsonl')
 	})
 })

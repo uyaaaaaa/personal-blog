@@ -126,12 +126,36 @@ const report = (name, records) => {
 	console.log('')
 }
 
+const SUBAGENTS = 'subagents'
+
+// サブエージェントは親と別の記録に出る。固定費も別に払うので、本流と並べて見えるようにする
+const subagentsOf = (directory, log) => {
+	try {
+		const nested = join(directory, log.replace(/\.jsonl$/, ''), SUBAGENTS)
+		return readdirSync(nested)
+			.filter((name) => name.endsWith('.jsonl'))
+			.map((name) => join(nested, name))
+	} catch {
+		return []
+	}
+}
+
+export const named = (log, readMeta = readFileSync) => {
+	const name = log.replace(/^.*\//, '')
+	try {
+		const { agentType } = JSON.parse(readMeta(log.replace(/\.jsonl$/, '.meta.json'), 'utf8'))
+		return agentType === undefined ? name : `${name}  [${agentType}]`
+	} catch {
+		return name
+	}
+}
+
 const logsOf = (paths) => {
 	if (paths.length > 0) return paths.map((path) => resolve(path))
 	const directory = join(PROJECTS, slug(process.cwd()))
 	return readdirSync(directory)
 		.filter((name) => name.endsWith('.jsonl'))
-		.map((name) => join(directory, name))
+		.flatMap((name) => [join(directory, name), ...subagentsOf(directory, name)])
 }
 
 if (process.argv[1]?.endsWith('session-cost.mjs')) {
@@ -144,5 +168,5 @@ if (process.argv[1]?.endsWith('session-cost.mjs')) {
 		process.exit(1)
 	}
 
-	for (const log of logs) report(log.replace(/^.*\//, ''), parse(readFileSync(log, 'utf8')))
+	for (const log of logs) report(named(log), parse(readFileSync(log, 'utf8')))
 }
