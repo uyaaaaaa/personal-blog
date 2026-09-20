@@ -53,6 +53,7 @@ node scripts/review-args.mjs < "$FILE"
 ```
 
 - `verified` には `get_check_runs` の状態を書く。自分では lint も test も打たない
+- **`line` は差分が足した行・変えた行から選ぶ。** 触っていない行を指すと、投稿が 422（Line could not be resolved）で落ちる
 - 落ちたら理由が出る。2 に戻って直し、通るまで出さない
 - PR が無い依頼（作業ツリー）は `main...HEAD` の差分を見て、`pr` を省いた入力の形のまま返す
 
