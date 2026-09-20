@@ -1,6 +1,6 @@
 ---
 name: assign
-description: "このリポジトリの GitHub issue を1本、着手から PR の見届けまで進める。「#108 対応して」「issue #110 を直して」のように issue 番号で来る依頼で使う。"
+description: "このリポジトリの GitHub issue を1本、着手から PR を出すまで進める。「#108 対応して」「issue #110 を直して」のように issue 番号で来る依頼で使う。"
 ---
 
 # issue 対応の手順
