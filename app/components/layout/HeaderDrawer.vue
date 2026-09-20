@@ -100,7 +100,7 @@
 								d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"
 							/>
 						</Icon>
-						<span class="drawer-row-label">Categories</span>
+						<span class="drawer-row-label">{{ groups.categories.heading }}</span>
 						<ChevronDownIcon
 							class="drawer-chevron"
 							:class="{ 'is-open': isCategoriesOpen }"
@@ -114,17 +114,17 @@
 					>
 						<ul class="drawer-sublist">
 							<li
-								v-for="category in categories"
-								:key="category.slug"
+								v-for="item in groups.categories.items"
+								:key="item.key"
 							>
 								<NuxtLink
-									:to="`/category/${category.slug}`"
+									:to="item.href"
 									class="drawer-subrow drawer-subrow-split"
 									prefetch-on="interaction"
 									@click="closeDrawer"
 								>
-									<span class="drawer-subrow-name">{{ category.label }}</span>
-									<span class="drawer-subrow-count">{{ category.count }}</span>
+									<span class="drawer-subrow-name">{{ item.primary }}</span>
+									<span class="drawer-subrow-count">{{ item.secondary }}</span>
 								</NuxtLink>
 							</li>
 						</ul>
@@ -145,7 +145,7 @@
 							/>
 							<path d="M12 7v5l3.5 2" />
 						</Icon>
-						<span class="drawer-row-label">Latest</span>
+						<span class="drawer-row-label">{{ groups.latest.heading }}</span>
 						<ChevronDownIcon
 							class="drawer-chevron"
 							:class="{ 'is-open': isLatestOpen }"
@@ -159,26 +159,26 @@
 					>
 						<ul class="drawer-sublist">
 							<li
-								v-for="article in latestItems"
-								:key="article.path"
+								v-for="item in groups.latest.items"
+								:key="item.key"
 							>
 								<NuxtLink
-									:to="article.path"
+									:to="item.href"
 									class="drawer-subrow"
 									prefetch-on="interaction"
 									@click="closeDrawer"
 								>
-									<span class="drawer-subrow-title">{{ article.title }}</span>
+									<span class="drawer-subrow-title">{{ item.primary }}</span>
 									<time
 										class="drawer-subrow-meta"
-										:datetime="article.date"
-										>{{ article.dateLabel }}</time
+										:datetime="item.datetime"
+										>{{ item.secondary }}</time
 									>
 								</NuxtLink>
 							</li>
-							<li>
+							<li v-if="groups.latest.viewAllHref">
 								<NuxtLink
-									to="/article"
+									:to="groups.latest.viewAllHref"
 									class="drawer-subrow drawer-subrow-all"
 									prefetch-on="interaction"
 									@click="closeDrawer"
@@ -204,7 +204,7 @@
 								r="1.5"
 							/>
 						</Icon>
-						<span class="drawer-row-label">Tags</span>
+						<span class="drawer-row-label">{{ groups.tags.heading }}</span>
 						<ChevronDownIcon
 							class="drawer-chevron"
 							:class="{ 'is-open': isTagsOpen }"
@@ -218,22 +218,22 @@
 					>
 						<ul class="drawer-sublist">
 							<li
-								v-for="tag in topTags"
-								:key="tag.slug"
+								v-for="item in groups.tags.items"
+								:key="item.key"
 							>
 								<NuxtLink
-									:to="`/tags/${tag.slug}`"
+									:to="item.href"
 									class="drawer-subrow drawer-subrow-split"
 									prefetch-on="interaction"
 									@click="closeDrawer"
 								>
-									<span class="drawer-subrow-name">{{ tag.name }}</span>
-									<span class="drawer-subrow-count">{{ tag.count }}</span>
+									<span class="drawer-subrow-name">{{ item.primary }}</span>
+									<span class="drawer-subrow-count">{{ item.secondary }}</span>
 								</NuxtLink>
 							</li>
-							<li>
+							<li v-if="groups.tags.viewAllHref">
 								<NuxtLink
-									to="/tags"
+									:to="groups.tags.viewAllHref"
 									class="drawer-subrow drawer-subrow-all"
 									prefetch-on="interaction"
 									@click="closeDrawer"
@@ -255,15 +255,11 @@
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
-	import type { CategorySummary } from '~/utils/category'
-	import type { MenuArticle } from '~/utils/menuArticle'
-	import type { TagSummary } from '~/utils/tag'
+	import type { MenuGroups } from '~/utils/menuGroup'
 
 	const props = defineProps<{
 		isOpen: boolean
-		categories: CategorySummary[]
-		latestItems: MenuArticle[]
-		topTags: TagSummary[]
+		groups: MenuGroups
 	}>()
 
 	const emit = defineEmits<{
