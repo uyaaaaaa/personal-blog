@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 import { readdirSync, readFileSync } from 'node:fs'
 import { isAbsolute, join } from 'node:path'
-import { complete, eventOf, judged, rules } from '../../scripts/review-rules.mjs'
+import { complete, eventOf, judged, rules, source } from '../../scripts/review-rules.mjs'
 import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
 export { rules }
 
-const SKILL = '.claude/skills/review/SKILL.md'
+const SKILL = '.claude/skills/review'
+const STEPS = `${SKILL}/SKILL.md`
+const GRADES = `${SKILL}/references/grade.md`
 const EVIDENCE = '.verify'
 
 const key = (pr) => `review.${pr}`
@@ -98,7 +100,7 @@ const commented = (text, it) => {
 	const grade = graded(text, it.grades)
 	if (!grade.name) {
 		return grade.names.length === 0
-			? `グレードのバッジが無い。${SKILL} の本文を1つだけ先頭に写す`
+			? `グレードのバッジが無い。${GRADES} の本文を1つだけ先頭に写す`
 			: `バッジが ${grade.names.join(' と ')} の${grade.names.length}つある。1コメント1グレードに割る`
 	}
 	if (!grade.head) return `バッジはコメントの先頭に置く（${grade.name}）`
@@ -147,7 +149,7 @@ const validated = (payload, it, seen) => {
 	const bodies = comments.map((one) => (typeof one?.body === 'string' ? one.body : ''))
 
 	if ([body, ...bodies].some((text) => respelled(text, it.grades) !== text)) {
-		return `バッジの綴りが正本と違う。${SKILL} の表の本文をそのまま写す`
+		return `バッジの綴りが正本と違う。${GRADES} の表の本文をそのまま写す`
 	}
 	if (!comments.every(PLACED)) return 'インラインには `path` と `line` を付ける'
 
@@ -238,7 +240,7 @@ const root = () => process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
 export const resolve = (path, base) => (isAbsolute(path) ? path : join(base, path))
 
 const ASK = {
-	skill: () => readFileSync(join(root(), SKILL), 'utf8'),
+	skill: () => source(join(root(), SKILL)),
 	payload: (path) => readFileSync(resolve(path, root()), 'utf8'),
 	evidence: () => {
 		try {
@@ -260,7 +262,7 @@ const POSTED =
 	/^mcp__.*(add_issue_comment|update_issue_comment|add_comment_to_pending_review|add_reply_to_pull_request_comment)$/
 
 const direct = (it) => ({
-	reason: `自分のトークンで submit しない。${it.workflow} の発火に渡す（→ ${SKILL} の6）`,
+	reason: `自分のトークンで submit しない。${it.workflow} の発火に渡す（→ ${STEPS} の6）`,
 })
 
 const VERDICT = /^\s*\**判定\**\s*[:：]/m
@@ -273,7 +275,7 @@ const posted = (input, it) => {
 	const body = input.tool_input?.body
 	if (typeof body !== 'string' || !shaped(body, it)) return null
 	return {
-		reason: `判定もグレードも通常コメントでは付かない。${it.workflow} の発火に渡す（→ ${SKILL} の6）`,
+		reason: `判定もグレードも通常コメントでは付かない。${it.workflow} の発火に渡す（→ ${STEPS} の6）`,
 	}
 }
 

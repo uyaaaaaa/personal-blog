@@ -1,3 +1,23 @@
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+const STEPS = 'SKILL.md'
+const REFERENCES = 'references'
+
+const referenced = (dir) => {
+	try {
+		return readdirSync(join(dir, REFERENCES))
+			.filter((name) => name.endsWith('.md'))
+			.sort()
+			.map((name) => join(dir, REFERENCES, name))
+	} catch {
+		return []
+	}
+}
+
+export const source = (dir) =>
+	[join(dir, STEPS), ...referenced(dir)].map((path) => readFileSync(path, 'utf8')).join('\n')
+
 const GRADE = /^\|\s*`([a-z]+)`\s*\|[^|]*\|\s*`(!\[[^\]]*\]\([^)]*\))`\s*\|/gm
 const JUDGMENT = /^\|\s*`([A-Za-z][A-Za-z ]*)`\s*\|\s*([^|]+?)\s*\|\s*$/gm
 const CONDITION = /`([a-z]+)`\s*が(\d+)件(以上)?/g
