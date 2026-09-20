@@ -26,6 +26,7 @@
 	import Pagination from '~/components/ui/Pagination.vue'
 	import { usePagination } from '~/composables/usePagination'
 	import { usePageSeo } from '~/composables/usePageSeo'
+	import { publishedArticleList } from '~/utils/articleQuery'
 	import { isCategory, CATEGORY_LABELS } from '~/utils/category'
 
 	const route = useRoute()
@@ -38,12 +39,7 @@
 	const label = CATEGORY_LABELS[category]
 
 	const { data: articles } = await useAsyncData(`category-articles-${category}`, () =>
-		queryCollection('article')
-			.where('published', '=', true)
-			.where('category', '=', category)
-			.order('date', 'DESC')
-			.select('path', 'title', 'date', 'tags')
-			.all(),
+		publishedArticleList().where('category', '=', category).all(),
 	)
 
 	if ((articles.value ?? []).length === 0) {

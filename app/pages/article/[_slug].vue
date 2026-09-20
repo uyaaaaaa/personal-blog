@@ -71,6 +71,7 @@
 	import ReadNext from '~/components/article/ReadNext.vue'
 	import ScrollToTopButton from '~/components/ui/ScrollToTopButton.vue'
 	import { usePageSeo } from '~/composables/usePageSeo'
+	import { publishedArticles } from '~/utils/articleQuery'
 	import { CATEGORY_LABELS, isCategory } from '~/utils/category'
 	import { formatDate } from '~/utils/date'
 	import { tagToSlug } from '~/utils/tag'
@@ -89,7 +90,7 @@
 		refresh,
 		status,
 	} = await useAsyncData(articlePath.value, () =>
-		queryCollection('article').path(articlePath.value).where('published', '=', true).first(),
+		publishedArticles().path(articlePath.value).first(),
 	)
 
 	const isNotFound = computed(() => status.value === 'success' && !page.value)

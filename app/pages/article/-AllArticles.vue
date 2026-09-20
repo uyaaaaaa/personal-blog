@@ -26,15 +26,12 @@
 	import Pagination from '~/components/ui/Pagination.vue'
 	import { usePagination } from '~/composables/usePagination'
 	import { usePageSeo } from '~/composables/usePageSeo'
+	import { publishedArticleList } from '~/utils/articleQuery'
 
 	const route = useRoute()
 
 	const { data: articles } = await useAsyncData('article-list', () =>
-		queryCollection('article')
-			.where('published', '=', true)
-			.order('date', 'DESC')
-			.select('path', 'title', 'date', 'tags')
-			.all(),
+		publishedArticleList().all(),
 	)
 
 	const { page, totalPages, pagedItems, startNumber, basePath } = usePagination(
