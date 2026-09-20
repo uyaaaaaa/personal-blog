@@ -305,8 +305,6 @@ const LENGTH_CLASSES = ['duration', 'delay', 'animate']
 
 const MOTION_CLASS_MESSAGE = `モーションのクラスは用途の名前で書く（${MOTION_CLASSES.join(' / ')}）。長さは用途のクラスが持つので、長さを別に書くクラス（${LENGTH_CLASSES.map((name) => `${name}-`).join(' / ')}）は無い。`
 
-// theme から消した綴りは書いても Tailwind が落とすが、任意値（duration-[200ms]）は
-// theme を通らずに出る。テンプレートの角括弧は別の判定が見るので、ここは @apply だけを見る
 const OFF_PURPOSE_MOTION = new RegExp(
 	`(?:^|[\\s:])(?:[a-z-]+:)*!?(?:transition(?!-(?:${MOTION_PURPOSES})(?![\\w-]))|(?:${LENGTH_CLASSES.join('|')})-)`,
 )
