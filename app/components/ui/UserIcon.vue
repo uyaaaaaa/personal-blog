@@ -1,5 +1,5 @@
 <template>
-	<Icon size="row">
+	<Icon size="base">
 		<circle
 			cx="12"
 			cy="8"

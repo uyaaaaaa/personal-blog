@@ -25,7 +25,7 @@
 					:aria-expanded="isSearchOpen"
 					@click="openSearch"
 				>
-					<SearchIcon size="control" />
+					<SearchIcon size="large" />
 				</button>
 
 				<ThemeToggle class="self-center" />

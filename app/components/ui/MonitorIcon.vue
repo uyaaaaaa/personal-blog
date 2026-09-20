@@ -1,5 +1,5 @@
 <template>
-	<Icon size="inline">
+	<Icon size="small">
 		<rect
 			x="2"
 			y="4"

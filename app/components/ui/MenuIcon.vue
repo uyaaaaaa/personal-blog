@@ -1,5 +1,5 @@
 <template>
-	<Icon size="control">
+	<Icon size="large">
 		<line
 			x1="3"
 			x2="21"

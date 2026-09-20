@@ -1,5 +1,5 @@
 <template>
-	<Icon size="row">
+	<Icon size="base">
 		<path d="M3 3h8l10 10-8 8L3 11V3Z" />
 		<circle
 			cx="7.5"

@@ -7,5 +7,5 @@
 <script setup lang="ts">
 	import Icon, { type IconSize } from '~/components/ui/Icon.vue'
 
-	withDefaults(defineProps<{ size?: IconSize }>(), { size: 'inline' })
+	withDefaults(defineProps<{ size?: IconSize }>(), { size: 'small' })
 </script>

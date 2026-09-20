@@ -19,7 +19,7 @@
 			<span class="min-w-0">{{ displayTitle }}</span>
 			<ChevronRightIcon
 				v-if="foldable"
-				size="inline"
+				size="small"
 				class="shrink-0 transition-move"
 				:class="{ 'rotate-90': isOpen }"
 			/>

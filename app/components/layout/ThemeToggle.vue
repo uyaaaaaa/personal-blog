@@ -17,11 +17,11 @@
 			@click="togglePanel"
 		>
 			<MoonIcon
-				size="control"
+				size="large"
 				class="dark:hidden"
 			/>
 			<SunIcon
-				size="control"
+				size="large"
 				class="hidden dark:block"
 			/>
 		</button>

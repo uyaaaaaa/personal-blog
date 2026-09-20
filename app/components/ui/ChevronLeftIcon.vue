@@ -1,5 +1,5 @@
 <template>
-	<Icon size="row">
+	<Icon size="base">
 		<path d="M15 18l-6-6 6-6" />
 	</Icon>
 </template>

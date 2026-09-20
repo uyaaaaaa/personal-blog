@@ -22,10 +22,10 @@
 <script lang="ts">
 	// 大きさはここが持つ。置く側のクラスや属性に預けると、同じ強さのユーティリティは
 	// 生成された CSS の並び順で決まり、属性は CSS に負けるので、置き場所ごとに勝者が変わる
-	export const ICON_SIZE_CLASS = {
-		inline: 'h-icon-inline w-icon-inline',
-		row: 'h-icon w-icon',
-		control: 'h-icon-control w-icon-control',
+	const ICON_SIZE_CLASS = {
+		small: 'h-icon-small w-icon-small',
+		base: 'h-icon w-icon',
+		large: 'h-icon-large w-icon-large',
 	} as const
 
 	export type IconSize = keyof typeof ICON_SIZE_CLASS
@@ -37,6 +37,6 @@
 			size?: IconSize
 			shape?: string
 		}>(),
-		{ size: 'row', shape: '' },
+		{ size: 'base', shape: '' },
 	)
 </script>
