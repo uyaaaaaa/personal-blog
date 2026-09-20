@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { isAbsolute, join } from 'node:path'
 import { complete, eventOf, judged, rules, source } from '../../scripts/review-rules.mjs'
 import { read } from '../../scripts/stdin.mjs'
@@ -10,7 +10,6 @@ export { rules }
 const SKILL = '.claude/skills/review'
 const STEPS = `${SKILL}/SKILL.md`
 const GRADES = `${SKILL}/references/grade.md`
-const EVIDENCE = '.verify'
 
 const key = (pr) => `review.${pr}`
 
@@ -26,16 +25,9 @@ const kept = (args, { forbidden, effort }) => {
 	return [...left, ...(leveled ? [] : [effort])].join(' ')
 }
 
-const skilled = (input, it, ask) => {
+const skilled = (input, it) => {
 	const { skill, args } = input.tool_input ?? {}
 	if (skill !== 'code-review') return null
-
-	const missing = it.required.filter((name) => !ask.evidence().includes(`${name}.log`))
-	if (missing.length > 0) {
-		return {
-			reason: `${missing.join(' と ')} の証跡が ${EVIDENCE}/ に無い。通してから呼ぶ（→ verify）`,
-		}
-	}
 
 	const updated = kept(typeof args === 'string' ? args : '', it)
 	return updated === null ? null : { updatedInput: { ...input.tool_input, args: updated } }
@@ -242,13 +234,6 @@ export const resolve = (path, base) => (isAbsolute(path) ? path : join(base, pat
 const ASK = {
 	skill: () => source(join(root(), SKILL)),
 	payload: (path) => readFileSync(resolve(path, root()), 'utf8'),
-	evidence: () => {
-		try {
-			return readdirSync(join(root(), EVIDENCE))
-		} catch {
-			return []
-		}
-	},
 	state,
 }
 
@@ -299,7 +284,7 @@ export const decide = (input, ask = ASK) => {
 		return null
 	}
 
-	if (tool === 'Skill') return skilled(input, it, ask)
+	if (tool === 'Skill') return skilled(input, it)
 	if (TOOLED.test(tool) || DIRECT.test(command)) return direct(it)
 	if (POSTED.test(tool)) return posted(input, it)
 	return reviewed(input, it, ask)

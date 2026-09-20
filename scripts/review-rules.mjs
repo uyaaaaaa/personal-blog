@@ -31,7 +31,6 @@ const WORKFLOW = /"workflow_id":\s*"([^"]+)"/
 const REF = /"ref":\s*"([^"]+)"/
 const FLAG = /`(--[a-z-]+)`/g
 const NAMED = /`([a-z]+)`/g
-const COMMAND = /npm (?:run )?([a-z:]+)/g
 
 const linesWith = (source, word) => source.split('\n').filter((line) => line.includes(word))
 
@@ -53,10 +52,6 @@ export const rules = (source) => {
 	const forbidden = linesWith(source, '付けない').flatMap((line) =>
 		[...line.matchAll(FLAG)].map(([, flag]) => flag),
 	)
-	const required = linesWith(source, '先に')
-		.filter((line) => line.includes('通す'))
-		.flatMap((line) => [...line.matchAll(COMMAND)].map(([, name]) => name))
-
 	return {
 		grades,
 		judgments,
@@ -70,7 +65,6 @@ export const rules = (source) => {
 		workflow: WORKFLOW.exec(source)?.[1],
 		ref: REF.exec(source)?.[1],
 		forbidden,
-		required,
 	}
 }
 

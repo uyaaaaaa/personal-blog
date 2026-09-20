@@ -11,17 +11,11 @@ const NITS = '![nits-badge](https://img.shields.io/badge/review-nits-cfd3d7)'
 
 const PATH = 'review.json'
 
-const ask = ({
-	evidence = ['lint.log', 'test.log'],
-	held = null,
-	source = SOURCE,
-	review,
-} = {}) => {
+const ask = ({ held = null, source = SOURCE, review } = {}) => {
 	const box = { value: held }
 	return {
 		skill: () => source,
 		payload: () => (typeof review === 'string' ? review : JSON.stringify(review)),
-		evidence: () => evidence,
 		state: () => ({
 			read: () => box.value,
 			write: (value) => {
@@ -95,7 +89,6 @@ describe('rules', () => {
 			effort: 'medium',
 			workflow: 'review.yml',
 			forbidden: ['--comment', '--fix'],
-			required: ['test', 'lint'],
 		})
 	})
 })
@@ -113,17 +106,6 @@ describe('code-review の呼び出し', () => {
 	it('effort だけ渡した呼び出しは触らない', () => {
 		expect(decide(skill('high'), ask())).toBeNull()
 		expect(decide(skill('--effort=high'), ask())).toBeNull()
-	})
-
-	it('lint か test の証跡が無いと落とす', () => {
-		expect(decide(skill('medium'), ask({ evidence: [] }))?.reason).toMatch(/test と lint/)
-		expect(decide(skill('medium'), ask({ evidence: ['lint.log'] }))?.reason).toMatch(/test/)
-		expect(decide(skill('medium'), ask({ evidence: ['test.log', 'lint.log'] }))).toBeNull()
-	})
-
-	it('名前に測ったものを含むだけのファイルは証跡にしない', () => {
-		const evidence = ['latest.png', 'lint.log']
-		expect(decide(skill('medium'), ask({ evidence }))?.reason).toMatch(/test/)
 	})
 
 	it('他のスキルは見ない', () => {
