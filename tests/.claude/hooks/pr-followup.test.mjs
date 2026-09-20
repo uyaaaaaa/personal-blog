@@ -25,6 +25,12 @@ const reviewed = (number = 292, workflow_id = 'review.yml') =>
 		inputs: { pr: String(number), review: '{}' },
 	})
 
+const ran = (number = 292, workflow = 'review.yml') => ({
+	hook_event_name: 'PostToolUse',
+	tool_name: 'Bash',
+	tool_input: { command: `gh workflow run ${workflow} -f pr=${number} -F review=@/tmp/it.json` },
+})
+
 const stop = () => decide({ hook_event_name: 'Stop' }, store)
 
 beforeEach(() => {
@@ -107,6 +113,32 @@ describe('decide', () => {
 		decide(opened(), store)
 		for (const done of [subscribed(), titled()]) decide(done, store, ask)
 		decide(reviewed(292, 'shipit.yml'), store, ask)
+
+		expect(stop()).toBeNull()
+	})
+
+	it('gh workflow run で出した発火も数える', () => {
+		decide(opened(), store)
+		for (const done of [subscribed(), titled(), ran()]) decide(done, store)
+
+		expect(stop()).toBeNull()
+	})
+
+	it('別の PR に向けた gh workflow run は数えない', () => {
+		decide(opened(292), store)
+		for (const done of [subscribed(), titled(), ran(300)]) decide(done, store)
+
+		expect(stop()).toMatch('Review ワークフロー')
+	})
+
+	it('スキルを読めない回でも発火を数える', () => {
+		const ask = {
+			skill: () => {
+				throw new Error('読めない')
+			},
+		}
+		decide(opened(), store)
+		for (const done of [subscribed(), titled(), reviewed()]) decide(done, store, ask)
 
 		expect(stop()).toBeNull()
 	})

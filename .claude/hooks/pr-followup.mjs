@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { join } from 'node:path'
-import { rules, source } from '../../scripts/review-rules.mjs'
+import { dispatched, plain, rules, source } from '../../scripts/review-rules.mjs'
 import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
@@ -12,38 +12,33 @@ const suffix = (name) => (name.startsWith('mcp__') ? name.replace(/^mcp__.*?__/,
 
 const matches = (value, pattern) => typeof value === 'string' && pattern.test(value)
 
-const plain = (name) =>
-	name
-		.replace(/^.*\//, '')
-		.replace(/\.ya?ml$/, '')
-		.toLowerCase()
-
 // 投稿先の正本は review スキル。改名されたら数え落とすので、名前は引いて突き合わせる
-const named = (value, workflow) =>
-	typeof value === 'string' && (workflow === undefined || plain(value) === plain(workflow))
+const named = (value, workflow) => workflow === undefined || plain(value) === plain(workflow)
+
+const called = (input, tool) => suffix(input.tool_name ?? '') === tool
 
 const STEPS = [
 	{
 		key: 'subscribe',
-		tool: 'subscribe_pr_activity',
 		how: 'PR のイベントを購読する',
-		at: (args, number) => args.pullNumber === number,
+		at: (input, number) =>
+			called(input, 'subscribe_pr_activity') && input.tool_input?.pullNumber === number,
 	},
 	{
 		key: 'title',
-		tool: 'set_session_title',
 		how: 'セッション名を PR #N に変える',
-		at: (args, number) => matches(args.title, new RegExp(`#\\s*${number}(?!\\d)`)),
+		at: (input, number) =>
+			called(input, 'set_session_title') &&
+			matches(input.tool_input?.title, new RegExp(`#\\s*${number}(?!\\d)`)),
 	},
 	{
 		key: 'review',
-		tool: 'actions_run_trigger',
 		how: 'レビューのエージェントを起こし、返った JSON を Review ワークフローの発火に渡す',
 		// 起こしただけでは済まない。返った JSON を発火に渡したところまでを見届けと数える
-		at: (args, number, workflow) =>
-			args.method === 'run_workflow' &&
-			named(args.workflow_id, workflow) &&
-			String(args.inputs?.pr) === String(number),
+		at: (input, number, workflow) => {
+			const found = dispatched(input)
+			return Boolean(found && named(found.workflow, workflow) && found.pr === String(number))
+		},
 	},
 ]
 
@@ -58,23 +53,21 @@ const failed = (input) => Boolean(input.tool_response?.isError || input.tool_res
 
 const recorded = (input, kept, workflow) => {
 	if (failed(input)) return null
-	const tool = suffix(input.tool_name ?? '')
-	const args = input.tool_input ?? {}
 
-	if (tool === 'create_pull_request') {
+	if (called(input, 'create_pull_request')) {
 		const number = opened(input.tool_response)
 		if (number === null || kept[number]) return null
 		return { ...kept, [number]: { done: [], asked: null } }
 	}
 
-	const step = STEPS.find((it) => it.tool === tool)
-	if (!step) return null
-
 	const next = { ...kept }
 	let changed = false
 	for (const [number, pull] of Object.entries(kept)) {
-		if (pull.done.includes(step.key) || !step.at(args, Number(number), workflow)) continue
-		next[number] = { ...pull, done: [...pull.done, step.key] }
+		const done = STEPS.filter(
+			(step) => !pull.done.includes(step.key) && step.at(input, Number(number), workflow),
+		).map(({ key }) => key)
+		if (done.length === 0) continue
+		next[number] = { ...pull, done: [...pull.done, ...done] }
 		changed = true
 	}
 	return changed ? next : null

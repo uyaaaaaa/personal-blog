@@ -77,3 +77,33 @@ export const judged = (judgments, counts) =>
 	judgments.find(({ needs }) => needs.length === 0)
 
 export const eventOf = (name) => name.toUpperCase().replace(/\s+/g, '_')
+
+export const plain = (name) =>
+	name
+		.replace(/^.*\//, '')
+		.replace(/\.ya?ml$/, '')
+		.toLowerCase()
+
+// 行頭か区切りの直後だけを発火と見る。文字列の中やコメントの `gh` に当てない
+export const LEAD = String.raw`(?:^\s*|[\n;&|(]\s*)`
+const RUN = new RegExp(`${LEAD}gh\\s+workflow\\s+run\\s+["']?([^\\s"']+)["']?`)
+const PR = /(?:-f|-F|--raw-field|--field)\s+["']?pr=(\d+)/
+const PAYLOAD = /(?:-F|--field)\s+["']?review=@([^\s"']+)/
+
+// 発火は MCP の呼び出しと `gh workflow run` の2経路。数える側も検査する側も同じ読み方で見る
+export const dispatched = (input) => {
+	if (input.tool_name === 'Bash') {
+		const command = input.tool_input?.command ?? ''
+		const workflow = RUN.exec(command)?.[1]
+		if (workflow === undefined) return null
+		return { workflow, pr: PR.exec(command)?.[1], path: PAYLOAD.exec(command)?.[1] }
+	}
+
+	const { method, workflow_id: workflow, inputs } = input.tool_input ?? {}
+	if (method !== 'run_workflow' || typeof workflow !== 'string') return null
+	return {
+		workflow,
+		pr: inputs?.pr === undefined ? undefined : String(inputs.pr),
+		review: typeof inputs?.review === 'string' ? inputs.review : undefined,
+	}
+}
