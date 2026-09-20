@@ -81,8 +81,8 @@ node scripts/review-args.mjs < findings.json
 - **判定・バッジ・件数の上限・サマリの組み立ては、この手順書と `references/` を読んでスクリプトが決める。**手で書き写さない
 - 上限を超えた件数や、欠けた `path` / `line` / 見出しは組み立てずに落ちる。落ちたら 2〜5 に戻る
 - `review` は `/pulls/{n}/reviews` に渡す形そのまま。判定が `Approve` なら `body` は入らない
-- 渡す先は `mcp__github__actions_run_trigger`。`gh` はこの環境に無いので、あるときだけ、出力の `.inputs.review` をファイルに書き出して `gh workflow run review.yml -f pr=<番号> -F review=@<そのファイル>` でも同じ
-- **走らせたら結果を見る。** `mcp__github__actions_list` の `list_workflow_runs`（`resource_id` に `review.yml`）で最新の run が `success` でなければ投稿できていない。失敗したまま報告しない
+- **発火の手段は問わない。** その場で打てるもので、出力の `workflow_id` と `ref` と `inputs` をそのまま渡す
+- **走らせたら結果を見る。** `review.yml` の最新の run が `success` でなければ投稿できていない。失敗したまま報告しない
 - 作業ツリーのレビュー（PR が無い）は投稿せず、同じ型で会話に返す
 - **投稿したら、判定と件数だけを報告して終わり**
 
