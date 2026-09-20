@@ -242,6 +242,8 @@
 	onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPointerdown))
 
 	defineExpose({ focus, close, isVisible })
+
+	/* eslint-disable style/no-outline-removal -- 目印は枠のアクセント線が持つ。開き方によらず出る */
 </script>
 
 <style scoped>
@@ -269,6 +271,10 @@
 
 	.search-input::placeholder {
 		color: var(--color-sub);
+	}
+
+	.search-input:focus-visible {
+		outline: none;
 	}
 
 	.search-panel-layer {

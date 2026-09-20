@@ -184,6 +184,8 @@
 		},
 		{ flush: 'post' },
 	)
+
+	/* eslint-disable style/no-outline-removal -- 目印は枠のアクセント線が持つ。開き方によらず出る */
 </script>
 
 <style scoped>
@@ -244,6 +246,10 @@
 
 	.search-field:focus-within {
 		border-bottom-color: var(--color-accent);
+	}
+
+	.search-input:focus-visible {
+		outline: none;
 	}
 
 	.search-field-icon {
