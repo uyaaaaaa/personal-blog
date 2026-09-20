@@ -1,6 +1,6 @@
 ---
 name: dispatch
-description: "open issue から自走できるものを選び、対応するセッションを起こす。定期の発火から呼ばれる。ここでは直さない。"
+description: "open issue から自走できるものを選び、対応するセッションを起こす。定期の発火から呼ばれる。"
 ---
 
 # issue の拾い方

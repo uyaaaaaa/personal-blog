@@ -1,6 +1,6 @@
 ---
 name: context-review
-description: "エージェントに渡る散文（CLAUDE.md・.claude/rules・.claude/skills・.claude/agents・コード内のコメント）を減らす。「コンテキストを見直して」「CLAUDE.md を整理して」「コメントを整理して」「モデルが変わったので調整して」という依頼で使う。書き足すのではなく、消せるものを探す。"
+description: "エージェントに渡る散文（CLAUDE.md・.claude/rules・.claude/skills・.claude/agents・コード内のコメント）を減らす。「コンテキストを見直して」「CLAUDE.md を整理して」「コメントを整理して」「モデルが変わったので調整して」という依頼で使う。"
 ---
 
 # 渡す散文を減らす

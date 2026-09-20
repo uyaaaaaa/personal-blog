@@ -1,6 +1,6 @@
 ---
 name: enforce
-description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約から、今の道具で機械に落とせるものを探して issue にする。週次の Routine から呼ばれる。ここでは実装しない。"
+description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約のうち、機械に落とせるものを探して issue にする。週次の Routine から呼ばれる。"
 ---
 
 # 規約を検査に移す

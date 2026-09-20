@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "Pull Request を作る手順。「PR にして」「PR 作って」という依頼で使う。"
+description: "Pull Request を作る。「PR にして」「PR 作って」という依頼で使う。"
 ---
 
 # PR の作り方
