@@ -18,11 +18,12 @@ const called = (tool, tool_input) => ({
 
 const subscribed = (number = 292) => called('subscribe_pr_activity', { pullNumber: number })
 const titled = (number = 292) => called('set_session_title', { title: `PR #${number}` })
-const reviewed = (number = 292, subagent_type = 'review') => ({
-	hook_event_name: 'PostToolUse',
-	tool_name: 'Agent',
-	tool_input: { subagent_type, prompt: `PR #${number} をレビューする` },
-})
+const reviewed = (number = 292, workflow_id = 'review.yml') =>
+	called('actions_run_trigger', {
+		method: 'run_workflow',
+		workflow_id,
+		inputs: { pr: String(number), review: '{}' },
+	})
 
 const stop = () => decide({ hook_event_name: 'Stop' }, store)
 
@@ -75,9 +76,9 @@ describe('decide', () => {
 		expect(stop()).toBeNull()
 	})
 
-	it('番号に触れただけの呼び出しと、別のエージェントは数えない', () => {
+	it('番号に触れただけの呼び出しと、別のワークフローの発火は数えない', () => {
 		decide(opened(), store)
-		decide(reviewed(292, 'general-purpose'), store)
+		decide(reviewed(292, 'deploy.yml'), store)
 		decide(called('set_session_title', { title: '292 を見る' }), store)
 
 		const reason = stop()
