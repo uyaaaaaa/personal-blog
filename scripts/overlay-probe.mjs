@@ -1579,6 +1579,50 @@ const probes = [
 		},
 	},
 	{
+		// 同じパネルが開いているのに、そこへ来た経路で入力欄の目印が変わっていた。
+		// Tab は読み込み直後の文書から送る。一度でも入力欄を離れると、次の Tab はその先から続く
+		name: 'inline-Tab で来ても ⌘K で来ても入力欄の目印が揃う',
+		opensByInput: true,
+		shortcutFocus: true,
+		run: async (p) => {
+			const closed = await p.evaluate('return $state()')
+			const inInput = 'return document.activeElement === document.querySelector(INPUT)'
+
+			let tabbed = false
+			for (let attempt = 0; attempt < 20 && !tabbed; attempt++) {
+				await p.pressKey('Tab')
+				await p.evaluate('await $frames(2)')
+				tabbed = await p.evaluate(inInput)
+			}
+			await p.typeQuery()
+			await sleep(TRANSITION)
+			const byTab = await p.evaluate('return $state()')
+
+			sent('activeElement を blur')
+			await p.evaluate('document.activeElement?.blur()')
+			let reached = false
+			for (let attempt = 0; attempt < 8 && !reached; attempt++) {
+				await p.pressShortcut(META)
+				reached = await p.evaluate(inInput)
+			}
+			await p.typeQuery()
+			await sleep(TRANSITION)
+			const byShortcut = await p.evaluate('return $state()')
+
+			return {
+				observed: `Tab: ${show(byTab, ['overlay', 'ring', 'underline'])} / ⌘K: ${show(byShortcut, ['overlay', 'ring', 'underline'])}`,
+				ok:
+					tabbed &&
+					reached &&
+					byTab.overlay === 'visible' &&
+					byShortcut.overlay === 'visible' &&
+					byTab.ring === byShortcut.ring &&
+					byTab.underline === byShortcut.underline &&
+					byTab.underline !== closed.underline,
+			}
+		},
+	},
+	{
 		name: 'inline-空の入力では何も出さず、幅だけ伸びる',
 		opensByInput: true,
 		run: async (p) => {
