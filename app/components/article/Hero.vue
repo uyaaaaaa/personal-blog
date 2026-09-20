@@ -3,7 +3,7 @@
 		class="border-b border-t-2 border-border-strong py-8 md:grid md:grid-cols-pickup md:gap-x-6"
 	>
 		<div
-			class="flex items-baseline gap-3 font-mono text-xs tracking-marker md:flex-col md:gap-1.5"
+			class="flex items-baseline gap-3 font-mono text-meta tracking-marker md:flex-col md:gap-1.5"
 		>
 			<p class="flex gap-2 text-sub">
 				<span aria-hidden="true">■</span>
@@ -40,14 +40,14 @@
 				<span
 					v-for="tag in article.tags"
 					:key="tag"
-					class="tag font-mono text-xs text-sub"
+					class="tag font-mono text-meta text-sub"
 					>#{{ tag }}</span
 				>
 			</div>
 
 			<NuxtLink
 				:to="article.path"
-				class="mt-5 inline-block font-mono text-sm font-medium text-accent hover:underline"
+				class="mt-5 inline-block font-mono text-ui font-medium text-accent hover:underline"
 				prefetch-on="interaction"
 				>Read →</NuxtLink
 			>

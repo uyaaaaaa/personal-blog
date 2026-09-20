@@ -46,7 +46,7 @@
 		>
 			<span
 				v-if="item === 'gap'"
-				class="px-1 font-mono text-sm text-sub"
+				class="px-1 font-mono text-ui text-sub"
 				>…</span
 			>
 			<NuxtLink

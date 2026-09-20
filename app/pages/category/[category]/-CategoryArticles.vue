@@ -2,7 +2,7 @@
 	<div class="space-y-8">
 		<div class="flex items-baseline gap-4">
 			<h1 class="text-heading font-bold text-main">{{ label }}</h1>
-			<span class="font-mono text-base text-sub">{{ articles?.length ?? 0 }}</span>
+			<span class="font-mono text-total text-sub">{{ articles?.length ?? 0 }}</span>
 		</div>
 
 		<CategoryFilter :current="category" />

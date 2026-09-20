@@ -5,21 +5,21 @@
 			:role="variant === 'error' ? 'status' : undefined"
 			:aria-busy="variant === 'error' ? Boolean(pending) : undefined"
 		>
-			<h1 class="text-xl font-bold text-main">{{ heading }}</h1>
+			<h1 class="text-notice-title font-bold text-main">{{ heading }}</h1>
 
 			<p
 				v-if="variant === 'not-found' && path"
-				class="rounded bg-surface-subtle px-2 py-1 font-mono text-xs text-sub"
+				class="rounded bg-surface-subtle px-2 py-1 font-mono text-meta text-sub"
 			>
 				{{ path }}
 			</p>
 
-			<p class="max-w-sm text-sm text-sub">{{ description }}</p>
+			<p class="max-w-sm text-ui text-sub">{{ description }}</p>
 
 			<button
 				v-if="variant === 'error'"
 				type="button"
-				class="mt-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-contrast transition-color hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-accent"
+				class="mt-1 rounded-md bg-accent px-4 py-2 text-ui font-medium text-accent-contrast transition-color hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-accent"
 				:disabled="pending"
 				@click="emit('retry')"
 			>
@@ -31,7 +31,7 @@
 			v-if="variant === 'not-found' && recentArticles?.length"
 			class="mt-10"
 		>
-			<h2 class="mb-3 font-mono text-xs tracking-wider text-sub">Recent Articles</h2>
+			<h2 class="mb-3 font-mono text-meta tracking-wider text-sub">Recent Articles</h2>
 			<ul class="flex flex-col">
 				<li
 					v-for="article in recentArticles"
@@ -40,9 +40,9 @@
 				>
 					<NuxtLink
 						:to="article.path"
-						class="flex flex-col gap-1 py-3 text-sm text-main transition-color hover:text-accent md:flex-row md:items-baseline md:gap-3"
+						class="flex flex-col gap-1 py-3 text-ui text-main transition-color hover:text-accent md:flex-row md:items-baseline md:gap-3"
 					>
-						<span class="flex-none font-mono text-xs text-sub">{{
+						<span class="flex-none font-mono text-meta text-sub">{{
 							formatDate(article.date)
 						}}</span>
 						<span>{{ article.title }}</span>

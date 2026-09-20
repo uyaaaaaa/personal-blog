@@ -52,10 +52,10 @@
 					<a
 						:href="`#${link.id}`"
 						@click.prevent="handleClick(link.id)"
-						class="flex gap-3 text-sm transition-color hover:text-accent"
+						class="flex gap-3 text-ui transition-color hover:text-accent"
 						:class="activeId === link.id ? 'font-medium text-main' : 'text-sub'"
 					>
-						<span class="flex-none font-mono text-xs leading-5 text-accent">{{
+						<span class="flex-none font-mono text-meta leading-5 text-accent">{{
 							ordinal(index)
 						}}</span>
 						<span class="min-w-0 break-words">{{ link.text }}</span>
@@ -71,7 +71,7 @@
 							<a
 								:href="`#${child.id}`"
 								@click.prevent="handleClick(child.id)"
-								class="block break-words pl-9 text-xs transition-color hover:text-accent"
+								class="block break-words pl-9 text-meta transition-color hover:text-accent"
 								:class="
 									activeId === child.id ? 'font-medium text-main' : 'text-sub'
 								"

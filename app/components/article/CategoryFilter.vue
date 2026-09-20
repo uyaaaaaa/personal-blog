@@ -8,7 +8,7 @@
 				<NuxtLink
 					:to="item.path"
 					:aria-current="item.current ? 'true' : undefined"
-					class="flex items-baseline gap-2 rounded-full border px-3 py-1.5 font-mono text-sm transition-color"
+					class="flex items-baseline gap-2 rounded-full border px-3 py-1.5 font-mono text-ui transition-color"
 					:class="
 						item.current
 							? 'border-accent text-accent'
@@ -17,7 +17,7 @@
 					prefetch-on="interaction"
 				>
 					<span>{{ item.label }}</span>
-					<span class="text-xs text-sub">{{ item.count }}</span>
+					<span class="text-meta text-sub">{{ item.count }}</span>
 				</NuxtLink>
 			</li>
 		</ul>

@@ -180,7 +180,7 @@ describe('Web フォントの読み込み', () => {
 	})
 
 	it('フォントを指すクラス名は通す', async () => {
-		expect(await webFontsIn('app/pages/a.vue', sfc('<div class="font-mono text-sm" />'))).toBe(
+		expect(await webFontsIn('app/pages/a.vue', sfc('<div class="font-mono text-ui" />'))).toBe(
 			0,
 		)
 	})
@@ -583,7 +583,7 @@ describe('モーションの長さ', () => {
 				sfc('<p class="transition-color md:transition-move" />'),
 			),
 		).toBe(0)
-		expect(await motionsIn('app/pages/a.vue', sfc('<p class="text-sm font-medium" />'))).toBe(0)
+		expect(await motionsIn('app/pages/a.vue', sfc('<p class="text-ui font-medium" />'))).toBe(0)
 	})
 
 	it('<style> の宣言と @apply を落とす', async () => {
