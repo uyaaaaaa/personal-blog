@@ -48,11 +48,11 @@ describe('モーションのクラス', () => {
 
 	it('長さを別に書くクラスを出さない', async () => {
 		const css = await utilities(
-			'<p class="duration-200 delay-150 animate-spin transition-colors transition-all"></p>',
+			'<p class="duration-200 delay-150 animate-spin transition transition-colors transition-all transition-transform"></p>',
 		)
 
 		expect(css).not.toMatch(
-			/duration-200|delay-150|animate-spin|transition-colors|transition-all/,
+			/duration-200|delay-150|animate-spin|transition-(colors|all|transform)|\.transition[\s{]/,
 		)
 	})
 })

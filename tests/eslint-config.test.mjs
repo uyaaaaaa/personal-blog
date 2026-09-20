@@ -567,29 +567,10 @@ describe('表示・非表示の出し分け', () => {
 })
 
 describe('モーションの長さ', () => {
-	it('用途の名前でないモーションのクラスを落とす', async () => {
-		expect(await motionsIn('app/pages/a.vue', sfc('<p class="duration-200" />'))).toBe(1)
-		expect(await motionsIn('app/pages/a.vue', sfc('<p class="transition-colors" />'))).toBe(1)
-		expect(await motionsIn('app/pages/a.vue', sfc('<p class="md:animate-spin" />'))).toBe(1)
-		expect(
-			await motionsIn('app/pages/a.vue', sfc(`<p :class="['transition-transform']" />`)),
-		).toBe(1)
-	})
-
-	it('用途の名前のクラスは通す', async () => {
-		expect(
-			await motionsIn(
-				'app/pages/a.vue',
-				sfc('<p class="transition-color md:transition-move" />'),
-			),
-		).toBe(0)
-		expect(await motionsIn('app/pages/a.vue', sfc('<p class="text-ui font-medium" />'))).toBe(0)
-	})
-
-	it('<style> の宣言と @apply を落とす', async () => {
+	it('<style> の宣言と任意値の @apply を落とす', async () => {
 		const style = (css) => `${sfc('<p class="a" />')}\n<style scoped>${css}</style>`
 		expect(await motionsIn('app/pages/a.vue', style('.a { transition: all 0.3s; }'))).toBe(1)
-		expect(await motionsIn('app/pages/a.vue', style('.a { @apply duration-200; }'))).toBe(1)
+		expect(await motionsIn('app/pages/a.vue', style('.a { @apply duration-[200ms]; }'))).toBe(1)
 		expect(
 			await motionsIn('app/pages/a.vue', style('.a { transition: transform 0.2s; }')),
 		).toBe(0)

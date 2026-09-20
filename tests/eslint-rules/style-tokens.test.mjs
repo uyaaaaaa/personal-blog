@@ -116,25 +116,6 @@ describe('no-important', () => {
 	})
 })
 
-describe('no-reduced-motion', () => {
-	it('prefers-reduced-motion を参照する @media を落とす', () => {
-		tester.run('no-reduced-motion', styleTokens.rules['no-reduced-motion'], {
-			valid: [
-				{ filename: 'a.vue', code: sfc('@media (min-width: 1024px) { .a { top: 0; } }') },
-			],
-			invalid: [
-				{
-					filename: 'a.vue',
-					code: sfc(
-						'@media (prefers-reduced-motion: reduce) { .a { transition: none; } }',
-					),
-					errors: [{ messageId: 'reducedMotion' }],
-				},
-			],
-		})
-	})
-})
-
 describe('no-off-purpose-motion', () => {
 	it('用途に決めた長さだけを通す', () => {
 		tester.run('no-off-purpose-motion', styleTokens.rules['no-off-purpose-motion'], {
@@ -233,14 +214,15 @@ describe('no-off-purpose-motion', () => {
 					code: sfc('.a { transition-duration: 0.42s; }'),
 					errors: [{ messageId: 'anyPurpose' }],
 				},
+				// 任意値は theme を通らずに出るので、@apply の綴りで見る
 				{
 					filename: 'a.vue',
-					code: sfc('.a { @apply duration-200; }'),
+					code: sfc('.a { @apply duration-[200ms]; }'),
 					errors: [{ messageId: 'motionClass' }],
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { @apply transition-transform; }'),
+					code: sfc('.a { @apply transition-[color]; }'),
 					errors: [{ messageId: 'motionClass' }],
 				},
 			],

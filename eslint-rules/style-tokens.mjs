@@ -303,12 +303,11 @@ const MOTION_CLASSES = Object.keys(durations).map((purpose) => `transition-${pur
 // 長さを別に書くクラスの接頭辞
 const LENGTH_CLASSES = ['duration', 'delay', 'animate']
 
-export const MOTION_CLASS_MESSAGE = `モーションのクラスは用途の名前で書く（${MOTION_CLASSES.join(' / ')}）。長さは用途のクラスが持つので、長さを別に書くクラス（${LENGTH_CLASSES.map((name) => `${name}-`).join(' / ')}）は無い。`
+const MOTION_CLASS_MESSAGE = `モーションのクラスは用途の名前で書く（${MOTION_CLASSES.join(' / ')}）。長さは用途のクラスが持つので、長さを別に書くクラス（${LENGTH_CLASSES.map((name) => `${name}-`).join(' / ')}）は無い。`
 
-// 用途のクラス以外の transition-* は theme から消してあり、書いても何も出ない
-export const OFF_PURPOSE_MOTION_CLASS = `(?:^|[\\s:])(?:[a-z-]+:)*!?(?:transition(?!-(?:${MOTION_PURPOSES})(?![\\w-]))|(?:${LENGTH_CLASSES.join('|')})-)`
-
-const OFF_PURPOSE_MOTION = new RegExp(OFF_PURPOSE_MOTION_CLASS)
+const OFF_PURPOSE_MOTION = new RegExp(
+	`(?:^|[\\s:])(?:[a-z-]+:)*!?(?:transition(?!-(?:${MOTION_PURPOSES})(?![\\w-]))|(?:${LENGTH_CLASSES.join('|')})-)`,
+)
 
 function offsetsOf(css) {
 	const offsets = [0]
@@ -398,7 +397,6 @@ function eachStyleBlock(context, visit) {
 	}
 }
 
-const REDUCED_MOTION = /prefers-reduced-motion/i
 const MEDIA_CONDITION = /\(([^()]*)\)/g
 const WIDTH_FEATURE = /\bwidth\b/i
 // colorMode の classSuffix が空なので、テーマは html の dark / light で表れる。
@@ -421,7 +419,6 @@ const OFF_TOKEN_FONT = new RegExp(OFF_TOKEN_FONT_CLASS)
 
 const SCRIPT_SPELLING = {
 	'no-scroll-behavior': `${SCROLL_BEHAVIOR_PROPERTY}|${SCROLL_BEHAVIOR_CLASS}`,
-	'no-reduced-motion': REDUCED_MOTION.source,
 	'no-theme-branch': COLOR_SCHEME.source,
 	'no-web-font': WEB_FONT_RESOURCE,
 	'no-custom-breakpoint': BREAKPOINT_MEDIA,
@@ -517,21 +514,6 @@ const CHECKS = {
 			root.walkAtRules('apply', (rule) => {
 				if (OFF_PURPOSE_MOTION.test(rule.params))
 					found.push({ node: rule, messageId: 'motionClass' })
-			})
-			return found
-		},
-	},
-
-	'no-reduced-motion': {
-		messages: {
-			reducedMotion:
-				'prefers-reduced-motion で分岐しない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ。',
-		},
-		find(root) {
-			const found = []
-			root.walkAtRules((rule) => {
-				if (REDUCED_MOTION.test(rule.params))
-					found.push({ node: rule, messageId: 'reducedMotion' })
 			})
 			return found
 		},

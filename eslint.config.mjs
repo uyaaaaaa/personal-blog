@@ -12,8 +12,6 @@ import styleTokens, {
 	FONT_CLASS_MESSAGE,
 	INVARIANT_URL,
 	MAX_WIDTH_VARIANTS,
-	MOTION_CLASS_MESSAGE,
-	OFF_PURPOSE_MOTION_CLASS,
 	OFF_TOKEN_FONT_CLASS,
 	OUTLINE_REMOVAL_CLASS,
 	SCROLL_BEHAVIOR_CLASS,
@@ -36,8 +34,6 @@ const styleRules = Object.fromEntries(
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
 const AUTO_IMPORT_URL = `${DOCS_URL}/adr/02-no-auto-import.md`
 
-const REDUCED_MOTION_MESSAGE =
-	'prefers-reduced-motion で分岐しない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ。'
 const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL}の2つだけ。他の境界を作らない。 ${BREAKPOINT_URL}`
 const MAX_WIDTH_MESSAGE = `幅の出し分けは ${BREAKPOINT_LABEL}から上に向けて書く。max-* で下に向けて書くと、同じ境界を指す書き方が2通りになる。 ${BREAKPOINT_URL}`
 const BARREL_MESSAGE = `再エクスポートだけのファイル（barrel file）を作らない。実体のファイルを直接 import する。 ${ARCHITECTURE_URL}`
@@ -308,14 +304,6 @@ const TEMPLATE_RESTRICTIONS = [
 		message: THEME_CLASS_MESSAGE,
 	},
 	{
-		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${OFF_PURPOSE_MOTION_CLASS}/]`,
-		message: MOTION_CLASS_MESSAGE,
-	},
-	{
-		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${OFF_PURPOSE_MOTION_CLASS}/], TemplateElement[value.cooked=/${OFF_PURPOSE_MOTION_CLASS}/])`,
-		message: MOTION_CLASS_MESSAGE,
-	},
-	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${MAX_WIDTH_CLASS}/]`,
 		message: MAX_WIDTH_MESSAGE,
 	},
@@ -406,10 +394,6 @@ const restrictions = {
 			selector: 'MemberExpression[property.name=/^on(before)?unload$/]',
 			message:
 				'onunload / onbeforeunload は使わない。bfcache を壊すので、離脱時の処理は pagehide か visibilitychange に置く。',
-		},
-		{
-			selector: scriptSpellingSelector('no-reduced-motion'),
-			message: REDUCED_MOTION_MESSAGE,
 		},
 		{
 			selector: scriptSpellingSelector('no-theme-branch'),
