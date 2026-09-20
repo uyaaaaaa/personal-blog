@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs'
 import { isAbsolute, join } from 'node:path'
-import { complete, eventOf, judged, rules, source } from '../../scripts/review-rules.mjs'
+import {
+	complete,
+	dispatched,
+	LEAD,
+	eventOf,
+	judged,
+	plain,
+	rules,
+	source,
+} from '../../scripts/review-rules.mjs'
 import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
@@ -140,50 +149,30 @@ const validated = (payload, it, seen) => {
 	)
 }
 
-const PR = /(?:-f|-F|--raw-field|--field)\s+["']?pr=(\d+)/
-const PAYLOAD = /(?:-F|--field)\s+["']?review=@([^\s"']+)/
-
-const LEAD = String.raw`(?:^\s*|[\n;&|(]\s*)`
-const RUN = new RegExp(`${LEAD}gh\\s+workflow\\s+run\\s+["']?([^\\s"']+)["']?`)
-
-const plain = (name) =>
-	name
-		.replace(/^.*\//, '')
-		.replace(/\.ya?ml$/, '')
-		.toLowerCase()
-
-const fromCommand = (input, it, ask) => {
-	const command = input.tool_input?.command ?? ''
-	const found = RUN.exec(command)?.[1]
-	if (found === undefined || plain(found) !== plain(it.workflow)) return null
-
-	const pr = PR.exec(command)?.[1]
-	const path = PAYLOAD.exec(command)?.[1]
-	if (!pr || !path) return { missing: '`-f pr=<番号>` と `-F review=@<ファイル>` の両方を渡す' }
+const fromCommand = (found, ask) => {
+	if (!found.pr || !found.path) {
+		return { missing: '`-f pr=<番号>` と `-F review=@<ファイル>` の両方を渡す' }
+	}
 	try {
-		return { pr, text: ask.payload(path) }
+		return { pr: found.pr, text: ask.payload(found.path) }
 	} catch {
-		return { pr }
+		return { pr: found.pr }
 	}
 }
 
-const fromTool = (input, it) => {
-	const { method, workflow_id: workflow, inputs } = input.tool_input ?? {}
-	if (method !== 'run_workflow' || plain(String(workflow ?? '')) !== plain(it.workflow))
-		return null
+const fromTool = (found) =>
+	found.pr && found.review !== undefined
+		? { pr: found.pr, text: found.review }
+		: { missing: '`inputs` に `pr` と、レビューの JSON を文字列にした `review` を渡す' }
 
-	const pr = inputs?.pr === undefined ? undefined : String(inputs.pr)
-	if (!pr || typeof inputs?.review !== 'string') {
-		return { missing: '`inputs` に `pr` と、レビューの JSON を文字列にした `review` を渡す' }
-	}
-	return { pr, text: inputs.review }
+const dispatch = (input, it, ask) => {
+	const found = dispatched(input)
+	if (!found || plain(found.workflow) !== plain(it.workflow)) return null
+	return input.tool_name === 'Bash' ? fromCommand(found, ask) : fromTool(found)
 }
-
-const dispatched = (input, it, ask) =>
-	input.tool_name === 'Bash' ? fromCommand(input, it, ask) : fromTool(input, it)
 
 const reviewed = (input, it, ask) => {
-	const found = dispatched(input, it, ask)
+	const found = dispatch(input, it, ask)
 	if (!found) return null
 	if (found.missing) return { reason: found.missing }
 
@@ -200,7 +189,7 @@ const reviewed = (input, it, ask) => {
 
 const recorded = (input, it, ask) => {
 	if (input.tool_response?.isError || input.tool_response?.is_error) return
-	const found = dispatched(input, it, ask)
+	const found = dispatch(input, it, ask)
 	if (!found?.pr) return
 
 	const box = ask.state(key(found.pr), input)
