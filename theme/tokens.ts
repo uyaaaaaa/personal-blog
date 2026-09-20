@@ -76,7 +76,6 @@ export const fontSize = {
 	ui: ['0.875rem', '1.25rem'],
 	'list-title': ['16px', '1.4'],
 	total: ['1rem', '1.5rem'],
-	// Header の .logo が <style> で書く。クラスにはならないが、語彙に無いと検査が落ちる
 	logo: '1.125rem',
 	'notice-title': ['1.25rem', '1.75rem'],
 	'title-sm': ['23px', '1.35'],
@@ -137,6 +136,7 @@ export const sizes = {
 		container: '1200px',
 	},
 	spacing: {
+		icon: '1.125rem',
 		'logo-mark': '26px',
 		'landing-offset-sm': '116px',
 		'landing-offset': '124px',
