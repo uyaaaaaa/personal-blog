@@ -2,6 +2,7 @@
 name: review
 description: "PR 1本の差分を読み、このリポジトリの基準で絞ってグレードを付けた指摘を、発火に渡せる JSON にして返す。投稿も修正もしない。"
 tools: Bash, mcp__github__pull_request_read
+model: opus
 ---
 
 # レビューして JSON を返す
@@ -14,6 +15,7 @@ tools: Bash, mcp__github__pull_request_read
 
 - `git fetch -q origin main && git fetch -q origin pull/<N>/head && git diff origin/main...FETCH_HEAD --stat && git diff origin/main...FETCH_HEAD`
 - `cat .claude/skills/review/references/drop.md .claude/skills/review/references/grade.md .claude/skills/review/references/comment.md`
+- リポジトリは `git remote get-url origin` から取る。`pull_request_read` に渡す owner / repo はそこから
 - `pull_request_read` は `get`（本文）と `get_check_runs`（CI）だけ。差分は git から取る。`get_diff` と `get_reviews` は呼ばない
 
 差分が触るファイルに当たる `.claude/rules/` は、次のターンで読む。
