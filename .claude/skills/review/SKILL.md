@@ -7,11 +7,11 @@ description: "このリポジトリのコードレビュー。`code-review` の�
 
 指摘の探索は組み込みの `code-review` に任せる。**このスキルが決めるのは、何を捨てるか・どのグレードを付けるか・どう書くかの3つ。**
 
-**手順書は、そのフェーズに入るときに読む。先にまとめて読まない。**
+**手順書は、そのフェーズの最初の呼び出しと同じターンで読む。** 先にまとめて読まない。読むだけのターンも作らない。
 
 ## 1. 集める
 
-**呼ぶ前に、`verify` に従って `npm test` と `npm run lint` を先に通す。**
+**lint と test は CI が打つ。自分では打たない。** `verified` には PR のチェックの状態を書く。PR の無い作業ツリーだけ、`verify` に従って自分で通す。
 
 `git diff main...HEAD --stat` で範囲を見てから `code-review` を呼ぶ。**`--comment` も `--fix` も付けない。**
 
@@ -54,7 +54,7 @@ node scripts/review-args.mjs < findings.json
 {
 	"pr": 123,
 	"reason": "判定の理由1文",
-	"verified": "`npm run lint` `npm test` は終了コード 0",
+	"verified": "CI の lint / test / typecheck は緑",
 	"comments": [
 		{
 			"grade": "must",

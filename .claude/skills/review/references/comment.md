@@ -6,7 +6,7 @@
 **判定: Request changes** — 目次の開閉が生成 HTML に出ず、初期表示が閉じたままになる。
 
 - must 1 / suggestion 2
-- 実測: `npm run lint` `npm test` は終了コード 0
+- 実測: CI の lint / test / typecheck は緑
 ```
 
 - 先頭行は **判定 + ダッシュ + 理由1文**

@@ -10,7 +10,7 @@ const USAGE = [
 	'渡す JSON:',
 	'  { "pr": 123,',
 	'    "reason": "判定の理由1文",',
-	'    "verified": "`npm run lint` `npm test` は終了コード 0",',
+	'    "verified": "CI の lint / test / typecheck は緑",',
 	'    "comments": [',
 	'      { "grade": "must", "path": "app/x.vue", "line": 12,',
 	'        "heading": "静的生成の HTML では閉じたままになる", "body": "理由。\\n代案。" }',
