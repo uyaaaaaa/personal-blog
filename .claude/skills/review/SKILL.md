@@ -11,6 +11,8 @@ description: "このリポジトリのコードレビュー。`code-review` の�
 
 ## 1. 集める
 
+**呼ぶ前に、`verify` に従って `npm test` と `npm run lint` を先に通す。**
+
 `git diff main...HEAD --stat` で範囲を見てから `code-review` を呼ぶ。**`--comment` も `--fix` も付けない。**
 
 | 対象 | 渡すもの |
