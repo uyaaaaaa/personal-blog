@@ -40,8 +40,7 @@
 | `public/site.webmanifest` | アイコン定義とテーマカラー |
 
 `<link>` の登録は `nuxt.config.ts` の `app.head` で行っている（全ページ共通）。
-ヘッダーのロゴは `app/components/layout/Header.vue` にインライン SVG で埋め込み、
-リクエストを増やさずに済ませている。
+ヘッダーのロゴはインライン SVG で埋め込み、リクエストを増やさずに済ませている。
 
 ## 更新するとき
 
