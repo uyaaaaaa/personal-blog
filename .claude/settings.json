@@ -1,4 +1,41 @@
 {
+	"permissions": {
+		"allow": [
+			"Bash(git status)",
+			"Bash(git status:*)",
+			"Bash(git diff:*)",
+			"Bash(git log:*)",
+			"Bash(git show:*)",
+			"Bash(git branch:*)",
+			"Bash(git fetch origin:*)",
+			"Bash(git checkout -b claude/:*)",
+			"Bash(git add:*)",
+			"Bash(git commit:*)",
+			"Bash(git push -u origin claude/:*)",
+			"Bash(npm ci)",
+			"Bash(npm test)",
+			"Bash(node scripts/article-files.mjs:*)",
+			"Bash(node scripts/article-routes.mjs:*)",
+			"Bash(node scripts/harness-journal.mjs:*)",
+			"Bash(node scripts/issue-shape.mjs:*)",
+			"Bash(node scripts/overlay-probe.mjs:*)",
+			"Bash(node scripts/review-args.mjs:*)",
+			"Bash(node scripts/session-args.mjs:*)",
+			"Bash(node scripts/session-cost.mjs:*)",
+			"Bash(node scripts/touches-code.mjs:*)",
+			"mcp__github__pull_request_read",
+			"mcp__github__get_file_contents",
+			"mcp__github__issue_read",
+			"mcp__github__list_issues",
+			"mcp__github__actions_list",
+			"mcp__github__actions_get",
+			"mcp__github__get_check_run",
+			"mcp__github__get_job_logs",
+			"mcp__github__subscribe_pr_activity",
+			"mcp__Claude_Code_Remote__set_session_title",
+			"mcp__Claude_Code_Remote__get_session"
+		]
+	},
 	"hooks": {
 		"UserPromptSubmit": [
 			{
