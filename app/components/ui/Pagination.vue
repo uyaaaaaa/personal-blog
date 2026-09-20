@@ -11,7 +11,7 @@
 			aria-label="Previous page"
 		>
 			<svg
-				class="chevron"
+				class="h-icon w-icon"
 				viewBox="0 0 24 24"
 				fill="none"
 				stroke="currentColor"
@@ -28,7 +28,7 @@
 			aria-hidden="true"
 		>
 			<svg
-				class="chevron"
+				class="h-icon w-icon"
 				viewBox="0 0 24 24"
 				fill="none"
 				stroke="currentColor"
@@ -71,7 +71,7 @@
 			aria-label="Next page"
 		>
 			<svg
-				class="chevron"
+				class="h-icon w-icon"
 				viewBox="0 0 24 24"
 				fill="none"
 				stroke="currentColor"
@@ -88,7 +88,7 @@
 			aria-hidden="true"
 		>
 			<svg
-				class="chevron"
+				class="h-icon w-icon"
 				viewBox="0 0 24 24"
 				fill="none"
 				stroke="currentColor"
@@ -144,10 +144,5 @@
 
 	.page-item-disabled {
 		color: var(--color-sub);
-	}
-
-	.chevron {
-		width: 1.125rem;
-		height: 1.125rem;
 	}
 </style>

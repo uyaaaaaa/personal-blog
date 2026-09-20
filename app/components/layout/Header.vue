@@ -3,7 +3,7 @@
 		<div class="header-inner mx-auto max-w-container px-4">
 			<NuxtLink
 				to="/"
-				class="logo"
+				class="logo text-logo"
 				@click="closeMenu"
 			>
 				<svg
@@ -237,7 +237,6 @@
 		align-items: center;
 		gap: 0.5rem;
 		font-weight: 700;
-		font-size: 1.125rem;
 		font-family: var(--font-mono);
 		letter-spacing: -0.025em;
 	}

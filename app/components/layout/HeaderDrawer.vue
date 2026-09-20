@@ -62,7 +62,7 @@
 						class="drawer-row"
 						@click="closeDrawer"
 					>
-						<Icon class="drawer-icon">
+						<Icon class="drawer-icon h-icon w-icon">
 							<path d="M3 10.5 12 3l9 7.5" />
 							<path d="M5.5 9.5V20h13V9.5" />
 						</Icon>
@@ -75,7 +75,7 @@
 						prefetch-on="interaction"
 						@click="closeDrawer"
 					>
-						<Icon class="drawer-icon">
+						<Icon class="drawer-icon h-icon w-icon">
 							<circle
 								cx="12"
 								cy="8"
@@ -95,7 +95,7 @@
 						aria-controls="drawer-group-categories"
 						@click="isCategoriesOpen = !isCategoriesOpen"
 					>
-						<Icon class="drawer-icon">
+						<Icon class="drawer-icon h-icon w-icon">
 							<path
 								d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"
 							/>
@@ -137,7 +137,7 @@
 						aria-controls="drawer-group-latest"
 						@click="isLatestOpen = !isLatestOpen"
 					>
-						<Icon class="drawer-icon">
+						<Icon class="drawer-icon h-icon w-icon">
 							<circle
 								cx="12"
 								cy="12"
@@ -196,7 +196,7 @@
 						aria-controls="drawer-group-tags"
 						@click="isTagsOpen = !isTagsOpen"
 					>
-						<Icon class="drawer-icon">
+						<Icon class="drawer-icon h-icon w-icon">
 							<path d="M3 3h8l10 10-8 8L3 11V3Z" />
 							<circle
 								cx="7.5"
@@ -423,8 +423,6 @@
 
 	.drawer-icon {
 		flex: none;
-		width: 1.125rem;
-		height: 1.125rem;
 		color: var(--color-sub);
 	}
 
