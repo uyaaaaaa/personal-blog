@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { opened, unfinished } from '~~/.claude/hooks/stop-guard.mjs'
+import { ahead, opened, unfinished } from '~~/.claude/hooks/stop-guard.mjs'
 
 const HOOK = fileURLToPath(new URL('../../../.claude/hooks/stop-guard.mjs', import.meta.url))
 
@@ -61,6 +61,34 @@ describe('unfinished', () => {
 		expect(
 			unfinished({ shots, dirty: true, ahead: 1, blocked: ['png', 'commit', 'push'] }),
 		).toBeNull()
+	})
+})
+
+describe('ahead', () => {
+	const sh = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim()
+	const commit = (cwd, name) => {
+		writeFileSync(join(cwd, name), name)
+		sh(cwd, 'add', name)
+		sh(cwd, '-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '-m', name)
+	}
+
+	it('どのリモートにも無いコミットだけを数え、upstream の無いブランチや古い origin/main に釣られない', () => {
+		const base = mkdtempSync(join(tmpdir(), 'stop-guard-git-'))
+		const remote = join(base, 'remote.git')
+		const work = join(base, 'work')
+		sh(base, 'init', '-q', '--bare', remote)
+		sh(base, 'init', '-q', '-b', 'main', work)
+		sh(work, 'remote', 'add', 'origin', remote)
+		commit(work, 'a')
+		sh(work, 'push', '-q', 'origin', 'main')
+		sh(work, 'checkout', '-q', '-b', 'claude/x')
+		commit(work, 'b')
+		commit(work, 'c')
+		sh(work, 'push', '-q', 'origin', 'HEAD:refs/heads/claude/x')
+		expect(ahead(work)).toBe(0)
+
+		commit(work, 'd')
+		expect(ahead(work)).toBe(1)
 	})
 })
 
