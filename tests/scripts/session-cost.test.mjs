@@ -63,6 +63,23 @@ describe('summary', () => {
 		expect(it_.single).toBe(2)
 	})
 
+	it('分類器に止められた呼び出しの数を、tool_result の文面から数える', () => {
+		const denied =
+			'Permission for this action was denied by the Claude Code auto mode classifier. Reason: [X].'
+		const result = (content) => ({
+			type: 'user',
+			message: { role: 'user', content: [{ type: 'tool_result', content }] },
+		})
+		const it_ = summary([
+			assistant('msg_1', used(10, 0), [{ type: 'tool_use', name: 'Bash' }]),
+			result(denied),
+			result('ok'),
+			result([{ type: 'text', text: denied }]),
+		])
+
+		expect(it_.denied).toBe(2)
+	})
+
 	it('積み上げた順に並べ、何番目のターンかを残す', () => {
 		const it_ = summary([
 			assistant('msg_1', used(10, 0)),

@@ -76,6 +76,22 @@ export const attachments = (records) => {
 	return found
 }
 
+// auto モードの分類器に止められた呼び出し。止められた回数だけ、文脈を読み直すターンが増える
+const DENIED = 'Permission for this action was denied by the Claude Code auto mode classifier'
+
+const textOf = (content) =>
+	typeof content === 'string'
+		? content
+		: (content ?? []).map((block) => block?.text ?? '').join('')
+
+export const denied = (records) =>
+	records
+		.filter((record) => record.type === 'user' && Array.isArray(record.message?.content))
+		.flatMap((record) => record.message.content)
+		.filter(
+			(block) => block?.type === 'tool_result' && textOf(block.content).startsWith(DENIED),
+		).length
+
 export const summary = (records) => {
 	const rows = turns(records)
 	const first = rows[0]
@@ -90,6 +106,7 @@ export const summary = (records) => {
 		grown: input === 0 ? 0 : (input - fixed * rows.length) / input,
 		// 並べて打てた呼び出しを別のターンにすると、そのぶん文脈全体を読み直す
 		single: rows.filter((row) => row.tools.length === 1).length,
+		denied: denied(records),
 		peak: rows.reduce((most, row) => Math.max(most, row.created + row.read), 0),
 		created: rows.reduce((total, row) => total + row.created, 0),
 		out: rows.reduce((total, row) => total + row.out, 0),
@@ -110,7 +127,7 @@ const report = (name, records) => {
 	console.log(`  ターン ${it.turns} / 固定費 ${num(it.fixed)} / 最大 ${num(it.peak)}`)
 	console.log(`  cache_creation 合計 ${num(it.created)} / output 合計 ${num(it.out)}`)
 	console.log(
-		`  入力合計 ${num(it.input)} / うち積み上がり ${Math.round(it.grown * 100)}% / ツール1個のターン ${it.single}/${it.turns}`,
+		`  入力合計 ${num(it.input)} / うち積み上がり ${Math.round(it.grown * 100)}% / ツール1個のターン ${it.single}/${it.turns} / 分類器の拒否 ${it.denied}`,
 	)
 	console.log(`  system prompt ${num(prompt(records))} bytes`)
 
