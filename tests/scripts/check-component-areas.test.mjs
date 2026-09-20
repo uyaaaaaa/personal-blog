@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 const SCRIPT = fileURLToPath(new URL('../../scripts/check-component-areas.mjs', import.meta.url))
 const AREAS = ['layout', 'article', 'content', 'error', 'ui']
-const FILES = ['app/components/*.{vue,ts}']
+const FILES = ['app/components/*.{vue,ts}', 'tests/app/components/*.{vue,ts}']
 
 // 仮の設定は temp に置くので、パーサは名前では解決されない。綴りの解決はここで済ませる
 const PARSER = pathToFileURL(createRequire(import.meta.url).resolve('vue-eslint-parser')).href
@@ -86,14 +86,21 @@ describe('check-component-areas', () => {
 	})
 
 	it('当たる対象を拡張子で狭めれば落とす', () => {
-		config({ files: ['app/components/*.vue'] })
+		config({ files: ['app/components/*.vue', 'tests/app/components/*.vue'] })
 		const { status, stderr } = check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/probe\.ts: 直下に置いても文面の error が1件出ない/)
 	})
 
+	it('当たる対象から tests 側が抜ければ落とす', () => {
+		config({ files: ['app/components/*.{vue,ts}'] })
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/tests\/app\/components\/Probe\.vue: 直下に置いても/)
+	})
+
 	it('当たる対象を領域の中まで広げれば落とす', () => {
-		config({ files: ['app/components/**/*.{vue,ts}'] })
+		config({ files: ['app/components/**/*.{vue,ts}', 'tests/app/components/**/*.{vue,ts}'] })
 		const { status, stderr } = check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/ui\/Probe\.vue: 領域の中なのに文面が出る/)

@@ -8,8 +8,9 @@ const CONFIG = 'eslint.config.mjs'
 const COMPONENTS = 'app/components'
 const ERROR = 2
 
-// 規約が成り立つ経路は文面と対象の2つ。対象は拡張子ごとに設定が分かれるので、両方の綴りで見る
+// 規約が成り立つ経路は文面と対象の2つ。対象は拡張子と根で設定が分かれるので、組み合わせで見る
 const PLACED = ['Probe.vue', 'probe.ts']
+const ROOTS = [COMPONENTS, `tests/${COMPONENTS}`]
 
 const fail = (...lines) => {
 	for (const line of lines) console.error(line)
@@ -72,15 +73,17 @@ const errors = [
 		.map((name) => `${name}: 挙げている領域が文面に出てこない`),
 ]
 
-for (const name of PLACED) {
-	const placed = `${COMPONENTS}/${name}`
-	if ((await reports(placed)) !== 1) {
-		errors.push(`${placed}: 直下に置いても文面の error が1件出ない`)
-	}
-	for (const area of found) {
-		const inside = `${COMPONENTS}/${area}/${name}`
-		if ((await reports(inside)) > 0) {
-			errors.push(`${inside}: 領域の中なのに文面が出る`)
+for (const root of ROOTS) {
+	for (const name of PLACED) {
+		const placed = `${root}/${name}`
+		if ((await reports(placed)) !== 1) {
+			errors.push(`${placed}: 直下に置いても文面の error が1件出ない`)
+		}
+		for (const area of found) {
+			const inside = `${root}/${area}/${name}`
+			if ((await reports(inside)) > 0) {
+				errors.push(`${inside}: 領域の中なのに文面が出る`)
+			}
 		}
 	}
 }
