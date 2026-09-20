@@ -10,7 +10,7 @@
 		"generate": "nuxt generate",
 		"lint": "npm run lint:article && npm run lint:code",
 		"lint:article": "node scripts/check-frontmatter.mjs && node scripts/check-tags.mjs",
-		"lint:code": "prettier --check . && eslint . && depcruise app tests --config --ignore-known && node scripts/check-css.mjs && node scripts/check-token-copies.mjs && node scripts/check-eslint-suppression.mjs && node scripts/check-tests-mirror.mjs && node scripts/check-adr.mjs && node scripts/check-doc-links.mjs",
+		"lint:code": "prettier --check . && eslint . && depcruise app tests --config --ignore-known --output-type err-long && node scripts/check-css.mjs && node scripts/check-token-copies.mjs && node scripts/check-eslint-suppression.mjs && node scripts/check-tests-mirror.mjs && node scripts/check-adr.mjs && node scripts/check-doc-links.mjs",
 		"preview": "nuxt preview",
 		"test": "vitest run",
 		"typecheck": "nuxt typecheck",
