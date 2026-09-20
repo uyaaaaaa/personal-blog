@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { devNull, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -65,11 +65,21 @@ describe('unfinished', () => {
 })
 
 describe('ahead', () => {
-	const sh = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim()
+	// 手元の global 設定（署名の要求など）をテストに持ち込まない
+	const env = {
+		...process.env,
+		GIT_CONFIG_GLOBAL: devNull,
+		GIT_CONFIG_NOSYSTEM: '1',
+		GIT_AUTHOR_NAME: 't',
+		GIT_AUTHOR_EMAIL: 't@example.com',
+		GIT_COMMITTER_NAME: 't',
+		GIT_COMMITTER_EMAIL: 't@example.com',
+	}
+	const sh = (cwd, ...args) => execFileSync('git', args, { cwd, env, encoding: 'utf8' }).trim()
 	const commit = (cwd, name) => {
 		writeFileSync(join(cwd, name), name)
 		sh(cwd, 'add', name)
-		sh(cwd, '-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '-m', name)
+		sh(cwd, 'commit', '-q', '-m', name)
 	}
 
 	it('どのリモートにも無いコミットだけを数え、upstream の無いブランチや古い origin/main に釣られない', () => {
