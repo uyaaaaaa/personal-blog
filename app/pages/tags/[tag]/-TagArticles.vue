@@ -39,7 +39,7 @@
 	}
 
 	const { data: articles } = await useAsyncData(`tag-articles-${slug}`, () =>
-		articlesTaggedWith(tag.name).all(),
+		articlesTaggedWith(tag.name),
 	)
 
 	const { page, totalPages, pagedItems, startNumber, basePath } = usePagination(
