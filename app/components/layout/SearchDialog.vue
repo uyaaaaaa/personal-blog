@@ -13,29 +13,7 @@
 			aria-label="Search articles"
 		>
 			<div class="search-field">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					class="search-field-icon"
-					aria-hidden="true"
-				>
-					<circle
-						cx="11"
-						cy="11"
-						r="8"
-					/>
-					<line
-						x1="21"
-						y1="21"
-						x2="16.65"
-						y2="16.65"
-					/>
-				</svg>
+				<SearchIcon class="search-field-icon" />
 				<!-- WebKit は type="search" にクリアボタンを足す。クラスを付けられない擬似要素なので、type では出させず、役割は role、仮想キーボードの検索キーは enterkeyhint で補う -->
 				<input
 					ref="inputRef"
@@ -87,6 +65,7 @@
 
 <script setup lang="ts">
 	import SearchResults from '~/components/layout/SearchResults.vue'
+	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useArticleSearch } from '~/composables/useArticleSearch'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
@@ -254,8 +233,6 @@
 
 	.search-field-icon {
 		flex: none;
-		width: 1rem;
-		height: 1rem;
 		color: var(--color-sub);
 	}
 

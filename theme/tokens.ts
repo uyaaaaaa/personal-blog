@@ -136,7 +136,9 @@ export const sizes = {
 		container: '1200px',
 	},
 	spacing: {
+		'icon-small': '1rem',
 		icon: '1.125rem',
+		'icon-large': '1.25rem',
 		'logo-mark': '26px',
 		'landing-offset-sm': '116px',
 		'landing-offset': '124px',

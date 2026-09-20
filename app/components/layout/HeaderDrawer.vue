@@ -6,29 +6,7 @@
 			@click="emit('toggle')"
 			aria-label="Open menu"
 		>
-			<Icon
-				width="20"
-				height="20"
-			>
-				<line
-					x1="3"
-					x2="21"
-					y1="6"
-					y2="6"
-				/>
-				<line
-					x1="3"
-					x2="21"
-					y1="12"
-					y2="12"
-				/>
-				<line
-					x1="3"
-					x2="21"
-					y1="18"
-					y2="18"
-				/>
-			</Icon>
+			<MenuIcon />
 		</button>
 
 		<div
@@ -49,10 +27,7 @@
 						aria-label="Close menu"
 						@click="closeDrawer"
 					>
-						<Icon>
-							<path d="M18 6 6 18" />
-							<path d="m6 6 12 12" />
-						</Icon>
+						<CloseIcon />
 					</button>
 				</div>
 
@@ -62,10 +37,7 @@
 						class="drawer-row"
 						@click="closeDrawer"
 					>
-						<Icon class="drawer-icon h-icon w-icon">
-							<path d="M3 10.5 12 3l9 7.5" />
-							<path d="M5.5 9.5V20h13V9.5" />
-						</Icon>
+						<HomeIcon class="drawer-icon" />
 						<span class="drawer-row-label">Home</span>
 					</NuxtLink>
 
@@ -75,14 +47,7 @@
 						prefetch-on="interaction"
 						@click="closeDrawer"
 					>
-						<Icon class="drawer-icon h-icon w-icon">
-							<circle
-								cx="12"
-								cy="8"
-								r="4"
-							/>
-							<path d="M4 21a8 8 0 0 1 16 0" />
-						</Icon>
+						<UserIcon class="drawer-icon" />
 						<span class="drawer-row-label">Profile</span>
 					</NuxtLink>
 
@@ -95,11 +60,7 @@
 						aria-controls="drawer-group-categories"
 						@click="isCategoriesOpen = !isCategoriesOpen"
 					>
-						<Icon class="drawer-icon h-icon w-icon">
-							<path
-								d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"
-							/>
-						</Icon>
+						<FolderIcon class="drawer-icon" />
 						<span class="drawer-row-label">{{ groups.categories.heading }}</span>
 						<ChevronDownIcon
 							class="drawer-chevron"
@@ -137,14 +98,7 @@
 						aria-controls="drawer-group-latest"
 						@click="isLatestOpen = !isLatestOpen"
 					>
-						<Icon class="drawer-icon h-icon w-icon">
-							<circle
-								cx="12"
-								cy="12"
-								r="9"
-							/>
-							<path d="M12 7v5l3.5 2" />
-						</Icon>
+						<ClockIcon class="drawer-icon" />
 						<span class="drawer-row-label">{{ groups.latest.heading }}</span>
 						<ChevronDownIcon
 							class="drawer-chevron"
@@ -196,14 +150,7 @@
 						aria-controls="drawer-group-tags"
 						@click="isTagsOpen = !isTagsOpen"
 					>
-						<Icon class="drawer-icon h-icon w-icon">
-							<path d="M3 3h8l10 10-8 8L3 11V3Z" />
-							<circle
-								cx="7.5"
-								cy="7.5"
-								r="1.5"
-							/>
-						</Icon>
+						<TagIcon class="drawer-icon" />
 						<span class="drawer-row-label">{{ groups.tags.heading }}</span>
 						<ChevronDownIcon
 							class="drawer-chevron"
@@ -251,7 +198,13 @@
 
 <script setup lang="ts">
 	import ChevronDownIcon from '~/components/ui/ChevronDownIcon.vue'
-	import Icon from '~/components/ui/Icon.vue'
+	import ClockIcon from '~/components/ui/ClockIcon.vue'
+	import CloseIcon from '~/components/ui/CloseIcon.vue'
+	import FolderIcon from '~/components/ui/FolderIcon.vue'
+	import HomeIcon from '~/components/ui/HomeIcon.vue'
+	import MenuIcon from '~/components/ui/MenuIcon.vue'
+	import TagIcon from '~/components/ui/TagIcon.vue'
+	import UserIcon from '~/components/ui/UserIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
@@ -373,11 +326,6 @@
 		cursor: pointer;
 	}
 
-	.drawer-close svg {
-		width: 1.25rem;
-		height: 1.25rem;
-	}
-
 	.drawer-close:hover {
 		background-color: var(--color-surface-subtle);
 	}
@@ -429,8 +377,6 @@
 
 	.drawer-chevron {
 		flex: none;
-		width: 1rem;
-		height: 1rem;
 		color: var(--color-sub);
 		transform: rotate(-90deg);
 		transition: transform 0.2s ease-in-out;

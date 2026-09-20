@@ -11,29 +11,7 @@
 			class="search-field flex w-full items-center gap-2 rounded-md border border-border bg-surface-subtle px-4 py-2 transition-color focus-within:border-accent"
 			@pointerdown="onPointerdown"
 		>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				class="search-field-icon"
-				aria-hidden="true"
-			>
-				<circle
-					cx="11"
-					cy="11"
-					r="8"
-				/>
-				<line
-					x1="21"
-					y1="21"
-					x2="16.65"
-					y2="16.65"
-				/>
-			</svg>
+			<SearchIcon class="search-field-icon" />
 			<!-- WebKit が type="search" に足すクリアボタンは擬似要素でクラスを付けられない。type では出させない -->
 			<input
 				ref="inputRef"
@@ -97,6 +75,7 @@
 
 <script setup lang="ts">
 	import SearchResults from '~/components/layout/SearchResults.vue'
+	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useArticleSearch } from '~/composables/useArticleSearch'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
@@ -254,8 +233,6 @@
 
 	.search-field-icon {
 		flex: none;
-		width: 1rem;
-		height: 1rem;
 		color: var(--color-sub);
 	}
 

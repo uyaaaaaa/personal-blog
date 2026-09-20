@@ -1,6 +1,11 @@
 <template>
-	<Icon size="small">
-		<polyline points="6 9 12 15 18 9" />
+	<Icon size="base">
+		<path d="M3 3h8l10 10-8 8L3 11V3Z" />
+		<circle
+			cx="7.5"
+			cy="7.5"
+			r="1.5"
+		/>
 	</Icon>
 </template>
 
