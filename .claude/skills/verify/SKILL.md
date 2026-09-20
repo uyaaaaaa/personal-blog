@@ -22,71 +22,23 @@ npm run lint > .verify/lint.log 2>&1; echo $?   # 出力はファイル、終了
 ## 実測メニュー
 
 上から順に、必要なところまで。**測れなかったものは「未実施」と書く。** 空欄にも「問題なし」にもしない。
+**その段に入るときに、手順書を読む。先にまとめて読まない。**
 
-| # | 打つもの | 何が分かる | 証跡から引くもの |
-| :--- | :--- | :--- | :--- |
-| 1 | `npm ci` | 測る土台が揃った | 終了コード |
-| 2 | `npm test` | 関数とコンポーネントの振る舞い | 終了コード、件数。失敗は全文 |
-| 3 | `npm run lint` | コンポーネントの import 漏れ、循環、依存方向 | 終了コード。error 行は全文 |
-| 4 | `npm run build` | prerender が通るか。composable / util の import 漏れ | 終了コード、生成されたページ数 |
-| 5 | `dist/` の検査 | **生成された HTML の中身** | 該当要素の有無、バイト数 |
-| 6 | 画面の撮影 | 見た目 | 撮った幅とテーマ、見て分かったこと |
-| 7 | 被せた UI に操作を送る | キーボード・日本語入力・履歴・幅の跨ぎ | NG の行と、その観測 |
-| 8 | プレビュー URL | 本番と同じ出力 | チェックの結果と URL |
+| # | 打つもの | 何が分かる | 証跡から引くもの | 手順書 |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | `npm ci` | 測る土台が揃った | 終了コード | |
+| 2 | `npm test` | 関数とコンポーネントの振る舞い | 終了コード、件数。失敗は全文 | |
+| 3 | `npm run lint` | コンポーネントの import 漏れ、循環、依存方向 | 終了コード。error 行は全文 | |
+| 4 | `npm run build` | prerender が通るか。composable / util の import 漏れ | 終了コード、生成されたページ数 | |
+| 5 | `dist/` の検査 | **生成された HTML の中身** | 該当要素の有無、バイト数 | [dist.md](./references/dist.md) |
+| 6 | 画面の撮影 | 見た目 | 撮った幅とテーマ、見て分かったこと | [screenshot.md](./references/screenshot.md) |
+| 7 | 被せた UI に操作を送る | キーボード・日本語入力・履歴・幅の跨ぎ | NG の行と、その観測 | [overlay.md](./references/overlay.md) |
+| 8 | プレビュー URL | 本番と同じ出力 | チェックの結果と URL | |
 
 - **1 を飛ばすと別のものを測る。** `node_modules` が無いとグローバルの ESLint が動いて落ちる。変更の問題ではない
 - **4 で止めてよいのは、生成物に影響しない変更だけ。** 出し分け・分岐・ルーティングを触ったら 5 まで行く
 - **2 は 5 の代わりにならない。** テストは、コンポーネントが生成された HTML に出たかを見ていない
 - **6 で止めてよいのは、被せた UI（ダイアログ・ドロワー）を触っていない変更だけ。** 撮影は操作を送っていない
-
-### 5 の要点: 生成物を読む
-
-`build` が通ることと、正しい HTML が出ることは別。Cloudflare Pages プリセットのため `build` の時点で `dist/` に出るので、`generate` を打ち直さなくてよい。
-
-- **コンポーネントの import 漏れは build を通る。** そのコンポーネントが消えた HTML が黙って生成される。拾えるのは lint だけ
-- **`onMounted` に依存する分岐は生成物に出ない。** 静的生成の HTML は「マウント前」で固定される
-- **実データで条件が揃わないものは、データを細工して測る。** 細工したまま build して検査し、**細工は revert する**
-
-```sh
-{ grep -c 'View All' dist/index.html; ls -l dist/index.html; } > .verify/dist.log 2>&1
-```
-
-### 6 の要点: 撮って、自分で見る
-
-`npm run dev` を起こし、SP 375px / PC 1280px × ライト / ダークの4通りを撮る。
-PNG を開いて見るのは、横スクロール、着地位置がヘッダーに潜っていないか、`before-` との差。
-
-```sh
-CH=$(command -v chromium || ls -d /opt/pw-browsers/chromium-*/chrome-linux/chrome | head -1)
-for w in 375 1280; do
-  printf '<body style="margin:0"><iframe src="http://localhost:3000/" style="width:%dpx;height:900px;border:0"></iframe>' "$w" > .verify/frame.html
-  for t in light:1 dark:0; do
-    "$CH" --headless --disable-gpu --no-sandbox --hide-scrollbars --window-size=$w,900 \
-      --virtual-time-budget=8000 --blink-settings=preferredColorScheme=${t#*:} \
-      --screenshot=".verify/index-$w-${t%%:*}.png" "file://$PWD/.verify/frame.html"
-  done
-done
-```
-
-`preferredColorScheme` は 0 がダーク、1 がライト。headless の窓は 500px 未満に縮まないので、幅は iframe 側で作る。
-ルーティングを触ったら、該当パスと**存在しないパス**の両方を叩き、ステータスを `.verify/routes.log` に残す。
-
-### 7 の要点: 押して、送って、観測を残す
-
-被せた UI で壊れるのは、見た目ではなく経路。Esc の届く先、閉じた後のフォーカスの戻り先、変換中のキー、ブラウザバック、`md` を跨いだ後の Tab は、撮っても写らない。
-送る操作は `scripts/overlay-probe.mjs` が持ち、結果は `.verify/overlay-<対象>.log` に、送った操作と観測が1件ずつ並ぶ。
-
-```sh
-npm run dev > .verify/dev.log 2>&1 &          # 3000 で起こしておく
-node scripts/overlay-probe.mjs search; echo $?  # ダイアログ
-node scripts/overlay-probe.mjs drawer; echo $?  # ドロワー
-```
-
-- **NG の行は、観測をそのまま報告に引く。** 「閉じない」ではなく `overlay="visible" active="BODY"`
-- **送信の行は、書いた手順ではなく実際に送った操作。** 飛ばした操作は出ず、押し直した回数は出る
-- **送る操作を増やすのも、対象を足すのも `scripts/overlay-probe.mjs`。** 手順書側に操作を書かない
-- **直した直後は、dev が拾い直してから打つ。** 拾う前の画面を測ると直す前の結果が出る
-- **`.verify/overlay-*.log` の無い報告は、操作を送っていない。** 撮影だけで「キーボードも確認した」と書かない
 
 ## 報告の型
 
