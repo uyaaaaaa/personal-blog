@@ -48,6 +48,21 @@ describe('summary', () => {
 		expect(it_.created).toBe(28035)
 	})
 
+	it('入力合計のうち固定費の外で積み上げた割合と、ツール1個のターンの数を出す', () => {
+		const it_ = summary([
+			assistant('msg_1', used(100, 0), [{ type: 'tool_use', name: 'Bash' }]),
+			assistant('msg_2', used(50, 100), [{ type: 'tool_use', name: 'Bash' }]),
+			assistant('msg_3', used(50, 150), [
+				{ type: 'tool_use', name: 'Bash' },
+				{ type: 'tool_use', name: 'Read' },
+			]),
+		])
+
+		expect(it_.input).toBe(450)
+		expect(it_.grown).toBeCloseTo((450 - 100 * 3) / 450)
+		expect(it_.single).toBe(2)
+	})
+
 	it('積み上げた順に並べ、何番目のターンかを残す', () => {
 		const it_ = summary([
 			assistant('msg_1', used(10, 0)),

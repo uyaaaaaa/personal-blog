@@ -79,10 +79,17 @@ export const attachments = (records) => {
 export const summary = (records) => {
 	const rows = turns(records)
 	const first = rows[0]
+	const fixed = first === undefined ? 0 : first.created + first.read
+	const input = rows.reduce((total, row) => total + row.created + row.read, 0)
 	return {
 		turns: rows.length,
 		// 1ターン目の入力は、作業を始める前に払っている固定費そのもの
-		fixed: first === undefined ? 0 : first.created + first.read,
+		fixed,
+		input,
+		// 固定費を除いた残りは、そのセッションで読んだり出したりして積み上げた分
+		grown: input === 0 ? 0 : (input - fixed * rows.length) / input,
+		// 並べて打てた呼び出しを別のターンにすると、そのぶん文脈全体を読み直す
+		single: rows.filter((row) => row.tools.length === 1).length,
 		peak: rows.reduce((most, row) => Math.max(most, row.created + row.read), 0),
 		created: rows.reduce((total, row) => total + row.created, 0),
 		out: rows.reduce((total, row) => total + row.out, 0),
@@ -102,6 +109,9 @@ const report = (name, records) => {
 	console.log(`# ${name}`)
 	console.log(`  ターン ${it.turns} / 固定費 ${num(it.fixed)} / 最大 ${num(it.peak)}`)
 	console.log(`  cache_creation 合計 ${num(it.created)} / output 合計 ${num(it.out)}`)
+	console.log(
+		`  入力合計 ${num(it.input)} / うち積み上がり ${Math.round(it.grown * 100)}% / ツール1個のターン ${it.single}/${it.turns}`,
+	)
 	console.log(`  system prompt ${num(prompt(records))} bytes`)
 
 	const parts = Object.entries(attachments(records)).sort(
