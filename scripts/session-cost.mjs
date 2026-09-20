@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path'
 
 const PROJECTS = join(homedir(), '.claude', 'projects')
 const SPIKES = 10
+const ALONE = 6
 const BYTES_PER_TOKEN = 4
 
 const USAGE = [
@@ -92,6 +93,18 @@ export const denied = (records) =>
 			(block) => block?.type === 'tool_result' && textOf(block.content).startsWith(DENIED),
 		).length
 
+// 単独で打たれた回数の多い順。名前だけ見えれば足りるので、並べたら数える
+const alone = (rows) => {
+	const found = new Map()
+	for (const row of rows) {
+		if (row.tools.length !== 1) continue
+		found.set(row.tools[0], (found.get(row.tools[0]) ?? 0) + 1)
+	}
+	return [...found]
+		.sort(([, one], [, other]) => other - one)
+		.map(([name, count]) => ({ name, count }))
+}
+
 export const summary = (records) => {
 	const rows = turns(records)
 	const first = rows[0]
@@ -106,6 +119,10 @@ export const summary = (records) => {
 		grown: input === 0 ? 0 : (input - fixed * rows.length) / input,
 		// 並べて打てた呼び出しを別のターンにすると、そのぶん文脈全体を読み直す
 		single: rows.filter((row) => row.tools.length === 1).length,
+		// 何も打たずに返しただけのターンも、文脈全体を読み直す分は同じだけ払う
+		idle: rows.filter((row) => row.tools.length === 0).length,
+		// どの呼び出しが単独で打たれているかが、畳む先を決める
+		alone: alone(rows),
 		denied: denied(records),
 		peak: rows.reduce((most, row) => Math.max(most, row.created + row.read), 0),
 		created: rows.reduce((total, row) => total + row.created, 0),
@@ -127,8 +144,16 @@ const report = (name, records) => {
 	console.log(`  ターン ${it.turns} / 固定費 ${num(it.fixed)} / 最大 ${num(it.peak)}`)
 	console.log(`  cache_creation 合計 ${num(it.created)} / output 合計 ${num(it.out)}`)
 	console.log(
-		`  入力合計 ${num(it.input)} / うち積み上がり ${Math.round(it.grown * 100)}% / ツール1個のターン ${it.single}/${it.turns} / 分類器の拒否 ${it.denied}`,
+		`  入力合計 ${num(it.input)} / うち積み上がり ${Math.round(it.grown * 100)}% / 分類器の拒否 ${it.denied}`,
 	)
+	console.log(`  ツール1個のターン ${it.single}/${it.turns} / 0個のターン ${it.idle}/${it.turns}`)
+	if (it.alone.length > 0) {
+		const top = it.alone
+			.slice(0, ALONE)
+			.map(({ name, count }) => `${name} x${count}`)
+			.join(' / ')
+		console.log(`  単独で打たれたもの: ${top}`)
+	}
 	console.log(`  system prompt ${num(prompt(records))} bytes`)
 
 	const parts = Object.entries(attachments(records)).sort(

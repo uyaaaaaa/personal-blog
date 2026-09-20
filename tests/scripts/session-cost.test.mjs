@@ -63,6 +63,35 @@ describe('summary', () => {
 		expect(it_.single).toBe(2)
 	})
 
+	it('何も打たなかったターンを、ツール1個のターンと分けて数える', () => {
+		const it_ = summary([
+			assistant('msg_1', used(10, 0), [{ type: 'tool_use', name: 'Bash' }]),
+			assistant('msg_2', used(10, 0)),
+			assistant('msg_3', used(10, 0), [{ type: 'thinking' }, { type: 'text' }]),
+		])
+
+		expect(it_.single).toBe(1)
+		expect(it_.idle).toBe(2)
+	})
+
+	it('単独で打たれた呼び出しを、多い順に数える', () => {
+		const one = (id, name) => assistant(id, used(10, 0), [{ type: 'tool_use', name }])
+		const it_ = summary([
+			one('msg_1', 'Read'),
+			one('msg_2', 'Bash'),
+			one('msg_3', 'Bash'),
+			assistant('msg_4', used(10, 0), [
+				{ type: 'tool_use', name: 'Grep' },
+				{ type: 'tool_use', name: 'Grep' },
+			]),
+		])
+
+		expect(it_.alone).toEqual([
+			{ name: 'Bash', count: 2 },
+			{ name: 'Read', count: 1 },
+		])
+	})
+
 	it('分類器に止められた呼び出しの数を、tool_result の文面から数える', () => {
 		const denied =
 			'Permission for this action was denied by the Claude Code auto mode classifier. Reason: [X].'
