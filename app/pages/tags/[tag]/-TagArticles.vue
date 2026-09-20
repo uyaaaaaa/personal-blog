@@ -31,7 +31,6 @@
 	const route = useRoute()
 	const slug = String(route.params.tag)
 
-	// スラッグから元のタグ名に戻す。記事を絞るのは名前で、スラッグは DB に無い
 	const { data: tags } = await useArticleTags()
 	const tag = (tags.value ?? []).find((it) => it.slug === slug)
 
