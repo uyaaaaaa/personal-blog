@@ -44,7 +44,6 @@ const post = (input, { tool = SLACK, event = 'PreToolUse', ...rest } = {}) => ({
 })
 
 const ISSUE = args('issue', ['295'], 'abc123')
-const REVIEW = args('review', ['300'])
 const TASK = args('task', ['weekly-prune', 'prune スキルに従う。'], 'zz99qq')
 
 describe('rules', () => {
@@ -56,7 +55,7 @@ describe('rules', () => {
 
 describe('create_session', () => {
 	it('session-args の出力をそのまま渡せば通す', () => {
-		for (const want of [ISSUE, REVIEW, TASK]) expect(decide(start(want), ask())).toBeNull()
+		for (const want of [ISSUE, TASK]) expect(decide(start(want), ask())).toBeNull()
 	})
 
 	it('出力を書き換えたら、違う項目を挙げて止める', () => {

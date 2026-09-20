@@ -23,11 +23,11 @@ const STEPS = [
 	},
 	{
 		key: 'review',
-		tool: 'create_session',
-		how: 'レビュー用のセッションを起こす（node scripts/session-args.mjs review N）',
+		tool: 'Agent',
+		how: 'レビューのエージェントを起こす（Agent の subagent_type: review）',
 		at: (args, number) =>
-			matches(args.prompt, /review/) &&
-			matches(args.prompt, new RegExp(`/pull/${number}(?!\\d)`)),
+			args.subagent_type === 'review' &&
+			matches(args.prompt, new RegExp(`#\\s*${number}(?!\\d)`)),
 	},
 ]
 
@@ -81,7 +81,6 @@ const blocking = (kept) => {
 				reason: [
 					'PR を出したセッションが見届けを済ませていない。followup スキルに従う。',
 					...lines,
-					'起こす手段が無ければ飛ばし、報告に「レビュー未依頼」と書いてから終える。',
 				].join('\n'),
 			}
 }

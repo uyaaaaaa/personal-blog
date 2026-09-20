@@ -18,10 +18,11 @@ const called = (tool, tool_input) => ({
 
 const subscribed = (number = 292) => called('subscribe_pr_activity', { pullNumber: number })
 const titled = (number = 292) => called('set_session_title', { title: `PR #${number}` })
-const reviewed = (number = 292) =>
-	called('create_session', {
-		prompt: `review スキルに従って https://github.com/uyaaaaaa/personal-blog/pull/${number} を見る。`,
-	})
+const reviewed = (number = 292, subagent_type = 'review') => ({
+	hook_event_name: 'PostToolUse',
+	tool_name: 'Agent',
+	tool_input: { subagent_type, prompt: `PR #${number} をレビューする` },
+})
 
 const stop = () => decide({ hook_event_name: 'Stop' }, store)
 
@@ -48,7 +49,7 @@ describe('decide', () => {
 		expect(reason).toMatch('PR #292')
 		expect(reason).toMatch('購読')
 		expect(reason).toMatch('セッション名')
-		expect(reason).toMatch('レビュー用のセッション')
+		expect(reason).toMatch('レビューのエージェント')
 	})
 
 	it('3つを済ませたら止めない', () => {
@@ -74,13 +75,13 @@ describe('decide', () => {
 		expect(stop()).toBeNull()
 	})
 
-	it('番号に触れただけの呼び出しは数えない', () => {
+	it('番号に触れただけの呼び出しと、別のエージェントは数えない', () => {
 		decide(opened(), store)
-		decide(called('create_session', { prompt: 'PR #292 の CI を直す' }), store)
+		decide(reviewed(292, 'general-purpose'), store)
 		decide(called('set_session_title', { title: '292 を見る' }), store)
 
 		const reason = stop()
-		expect(reason).toMatch('レビュー用のセッション')
+		expect(reason).toMatch('レビューのエージェント')
 		expect(reason).toMatch('セッション名')
 	})
 
