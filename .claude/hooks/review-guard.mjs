@@ -262,7 +262,7 @@ const POSTED =
 	/^mcp__.*(add_issue_comment|update_issue_comment|add_comment_to_pending_review|add_reply_to_pull_request_comment)$/
 
 const direct = (it) => ({
-	reason: `自分のトークンで submit しない。${it.workflow} の発火に渡す（→ ${STEPS} の6）`,
+	reason: `自分のトークンで submit しない。${it.workflow} の発火に渡す（→ ${STEPS} の「出す」）`,
 })
 
 const VERDICT = /^\s*\**判定\**\s*[:：]/m
@@ -275,7 +275,7 @@ const posted = (input, it) => {
 	const body = input.tool_input?.body
 	if (typeof body !== 'string' || !shaped(body, it)) return null
 	return {
-		reason: `判定もグレードも通常コメントでは付かない。${it.workflow} の発火に渡す（→ ${STEPS} の6）`,
+		reason: `判定もグレードも通常コメントでは付かない。${it.workflow} の発火に渡す（→ ${STEPS} の「出す」）`,
 	}
 }
 
