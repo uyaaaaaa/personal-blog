@@ -37,6 +37,8 @@
 
   ページを動かす ──▶ useScrollTo（全体で1本）──▶ 着地位置は CSS が決める
 
+  記事の取得 ──▶ utils/ のクエリ（全体で1本）──▶ 呼ぶ側は条件を継ぐ
+
   theme/tokens.ts ──▶ tailwind.config.ts ──▶ CSS 変数 / Tailwind theme
 
   collection の全件 ──▶ プリレンダの起点 ──▶ 全ページを静的生成 ──▶ 出ていないパスは404

@@ -17,6 +17,7 @@ const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前�
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
 const PUBLISHED = /記事のクエリには公開制御/
+const QUERY_LOCATION = /記事の取得を組み立てるのは/
 const DOM_ASSEMBLY = /DOM を組み立てない/
 const DISPLAY = /display: none を宣言に書かない/
 const MOTION = /決めた長さではない|モーションのクラスは用途の名前|transition の対象に all/
@@ -80,6 +81,11 @@ const renderOnlyIn = async (relative, code) => {
 const stdinReadsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => STDIN.test(message.message)).length
+}
+
+const queryLocationsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => QUERY_LOCATION.test(message.message)).length
 }
 
 const publishedIn = async (relative, code) => {
@@ -710,6 +716,36 @@ describe('記事のクエリの公開制御', () => {
 	it('公開制御の付いた鎖は通す', async () => {
 		expect(await publishedIn('app/composables/useArticles.ts', query(FILTERED))).toBe(0)
 		expect(await publishedIn('app/pages/index.vue', sfc('', query(FILTERED)))).toBe(0)
+	})
+})
+
+describe('記事のクエリの置き場', () => {
+	const query = ".where('published', '=', true).all()"
+	const ARTICLES = `const { data } = await useAsyncData('articles', () => queryCollection('article')${query})`
+	const DIGESTS = `const { data } = await useAsyncData('digests', () => queryCollection('digest')${query})`
+
+	it('置き場の外に書いた取得を、拡張子を問わず落とす', async () => {
+		expect(await queryLocationsIn('app/composables/useArticles.ts', ARTICLES)).toBe(1)
+		expect(await queryLocationsIn('app/pages/index.vue', sfc('', ARTICLES))).toBe(1)
+		expect(
+			await queryLocationsIn('app/components/layout/SearchDialog.vue', sfc('', ARTICLES)),
+		).toBe(1)
+	})
+
+	it('置き場に書いた取得と、記事でない collection は通す', async () => {
+		expect(
+			await queryLocationsIn(
+				'app/utils/articleQuery.ts',
+				`export const articles = () => queryCollection('article')${query}`,
+			),
+		).toBe(0)
+		expect(await queryLocationsIn('app/pages/digest/index.vue', sfc('', DIGESTS))).toBe(0)
+		expect(
+			await queryLocationsIn(
+				'app/pages/index.vue',
+				sfc('', "import { publishedArticleList } from '~/utils/articleQuery'"),
+			),
+		).toBe(0)
 	})
 })
 
