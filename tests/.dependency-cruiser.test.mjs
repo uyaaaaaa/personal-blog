@@ -96,7 +96,16 @@ describe('領域の一覧', () => {
 		await expect(loading(areas)).rejects.toThrow(reason)
 	})
 
-	it('領域と ui が揃っていれば読める', async () => {
-		await expect(loading(['layout', 'article', UI])).resolves.toBeDefined()
+	it('挙げた領域が、そのまま規則の綴りになる', async () => {
+		const { default: derived } = await loading(['search', 'layout', UI])
+		const derives = ['component-domains-isolated', 'ui-no-domains']
+		expect(
+			derived.forbidden
+				.filter((rule) => derives.includes(rule.name))
+				.map((rule) => rule.from.path),
+		).toEqual([
+			expect.stringContaining(`${COMPONENTS}/(search|layout)/`),
+			expect.stringContaining(`${COMPONENTS}/${UI}/`),
+		])
 	})
 })
