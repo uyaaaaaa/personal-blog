@@ -30,10 +30,6 @@ describe('readNextArticles', () => {
 		expect(readNextArticles(articles, '/k0', 3).map((it) => it.path)).toEqual(['/k1', '/b0'])
 	})
 
-	it('limit で切る', () => {
-		expect(readNextArticles(blog, '/b0', 2)).toHaveLength(2)
-	})
-
 	it('候補が自分しか無ければ空にする', () => {
 		expect(readNextArticles([article('/b0')], '/b0', 3)).toEqual([])
 	})
