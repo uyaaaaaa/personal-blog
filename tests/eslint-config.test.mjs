@@ -845,6 +845,11 @@ describe('検査の入力の読み取り', () => {
 			await checkInputsIn(CHECK, 'const data = globalThis.JSON.parse(source)'),
 		).toBeGreaterThan(0)
 		expect(await checkInputsIn(CHECK, 'const { parse } = JSON')).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, 'const parse = JSON.parse')).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, "const fs = require('node:fs')")).toBeGreaterThan(0)
+		expect(
+			await checkInputsIn(CHECK, 'const need = createRequire(import.meta.url)'),
+		).toBeGreaterThan(0)
 		expect(
 			await checkInputsIn(CHECK, "const fs = process.getBuiltinModule('node:fs')"),
 		).toBeGreaterThan(0)
