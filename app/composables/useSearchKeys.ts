@@ -1,10 +1,11 @@
-import type { useArticleSearch } from '~/composables/useArticleSearch'
 import { useFocusTrap } from '~/composables/useFocusTrap'
 
-type Search = Pick<
-	ReturnType<typeof useArticleSearch>,
-	'activeArticle' | 'moveActive' | 'isComposingKey'
->
+// useArticleSearch が返すもののうち、キー操作が読むぶんだけ
+type Search = {
+	activeArticle: Readonly<Ref<{ path: string } | undefined>>
+	moveActive: (delta: number) => void
+	isComposingKey: (event: KeyboardEvent) => boolean
+}
 
 type SearchKeysOptions = {
 	// キーで候補を選べる条件。選択の見えない状態にキーだけ効かせない

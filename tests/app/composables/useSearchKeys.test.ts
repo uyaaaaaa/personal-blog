@@ -25,7 +25,7 @@ const mountKeys = (
 			setup: () => {
 				keys = useSearchKeys(
 					{
-						activeArticle: activeArticle as Ref<never>,
+						activeArticle,
 						moveActive,
 						isComposingKey: () => composing,
 					},
