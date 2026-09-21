@@ -7,6 +7,30 @@
 		{ "serverName": "Google_Calendar" },
 		{ "serverName": "Cloudflare_Developer_Platform" }
 	],
+	"skillOverrides": {
+		"code-review": "name-only",
+		"security-review": "name-only",
+		"claude-api": "name-only",
+		"artifact-design": "name-only",
+		"artifact-diagramming": "name-only",
+		"artifact-capabilities": "name-only",
+		"dataviz": "user-invocable-only",
+		"update-config": "user-invocable-only",
+		"keybindings-help": "user-invocable-only",
+		"simplify": "user-invocable-only",
+		"fewer-permission-prompts": "user-invocable-only",
+		"loop": "user-invocable-only",
+		"workflow-authoring": "user-invocable-only",
+		"run": "user-invocable-only",
+		"init": "user-invocable-only",
+		"anthropic-skills:docs": "user-invocable-only",
+		"anthropic-skills:docx": "user-invocable-only",
+		"anthropic-skills:pdf": "user-invocable-only",
+		"anthropic-skills:pptx": "user-invocable-only",
+		"anthropic-skills:xlsx": "user-invocable-only",
+		"anthropic-skills:skill-creator": "user-invocable-only",
+		"anthropic-skills:import-memory": "user-invocable-only"
+	},
 	"permissions": {
 		"allow": [
 			"Bash(git status)",
