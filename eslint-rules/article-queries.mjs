@@ -1,3 +1,5 @@
+import { ARTICLE } from '../content.collections.mjs'
+
 // collection を引く綴りは4つあり、queryCollection 以外の3つも where を継げる（@nuxt/content）
 const QUERY = /^queryCollection/
 const PUBLISHED = 'published'
@@ -19,6 +21,11 @@ const bare = (node) => {
 
 const methodName = (callee) =>
 	callee.type === 'MemberExpression' ? (callee.property.name ?? callee.property.value) : null
+
+const mayQueryArticles = (node) => {
+	const [collection] = node.arguments
+	return collection?.type !== 'Literal' || collection.value === ARTICLE
+}
 
 const isQuery = (node) =>
 	node?.type === 'CallExpression' &&
@@ -77,7 +84,7 @@ const published = {
 
 		return {
 			CallExpression(node) {
-				if (isQuery(node)) queries.add(node)
+				if (isQuery(node) && mayQueryArticles(node)) queries.add(node)
 				if (!filtersPublished(node)) return
 
 				const query = queryOf(node)

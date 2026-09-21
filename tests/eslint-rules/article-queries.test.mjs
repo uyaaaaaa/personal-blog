@@ -64,6 +64,23 @@ describe('published', () => {
 		})
 	})
 
+	it('記事でない collection を名指した鎖は通し、名指していないものは落とす', () => {
+		run({
+			valid: [
+				"queryCollection('digest').order('date', 'DESC').all()",
+				"queryCollection('digest').path(path).first()",
+				"queryCollectionNavigation('digest')",
+			],
+			invalid: [
+				{ code: 'queryCollection(collection).all()', errors: [{ messageId: 'published' }] },
+				{
+					code: 'queryCollection(`article`).all()',
+					errors: [{ messageId: 'published' }],
+				},
+			],
+		})
+	})
+
 	it('値として書いた published では通さない', () => {
 		run({
 			valid: [],
