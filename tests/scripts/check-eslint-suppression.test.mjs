@@ -67,10 +67,10 @@ describe('check-eslint-suppression', () => {
 		expect(check().status).toBe(0)
 	})
 
-	it('読めないファイルは理由を出して落ちる', () => {
+	it('解析できないファイルは理由を出して落ちる', () => {
 		write('a.ts', 'const = = =\n')
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/読めない/)
+		expect(stderr).toMatch(/ソースとして解析できない/)
 	})
 })

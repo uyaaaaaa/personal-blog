@@ -61,7 +61,7 @@ for (const file of [...sources('')]) {
 	try {
 		comments = commentsOf(read(file), file)
 	} catch (error) {
-		errors.push(`${file}: 読めない（${error.message}）`)
+		errors.push(`${file}: ソースとして解析できない（${error.message}）`)
 		continue
 	}
 	for (const comment of comments ?? []) {
