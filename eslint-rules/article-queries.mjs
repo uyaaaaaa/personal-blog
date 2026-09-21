@@ -1,7 +1,8 @@
+import { ARTICLE } from '../content.collections.mjs'
+
 // collection を引く綴りは4つあり、queryCollection 以外の3つも where を継げる（@nuxt/content）
 const QUERY = /^queryCollection/
 const PUBLISHED = 'published'
-const ARTICLE = 'article'
 // orWhere は群の中を OR で繋ぐので、中の published は隣の条件で迂回される（@nuxt/content）
 const GROUP = 'andWhere'
 
