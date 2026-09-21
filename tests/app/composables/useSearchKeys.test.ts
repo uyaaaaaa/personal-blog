@@ -72,7 +72,9 @@ describe('useSearchKeys', () => {
 
 		expect(close).toHaveBeenCalledTimes(1)
 		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
-		expect(close.mock.invocationCallOrder[0]).toBeLessThan(navigate.mock.invocationCallOrder[0])
+		const [closeOrder = 0] = close.mock.invocationCallOrder
+		const [navigateOrder = 0] = navigate.mock.invocationCallOrder
+		expect(closeOrder).toBeLessThan(navigateOrder)
 	})
 
 	it('候補が無ければ Enter で閉じない', () => {
