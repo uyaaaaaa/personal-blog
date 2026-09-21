@@ -7,35 +7,41 @@ import configuration from '../.dependency-cruiser.mjs'
 import { COMPONENT_AREAS } from '../eslint.config.mjs'
 
 const COMPONENTS = 'app/components'
+const ROOTS = [COMPONENTS, `tests/${COMPONENTS}`]
+const CRUISED = ['app', 'tests']
 const UI = 'ui'
 const PROBE = 'probe.mjs'
 
-const pairs = COMPONENT_AREAS.flatMap((from) => COMPONENT_AREAS.map((to) => ({ from, to })))
+const cases = ROOTS.flatMap((root) =>
+	COMPONENT_AREAS.flatMap((from) => COMPONENT_AREAS.map((to) => ({ root, from, to }))),
+)
 
-const importer = ({ from, to }) => `${COMPONENTS}/${from}/to-${to}.mjs`
+const importer = ({ root, from, to }) => `${root}/${from}/to-${to}.mjs`
 
 const expected = ({ from, to }) => {
 	if (from === to || to === UI) return []
 	return from === UI ? ['ui-no-domains'] : ['component-domains-isolated']
 }
 
-const crossing = pairs.filter((pair) => expected(pair).length > 0)
-const inside = pairs.filter((pair) => expected(pair).length === 0)
+const crossing = cases.filter((it) => expected(it).length > 0)
+const inside = cases.filter((it) => expected(it).length === 0)
 
 let root
 let violations
 
 beforeAll(async () => {
 	root = mkdtempSync(join(tmpdir(), 'dependency-cruiser-'))
-	for (const area of COMPONENT_AREAS) {
-		mkdirSync(join(root, COMPONENTS, area), { recursive: true })
-		writeFileSync(join(root, COMPONENTS, area, PROBE), 'export const probe = null\n')
+	for (const directory of ROOTS) {
+		for (const area of COMPONENT_AREAS) {
+			mkdirSync(join(root, directory, area), { recursive: true })
+			writeFileSync(join(root, directory, area, PROBE), 'export const probe = null\n')
+		}
 	}
-	for (const pair of pairs) {
-		writeFileSync(join(root, importer(pair)), `import '../${pair.to}/${PROBE}'\n`)
+	for (const it of cases) {
+		writeFileSync(join(root, importer(it)), `import '../${it.to}/${PROBE}'\n`)
 	}
 
-	const { output } = await cruise([COMPONENTS], {
+	const { output } = await cruise(CRUISED, {
 		baseDir: root,
 		validate: true,
 		ruleSet: { forbidden: configuration.forbidden },
@@ -48,12 +54,12 @@ afterAll(() => {
 })
 
 const reported = (subset) =>
-	subset.map((pair) => [
-		importer(pair),
-		violations.filter((it) => it.from === importer(pair)).map((it) => it.rule.name),
+	subset.map((it) => [
+		importer(it),
+		violations.filter((found) => found.from === importer(it)).map((found) => found.rule.name),
 	])
 
-const wanted = (subset) => subset.map((pair) => [importer(pair), expected(pair)])
+const wanted = (subset) => subset.map((it) => [importer(it), expected(it)])
 
 describe('.dependency-cruiser', () => {
 	it('領域どうしの import は、挙げているどの領域からでも落ちる', () => {
