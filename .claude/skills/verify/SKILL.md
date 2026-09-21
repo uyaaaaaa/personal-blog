@@ -16,7 +16,7 @@ description: "このリポジトリの変更の実測と、`.verify/` に残す�
 npm run lint > .verify/lint.log 2>&1; echo $?   # 出力はファイル、終了コードは別に出す
 ```
 
-**互いに依存しない実測は、1本の Bash に畳む**（→ CLAUDE.md）。
+**test・lint・build は互いの結果に依らないので、1本の Bash に畳む。**
 
 ```sh
 npm test > .verify/test.log 2>&1; echo test=$?; npm run lint > .verify/lint.log 2>&1; echo lint=$?; npm run build > .verify/build.log 2>&1; echo build=$?

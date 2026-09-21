@@ -36,9 +36,11 @@ const toolsOf = (message) =>
 		.map((block) => block.name)
 
 // tool_result はこちらが打った呼び出しの戻りで、人からの問いかけではない
-const asked = (record) =>
-	record.type === 'user' &&
-	!(record.message?.content ?? []).some?.((block) => block?.type === 'tool_result')
+const asked = (record) => {
+	if (record.type !== 'user') return false
+	const content = record.message?.content
+	return !Array.isArray(content) || !content.some((block) => block?.type === 'tool_result')
+}
 
 // 1つの応答が thinking / text / tool_use の行に割れて記録される。usage は同じものが並ぶ
 export const turns = (records) => {
