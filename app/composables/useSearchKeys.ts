@@ -24,20 +24,21 @@ export const useSearchKeys = (
 		navigateTo(article.path)
 	}
 
+	const ACTIONS: Record<string, () => void> = {
+		ArrowDown: () => search.moveActive(1),
+		ArrowUp: () => search.moveActive(-1),
+		Enter: openActive,
+	}
+
 	const onKeydown = (event: KeyboardEvent) => {
 		if (search.isComposingKey(event)) return
 		if (!canSelect()) return
 
-		if (event.key === 'ArrowDown') {
-			event.preventDefault()
-			search.moveActive(1)
-		} else if (event.key === 'ArrowUp') {
-			event.preventDefault()
-			search.moveActive(-1)
-		} else if (event.key === 'Enter') {
-			event.preventDefault()
-			openActive()
-		}
+		const action = ACTIONS[event.key]
+		if (!action) return
+
+		event.preventDefault()
+		action()
 	}
 
 	const { trapRef } = useFocusTrap(isTrapped, (event) => {
