@@ -485,6 +485,7 @@ export default [
 		rules: {
 			...restrictions,
 			'imports/order': 'error',
+			'queries/location': 'error',
 			'queries/published': 'error',
 			'no-restricted-syntax': [
 				...restrictions['no-restricted-syntax'],
@@ -515,6 +516,7 @@ export default [
 		rules: {
 			...restrictions,
 			'imports/order': 'error',
+			'queries/location': 'error',
 			'queries/published': 'error',
 			// components: false 後もグローバル登録が残るのはNuxtの組み込みコンポーネントのみ
 			'vue/no-undef-components': [

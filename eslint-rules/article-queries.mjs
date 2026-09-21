@@ -1,4 +1,14 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { ARTICLE } from '../content.collections.mjs'
+
+const INVARIANT_URL =
+	'https://github.com/uyaaaaaa/personal-blog/blob/main/docs/ARCHITECTURE.md#不変条件'
+
+// 起点は eslint を打つ場所に依らせない。cwd から見ると、リポジトリ直下以外から打ったとき
+// 置き場そのものが置き場の外に見え、クエリの本体が落ちる
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const QUERY_DIRECTORY = path.join(ROOT, 'app', 'utils') + path.sep
 
 // collection を引く綴りは4つあり、queryCollection 以外の3つも where を継げる（@nuxt/content）
 const QUERY = /^queryCollection/
@@ -99,8 +109,29 @@ const published = {
 	},
 }
 
+const location = {
+	meta: {
+		type: 'problem',
+		schema: [],
+		messages: {
+			location: `記事の取得を組み立てるのは app/utils/ だけ。ここでは utils/ のクエリを import し、条件を継いで使う。 ${INVARIANT_URL}`,
+		},
+	},
+	create(context) {
+		if (path.resolve(context.filename).startsWith(QUERY_DIRECTORY)) return {}
+
+		return {
+			CallExpression(node) {
+				if (isQuery(node) && mayQueryArticles(node))
+					context.report({ node, messageId: 'location' })
+			},
+		}
+	},
+}
+
 export default {
 	rules: {
+		location,
 		published,
 	},
 }
