@@ -120,6 +120,17 @@ describe('useSearchKeys', () => {
 		expect(close).toHaveBeenCalledTimes(1)
 	})
 
+	// SP の全画面検索は ↑↓・Enter が効かない幅で、閉じる手が Escape しか無い
+	it('選べない幅でも Escape は閉じる', async () => {
+		const { close, isTrapped } = mountKeys({ canSelect: false }, ref(false))
+		isTrapped.value = true
+		await nextTick()
+
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+
+		expect(close).toHaveBeenCalledTimes(1)
+	})
+
 	it('変換中の Escape では閉じない', async () => {
 		const { close, isTrapped } = mountKeys({ composing: true }, ref(false))
 		isTrapped.value = true
