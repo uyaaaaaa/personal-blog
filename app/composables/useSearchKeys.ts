@@ -1,6 +1,5 @@
 import { useFocusTrap } from '~/composables/useFocusTrap'
 
-// useArticleSearch が返すもののうち、キー操作が読むぶんだけ
 type Search = {
 	activeArticle: Readonly<Ref<{ path: string } | undefined>>
 	moveActive: (delta: number) => void
@@ -8,16 +7,11 @@ type Search = {
 }
 
 type SearchKeysOptions = {
-	// キーで候補を選べる条件。選択の見えない状態にキーだけ効かせない
 	canSelect: () => boolean
-	// Tab の閉じ込めと Escape を窓で受ける間
 	isTrapped: Ref<boolean>
-	// 記事へ移るときと Escape のときの閉じ方。出る場所ごとに違うのはここだけ
 	close: () => void
 }
 
-// ↑↓・Enter・Escape の割り当ては、インラインの検索と全画面の検索で1つを共有する。
-// 片方だけ直し忘れると、同じ案内を出したまま操作だけが食い違う
 export const useSearchKeys = (
 	search: Search,
 	{ canSelect, isTrapped, close }: SearchKeysOptions,
