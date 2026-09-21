@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { cruise } from 'dependency-cruiser'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import configuration from '../.dependency-cruiser.mjs'
 import { COMPONENT_AREAS } from '../eslint.config.mjs'
 
@@ -12,7 +12,7 @@ const CRUISED = ['app', 'tests']
 const UI = 'ui'
 const PROBE = 'probe.mjs'
 
-const cases = ROOTS.flatMap((root) =>
+const pairs = ROOTS.flatMap((root) =>
 	COMPONENT_AREAS.flatMap((from) => COMPONENT_AREAS.map((to) => ({ root, from, to }))),
 )
 
@@ -23,8 +23,8 @@ const expected = ({ from, to }) => {
 	return from === UI ? ['ui-no-domains'] : ['component-domains-isolated']
 }
 
-const crossing = cases.filter((it) => expected(it).length > 0)
-const inside = cases.filter((it) => expected(it).length === 0)
+const crossing = pairs.filter((pair) => expected(pair).length > 0)
+const inside = pairs.filter((pair) => expected(pair).length === 0)
 
 let root
 let violations
@@ -37,11 +37,12 @@ beforeAll(async () => {
 			writeFileSync(join(root, directory, area, PROBE), 'export const probe = null\n')
 		}
 	}
-	for (const it of cases) {
-		writeFileSync(join(root, importer(it)), `import '../${it.to}/${PROBE}'\n`)
+	for (const pair of pairs) {
+		writeFileSync(join(root, importer(pair)), `import '../${pair.to}/${PROBE}'\n`)
 	}
 
 	const { output } = await cruise(CRUISED, {
+		...configuration.options,
 		baseDir: root,
 		validate: true,
 		ruleSet: { forbidden: configuration.forbidden },
@@ -54,12 +55,12 @@ afterAll(() => {
 })
 
 const reported = (subset) =>
-	subset.map((it) => [
-		importer(it),
-		violations.filter((found) => found.from === importer(it)).map((found) => found.rule.name),
+	subset.map((pair) => [
+		importer(pair),
+		violations.filter((found) => found.from === importer(pair)).map((found) => found.rule.name),
 	])
 
-const wanted = (subset) => subset.map((it) => [importer(it), expected(it)])
+const wanted = (subset) => subset.map((pair) => [importer(pair), expected(pair)])
 
 describe('.dependency-cruiser', () => {
 	it('領域どうしの import は、挙げているどの領域からでも落ちる', () => {
@@ -68,5 +69,34 @@ describe('.dependency-cruiser', () => {
 
 	it('同じ領域の中と ui への import は通す', () => {
 		expect(reported(inside)).toEqual(wanted(inside))
+	})
+})
+
+const loading = async (areas) => {
+	vi.resetModules()
+	vi.doMock('../eslint.config.mjs', () => ({ COMPONENT_AREAS: areas }))
+	return import('../.dependency-cruiser.mjs')
+}
+
+const unusable = [
+	{ how: '領域でない綴りが混ざる', areas: ['layout', 'article|x', UI], reason: /配列でない/ },
+	{ how: '文字列でないものが混ざる', areas: ['layout', 42, UI], reason: /配列でない/ },
+	{ how: '配列ですらない', areas: undefined, reason: /配列でない/ },
+	{ how: 'ui が挙がっていない', areas: ['layout', 'article'], reason: /に ui が無い/ },
+	{ how: 'ui しか挙がっていない', areas: [UI], reason: /以外の領域を挙げていない/ },
+]
+
+describe('領域の一覧', () => {
+	afterEach(() => {
+		vi.doUnmock('../eslint.config.mjs')
+		vi.resetModules()
+	})
+
+	it.each(unusable)('$how なら理由を出して止まる', async ({ areas, reason }) => {
+		await expect(loading(areas)).rejects.toThrow(reason)
+	})
+
+	it('領域と ui が揃っていれば読める', async () => {
+		await expect(loading(['layout', 'article', UI])).resolves.toBeDefined()
 	})
 })
