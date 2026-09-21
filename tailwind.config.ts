@@ -19,6 +19,15 @@ const baseStyles = plugin(({ addBase }) => {
 		'.dark': toDarkCssVariables(),
 		// ダブルタップズームとタップ遅延を無効にする。ピンチズームは残る
 		body: { touchAction: 'manipulation' },
+		// OS が動きを減らす設定のとき、長さだけを 0 にする。対象も終わりの値も残るので、
+		// 開閉と状態変化の結果は設定の有無で変わらない。宣言の出どころ（用途のクラス・
+		// <style>・インライン）を問わず届かせるため、全称セレクタと !important で当てる
+		'@media (prefers-reduced-motion: reduce)': {
+			'*, *::before, *::after': {
+				transitionDuration: '0s !important',
+				animationDuration: '0s !important',
+			},
+		},
 	})
 })
 

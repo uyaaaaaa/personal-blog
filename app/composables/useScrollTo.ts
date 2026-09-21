@@ -1,6 +1,13 @@
 const SETTLED_FRAMES = 4
 const JUMP_LIMIT_MS = 1200
 
+// OS の「動きを減らす」設定。呼び出しが渡す behavior は CSS の scroll-behavior より
+// 優先されるので、送り方を決めるここが読む
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+
+const scrollBehavior = (): ScrollBehavior =>
+	window.matchMedia(REDUCED_MOTION_QUERY).matches ? 'auto' : 'smooth'
+
 const isJumping = ref(false)
 
 let frame: number | undefined
@@ -36,14 +43,14 @@ export const useScrollTo = () => {
 		const element = document.getElementById(id)
 		if (!element) return
 
-		element.scrollIntoView({ behavior: 'smooth' })
+		element.scrollIntoView({ behavior: scrollBehavior() })
 		trackJump()
 
 		history.pushState(null, '', `#${id}`)
 	}
 
 	const scrollToTop = () => {
-		window.scrollTo({ top: 0, behavior: 'smooth' })
+		window.scrollTo({ top: 0, behavior: scrollBehavior() })
 		trackJump()
 	}
 

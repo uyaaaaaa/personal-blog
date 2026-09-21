@@ -28,6 +28,13 @@ const utilities = async (raw: string) => {
 	return css
 }
 
+const baseStyles = async () => {
+	const { css } = await postcss([
+		tailwind({ ...config, content: [{ raw: '', extension: 'html' }] }),
+	]).process('@tailwind base', { from: undefined })
+	return css
+}
+
 const durationOf = (css: string, selector: string) => {
 	let found: string | undefined
 	postcss.parse(css).walkRules(selector, (rule) =>
@@ -54,5 +61,40 @@ describe('モーションのクラス', () => {
 		expect(css).not.toMatch(
 			/duration-200|delay-150|animate-spin|transition-(colors|all|transform)|\.transition[\s{]/,
 		)
+	})
+})
+
+// 減らす設定を見る記述は1箇所。用途のクラスも <style> の transition もここで長さを失う
+const reducedMotionRules = (css: string) => {
+	const found: { selector: string; declarations: string[] }[] = []
+	postcss.parse(css).walkAtRules('media', (atRule) => {
+		if (!atRule.params.includes('prefers-reduced-motion: reduce')) return
+
+		atRule.walkRules((rule) =>
+			found.push({
+				selector: rule.selector,
+				declarations: rule.nodes
+					.filter((node) => node.type === 'decl')
+					.map(
+						(decl) =>
+							`${decl.prop}: ${decl.value}${decl.important ? ' !important' : ''}`,
+					),
+			}),
+		)
+	})
+	return found
+}
+
+describe('動きを減らす設定', () => {
+	it('どこが宣言したモーションも長さを失う', async () => {
+		expect(reducedMotionRules(await baseStyles())).toEqual([
+			{
+				selector: '*, *::before, *::after',
+				declarations: [
+					'transition-duration: 0s !important',
+					'animation-duration: 0s !important',
+				],
+			},
+		])
 	})
 })
