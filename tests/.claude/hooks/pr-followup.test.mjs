@@ -203,10 +203,8 @@ describe('decide', () => {
 
 	it('判定を読めなかった回も打ち切りに数える', () => {
 		followed(292, changes())
-		for (let round = 0; round < ROUNDS; round += 1) {
-			expect(stop()).not.toBeNull()
-			decide(reviewed(), store)
-		}
+		for (let round = 1; round < ROUNDS; round += 1) decide(reviewed(), store)
+		decide(changes(), store)
 
 		expect(stop()).toBeNull()
 	})
@@ -227,6 +225,14 @@ describe('decide', () => {
 		decide(approved(), store, ask)
 
 		expect(stop(ask)).toMatch('APPROVE')
+	})
+
+	it('判定を読めなかった巡のあとは、前の巡の判定で止めない', () => {
+		followed(292, changes())
+		expect(stop()).not.toBeNull()
+
+		decide(reviewed(), store)
+		expect(stop()).toBeNull()
 	})
 
 	it('判定を読めない発火では止めない', () => {

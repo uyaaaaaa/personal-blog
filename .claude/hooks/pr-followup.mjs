@@ -83,13 +83,15 @@ const counted = (input, kept, workflow, ask) => {
 	const pull = found.pr === undefined ? undefined : kept[found.pr]
 	if (!pull) return null
 
+	// 読めなかった巡は判定を持ち越さない。前の巡の判定を根拠に止めない
+	const { verdict, ...rest } = pull
 	const event = eventIn(found, ask)
 	return {
 		...kept,
 		[found.pr]: {
-			...pull,
+			...rest,
 			...(event === null ? {} : { verdict: event }),
-			rounds: (pull.rounds ?? 0) + 1,
+			rounds: (rest.rounds ?? 0) + 1,
 		},
 	}
 }
