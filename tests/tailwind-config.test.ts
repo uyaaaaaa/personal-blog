@@ -70,7 +70,7 @@ const reducedMotionRules = (css: string) => {
 	postcss.parse(css).walkAtRules('media', (atRule) => {
 		if (!atRule.params.includes('prefers-reduced-motion: reduce')) return
 
-		atRule.walkRules((rule) =>
+		atRule.walkRules((rule) => {
 			found.push({
 				selector: rule.selector,
 				declarations: rule.nodes
@@ -79,8 +79,8 @@ const reducedMotionRules = (css: string) => {
 						(decl) =>
 							`${decl.prop}: ${decl.value}${decl.important ? ' !important' : ''}`,
 					),
-			}),
-		)
+			})
+		})
 	})
 	return found
 }
