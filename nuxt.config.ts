@@ -10,6 +10,7 @@ export default defineNuxtConfig({
 	components: false,
 	app: {
 		head: {
+			htmlAttrs: { lang: 'ja' },
 			link: [
 				{ rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
 				{ rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml', sizes: 'any' },
