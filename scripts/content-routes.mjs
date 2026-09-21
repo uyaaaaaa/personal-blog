@@ -6,12 +6,14 @@ const DIGEST_TABLE = `_content_${DIGEST}`
 
 // パスは @nuxt/content が slugify して決める。ファイル名から組み直すと綴りが割れるので、
 // ビルド時に組み上がった collection の DB をそのまま読む
-const paths = (databaseFile, table, where, what) => {
+const paths = (databaseFile, table, condition, what) => {
 	let db
 	try {
 		db = new Database(databaseFile, { readonly: true, fileMustExist: true })
 		return db
-			.prepare(`SELECT path FROM ${table}${where} ORDER BY path`)
+			.prepare(
+				`SELECT path FROM ${table}${condition === '' ? '' : ` WHERE ${condition}`} ORDER BY path`,
+			)
 			.all()
 			.map((row) => row.path)
 	} catch (error) {
@@ -22,7 +24,7 @@ const paths = (databaseFile, table, where, what) => {
 }
 
 export const articleRoutes = (databaseFile) => {
-	const routes = paths(databaseFile, ARTICLE_TABLE, ' WHERE published = 1', '公開中の記事')
+	const routes = paths(databaseFile, ARTICLE_TABLE, 'published = 1', '公開中の記事')
 
 	// 0件は空の起点として通り、出ていないページの検出も素通りする。
 	// 記事は必ず1件以上あるので、0件は collection が組み上がっていない合図として落とす
