@@ -1,6 +1,7 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { dispatched, plain, rules, source } from '../../scripts/review-rules.mjs'
+import { dispatched, eventOf, plain, resolve, rules, source } from '../../scripts/review-rules.mjs'
 import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
@@ -51,15 +52,48 @@ const opened = (response) => {
 
 const failed = (input) => Boolean(input.tool_response?.isError || input.tool_response?.is_error)
 
-const recorded = (input, kept, workflow) => {
-	if (failed(input)) return null
-
-	if (called(input, 'create_pull_request')) {
-		const number = opened(input.tool_response)
-		if (number === null || kept[number]) return null
-		return { ...kept, [number]: { done: [], asked: null } }
+const payloadOf = (found, ask) => {
+	if (found.review !== undefined) return found.review
+	if (found.path === undefined) return null
+	try {
+		return ask.payload(found.path)
+	} catch {
+		return null
 	}
+}
 
+const eventIn = (found, ask) => {
+	const text = payloadOf(found, ask)
+	if (text === null) return null
+	try {
+		const { event } = JSON.parse(text)
+		return typeof event === 'string' ? event : null
+	} catch {
+		return null
+	}
+}
+
+// 回数は発火ごと。判定は読めた回だけ差し替える
+const counted = (input, kept, workflow, ask) => {
+	const found = dispatched(input)
+	if (!found || !named(found.workflow, workflow)) return null
+
+	const pull = found.pr === undefined ? undefined : kept[found.pr]
+	if (!pull) return null
+
+	const { verdict, ...rest } = pull
+	const event = eventIn(found, ask)
+	return {
+		...kept,
+		[found.pr]: {
+			...rest,
+			...(event === null ? {} : { verdict: event }),
+			rounds: (rest.rounds ?? 0) + 1,
+		},
+	}
+}
+
+const stepped = (input, kept, workflow) => {
 	const next = { ...kept }
 	let changed = false
 	for (const [number, pull] of Object.entries(kept)) {
@@ -73,18 +107,59 @@ const recorded = (input, kept, workflow) => {
 	return changed ? next : null
 }
 
+const recorded = (input, kept, workflow, ask) => {
+	if (failed(input)) return null
+
+	if (called(input, 'create_pull_request')) {
+		const number = opened(input.tool_response)
+		if (number === null || kept[number]) return null
+		return { ...kept, [number]: { done: [], asked: null } }
+	}
+
+	const next = stepped(input, kept, workflow) ?? kept
+	return counted(input, next, workflow, ask) ?? (next === kept ? null : next)
+}
+
 const missing = (pull) => STEPS.filter(({ key }) => !pull.done.includes(key))
 
-const blocking = (kept) => {
+// 指摘が要らない判定が Approve
+const approving = (it) => {
+	const found = it.judgments?.find(({ needs }) => needs.length === 0)
+	return found ? eventOf(found.name) : null
+}
+
+// 打ち切りに達した PR は、出し直す先が無いので止めない
+const waiting = (pull, { rounds, approved }) =>
+	typeof pull.verdict === 'string' &&
+	approved !== null &&
+	pull.verdict !== approved &&
+	Number.isFinite(rounds) &&
+	pull.rounds <= rounds
+
+const pending = (pull, until) => {
+	const left = missing(pull)
+	if (left.length > 0) {
+		return {
+			at: left.map(({ key }) => key).join(','),
+			how: left.map(({ how }) => how).join(' / '),
+		}
+	}
+	if (!waiting(pull, until)) return null
+	return {
+		at: `${pull.verdict}.${pull.rounds}`,
+		how: `判定が ${pull.verdict} のまま。指摘に対応し、レビューを起こし直す（直しが無く返信だけの巡でも起こす）`,
+	}
+}
+
+const blocking = (kept, until) => {
 	const next = { ...kept }
 	const lines = []
 	for (const [number, pull] of Object.entries(kept)) {
-		const left = missing(pull)
-		const keys = left.map(({ key }) => key).join(',')
-		// 同じ不足で2度は止めない。手段が無いセッションを終われなくしない
-		if (left.length === 0 || pull.asked === keys) continue
-		next[number] = { ...pull, asked: keys }
-		lines.push(`PR #${number}: ${left.map(({ how }) => how).join(' / ')}`)
+		const left = pending(pull, until)
+		// 同じ状態で2度は止めない。手段が無いセッションを終われなくしない
+		if (!left || pull.asked === left.at) continue
+		next[number] = { ...pull, asked: left.at }
+		lines.push(`PR #${number}: ${left.how}`)
 	}
 	return lines.length === 0
 		? null
@@ -99,28 +174,32 @@ const blocking = (kept) => {
 
 const root = () => process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
 
-const ASK = { skill: () => source(join(root(), SKILL)) }
+const ASK = {
+	skill: () => source(join(root(), SKILL)),
+	payload: (path) => readFileSync(resolve(path, root()), 'utf8'),
+}
 
-// 読めなければ名前で絞らない。終われないセッションを作らない
-const workflowOf = (ask) => {
+// 読めなければ名前でも判定でも絞らない
+const ruled = (ask) => {
 	try {
-		return rules(ask.skill()).workflow
+		return rules(ask.skill())
 	} catch {
-		return undefined
+		return {}
 	}
 }
 
 export const decide = (input, store, ask = ASK) => {
 	const kept = store.read() ?? {}
+	const it = ruled(ask)
 
 	if (input.hook_event_name === 'Stop') {
-		const found = blocking(kept)
+		const found = blocking(kept, { rounds: it.rounds, approved: approving(it) })
 		if (!found) return null
 		store.write(found.kept)
 		return found.reason
 	}
 
-	const next = recorded(input, kept, workflowOf(ask))
+	const next = recorded(input, kept, it.workflow, ask)
 	if (next) store.write(next)
 	return null
 }

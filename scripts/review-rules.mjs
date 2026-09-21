@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 
 const STEPS = 'SKILL.md'
 const REFERENCES = 'references'
@@ -14,6 +14,8 @@ const referenced = (dir) => {
 		return []
 	}
 }
+
+export const resolve = (path, base) => (isAbsolute(path) ? path : join(base, path))
 
 export const source = (dir) =>
 	[join(dir, STEPS), ...referenced(dir)].map((path) => readFileSync(path, 'utf8')).join('\n')

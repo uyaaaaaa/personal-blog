@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { decide, resolve, rules } from '~~/.claude/hooks/review-guard.mjs'
-import { source } from '~~/scripts/review-rules.mjs'
+import { decide, rules } from '~~/.claude/hooks/review-guard.mjs'
+import { resolve, source } from '~~/scripts/review-rules.mjs'
 
 const SOURCE = source(fileURLToPath(new URL('../../../.claude/skills/review', import.meta.url)))
 

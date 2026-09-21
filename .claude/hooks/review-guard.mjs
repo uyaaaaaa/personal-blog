@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs'
-import { isAbsolute, join } from 'node:path'
+import { join } from 'node:path'
 import {
 	complete,
 	dispatched,
@@ -8,6 +8,7 @@ import {
 	eventOf,
 	judged,
 	plain,
+	resolve,
 	rules,
 	source,
 } from '../../scripts/review-rules.mjs'
@@ -197,8 +198,6 @@ const recorded = (input, it, ask) => {
 }
 
 const root = () => process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
-
-export const resolve = (path, base) => (isAbsolute(path) ? path : join(base, path))
 
 const ASK = {
 	skill: () => source(join(root(), SKILL)),
