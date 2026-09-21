@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3'
+import { ARTICLE } from '../content.collections.mjs'
 
-const TABLE = '_content_article'
+const TABLE = `_content_${ARTICLE}`
 
 // パスは @nuxt/content が slugify して決める。ファイル名から組み直すと綴りが割れるので、
 // ビルド時に組み上がった collection の DB をそのまま読む
