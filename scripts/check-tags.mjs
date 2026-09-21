@@ -1,7 +1,8 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { tagToSlug } from '../app/utils/tag.ts'
-import { articleFiles, fail } from './article-files.mjs'
+import { ARTICLES, articleFiles } from './article-files.mjs'
+import { fail, inputs } from './check-io.mjs'
+
+const { read } = inputs(process.argv[2])
 
 const readFrontmatter = (source) => {
 	const matched = source.match(/^---\r?\n([\s\S]*?)\r?\n---/)
@@ -30,12 +31,12 @@ const readTags = (frontmatter, file) => {
 	return tags
 }
 
-const { dir, files } = articleFiles(process.argv[2])
+const { files } = articleFiles(process.argv[2])
 
 const owners = new Map()
 try {
 	for (const name of files) {
-		const frontmatter = readFrontmatter(readFileSync(join(dir, name), 'utf8'))
+		const frontmatter = readFrontmatter(read(`${ARTICLES}/${name}`))
 		if (frontmatter === null) continue
 		for (const tag of readTags(frontmatter, name)) {
 			if (!owners.has(tag)) owners.set(tag, name)

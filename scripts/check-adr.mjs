@@ -1,8 +1,7 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { dirname, relative, resolve } from 'node:path'
+import { fail, inputs } from './check-io.mjs'
 
-const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
+const { root: ROOT, read, entries, exists } = inputs(process.argv[2])
 const ADR = 'docs/adr'
 const INDEX = 'docs/DECISIONS.md'
 const POINTS = ['検討した案', '対価', '戻す条件']
@@ -14,21 +13,8 @@ const POINT = /^- \*\*(.+?)\*\*/gm
 const ROW = /^- \[(\d+) (.+)\]\(\.\/adr\/(.+?)\)$/gm
 const LINK = /\]\(([^)\s]+)\)/g
 
-const fail = (...lines) => {
-	for (const line of lines) console.error(line)
-	process.exit(1)
-}
-
-const read = (path) => {
-	try {
-		return readFileSync(join(ROOT, path), 'utf8')
-	} catch (error) {
-		fail(`${path} を読み取れない:`, `  ${error.message}`)
-	}
-}
-
 const walk = (directory) =>
-	readdirSync(join(ROOT, directory), { withFileTypes: true }).flatMap((entry) => {
+	entries(directory).flatMap((entry) => {
 		if (IGNORED.has(entry.name)) return []
 		const path = directory === '' ? entry.name : `${directory}/${entry.name}`
 		return entry.isDirectory() ? walk(path) : [path]
@@ -36,13 +22,10 @@ const walk = (directory) =>
 
 const errors = []
 
-const listing = () => {
-	try {
-		return readdirSync(join(ROOT, ADR)).sort()
-	} catch (error) {
-		fail(`${ADR} を読み取れない:`, `  ${error.message}`)
-	}
-}
+const listing = () =>
+	entries(ADR)
+		.map((entry) => entry.name)
+		.sort()
 
 // .DS_Store のような git の管理外のファイルで lint を止めない。拾うのは .md だけ
 const named = listing()
@@ -141,7 +124,7 @@ for (const path of walk('').filter((path) => path.endsWith('.md'))) {
 		if (target === '' || href.includes('://')) continue
 
 		const to = relative(ROOT, resolve(ROOT, dirname(path), target))
-		if (!to.startsWith(`${ADR}/`) || existsSync(join(ROOT, to))) continue
+		if (!to.startsWith(`${ADR}/`) || exists(to)) continue
 
 		const line = source.slice(0, match.index).split('\n').length
 		errors.push(`${path}:${line}: ${href} の先が無い`)

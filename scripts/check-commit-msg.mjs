@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { fail, inputs } from './check-io.mjs'
 
 const SUBJECT_MIN = 12
 const SUBJECT_MAX = 50
@@ -12,15 +12,12 @@ const JAPANESE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u
 // 体言止めの語を並べても「〜のバグ」「〜のリファクタリング」に当たらず、名詞は際限なく増える
 const ASSERTIVE = /(?:ない|[うくぐすつぬぶむる])$/u
 
-const fail = (...lines) => {
-	for (const line of lines) console.error(line)
-	process.exit(1)
-}
+const { read } = inputs()
 
 const path = process.argv[2]
 if (!path) fail('コミットメッセージのファイルが渡されていない')
 
-const lines = readFileSync(path, 'utf8')
+const lines = read(path)
 	.split(/^#\s*-+\s*>8\s*-+.*$/m)[0]
 	.split(/\r?\n/)
 	.filter((line) => !line.startsWith('#'))

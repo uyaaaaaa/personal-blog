@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { readFrontMatter } from '../content.frontmatter.ts'
 import { articleSchema } from '../content.schema.ts'
-import { articleFiles, fail } from './article-files.mjs'
+import { ARTICLES, articleFiles } from './article-files.mjs'
+import { fail, inputs } from './check-io.mjs'
 
-const { dir, files } = articleFiles(process.argv[2])
+const { read } = inputs(process.argv[2])
+const { files } = articleFiles(process.argv[2])
 
 const unreadable = []
 const mismatched = []
@@ -12,7 +12,7 @@ const mismatched = []
 for (const name of files) {
 	let data
 	try {
-		data = readFrontMatter(readFileSync(join(dir, name), 'utf8'))
+		data = readFrontMatter(read(`${ARTICLES}/${name}`))
 	} catch (error) {
 		unreadable.push(`${name}: ${error.message}`)
 		continue

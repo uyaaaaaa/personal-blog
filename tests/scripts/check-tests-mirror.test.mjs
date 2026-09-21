@@ -197,7 +197,7 @@ describe('実装からテスト', () => {
 			write(`.claude/${file}`, '{')
 			const { status, stderr } = check()
 			expect(status).toBe(1)
-			expect(stderr).toMatch(`${file}: hooks を読めない`)
+			expect(stderr).toMatch(`${file} を JSON として読めない`)
 			rmSync(join(root, '.claude', file))
 		}
 	})

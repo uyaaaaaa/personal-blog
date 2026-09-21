@@ -86,6 +86,42 @@ const STDIN_READ = [
 	},
 ]
 
+const CHECK_IO = 'scripts/check-io.mjs'
+const CHECK_INPUT_MESSAGE = `検査が入力を読む口は ${CHECK_IO} だけ。素の読み取りは、どの入力がなぜ駄目かの1行を出さずにスタックで落ちる。`
+
+// fs に届く経路は import だけではない。require と組み込みモジュールの取り出しも同じ関数を渡す
+const CHECK_INPUT_MODULES = [
+	'fs',
+	'node:fs',
+	'fs/promises',
+	'node:fs/promises',
+	'module',
+	'node:module',
+]
+
+const CHECK_INPUT = [
+	{
+		// 動的 import はファイルもパッケージも読む。失敗した指定子を言えるのは集約先だけ
+		selector: 'ImportExpression',
+		message: CHECK_INPUT_MESSAGE,
+	},
+	{
+		// 読んだ文字列の解析も入力の読み取り。素の SyntaxError はどのファイルの話かを言わない
+		selector:
+			"CallExpression[callee.object.name='JSON']:matches([callee.property.name='parse'], [callee.property.value='parse'])",
+		message: CHECK_INPUT_MESSAGE,
+	},
+	{
+		selector: 'CallExpression[callee.name=/^(require|createRequire)$/]',
+		message: CHECK_INPUT_MESSAGE,
+	},
+	{
+		selector:
+			'CallExpression[callee.property.name=/^(createRequire|getBuiltinModule|binding)$/]',
+		message: CHECK_INPUT_MESSAGE,
+	},
+]
+
 const LANDING_MESSAGE = `ページ内ジャンプの着地位置は CSS が持つ。JS でオフセットを足さず、ページ全体を動かす呼び出しは useScrollTo に集約する。 ${INVARIANT_URL}`
 
 const PAGE_SCROLLER = '/^(documentElement|body|scrollingElement)$/'
@@ -619,6 +655,24 @@ export default [
 		ignores: ['scripts/stdin.mjs'],
 		rules: {
 			'no-restricted-syntax': ['error', ...STDIN_READ],
+		},
+	},
+	{
+		// 検査が読む口を1本に保つ。集約先そのものは除く。
+		// 対象は lint が回す検査と、そこが記事を読むのに通す1本。テストは入力を作る側なので入れない
+		files: ['scripts/check-*.mjs', 'scripts/article-files.mjs'],
+		ignores: [CHECK_IO],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					paths: CHECK_INPUT_MODULES.map((name) => ({
+						name,
+						message: CHECK_INPUT_MESSAGE,
+					})),
+				},
+			],
+			'no-restricted-syntax': ['error', ...STDIN_READ, ...CHECK_INPUT],
 		},
 	},
 	{

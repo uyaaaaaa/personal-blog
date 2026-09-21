@@ -1,15 +1,13 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fail, inputs } from './check-io.mjs'
 
-const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
+const { read, entries, json, exists } = inputs(process.argv[2])
 const TESTS = 'tests'
 const HOOKS = '.githooks'
 const SETTINGS = ['.claude/settings.json', '.claude/settings.local.json']
 const IGNORED = new Set(['node_modules', '.git', '.nuxt', '.output', 'dist', '.verify'])
 
 const walk = (directory) =>
-	readdirSync(join(ROOT, directory), { withFileTypes: true }).flatMap((entry) => {
+	entries(directory).flatMap((entry) => {
 		if (IGNORED.has(entry.name)) return []
 		const path = directory === '' ? entry.name : `${directory}/${entry.name}`
 		return entry.isDirectory() ? walk(path) : [path]
@@ -45,27 +43,21 @@ const DELEGATED = /npm run ([\w:-]+)/g
 const errors = []
 
 const hookCommands = () =>
-	SETTINGS.filter((path) => existsSync(join(ROOT, path))).flatMap((path) => {
-		try {
-			const { hooks = {} } = JSON.parse(readFileSync(join(ROOT, path), 'utf8'))
-			return Object.values(hooks)
-				.flat()
-				.flatMap((matcher) => matcher.hooks ?? [])
-				.map((hook) => hook.command)
-				.filter((command) => typeof command === 'string')
-		} catch (error) {
-			errors.push(`${path}: hooks を読めない（${error.message}）`)
-			return []
-		}
+	SETTINGS.filter(exists).flatMap((path) => {
+		// JSON は null にも配列にもなる。読めた値の型でスタックに落ちないよう、空として扱う
+		const { hooks } = json(path) ?? {}
+		return Object.values(hooks ?? {})
+			.flat()
+			.flatMap((matcher) => matcher.hooks ?? [])
+			.map((hook) => hook.command)
+			.filter((command) => typeof command === 'string')
 	})
 
 const runners = () => {
-	const { scripts } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
+	const { scripts } = json('package.json')
 	const queue = [
 		scripts.lint,
-		...readdirSync(join(ROOT, HOOKS)).map((name) =>
-			readFileSync(join(ROOT, HOOKS, name), 'utf8'),
-		),
+		...entries(HOOKS).map((entry) => read(`${HOOKS}/${entry.name}`)),
 		...hookCommands(),
 	]
 
@@ -97,22 +89,20 @@ for (const test of tests) {
 	}
 
 	const sources = sourcesOf(test.slice(TESTS.length + 1))
-	if (sources.some((source) => existsSync(join(ROOT, source)))) continue
+	if (sources.some(exists)) continue
 
 	errors.push(`${test}: 対応する実装が無い（${sources.join(' / ')}）`)
 }
 
 for (const check of checks) {
 	const candidates = testsOf(check)
-	if (candidates.some((test) => existsSync(join(ROOT, test)))) continue
+	if (candidates.some(exists)) continue
 
 	errors.push(`${check}: 回している検査に対応するテストが無い（${candidates.join(' / ')}）`)
 }
 
 if (errors.length > 0) {
-	console.error('テストと実装の対応が取れていない:')
-	for (const error of errors) console.error(`  ${error}`)
-	process.exit(1)
+	fail('テストと実装の対応が取れていない:', ...errors.map((error) => `  ${error}`))
 }
 
 console.log(

@@ -1,8 +1,6 @@
-import { existsSync, readFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fail, inputs } from './check-io.mjs'
 
-const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
+const { read, exists, load } = inputs(process.argv[2])
 const CONFIG = 'eslint.config.mjs'
 const REPO_URL = 'https://github.com/uyaaaaaa/personal-blog/blob/main/'
 
@@ -12,11 +10,6 @@ const HEADING = /^#{1,6} +(\S.*?)\s*$/
 const MARKDOWN_LINK = /\[([^\]]*)\]\([^)]*\)/g
 // GitHub の見出しアンカーの作り方。小文字にし、文字・数字・空白・ハイフン・下線以外を落とし、空白をハイフンにする
 const ANCHOR_DROPPED = /[^\p{L}\p{N}\s_-]/gu
-
-const fail = (...lines) => {
-	for (const line of lines) console.error(line)
-	process.exit(1)
-}
 
 const anchorOf = (heading) =>
 	heading
@@ -56,9 +49,7 @@ const urlsIn = (config) => {
 	return [...urls].sort()
 }
 
-const config = await import(pathToFileURL(join(ROOT, CONFIG))).catch((error) =>
-	fail(`${CONFIG} を読み取れない:`, `  ${error.message}`),
-)
+const config = await load(CONFIG)
 
 const urls = urlsIn(config.default)
 if (urls.length === 0) {
@@ -68,29 +59,20 @@ if (urls.length === 0) {
 const errors = []
 const cached = new Map()
 
-const read = (path) => {
-	if (!cached.has(path)) {
-		try {
-			cached.set(path, { anchors: anchorsOf(readFileSync(join(ROOT, path), 'utf8')) })
-		} catch (error) {
-			cached.set(path, { unreadable: error.message })
-		}
-	}
+const anchorsIn = (path) => {
+	if (!cached.has(path)) cached.set(path, anchorsOf(read(path)))
 	return cached.get(path)
 }
 
 for (const url of urls) {
 	const [target, fragment] = decodeURI(url.slice(REPO_URL.length)).split('#')
-	if (!existsSync(join(ROOT, target))) {
+	if (!exists(target)) {
 		errors.push(`${url}: ${target} が無い`)
 		continue
 	}
 	if (fragment === undefined) continue
 
-	const { anchors, unreadable } = read(target)
-	if (unreadable !== undefined) {
-		errors.push(`${url}: ${target} を読み取れない（${unreadable}）`)
-	} else if (!anchors.has(fragment)) {
+	if (!anchorsIn(target).has(fragment)) {
 		errors.push(`${url}: ${target} に #${fragment} に当たる見出しが無い`)
 	}
 }

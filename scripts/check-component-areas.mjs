@@ -1,9 +1,8 @@
-import { readdirSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { join } from 'node:path'
 import { ESLint } from 'eslint'
+import { fail, inputs } from './check-io.mjs'
 
-const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
+const { root: ROOT, entries, load } = inputs(process.argv[2])
 const CONFIG = 'eslint.config.mjs'
 const COMPONENTS = 'app/components'
 const ERROR = 2
@@ -12,29 +11,11 @@ const ERROR = 2
 const PLACED = ['Probe.vue', 'probe.ts']
 const ROOTS = [COMPONENTS, `tests/${COMPONENTS}`]
 
-const fail = (...lines) => {
-	for (const line of lines) console.error(line)
-	process.exit(1)
-}
-
-const load = async (path) => {
-	try {
-		return await import(pathToFileURL(join(ROOT, path)).href)
-	} catch (error) {
-		fail(`${path} を読み取れない:`, `  ${error.message}`)
-	}
-}
-
 // 領域はディレクトリ。直下のファイルは検査が落とす側なので、行き先には数えない
-const directories = () => {
-	try {
-		return readdirSync(join(ROOT, COMPONENTS), { withFileTypes: true })
-			.filter((entry) => entry.isDirectory())
-			.map((entry) => entry.name)
-	} catch (error) {
-		fail(`${COMPONENTS}/ を読み取れない:`, `  ${error.message}`)
-	}
-}
+const directories = () =>
+	entries(COMPONENTS)
+		.filter((entry) => entry.isDirectory())
+		.map((entry) => entry.name)
 
 const { COMPONENT_AREAS: listed, AREA_DIRECTORY_MESSAGE: message } = await load(CONFIG)
 

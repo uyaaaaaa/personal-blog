@@ -16,6 +16,7 @@ const STYLESHEET = /スタイルシートを組み立てない/
 const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前のクラス/
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
+const CHECK_INPUT = /検査が入力を読む口は/
 const PUBLISHED = /記事のクエリには公開制御/
 const QUERY_LOCATION = /記事の取得を組み立てるのは/
 const DOM_ASSEMBLY = /DOM を組み立てない/
@@ -81,6 +82,11 @@ const renderOnlyIn = async (relative, code) => {
 const stdinReadsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => STDIN.test(message.message)).length
+}
+
+const checkInputsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => CHECK_INPUT.test(message.message)).length
 }
 
 const queryLocationsIn = async (relative, code) => {
@@ -821,6 +827,53 @@ describe('composable の DOM の組み立て', () => {
 		).toBe(0)
 		expect(
 			await assembliesIn('tests/app/utils/shelf.test.ts', body("host.appendChild(h('p'))")),
+		).toBe(0)
+	})
+})
+
+describe('検査の入力の読み取り', () => {
+	const CHECK = 'scripts/check-areas.mjs'
+
+	it('綴りを変えた読み取りも落とす', async () => {
+		expect(
+			await checkInputsIn(CHECK, "import { readFileSync } from 'node:fs'"),
+		).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, "import fs from 'fs/promises'")).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, "await import('./a.mjs')")).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, 'const data = JSON.parse(source)')).toBeGreaterThan(0)
+		expect(
+			await checkInputsIn(CHECK, "const fs = process.getBuiltinModule('node:fs')"),
+		).toBeGreaterThan(0)
+		expect(
+			await checkInputsIn(
+				'scripts/article-files.mjs',
+				"import { readdirSync } from 'node:fs'",
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('集約先そのものと、通して読む側は通す', async () => {
+		expect(
+			await checkInputsIn('scripts/check-io.mjs', "import { readFileSync } from 'node:fs'"),
+		).toBe(0)
+		expect(
+			await checkInputsIn(
+				CHECK,
+				"import { inputs } from './check-io.mjs'\ninputs().read('a')",
+			),
+		).toBe(0)
+		// 入力を作るテストと、lint が回さない probe は、読み取りの口の外
+		expect(
+			await checkInputsIn(
+				`tests/${CHECK}.test.mjs`,
+				"import { writeFileSync } from 'node:fs'",
+			),
+		).toBe(0)
+		expect(
+			await checkInputsIn(
+				'scripts/overlay-probe.mjs',
+				"import { readFileSync } from 'node:fs'",
+			),
 		).toBe(0)
 	})
 })
