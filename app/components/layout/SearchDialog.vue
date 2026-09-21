@@ -10,6 +10,7 @@
 			ref="trapRef"
 			class="search-dialog rounded-card border border-border bg-surface shadow-lg"
 			role="dialog"
+			aria-modal="true"
 			aria-label="Search articles"
 		>
 			<div class="search-field">
@@ -68,6 +69,7 @@
 	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useArticleSearch } from '~/composables/useArticleSearch'
+	import { useBackdropInert } from '~/composables/useBackdropInert'
 	import { useSearchKeys } from '~/composables/useSearchKeys'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 
@@ -118,6 +120,8 @@
 	})
 
 	const { lockRef } = useTouchScrollLock()
+
+	useBackdropInert(toRef(props, 'isOpen'), trapRef)
 
 	// 閉じるアニメーションの間も結果を出したままにするため、消すのは開くとき。
 	// フォーカスは押したときと同じ tick で寄せる。フレームを待つと、多くのモバイル

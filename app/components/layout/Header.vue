@@ -64,6 +64,7 @@
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
 	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
+	import { releaseBackdrop } from '~/composables/useBackdropInert'
 	import { isSearchShortcut } from '~/utils/shortcut'
 
 	const props = defineProps<{
@@ -83,8 +84,11 @@
 		isMenuOpen.value = !isMenuOpen.value
 	}
 
+	// 閉じた直後に背面へフォーカスを寄せる経路がある。prop がドロワーに伝わるのを待つと、
+	// 寄せ先が inert のままになる
 	const closeMenu = () => {
 		isMenuOpen.value = false
+		releaseBackdrop()
 	}
 
 	const openSearchFrom = (opener: HTMLElement | null) => {
@@ -100,6 +104,7 @@
 
 	const closeSearch = () => {
 		isSearchOpen.value = false
+		releaseBackdrop()
 		focusByGesture(searchOpener)
 		searchOpener = null
 	}

@@ -21,7 +21,8 @@ const TRANSITION = 400
 
 export const OVERLAYS = {
 	search: {
-		trigger: 'header button[aria-haspopup="dialog"]',
+		// ヘッダーの開閉ボタンは検索もドロワーも dialog を名乗る。名前で引き分ける
+		trigger: 'header button[aria-label="Search"]',
 		shortcut: 'K',
 		// 下の層に残って戻し先を覆いうる被せ物
 		covering: 'drawer',
@@ -1066,6 +1067,42 @@ const probes = [
 			return {
 				observed: show(state, ['overlay', 'active', 'ring']),
 				ok: state.overlay === 'hidden' && state.activeShown && state.ring === NO_RING,
+			}
+		},
+	},
+	{
+		// 背面が辿れると、読み上げは被せたものの外まで進む。名前が無ければ何が開いたかも
+		// 分からない。inert は支援技術のツリーと Tab の行き先を同時に外す
+		name: 'aria-被せている間の背面と名前',
+		dialog: true,
+		run: async (p) => {
+			await p.open()
+			const observed = await p.evaluate(`
+				const trap = document.querySelector(TRAP)
+				const reachable = [...document.querySelectorAll(FOCUSABLE)].filter(
+					(el) =>
+						$shown(el) &&
+						getComputedStyle(el).visibility !== 'hidden' &&
+						!trap.contains(el) &&
+						!el.closest('[inert], [aria-hidden="true"]'),
+				)
+				return {
+					name: trap.getAttribute('aria-label'),
+					modal: trap.getAttribute('aria-modal'),
+					role: trap.getAttribute('role'),
+					expanded: $vis(TRIGGER)?.getAttribute('aria-expanded') ?? null,
+					reachable: reachable.map($name),
+				}
+			`)
+			const left = observed.reachable
+			return {
+				observed: `名前="${observed.name}" role="${observed.role}" aria-modal="${observed.modal}" トリガの aria-expanded="${observed.expanded}" 背面に残った行き先=${left.length}件${left.length > 0 ? `（${left.slice(0, 5).join(' / ')}${left.length > 5 ? ' …' : ''}）` : ''}`,
+				ok:
+					left.length === 0 &&
+					!!observed.name &&
+					observed.role === 'dialog' &&
+					observed.modal === 'true' &&
+					observed.expanded === 'true',
 			}
 		},
 	},

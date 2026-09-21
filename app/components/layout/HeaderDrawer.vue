@@ -2,9 +2,12 @@
 	<div class="flex items-center md:hidden">
 		<button
 			ref="menuButtonRef"
+			type="button"
 			class="mobile-menu-btn"
 			@click="emit('toggle')"
-			aria-label="Open menu"
+			aria-label="Menu"
+			aria-haspopup="dialog"
+			:aria-expanded="isOpen"
 		>
 			<MenuIcon />
 		</button>
@@ -15,9 +18,12 @@
 			:class="{ 'is-open': isOpen }"
 			@click="emit('close')"
 		>
-			<aside
+			<div
 				ref="trapRef"
 				class="mobile-drawer"
+				role="dialog"
+				aria-modal="true"
+				aria-label="Menu"
 				@click.stop
 			>
 				<div class="drawer-header h-header-sm">
@@ -191,7 +197,7 @@
 						</ul>
 					</div>
 				</nav>
-			</aside>
+			</div>
 		</div>
 	</div>
 </template>
@@ -206,6 +212,7 @@
 	import TagIcon from '~/components/ui/TagIcon.vue'
 	import UserIcon from '~/components/ui/UserIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
+	import { releaseBackdrop, useBackdropInert } from '~/composables/useBackdropInert'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 	import type { MenuGroups } from '~/utils/menuGroup'
@@ -222,13 +229,17 @@
 
 	const menuButtonRef = ref<HTMLButtonElement | null>(null)
 
-	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる
+	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる。
+	// そのハンバーガーは被せている間の背面なので、移す前に inert から外す
 	const closeDrawer = () => {
+		releaseBackdrop()
 		focusByGesture(menuButtonRef.value)
 		emit('close')
 	}
 
 	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), closeDrawer)
+
+	useBackdropInert(toRef(props, 'isOpen'), trapRef)
 
 	const { lockRef } = useTouchScrollLock()
 
