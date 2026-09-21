@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import remarkObsidianCallout from './remark/obsidian-callout.mjs'
-import { articleRoutes } from './scripts/article-routes.mjs'
+import { articleRoutes, digestRoutes } from './scripts/content-routes.mjs'
 import { writeWorkerRoutes } from './scripts/worker-routes.mjs'
 import { CATEGORIES } from './app/utils/category'
 
@@ -97,7 +97,8 @@ export default defineNuxtConfig({
 		'nitro:build:before'(nitro) {
 			if (nitro.options.dev) return
 
-			const pages = articleRoutes(nitro.options.runtimeConfig.content.localDatabase.filename)
+			const database = nitro.options.runtimeConfig.content.localDatabase.filename
+			const pages = [...articleRoutes(database), ...digestRoutes(database)]
 			nitro.options.prerender.routes.push(...pages)
 
 			nitro.hooks.hook('compiled', () => {
