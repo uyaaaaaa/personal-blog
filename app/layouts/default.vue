@@ -1,7 +1,16 @@
 <template>
 	<div class="layout-container">
+		<a
+			href="#main-content"
+			class="skip-link"
+			>Skip to content</a
+		>
 		<Header :location="route.fullPath" />
-		<main class="flex-1 px-5 pb-16 pt-7 md:px-10 md:pb-24 md:pt-14">
+		<main
+			id="main-content"
+			tabindex="-1"
+			class="flex-1 scroll-mt-below-header-sm px-5 pb-16 pt-7 md:scroll-mt-below-header md:px-10 md:pb-24 md:pt-14"
+		>
 			<div
 				class="mx-auto w-full"
 				:class="measure"
@@ -68,5 +77,22 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
+	}
+
+	.skip-link {
+		position: fixed;
+		top: 0.75rem;
+		left: 0.75rem;
+		z-index: 130;
+		padding: 0.5rem 1rem;
+		background-color: var(--color-surface);
+		color: var(--color-main);
+		border: 1px solid var(--color-border);
+		border-radius: 0.25rem;
+		transform: translateY(-150%);
+	}
+
+	.skip-link:focus {
+		transform: translateY(0);
 	}
 </style>
