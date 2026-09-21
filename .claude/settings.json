@@ -47,7 +47,7 @@
 			"Bash(npm ci)",
 			"Bash(npm test)",
 			"Bash(node scripts/article-files.mjs:*)",
-			"Bash(node scripts/article-routes.mjs:*)",
+			"Bash(node scripts/content-routes.mjs:*)",
 			"Bash(node scripts/harness-journal.mjs:*)",
 			"Bash(node scripts/issue-shape.mjs:*)",
 			"Bash(node scripts/overlay-probe.mjs:*)",
