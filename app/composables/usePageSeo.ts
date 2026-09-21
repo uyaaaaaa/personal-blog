@@ -7,12 +7,17 @@ type PageSeoInput = {
 	type?: 'website' | 'article'
 	publishedTime?: Resolvable<string | undefined>
 	tags?: Resolvable<string[] | undefined>
+	noindex?: boolean
 }
 
 const SITE_NAME = 'Tech Blog'
 const SITE_DESCRIPTION =
 	'Functional Minimalism for Experts. Technical articles on software engineering, architecture, and design.'
 const DEFAULT_OGP_IMAGE = '/ogp.png'
+
+// robots.txt で弾くとこの宣言自体が読まれず、URL だけが検索結果に載る。
+// nofollow は、たどった先が索引に載るまでの猶予を削るため
+const NOINDEX = 'noindex, nofollow'
 
 /**
  * og:imageやog:urlは絶対URLでないとクローラが解決できないため、
@@ -36,6 +41,8 @@ export const usePageSeo = (input: PageSeoInput) => {
 	useSeoMeta({
 		title: () => title.value,
 		description: () => description.value,
+
+		robots: input.noindex ? NOINDEX : undefined,
 
 		ogType: input.type ?? 'website',
 		ogSiteName: SITE_NAME,

@@ -12,3 +12,4 @@
 - [05 route に依らない取得は、それを出すコンポーネントが持つ](./adr/05-fetch-follows-route-dependency.md)
 - [06 route を読むのは入口だけにし、下の層は props と引数で受け取る](./adr/06-route-read-only-at-entry.md)
 - [07 `components/` の共有部品は題材を知らないものだけを `ui/` に置く](./adr/07-ui-knows-no-domain.md)
+- [08 機械が集めたものは記事と別の URL 系統に出す](./adr/08-collected-content-in-its-own-url-family.md)
