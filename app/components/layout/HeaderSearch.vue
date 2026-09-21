@@ -78,7 +78,7 @@
 	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useArticleSearch } from '~/composables/useArticleSearch'
-	import { useFocusTrap } from '~/composables/useFocusTrap'
+	import { useSearchKeys } from '~/composables/useSearchKeys'
 
 	const LIST_ID = 'header-search-results'
 
@@ -89,17 +89,9 @@
 		(e: 'update:open', value: boolean): void
 	}>()
 
-	const {
-		query,
-		results,
-		activeIndex,
-		activeArticle,
-		moveActive,
-		startComposition,
-		endComposition,
-		isComposingKey,
-		clear,
-	} = useArticleSearch()
+	const search = useArticleSearch()
+	const { query, results, activeIndex, startComposition, endComposition, isComposingKey, clear } =
+		search
 
 	const inputRef = ref<HTMLInputElement | null>(null)
 
@@ -145,13 +137,21 @@
 
 	const isVisible = () => (inputRef.value?.getClientRects().length ?? 0) > 0
 
-	const openActive = () => {
-		const article = activeArticle.value
-		if (!article) return
-
-		dismiss()
-		navigateTo(article.path)
+	// 隠れた要素に乗ったフォーカスはブラウザが外し、次の Tab が文書の先頭から始まる
+	const returnFocus = () => {
+		const active = document.activeElement
+		if (active === inputRef.value) return
+		if (trapRef.value?.contains(active)) focusByGesture(inputRef.value)
 	}
+
+	const { onKeydown: onSelectKeydown, trapRef } = useSearchKeys(search, {
+		canSelect: () => isOpen.value,
+		isTrapped: hasList,
+		close: () => {
+			returnFocus()
+			dismiss()
+		},
+	})
 
 	const onKeydown = (event: KeyboardEvent) => {
 		if (isComposingKey(event)) return
@@ -172,33 +172,8 @@
 			return
 		}
 
-		if (!isOpen.value) return
-
-		if (event.key === 'ArrowDown') {
-			event.preventDefault()
-			moveActive(1)
-		} else if (event.key === 'ArrowUp') {
-			event.preventDefault()
-			moveActive(-1)
-		} else if (event.key === 'Enter') {
-			event.preventDefault()
-			openActive()
-		}
+		onSelectKeydown(event)
 	}
-
-	// 隠れた要素に乗ったフォーカスはブラウザが外し、次の Tab が文書の先頭から始まる
-	const returnFocus = () => {
-		const active = document.activeElement
-		if (active === inputRef.value) return
-		if (trapRef.value?.contains(active)) focusByGesture(inputRef.value)
-	}
-
-	const { trapRef } = useFocusTrap(hasList, (event) => {
-		if (isComposingKey(event)) return
-
-		returnFocus()
-		dismiss()
-	})
 
 	watch(isOpen, (open) => emit('update:open', open))
 
