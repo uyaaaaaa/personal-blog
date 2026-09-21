@@ -1,10 +1,9 @@
 import { readFrontMatter } from '../content.frontmatter.ts'
 import { articleSchema } from '../content.schema.ts'
-import { ARTICLES, articleFiles } from './article-files.mjs'
-import { fail, inputs } from './check-io.mjs'
+import { articleFiles } from './article-files.mjs'
+import { fail } from './check-io.mjs'
 
-const { read } = inputs(process.argv[2])
-const { files } = articleFiles(process.argv[2])
+const { files, read } = articleFiles(process.argv[2])
 
 const unreadable = []
 const mismatched = []
@@ -12,7 +11,7 @@ const mismatched = []
 for (const name of files) {
 	let data
 	try {
-		data = readFrontMatter(read(`${ARTICLES}/${name}`))
+		data = readFrontMatter(read(name))
 	} catch (error) {
 		unreadable.push(`${name}: ${error.message}`)
 		continue

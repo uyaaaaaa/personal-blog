@@ -865,7 +865,7 @@ describe('検査の入力の読み取り', () => {
 		// 入力を作るテストと、lint が回さない probe は、読み取りの口の外
 		expect(
 			await checkInputsIn(
-				`tests/${CHECK}.test.mjs`,
+				'tests/scripts/check-areas.test.mjs',
 				"import { writeFileSync } from 'node:fs'",
 			),
 		).toBe(0)

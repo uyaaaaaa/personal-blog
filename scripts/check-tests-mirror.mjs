@@ -44,12 +44,12 @@ const errors = []
 
 const hookCommands = () =>
 	SETTINGS.filter(exists).flatMap((path) => {
-		// JSON は null にも配列にもなる。読めた値の型でスタックに落ちないよう、空として扱う
+		// 設定は手で書くので、辿る先はどの段でも欠けうる。欠けた段はコマンドを持たない
 		const { hooks } = json(path) ?? {}
 		return Object.values(hooks ?? {})
 			.flat()
-			.flatMap((matcher) => matcher.hooks ?? [])
-			.map((hook) => hook.command)
+			.flatMap((matcher) => matcher?.hooks ?? [])
+			.map((hook) => hook?.command)
 			.filter((command) => typeof command === 'string')
 	})
 

@@ -1,11 +1,11 @@
 import { join, relative } from 'node:path'
 import { fail, inputs } from './check-io.mjs'
 
-export const ARTICLES = 'content/article'
+const ARTICLES = 'content/article'
 
 // 記事は /article/<スラッグ> の1階層にしか載らず、下の階層に置くと prerender が 404 で落ちる
 export const articleFiles = (given) => {
-	const { root, entries } = inputs(given)
+	const { root, entries, read } = inputs(given)
 	const dir = join(root, ARTICLES)
 
 	// Nuxt は article/**/*.md で symlink も拾う。dirent では isFile() が false になる
@@ -21,5 +21,9 @@ export const articleFiles = (given) => {
 		)
 	}
 
-	return { dir, files: found.map((entry) => entry.name) }
+	return {
+		dir,
+		files: found.map((entry) => entry.name),
+		read: (name) => read(`${ARTICLES}/${name}`),
+	}
 }
