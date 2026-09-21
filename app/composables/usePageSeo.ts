@@ -15,8 +15,6 @@ const SITE_DESCRIPTION =
 	'Functional Minimalism for Experts. Technical articles on software engineering, architecture, and design.'
 const DEFAULT_OGP_IMAGE = '/ogp.png'
 
-// robots.txt で弾くとこの宣言自体が読まれず、URL だけが検索結果に載る。
-// nofollow は、たどった先が索引に載るまでの猶予を削るため
 const NOINDEX = 'noindex, nofollow'
 
 /**

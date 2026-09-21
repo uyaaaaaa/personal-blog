@@ -22,8 +22,6 @@ const bare = (node) => {
 const methodName = (callee) =>
 	callee.type === 'MemberExpression' ? (callee.property.name ?? callee.property.value) : null
 
-// 公開制御を持つのは記事の collection だけ。第1引数が collection 名。
-// 変数で渡された名前は記事かもしれないので、リテラルで別の collection を名指したものだけ外す
 const mayQueryArticles = (node) => {
 	const [collection] = node.arguments
 	return collection?.type !== 'Literal' || collection.value === ARTICLE
