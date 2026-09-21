@@ -84,7 +84,7 @@ describe('check-frontmatter', () => {
 		write('a.md', ...article(...lines))
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/記事を読み取れない/)
+		expect(stderr).toMatch(/YAML として読めない/)
 		expect(stderr).toMatch(/a\.md/)
 	})
 

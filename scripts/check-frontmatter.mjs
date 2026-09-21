@@ -29,7 +29,9 @@ for (const name of files) {
 const indented = (lines) => lines.map((line) => `  ${line}`)
 
 const report = [
-	...(unreadable.length > 0 ? ['記事を読み取れない:', ...indented(unreadable)] : []),
+	...(unreadable.length > 0
+		? ['フロントマターを YAML として読めない:', ...indented(unreadable)]
+		: []),
 	...(mismatched.length > 0
 		? ['フロントマターがスキーマ（content.schema.ts）に合わない:', ...indented(mismatched)]
 		: []),

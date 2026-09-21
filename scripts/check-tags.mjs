@@ -41,7 +41,7 @@ try {
 		}
 	}
 } catch (error) {
-	fail('タグを読み取れない:', `  ${error.message}`)
+	fail('tags の書き方が読み取れる形ではない:', `  ${error.message}`)
 }
 
 const bySlug = new Map()
