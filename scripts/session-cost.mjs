@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path'
 
 const PROJECTS = join(homedir(), '.claude', 'projects')
 const SPIKES = 10
+const ALONE = 6
 const BYTES_PER_TOKEN = 4
 
 const USAGE = [
@@ -34,10 +35,22 @@ const toolsOf = (message) =>
 		.filter((block) => block?.type === 'tool_use')
 		.map((block) => block.name)
 
+// tool_result はこちらが打った呼び出しの戻りで、人からの問いかけではない
+const asked = (record) => {
+	if (record.type !== 'user') return false
+	const content = record.message?.content
+	return !Array.isArray(content) || !content.some((block) => block?.type === 'tool_result')
+}
+
 // 1つの応答が thinking / text / tool_use の行に割れて記録される。usage は同じものが並ぶ
 export const turns = (records) => {
 	const found = new Map()
+	let latest
+	const close = () => {
+		if (latest !== undefined) found.set(latest, { ...found.get(latest), last: true })
+	}
 	for (const record of records) {
+		if (asked(record)) close()
 		const { id, usage } = record.message ?? {}
 		if (record.type !== 'assistant' || !usage || id === undefined) continue
 		const seen = found.get(id) ?? {
@@ -46,9 +59,12 @@ export const turns = (records) => {
 			read: usage.cache_read_input_tokens ?? 0,
 			out: usage.output_tokens ?? 0,
 			tools: [],
+			last: false,
 		}
 		found.set(id, { ...seen, tools: [...seen.tools, ...toolsOf(record.message)] })
+		latest = id
 	}
+	close()
 	return [...found.values()]
 }
 
@@ -92,8 +108,23 @@ export const denied = (records) =>
 			(block) => block?.type === 'tool_result' && textOf(block.content).startsWith(DENIED),
 		).length
 
+// 単独で打たれた回数の多い順。名前だけ見えれば足りるので、並べたら数える
+const alone = (rows) => {
+	const found = new Map()
+	for (const row of rows) {
+		if (row.tools.length !== 1) continue
+		found.set(row.tools[0], (found.get(row.tools[0]) ?? 0) + 1)
+	}
+	return [...found]
+		.sort(([, one], [, other]) => other - one)
+		.map(([name, count]) => ({ name, count }))
+}
+
 export const summary = (records) => {
 	const rows = turns(records)
+	const one = alone(rows)
+	// 人へ返して終わる応答は問いかけごとに必ず出るので、畳める余地の母数には入らない
+	const open = rows.filter((row) => !row.last).length
 	const first = rows[0]
 	const fixed = first === undefined ? 0 : first.created + first.read
 	const input = rows.reduce((total, row) => total + row.created + row.read, 0)
@@ -104,8 +135,13 @@ export const summary = (records) => {
 		input,
 		// 固定費を除いた残りは、そのセッションで読んだり出したりして積み上げた分
 		grown: input === 0 ? 0 : (input - fixed * rows.length) / input,
+		open,
 		// 並べて打てた呼び出しを別のターンにすると、そのぶん文脈全体を読み直す
-		single: rows.filter((row) => row.tools.length === 1).length,
+		single: one.reduce((total, it) => total + it.count, 0),
+		// 何も打たずに宣言だけして続けたターン
+		idle: rows.filter((row) => row.tools.length === 0 && !row.last).length,
+		// どの呼び出しが単独で打たれているかが、畳む先を決める
+		alone: one,
 		denied: denied(records),
 		peak: rows.reduce((most, row) => Math.max(most, row.created + row.read), 0),
 		created: rows.reduce((total, row) => total + row.created, 0),
@@ -127,8 +163,16 @@ const report = (name, records) => {
 	console.log(`  ターン ${it.turns} / 固定費 ${num(it.fixed)} / 最大 ${num(it.peak)}`)
 	console.log(`  cache_creation 合計 ${num(it.created)} / output 合計 ${num(it.out)}`)
 	console.log(
-		`  入力合計 ${num(it.input)} / うち積み上がり ${Math.round(it.grown * 100)}% / ツール1個のターン ${it.single}/${it.turns} / 分類器の拒否 ${it.denied}`,
+		`  入力合計 ${num(it.input)} / うち積み上がり ${Math.round(it.grown * 100)}% / 分類器の拒否 ${it.denied}`,
 	)
+	console.log(`  ツール1個のターン ${it.single}/${it.turns} / 0個のターン ${it.idle}/${it.open}`)
+	if (it.alone.length > 0) {
+		const top = it.alone
+			.slice(0, ALONE)
+			.map(({ name, count }) => `${name} x${count}`)
+			.join(' / ')
+		console.log(`  単独で打たれたもの: ${top}`)
+	}
 	console.log(`  system prompt ${num(prompt(records))} bytes`)
 
 	const parts = Object.entries(attachments(records)).sort(

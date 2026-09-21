@@ -63,6 +63,66 @@ describe('summary', () => {
 		expect(it_.single).toBe(2)
 	})
 
+	it('何も打たずに続けたターンを、ツール1個のターンと分けて数える', () => {
+		const it_ = summary([
+			assistant('msg_1', used(10, 0), [{ type: 'tool_use', name: 'Bash' }]),
+			assistant('msg_2', used(10, 0)),
+			assistant('msg_3', used(10, 0), [{ type: 'thinking' }, { type: 'text' }]),
+		])
+
+		expect(it_.single).toBe(1)
+		expect(it_.idle).toBe(1)
+	})
+
+	it('0個のターンの母数から、人へ返して終わる応答を外す', () => {
+		const it_ = summary([
+			assistant('msg_1', used(10, 0), [{ type: 'text' }]),
+			{ type: 'user', message: { content: '次はこれ' } },
+			assistant('msg_2', used(10, 0), [{ type: 'text' }]),
+		])
+
+		expect(it_.turns).toBe(2)
+		expect(it_.open).toBe(0)
+	})
+
+	it('人へ返して終わる応答は、何も打たなくても数えない', () => {
+		const it_ = summary([
+			assistant('msg_1', used(10, 0), [{ type: 'text' }]),
+			{ type: 'user', message: { content: '次はこれ' } },
+			assistant('msg_2', used(10, 0), [{ type: 'text' }]),
+		])
+
+		expect(it_.idle).toBe(0)
+	})
+
+	it('呼び出しの戻りは問いかけと見なさない', () => {
+		const it_ = summary([
+			assistant('msg_1', used(10, 0), [{ type: 'text' }]),
+			{ type: 'user', message: { content: [{ type: 'tool_result', content: '' }] } },
+			assistant('msg_2', used(10, 0), [{ type: 'text' }]),
+		])
+
+		expect(it_.idle).toBe(1)
+	})
+
+	it('単独で打たれた呼び出しを、多い順に数える', () => {
+		const one = (id, name) => assistant(id, used(10, 0), [{ type: 'tool_use', name }])
+		const it_ = summary([
+			one('msg_1', 'Read'),
+			one('msg_2', 'Bash'),
+			one('msg_3', 'Bash'),
+			assistant('msg_4', used(10, 0), [
+				{ type: 'tool_use', name: 'Grep' },
+				{ type: 'tool_use', name: 'Grep' },
+			]),
+		])
+
+		expect(it_.alone).toEqual([
+			{ name: 'Bash', count: 2 },
+			{ name: 'Read', count: 1 },
+		])
+	})
+
 	it('分類器に止められた呼び出しの数を、tool_result の文面から数える', () => {
 		const denied =
 			'Permission for this action was denied by the Claude Code auto mode classifier. Reason: [X].'
