@@ -55,7 +55,6 @@ const failed = (input) => Boolean(input.tool_response?.isError || input.tool_res
 const payloadOf = (found, ask) => {
 	if (found.review !== undefined) return found.review
 	if (found.path === undefined) return null
-	// 読み取りの手段ごと無い呼び出し元もある。読めない回は判定を見ないだけにする
 	try {
 		return ask.payload(found.path)
 	} catch {
@@ -63,7 +62,6 @@ const payloadOf = (found, ask) => {
 	}
 }
 
-// 判定を読めない回は数えない。読めないことを未 Approve と扱うと、起こし直す先が無いまま止め続ける
 const eventIn = (found, ask) => {
 	const text = payloadOf(found, ask)
 	if (text === null) return null
@@ -75,7 +73,7 @@ const eventIn = (found, ask) => {
 	}
 }
 
-// 回数は発火ごとに数える。判定を読めなかった回を飛ばすと、guard が塞ぐ発火を Stop が求める
+// 回数は発火ごと。判定は読めた回だけ差し替える
 const counted = (input, kept, workflow, ask) => {
 	const found = dispatched(input)
 	if (!found || !named(found.workflow, workflow)) return null
@@ -83,7 +81,6 @@ const counted = (input, kept, workflow, ask) => {
 	const pull = found.pr === undefined ? undefined : kept[found.pr]
 	if (!pull) return null
 
-	// 読めなかった巡は判定を持ち越さない。前の巡の判定を根拠に止めない
 	const { verdict, ...rest } = pull
 	const event = eventIn(found, ask)
 	return {
@@ -125,13 +122,13 @@ const recorded = (input, kept, workflow, ask) => {
 
 const missing = (pull) => STEPS.filter(({ key }) => !pull.done.includes(key))
 
-// 指摘が要らない判定が Approve。名前も打ち切りの回数も review から引く
+// 指摘が要らない判定が Approve
 const approving = (it) => {
 	const found = it.judgments?.find(({ needs }) => needs.length === 0)
 	return found ? eventOf(found.name) : null
 }
 
-// 出し直せなくなった PR で止め続けない
+// 打ち切りに達した PR は、出し直す先が無いので止めない
 const waiting = (pull, { rounds, approved }) =>
 	typeof pull.verdict === 'string' &&
 	approved !== null &&
@@ -182,7 +179,7 @@ const ASK = {
 	payload: (path) => readFileSync(resolve(path, root()), 'utf8'),
 }
 
-// 読めなければ名前で絞らず、判定でも止めない。終われないセッションを作らない
+// 読めなければ名前でも判定でも絞らない
 const ruled = (ask) => {
 	try {
 		return rules(ask.skill())
