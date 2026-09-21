@@ -73,6 +73,7 @@
 	import { usePageSeo } from '~/composables/usePageSeo'
 	import { publishedArticles } from '~/utils/articleQuery'
 	import { CATEGORY_LABELS, isCategory } from '~/utils/category'
+	import { contentPath } from '~/utils/contentPath'
 	import { formatDate } from '~/utils/date'
 	import { tagToSlug } from '~/utils/tag'
 
@@ -80,9 +81,7 @@
 
 	const route = useRoute()
 
-	// Cloudflare Pagesは /article/foo を /article/foo/ にリダイレクトするが、記事のパスと
-	// プリレンダ済みペイロードのキーは末尾スラッシュなし。揃えないと記事があるのに無いと判定される
-	const articlePath = computed(() => route.path.replace(/\/+$/, '') || '/')
+	const articlePath = computed(() => contentPath(route.path))
 
 	const {
 		data: page,

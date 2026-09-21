@@ -79,6 +79,7 @@ export default defineNuxtConfig({
 			routes: [
 				'/',
 				'/profile',
+				'/digest',
 				'/404.html',
 				...CATEGORIES.map((category) => `/category/${category}`),
 			],

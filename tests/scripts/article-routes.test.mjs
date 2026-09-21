@@ -4,6 +4,9 @@ import { join } from 'node:path'
 import Database from 'better-sqlite3'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { articleRoutes } from '../../scripts/article-routes.mjs'
+import { ARTICLE } from '../../content.collections.mjs'
+
+const TABLE = `_content_${ARTICLE}`
 
 let root
 let file
@@ -19,8 +22,8 @@ afterEach(() => {
 
 const seed = (rows) => {
 	const db = new Database(file)
-	db.exec('CREATE TABLE _content_article (path TEXT, published INTEGER)')
-	const insert = db.prepare('INSERT INTO _content_article VALUES (?, ?)')
+	db.exec(`CREATE TABLE ${TABLE} (path TEXT, published INTEGER)`)
+	const insert = db.prepare(`INSERT INTO ${TABLE} VALUES (?, ?)`)
 	for (const [path, published] of rows) insert.run(path, published)
 	db.close()
 }
