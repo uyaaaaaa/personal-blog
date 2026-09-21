@@ -18,18 +18,27 @@ const called = (tool, tool_input) => ({
 
 const subscribed = (number = 292) => called('subscribe_pr_activity', { pullNumber: number })
 const titled = (number = 292) => called('set_session_title', { title: `PR #${number}` })
-const reviewed = (number = 292, workflow_id = 'review.yml') =>
+const reviewed = (number = 292, workflow_id = 'review.yml', payload = {}) =>
 	called('actions_run_trigger', {
 		method: 'run_workflow',
 		workflow_id,
-		inputs: { pr: String(number), review: '{}' },
+		inputs: { pr: String(number), review: JSON.stringify(payload) },
 	})
+
+const approved = (number = 292) => reviewed(number, 'review.yml', { event: 'APPROVE' })
+const changes = (number = 292) =>
+	reviewed(number, 'review.yml', { event: 'REQUEST_CHANGES', body: '**判定: Request changes**' })
 
 const ran = (number = 292, workflow = 'review.yml') => ({
 	hook_event_name: 'PostToolUse',
 	tool_name: 'Bash',
 	tool_input: { command: `gh workflow run ${workflow} -f pr=${number} -F review=@/tmp/it.json` },
 })
+
+const followed = (number = 292, ...events) => {
+	decide(opened(number), store)
+	for (const done of [subscribed(number), titled(number), ...events]) decide(done, store)
+}
 
 const stop = () => decide({ hook_event_name: 'Stop' }, store)
 
@@ -149,6 +158,68 @@ describe('decide', () => {
 		decide({ ...reviewed(), tool_response: { isError: true } }, store)
 
 		expect(stop()).toMatch('Review ワークフロー')
+	})
+
+	it('判定が Approve でなければ、3つを済ませても止める', () => {
+		followed(292, changes())
+
+		const reason = stop()
+		expect(reason).toMatch('PR #292')
+		expect(reason).toMatch('REQUEST_CHANGES')
+		expect(reason).toMatch('起こし直す')
+	})
+
+	it('起こし直した判定が Approve なら止めない', () => {
+		followed(292, changes())
+		expect(stop()).not.toBeNull()
+
+		decide(approved(), store)
+		expect(stop()).toBeNull()
+	})
+
+	it('同じ判定では2度目は止めないが、出し直せばまた止める', () => {
+		followed(292, changes())
+		expect(stop()).not.toBeNull()
+		expect(stop()).toBeNull()
+
+		decide(changes(), store)
+		expect(stop()).toMatch('REQUEST_CHANGES')
+	})
+
+	it('打ち切りの回数に達したら止めない', () => {
+		followed(292, changes())
+		for (const again of [changes(), changes(), changes()]) {
+			expect(stop()).not.toBeNull()
+			decide(again, store)
+		}
+
+		expect(stop()).toBeNull()
+	})
+
+	it('判定を読めない発火では止めない', () => {
+		followed(292, reviewed())
+
+		expect(stop()).toBeNull()
+	})
+
+	it('gh workflow run は渡したファイルから判定を読む', () => {
+		const ask = { payload: () => JSON.stringify({ event: 'REQUEST_CHANGES' }) }
+		decide(opened(292), store)
+		for (const done of [subscribed(), titled(), ran()]) decide(done, store, ask)
+
+		expect(stop()).toMatch('REQUEST_CHANGES')
+	})
+
+	it('ファイルを読めない発火では止めない', () => {
+		const ask = {
+			payload: () => {
+				throw new Error('読めない')
+			},
+		}
+		decide(opened(292), store)
+		for (const done of [subscribed(), titled(), ran()]) decide(done, store, ask)
+
+		expect(stop()).toBeNull()
 	})
 
 	it('PR ごとに数える', () => {

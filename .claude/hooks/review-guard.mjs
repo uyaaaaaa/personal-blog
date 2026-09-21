@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs'
-import { isAbsolute, join } from 'node:path'
+import { join } from 'node:path'
 import {
 	complete,
 	dispatched,
@@ -8,13 +8,14 @@ import {
 	eventOf,
 	judged,
 	plain,
+	resolve,
 	rules,
 	source,
 } from '../../scripts/review-rules.mjs'
 import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
-export { rules }
+export { resolve, rules }
 
 const SKILL = '.claude/skills/review'
 const STEPS = `${SKILL}/SKILL.md`
@@ -197,8 +198,6 @@ const recorded = (input, it, ask) => {
 }
 
 const root = () => process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
-
-export const resolve = (path, base) => (isAbsolute(path) ? path : join(base, path))
 
 const ASK = {
 	skill: () => source(join(root(), SKILL)),
