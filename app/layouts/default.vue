@@ -6,7 +6,6 @@
 			>Skip to content</a
 		>
 		<Header :location="route.fullPath" />
-		<!-- スキップリンクの飛び先。tabindex="-1" でプログラムからのフォーカスを受けられるようにする -->
 		<main
 			id="main-content"
 			tabindex="-1"
