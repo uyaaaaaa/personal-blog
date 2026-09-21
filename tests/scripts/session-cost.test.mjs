@@ -74,6 +74,17 @@ describe('summary', () => {
 		expect(it_.idle).toBe(1)
 	})
 
+	it('0個のターンの母数から、人へ返して終わる応答を外す', () => {
+		const it_ = summary([
+			assistant('msg_1', used(10, 0), [{ type: 'text' }]),
+			{ type: 'user', message: { content: '次はこれ' } },
+			assistant('msg_2', used(10, 0), [{ type: 'text' }]),
+		])
+
+		expect(it_.turns).toBe(2)
+		expect(it_.open).toBe(0)
+	})
+
 	it('人へ返して終わる応答は、何も打たなくても数えない', () => {
 		const it_ = summary([
 			assistant('msg_1', used(10, 0), [{ type: 'text' }]),

@@ -122,6 +122,9 @@ const alone = (rows) => {
 
 export const summary = (records) => {
 	const rows = turns(records)
+	const one = alone(rows)
+	// 人へ返して終わる応答は問いかけごとに必ず出るので、畳める余地の母数には入らない
+	const open = rows.filter((row) => !row.last).length
 	const first = rows[0]
 	const fixed = first === undefined ? 0 : first.created + first.read
 	const input = rows.reduce((total, row) => total + row.created + row.read, 0)
@@ -132,12 +135,13 @@ export const summary = (records) => {
 		input,
 		// 固定費を除いた残りは、そのセッションで読んだり出したりして積み上げた分
 		grown: input === 0 ? 0 : (input - fixed * rows.length) / input,
+		open,
 		// 並べて打てた呼び出しを別のターンにすると、そのぶん文脈全体を読み直す
-		single: rows.filter((row) => row.tools.length === 1).length,
-		// 何も打たずに宣言だけして続けたターン。人へ返して終わる応答は問いかけごとに必ず出るので除く
+		single: one.reduce((total, it) => total + it.count, 0),
+		// 何も打たずに宣言だけして続けたターン
 		idle: rows.filter((row) => row.tools.length === 0 && !row.last).length,
 		// どの呼び出しが単独で打たれているかが、畳む先を決める
-		alone: alone(rows),
+		alone: one,
 		denied: denied(records),
 		peak: rows.reduce((most, row) => Math.max(most, row.created + row.read), 0),
 		created: rows.reduce((total, row) => total + row.created, 0),
@@ -161,7 +165,7 @@ const report = (name, records) => {
 	console.log(
 		`  入力合計 ${num(it.input)} / うち積み上がり ${Math.round(it.grown * 100)}% / 分類器の拒否 ${it.denied}`,
 	)
-	console.log(`  ツール1個のターン ${it.single}/${it.turns} / 0個のターン ${it.idle}/${it.turns}`)
+	console.log(`  ツール1個のターン ${it.single}/${it.turns} / 0個のターン ${it.idle}/${it.open}`)
 	if (it.alone.length > 0) {
 		const top = it.alone
 			.slice(0, ALONE)
