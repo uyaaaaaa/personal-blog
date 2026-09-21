@@ -1,5 +1,9 @@
+import { fileURLToPath } from 'node:url'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { decide } from '~~/.claude/hooks/pr-followup.mjs'
+import { source } from '~~/scripts/review-rules.mjs'
+
+const SOURCE = source(fileURLToPath(new URL('../../../.claude/skills/review', import.meta.url)))
 
 let store
 
@@ -40,7 +44,7 @@ const followed = (number = 292, ...events) => {
 	for (const done of [subscribed(number), titled(number), ...events]) decide(done, store)
 }
 
-const stop = () => decide({ hook_event_name: 'Stop' }, store)
+const stop = (ask) => decide({ hook_event_name: 'Stop' }, store, ask)
 
 beforeEach(() => {
 	let kept = null
@@ -194,6 +198,24 @@ describe('decide', () => {
 		}
 
 		expect(stop()).toBeNull()
+	})
+
+	it('Approve の名前は review スキルから引く', () => {
+		const ask = { skill: () => SOURCE.replace(/`Approve`/g, '`Ship it`') }
+		decide(opened(292), store)
+		for (const done of [subscribed(), titled()]) decide(done, store, ask)
+		decide(reviewed(292, 'review.yml', { event: 'SHIP_IT' }), store, ask)
+
+		expect(stop(ask)).toBeNull()
+	})
+
+	it('スキルに無い名前の判定では止める', () => {
+		const ask = { skill: () => SOURCE.replace(/`Approve`/g, '`Ship it`') }
+		decide(opened(292), store)
+		for (const done of [subscribed(), titled()]) decide(done, store, ask)
+		decide(approved(), store, ask)
+
+		expect(stop(ask)).toMatch('APPROVE')
 	})
 
 	it('判定を読めない発火では止めない', () => {

@@ -15,7 +15,7 @@ import {
 import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
-export { resolve, rules }
+export { rules }
 
 const SKILL = '.claude/skills/review'
 const STEPS = `${SKILL}/SKILL.md`

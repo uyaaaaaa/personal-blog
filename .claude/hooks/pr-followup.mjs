@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { dispatched, plain, resolve, rules, source } from '../../scripts/review-rules.mjs'
+import { dispatched, eventOf, plain, resolve, rules, source } from '../../scripts/review-rules.mjs'
 import { read } from '../../scripts/stdin.mjs'
 import { state } from './state.mjs'
 
 const SKILL = '.claude/skills/review'
 
 const PULL = /\/pull\/(\d+)/
-
-const APPROVED = 'APPROVE'
 
 const suffix = (name) => (name.startsWith('mcp__') ? name.replace(/^mcp__.*?__/, '') : name)
 
@@ -118,14 +116,21 @@ const recorded = (input, kept, workflow, ask) => {
 
 const missing = (pull) => STEPS.filter(({ key }) => !pull.done.includes(key))
 
-// 打ち切りの回数は review が持つ。出し直せなくなった PR で止め続けない
-const waiting = (pull, rounds) =>
+// 指摘が要らない判定が Approve。名前も打ち切りの回数も review から引く
+const approving = (it) => {
+	const found = it.judgments?.find(({ needs }) => needs.length === 0)
+	return found ? eventOf(found.name) : null
+}
+
+// 出し直せなくなった PR で止め続けない
+const waiting = (pull, { rounds, approved }) =>
 	typeof pull.verdict === 'string' &&
-	pull.verdict !== APPROVED &&
+	approved !== null &&
+	pull.verdict !== approved &&
 	Number.isFinite(rounds) &&
 	pull.rounds <= rounds
 
-const pending = (pull, rounds) => {
+const pending = (pull, until) => {
 	const left = missing(pull)
 	if (left.length > 0) {
 		return {
@@ -133,18 +138,18 @@ const pending = (pull, rounds) => {
 			how: left.map(({ how }) => how).join(' / '),
 		}
 	}
-	if (!waiting(pull, rounds)) return null
+	if (!waiting(pull, until)) return null
 	return {
 		at: `${pull.verdict}.${pull.rounds}`,
 		how: `判定が ${pull.verdict} のまま。指摘に対応し、レビューを起こし直す（直しが無く返信だけの巡でも起こす）`,
 	}
 }
 
-const blocking = (kept, rounds) => {
+const blocking = (kept, until) => {
 	const next = { ...kept }
 	const lines = []
 	for (const [number, pull] of Object.entries(kept)) {
-		const left = pending(pull, rounds)
+		const left = pending(pull, until)
 		// 同じ状態で2度は止めない。手段が無いセッションを終われなくしない
 		if (!left || pull.asked === left.at) continue
 		next[number] = { ...pull, asked: left.at }
@@ -182,7 +187,7 @@ export const decide = (input, store, ask = ASK) => {
 	const it = ruled(ask)
 
 	if (input.hook_event_name === 'Stop') {
-		const found = blocking(kept, it.rounds)
+		const found = blocking(kept, { rounds: it.rounds, approved: approving(it) })
 		if (!found) return null
 		store.write(found.kept)
 		return found.reason
