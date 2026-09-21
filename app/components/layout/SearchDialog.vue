@@ -68,7 +68,7 @@
 	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useArticleSearch } from '~/composables/useArticleSearch'
-	import { useFocusTrap } from '~/composables/useFocusTrap'
+	import { useSearchKeys } from '~/composables/useSearchKeys'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 
 	const LIST_ID = 'search-dialog-results'
@@ -81,17 +81,8 @@
 		(e: 'close'): void
 	}>()
 
-	const {
-		query,
-		results,
-		activeIndex,
-		activeArticle,
-		moveActive,
-		startComposition,
-		endComposition,
-		isComposingKey,
-		clear,
-	} = useArticleSearch()
+	const search = useArticleSearch()
+	const { query, results, activeIndex, startComposition, endComposition, clear } = search
 
 	const inputRef = ref<HTMLInputElement | null>(null)
 
@@ -100,14 +91,6 @@
 			? 'Type to search articles by title or tag.'
 			: 'No articles found.',
 	)
-
-	const openActive = () => {
-		const article = activeArticle.value
-		if (!article) return
-
-		emit('close')
-		navigateTo(article.path)
-	}
 
 	// 押した位置が外側のときだけ閉じる。入力欄からドラッグして外で離すと click は
 	// オーバーレイに来るため、click だけで判定すると選択のたびに閉じてしまう
@@ -128,24 +111,10 @@
 
 	const canSelectByKey = () => window.matchMedia(KEYBOARD_SELECT_QUERY).matches
 
-	const onInputKeydown = (event: KeyboardEvent) => {
-		if (isComposingKey(event)) return
-		if (!canSelectByKey()) return
-
-		if (event.key === 'ArrowDown') {
-			event.preventDefault()
-			moveActive(1)
-		} else if (event.key === 'ArrowUp') {
-			event.preventDefault()
-			moveActive(-1)
-		} else if (event.key === 'Enter') {
-			event.preventDefault()
-			openActive()
-		}
-	}
-
-	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), (event) => {
-		if (!isComposingKey(event)) emit('close')
+	const { onKeydown: onInputKeydown, trapRef } = useSearchKeys(search, {
+		canSelect: canSelectByKey,
+		isTrapped: toRef(props, 'isOpen'),
+		close: () => emit('close'),
 	})
 
 	const { lockRef } = useTouchScrollLock()
