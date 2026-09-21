@@ -1,31 +1,16 @@
 <template>
-	<div class="space-y-8">
-		<div class="flex items-baseline gap-4">
-			<h1 class="font-mono text-heading font-bold text-main">
-				<span class="text-accent">#</span>{{ tag.name }}
-			</h1>
-			<span class="font-mono text-total text-sub">{{ articles?.length ?? 0 }}</span>
-		</div>
-
-		<ArticleList
-			:articles="pagedItems"
-			:start-number="startNumber"
-		/>
-
-		<Pagination
-			:page="page"
-			:total-pages="totalPages"
-			:base-path="basePath"
-		/>
-	</div>
+	<ArticleIndex
+		:list="list"
+		mono-heading
+	>
+		<template #heading> <span class="text-accent">#</span>{{ tag.name }} </template>
+	</ArticleIndex>
 </template>
 
 <script setup lang="ts">
-	import ArticleList from '~/components/article/ArticleList.vue'
-	import Pagination from '~/components/ui/Pagination.vue'
+	import ArticleIndex from '~/components/article/ArticleIndex.vue'
+	import { useArticleIndex } from '~/composables/useArticleIndex'
 	import { useArticleTags } from '~/composables/useArticleTags'
-	import { usePagination } from '~/composables/usePagination'
-	import { usePageSeo } from '~/composables/usePageSeo'
 	import { articlesTaggedWith } from '~/utils/articleQuery'
 
 	const route = useRoute()
@@ -42,18 +27,11 @@
 		articlesTaggedWith(tag.name),
 	)
 
-	const { page, totalPages, pagedItems, startNumber, basePath } = usePagination(
-		computed(() => articles.value ?? []),
-		{
-			pageParam: () => route.params.page,
-			path: () => route.path,
-		},
-	)
-
-	usePageSeo({
+	const list = useArticleIndex({
+		articles: computed(() => articles.value ?? []),
+		pageParam: () => route.params.page,
 		path: () => route.path,
-		title: () =>
-			page.value > 1 ? `#${tag.name} (${page.value}/${totalPages.value})` : `#${tag.name}`,
+		title: `#${tag.name}`,
 		description: `${tag.name} タグが付いた記事の一覧。`,
 	})
 </script>
