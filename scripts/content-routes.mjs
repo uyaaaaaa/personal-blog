@@ -25,7 +25,7 @@ export const articleRoutes = (databaseFile) => {
 	const routes = paths(databaseFile, ARTICLE_TABLE, ' WHERE published = 1', '公開中の記事')
 
 	// 0件は空の起点として通り、出ていないページの検出も素通りする。
-	// このPRが塞いだ「黙って消える」経路が、起点の側に戻る
+	// 記事は必ず1件以上あるので、0件は collection が組み上がっていない合図として落とす
 	if (routes.length === 0)
 		throw new Error(`${ARTICLE_TABLE} に公開中の記事が1件も無い（${databaseFile}）`)
 
