@@ -6,14 +6,13 @@ const DIGEST_TABLE = `_content_${DIGEST}`
 
 // パスは @nuxt/content が slugify して決める。ファイル名から組み直すと綴りが割れるので、
 // ビルド時に組み上がった collection の DB をそのまま読む
-const paths = (databaseFile, table, condition, what) => {
+const paths = (databaseFile, table, what, condition) => {
+	const where = condition === undefined ? '' : ` WHERE ${condition}`
 	let db
 	try {
 		db = new Database(databaseFile, { readonly: true, fileMustExist: true })
 		return db
-			.prepare(
-				`SELECT path FROM ${table}${condition === '' ? '' : ` WHERE ${condition}`} ORDER BY path`,
-			)
+			.prepare(`SELECT path FROM ${table}${where} ORDER BY path`)
 			.all()
 			.map((row) => row.path)
 	} catch (error) {
@@ -24,7 +23,7 @@ const paths = (databaseFile, table, condition, what) => {
 }
 
 export const articleRoutes = (databaseFile) => {
-	const routes = paths(databaseFile, ARTICLE_TABLE, 'published = 1', '公開中の記事')
+	const routes = paths(databaseFile, ARTICLE_TABLE, '公開中の記事', 'published = 1')
 
 	// 0件は空の起点として通り、出ていないページの検出も素通りする。
 	// 記事は必ず1件以上あるので、0件は collection が組み上がっていない合図として落とす
@@ -35,4 +34,4 @@ export const articleRoutes = (databaseFile) => {
 }
 
 // 収集物は0件から始まる。空を異常にすると、何も集まっていない間のビルドが通らない
-export const digestRoutes = (databaseFile) => paths(databaseFile, DIGEST_TABLE, '', '収集したもの')
+export const digestRoutes = (databaseFile) => paths(databaseFile, DIGEST_TABLE, '収集したもの')
