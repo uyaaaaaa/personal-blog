@@ -77,6 +77,17 @@ describe('useSearchKeys', () => {
 		expect(closeOrder).toBeLessThan(navigateOrder)
 	})
 
+	it('割り当ての無いキーは素通しする', () => {
+		const { onKeydown, moveActive, close } = mountKeys()
+
+		const key = press('a')
+		onKeydown(key)
+
+		expect(moveActive).not.toHaveBeenCalled()
+		expect(close).not.toHaveBeenCalled()
+		expect(key.defaultPrevented).toBe(false)
+	})
+
 	it('候補が無ければ Enter で閉じない', () => {
 		const { onKeydown, close, activeArticle } = mountKeys()
 		activeArticle.value = undefined
