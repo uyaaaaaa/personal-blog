@@ -9,7 +9,7 @@
 		<main
 			id="main-content"
 			tabindex="-1"
-			class="flex-1 px-5 pb-16 pt-7 md:px-10 md:pb-24 md:pt-14"
+			class="flex-1 scroll-mt-below-header-sm px-5 pb-16 pt-7 md:scroll-mt-below-header md:px-10 md:pb-24 md:pt-14"
 		>
 			<div
 				class="mx-auto w-full"
