@@ -63,7 +63,7 @@ describe('summary', () => {
 		expect(it_.single).toBe(2)
 	})
 
-	it('何も打たなかったターンを、ツール1個のターンと分けて数える', () => {
+	it('何も打たずに続けたターンを、ツール1個のターンと分けて数える', () => {
 		const it_ = summary([
 			assistant('msg_1', used(10, 0), [{ type: 'tool_use', name: 'Bash' }]),
 			assistant('msg_2', used(10, 0)),
@@ -71,7 +71,27 @@ describe('summary', () => {
 		])
 
 		expect(it_.single).toBe(1)
-		expect(it_.idle).toBe(2)
+		expect(it_.idle).toBe(1)
+	})
+
+	it('人へ返して終わる応答は、何も打たなくても数えない', () => {
+		const it_ = summary([
+			assistant('msg_1', used(10, 0), [{ type: 'text' }]),
+			{ type: 'user', message: { content: '次はこれ' } },
+			assistant('msg_2', used(10, 0), [{ type: 'text' }]),
+		])
+
+		expect(it_.idle).toBe(0)
+	})
+
+	it('呼び出しの戻りは問いかけと見なさない', () => {
+		const it_ = summary([
+			assistant('msg_1', used(10, 0), [{ type: 'text' }]),
+			{ type: 'user', message: { content: [{ type: 'tool_result', content: '' }] } },
+			assistant('msg_2', used(10, 0), [{ type: 'text' }]),
+		])
+
+		expect(it_.idle).toBe(1)
 	})
 
 	it('単独で打たれた呼び出しを、多い順に数える', () => {

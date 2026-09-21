@@ -35,10 +35,20 @@ const toolsOf = (message) =>
 		.filter((block) => block?.type === 'tool_use')
 		.map((block) => block.name)
 
+// tool_result はこちらが打った呼び出しの戻りで、人からの問いかけではない
+const asked = (record) =>
+	record.type === 'user' &&
+	!(record.message?.content ?? []).some?.((block) => block?.type === 'tool_result')
+
 // 1つの応答が thinking / text / tool_use の行に割れて記録される。usage は同じものが並ぶ
 export const turns = (records) => {
 	const found = new Map()
+	let latest
+	const close = () => {
+		if (latest !== undefined) found.set(latest, { ...found.get(latest), last: true })
+	}
 	for (const record of records) {
+		if (asked(record)) close()
 		const { id, usage } = record.message ?? {}
 		if (record.type !== 'assistant' || !usage || id === undefined) continue
 		const seen = found.get(id) ?? {
@@ -47,9 +57,12 @@ export const turns = (records) => {
 			read: usage.cache_read_input_tokens ?? 0,
 			out: usage.output_tokens ?? 0,
 			tools: [],
+			last: false,
 		}
 		found.set(id, { ...seen, tools: [...seen.tools, ...toolsOf(record.message)] })
+		latest = id
 	}
+	close()
 	return [...found.values()]
 }
 
@@ -119,8 +132,8 @@ export const summary = (records) => {
 		grown: input === 0 ? 0 : (input - fixed * rows.length) / input,
 		// 並べて打てた呼び出しを別のターンにすると、そのぶん文脈全体を読み直す
 		single: rows.filter((row) => row.tools.length === 1).length,
-		// 何も打たずに返しただけのターンも、文脈全体を読み直す分は同じだけ払う
-		idle: rows.filter((row) => row.tools.length === 0).length,
+		// 何も打たずに宣言だけして続けたターン。人へ返して終わる応答は問いかけごとに必ず出るので除く
+		idle: rows.filter((row) => row.tools.length === 0 && !row.last).length,
 		// どの呼び出しが単独で打たれているかが、畳む先を決める
 		alone: alone(rows),
 		denied: denied(records),
