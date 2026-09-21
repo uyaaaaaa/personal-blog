@@ -203,6 +203,14 @@ describe('実装からテスト', () => {
 		expect(stderr).toBe('')
 	})
 
+	it('scripts を持たない package.json は、理由の1行を出して落とす', () => {
+		write('package.json', '{}')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/scripts\.lint を持たない/)
+		expect(stderr).not.toMatch(/\n {4}at /)
+	})
+
 	it('読めない設定は、どちらのファイルでも理由の1行を出して落とす', () => {
 		for (const file of ['settings.json', 'settings.local.json']) {
 			write(`.claude/${file}`, '{')

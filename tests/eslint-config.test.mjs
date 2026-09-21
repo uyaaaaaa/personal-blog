@@ -842,6 +842,10 @@ describe('検査の入力の読み取り', () => {
 		expect(await checkInputsIn(CHECK, "await import('./a.mjs')")).toBeGreaterThan(0)
 		expect(await checkInputsIn(CHECK, 'const data = JSON.parse(source)')).toBeGreaterThan(0)
 		expect(
+			await checkInputsIn(CHECK, 'const data = globalThis.JSON.parse(source)'),
+		).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, 'const { parse } = JSON')).toBeGreaterThan(0)
+		expect(
 			await checkInputsIn(CHECK, "const fs = process.getBuiltinModule('node:fs')"),
 		).toBeGreaterThan(0)
 		expect(
@@ -875,5 +879,7 @@ describe('検査の入力の読み取り', () => {
 				"import { readFileSync } from 'node:fs'",
 			),
 		).toBe(0)
+		// 読み取った文字列を解析する別の parse は、入力の読み取りではない
+		expect(await checkInputsIn(CHECK, 'postcss.parse(source)')).toBe(0)
 	})
 })

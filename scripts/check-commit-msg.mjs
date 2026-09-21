@@ -12,7 +12,8 @@ const JAPANESE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u
 // 体言止めの語を並べても「〜のバグ」「〜のリファクタリング」に当たらず、名詞は際限なく増える
 const ASSERTIVE = /(?:ない|[うくぐすつぬぶむる])$/u
 
-const { read } = inputs()
+// 渡されるのは根ではなくファイル。git が渡す相対パスは cwd から辿る
+const { read } = inputs(process.cwd())
 
 const path = process.argv[2]
 if (!path) fail('コミットメッセージのファイルが渡されていない')

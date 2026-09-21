@@ -54,7 +54,10 @@ const hookCommands = () =>
 	})
 
 const runners = () => {
-	const { scripts } = json('package.json')
+	const { scripts } = json('package.json') ?? {}
+	// 回している検査はここから辿る。入口が無ければ何も辿れない
+	if (typeof scripts?.lint !== 'string') fail('package.json が scripts.lint を持たない')
+
 	const queue = [
 		scripts.lint,
 		...entries(HOOKS).map((entry) => read(`${HOOKS}/${entry.name}`)),

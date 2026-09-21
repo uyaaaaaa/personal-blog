@@ -99,6 +99,18 @@ const CHECK_INPUT_MODULES = [
 	'node:module',
 ]
 
+const JSON_OBJECT = [
+	"[callee.object.name='JSON']",
+	"[callee.object.property.name='JSON']",
+	"[callee.object.property.value='JSON']",
+].join(', ')
+const JSON_PARSE = "[callee.property.name='parse'], [callee.property.value='parse']"
+const JSON_BOUND = [
+	"[init.name='JSON']",
+	"[init.property.name='JSON']",
+	"[init.property.value='JSON']",
+].join(', ')
+
 const CHECK_INPUT = [
 	{
 		// 動的 import はファイルもパッケージも読む。失敗した指定子を言えるのは集約先だけ
@@ -106,9 +118,14 @@ const CHECK_INPUT = [
 		message: CHECK_INPUT_MESSAGE,
 	},
 	{
-		// 読んだ文字列の解析も入力の読み取り。素の SyntaxError はどのファイルの話かを言わない
-		selector:
-			"CallExpression[callee.object.name='JSON']:matches([callee.property.name='parse'], [callee.property.value='parse'])",
+		// 読んだ文字列の解析も入力の読み取り。素の SyntaxError はどのファイルの話かを言わない。
+		// JSON は globalThis 越しにも綴れるので、受け手ではなく名前で見る
+		selector: `CallExpression:matches(${JSON_OBJECT}):matches(${JSON_PARSE})`,
+		message: CHECK_INPUT_MESSAGE,
+	},
+	{
+		// 束縛で受けると、読むところに JSON が綴られない
+		selector: `VariableDeclarator:matches(${JSON_BOUND}) ObjectPattern > Property[key.name='parse']`,
 		message: CHECK_INPUT_MESSAGE,
 	},
 	{
