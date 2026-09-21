@@ -1,9 +1,10 @@
 import { fileURLToPath } from 'node:url'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { decide } from '~~/.claude/hooks/pr-followup.mjs'
-import { source } from '~~/scripts/review-rules.mjs'
+import { rules, source } from '~~/scripts/review-rules.mjs'
 
 const SOURCE = source(fileURLToPath(new URL('../../../.claude/skills/review', import.meta.url)))
+const ROUNDS = rules(SOURCE).rounds
 
 let store
 
@@ -192,9 +193,19 @@ describe('decide', () => {
 
 	it('打ち切りの回数に達したら止めない', () => {
 		followed(292, changes())
-		for (const again of [changes(), changes(), changes()]) {
+		for (let round = 0; round < ROUNDS; round += 1) {
 			expect(stop()).not.toBeNull()
-			decide(again, store)
+			decide(changes(), store)
+		}
+
+		expect(stop()).toBeNull()
+	})
+
+	it('判定を読めなかった回も打ち切りに数える', () => {
+		followed(292, changes())
+		for (let round = 0; round < ROUNDS; round += 1) {
+			expect(stop()).not.toBeNull()
+			decide(reviewed(), store)
 		}
 
 		expect(stop()).toBeNull()

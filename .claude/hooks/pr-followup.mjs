@@ -75,7 +75,8 @@ const eventIn = (found, ask) => {
 	}
 }
 
-const judged = (input, kept, workflow, ask) => {
+// 回数は発火ごとに数える。判定を読めなかった回を飛ばすと、guard が塞ぐ発火を Stop が求める
+const counted = (input, kept, workflow, ask) => {
 	const found = dispatched(input)
 	if (!found || !named(found.workflow, workflow)) return null
 
@@ -83,8 +84,14 @@ const judged = (input, kept, workflow, ask) => {
 	if (!pull) return null
 
 	const event = eventIn(found, ask)
-	if (event === null) return null
-	return { ...kept, [found.pr]: { ...pull, verdict: event, rounds: (pull.rounds ?? 0) + 1 } }
+	return {
+		...kept,
+		[found.pr]: {
+			...pull,
+			...(event === null ? {} : { verdict: event }),
+			rounds: (pull.rounds ?? 0) + 1,
+		},
+	}
 }
 
 const stepped = (input, kept, workflow) => {
@@ -111,7 +118,7 @@ const recorded = (input, kept, workflow, ask) => {
 	}
 
 	const next = stepped(input, kept, workflow) ?? kept
-	return judged(input, next, workflow, ask) ?? (next === kept ? null : next)
+	return counted(input, next, workflow, ask) ?? (next === kept ? null : next)
 }
 
 const missing = (pull) => STEPS.filter(({ key }) => !pull.done.includes(key))
