@@ -42,7 +42,6 @@ const DOM_ASSEMBLY_MESSAGE = `composable と utils は DOM を組み立てない
 const IMPORTANT_MESSAGE = `!important は書かない。Tailwind の ! 修飾子も同じ。第三者由来のインラインスタイルを打ち消すときだけ許す。${STYLE_EXCEPTION}`
 const OUTLINE_MESSAGE = `フォーカスの輪郭を消さない。キーボードのフォーカス位置は常に見える。Tailwind の outline-none / outline-0 も同じ。同じ要素に別の見える指標があるときだけ許す。${STYLE_EXCEPTION}`
 
-// 任意値の variant（min-[600px]:）は角括弧の検査が落とす
 const MAX_WIDTH_CLASS = `(?:^|[\\s:])(?:${MAX_WIDTH_VARIANTS.join('|')}):`
 const BANG_CLASS = '(?:^|[\\s:])!'
 const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> ExportSpecifier))'
@@ -50,7 +49,6 @@ const REEXPORT = ':matches(ExportAllDeclaration, ExportNamedDeclaration:has(> Ex
 const STDIN_MESSAGE =
 	'標準入力は scripts/stdin.mjs だけが読む。読み取りの境目にまたがった多バイト文字が U+FFFD になる。'
 
-// fd 0 と /dev/stdin も同じ入口。綴りを変えただけの読み取りを同じ判定で見る
 const STDIN_FD = '/^(readFileSync|readFile|createReadStream|openSync|open)$/'
 const STDIN_READ = [
 	{
@@ -62,7 +60,6 @@ const STDIN_READ = [
 		message: STDIN_MESSAGE,
 	},
 	{
-		// 第2引数以降の 0 に当たらないよう、最初の引数だけを見る
 		selector: `CallExpression[callee.name=${STDIN_FD}] > Literal[value=0]:first-child`,
 		message: STDIN_MESSAGE,
 	},
@@ -75,7 +72,6 @@ const STDIN_READ = [
 			":matches(Literal[value='/dev/stdin'], TemplateElement[value.cooked='/dev/stdin'])",
 		message: STDIN_MESSAGE,
 	},
-	// 束縛で受けると、読むところに process も stdin も綴られない
 	{
 		selector: "ImportSpecifier[imported.name='stdin']",
 		message: STDIN_MESSAGE,
@@ -89,7 +85,6 @@ const STDIN_READ = [
 const CHECK_IO = 'scripts/check-io.mjs'
 const CHECK_INPUT_MESSAGE = `検査が入力を読む口は ${CHECK_IO} だけ。素の読み取りは、どの入力がなぜ駄目かの1行を出さずにスタックで落ちる。`
 
-// fs に届く経路は import だけではない。require と組み込みモジュールの取り出しも同じ関数を渡す
 const CHECK_INPUT_MODULES = [
 	'fs',
 	'node:fs',
@@ -99,7 +94,6 @@ const CHECK_INPUT_MODULES = [
 	'node:module',
 ]
 
-// JSON は globalThis 越しにも computed でも綴れる。受け手ではなく名前で見る
 const JSON_OBJECT = [
 	"[object.name='JSON']",
 	"[object.property.name='JSON']",
@@ -114,18 +108,14 @@ const JSON_BOUND = [
 
 const CHECK_INPUT = [
 	{
-		// 動的 import はファイルもパッケージも読む。失敗した指定子を言えるのは集約先だけ
 		selector: 'ImportExpression',
 		message: CHECK_INPUT_MESSAGE,
 	},
 	{
-		// 読んだ文字列の解析も入力の読み取り。素の SyntaxError はどのファイルの話かを言わない。
-		// 呼ぶ手前の綴りを見るので、束縛で受けてから読む経路も同じ1件で当たる
 		selector: `MemberExpression:matches(${JSON_OBJECT}):matches(${JSON_PARSE})`,
 		message: CHECK_INPUT_MESSAGE,
 	},
 	{
-		// 分割代入で受けると、読むところにも束縛にも JSON.parse が綴られない
 		selector: `VariableDeclarator:matches(${JSON_BOUND}) ObjectPattern > Property[key.name='parse']`,
 		message: CHECK_INPUT_MESSAGE,
 	},
@@ -144,10 +134,8 @@ const LANDING_MESSAGE = `ページ内ジャンプの着地位置は CSS が持�
 
 const PAGE_SCROLLER = '/^(documentElement|body|scrollingElement)$/'
 const SCROLL_METHOD = '/^scroll(To|By)?$/'
-// Type 付きは Nuxt の router option。hash ジャンプと位置復元の behavior になる
 const SCROLL_BEHAVIOR_KEY = '/^scrollBehavior(Type)?$/'
 
-// 集約先の useScrollTo だけが例外。除くために、この配列の同一性で識別する
 const PAGE_SCROLL = [
 	{
 		selector: `CallExpression[callee.object.name=/^(window|globalThis|self)$/][callee.property.name=${SCROLL_METHOD}]`,
@@ -175,7 +163,6 @@ const PAGE_SCROLL = [
 	},
 ]
 
-// 集約先の useScrollFrame だけが例外。除くために、この配列の同一性で識別する
 const SCROLL_SUBSCRIPTION = [
 	{
 		selector:
@@ -188,15 +175,11 @@ const SCROLL_SUBSCRIPTION = [
 	},
 ]
 
-// 読み込みの経路そのものを塞ぐ。@font-face と CSS の @import は style/no-web-font が見る
 const WEB_FONT = [
 	{
-		// 1つの selector にまとめる。分けると両方に当たる文字列が2回報告される
 		selector: [
 			scriptSpellingSelector('no-web-font'),
-			// フォントを読み込むモジュール（@nuxt/fonts 等）と、設定が並べる指定子。名前で見る
 			':matches(ImportDeclaration, ImportExpression) > Literal[value=/font/i]',
-			// typography の css は配列を持たないので当たらない
 			'Property[key.name=/^(modules|css)$/] ArrayExpression Literal[value=/font/i]',
 		].join(', '),
 		message: WEB_FONT_MESSAGE,
@@ -241,7 +224,6 @@ const INLINE_STYLE = [
 		selector: `${STYLE_BINDING} > ObjectExpression > :not(Property[key.value=${CUSTOM_PROPERTY}])`,
 		message: INLINE_STYLE_MESSAGE,
 	},
-	// 読み取りは通す。宣言を書き換える経路だけを見る
 	{
 		selector: `AssignmentExpression:matches(${STYLE_WRITE})`,
 		message: INLINE_STYLE_MESSAGE,
@@ -260,7 +242,6 @@ const INLINE_STYLE = [
 	},
 ]
 
-// sheet は createElement か CSSStyleSheet を通った先にしかなく、どちらも別の行が落とす
 const STYLESHEET_API =
 	'/^(?:styleSheets|adoptedStyleSheets|insertRule|deleteRule|addRule|removeRule)$/'
 
@@ -284,14 +265,12 @@ const STYLESHEET_ASSEMBLY = [
 			'CallExpression[callee.property.name=/^createElement(?:NS)?$/] > Literal[value=/^style$/i]',
 		message: STYLESHEET_MESSAGE,
 	},
-	// 流し込む先は数え切れないので、流すものの側を見る
 	{
 		selector: `:matches(Literal[value=/${STYLESHEET_STRING}/i], TemplateElement[value.cooked=/${STYLESHEET_STRING}/i]):not(${INSERT_CALL} *)`,
 		message: STYLESHEET_MESSAGE,
 	},
 ]
 
-// 2つとも scripts/check-component-areas.mjs が app/components/ と突き合わせるので export する
 export const COMPONENT_AREAS = ['layout', 'article', 'content', 'error', 'ui']
 
 export const AREA_DIRECTORY_MESSAGE = `components/ の直下にファイルを置かない。${COMPONENT_AREAS.join(' / ')} のいずれかに入れる。 ${ARCHITECTURE_URL}`
@@ -302,7 +281,6 @@ const PAGE_CONTEXT_META_MESSAGE = `components/ はページのメタを設定し
 
 const CROSS_DIRECTORY_RELATIVE = ['..', '../*', '../**', './..', './../*', './../**']
 
-// 値の読み方（.params・分割代入）ではなく、route を取得するところを見る
 const ROUTE_ACCESS = [
 	{
 		selector: 'CallExpression[callee.name=/^useRouter?$/]',
@@ -314,13 +292,11 @@ const ROUTE_ACCESS = [
 	},
 ]
 
-// script と違いテンプレートの $route / $router は Vue が名前で解決するので、import に現れない
 const ROUTE_ACCESS_TEMPLATE = {
 	selector: 'VExpressionContainer Identifier[name=/^\\$rou(te|ter)$/]',
 	message: PAGE_CONTEXT_ROUTE_MESSAGE,
 }
 
-// 拡張子で落ちるものが変わらないよう1つにまとめる
 const PAGE_CONTEXT = [
 	...ROUTE_ACCESS,
 	{
@@ -333,7 +309,6 @@ const PAGE_CONTEXT = [
 	},
 ]
 
-// 角括弧を含むクラス（`w-[264px]` 等）がTailwindの任意値
 const TEMPLATE_RESTRICTIONS = [
 	{
 		selector: "VAttribute[directive=false][key.name='class'] > VLiteral[value=/\\[/]",
@@ -389,7 +364,6 @@ const TEMPLATE_RESTRICTIONS = [
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${SCROLL_BEHAVIOR_CLASS}/]`,
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
-	// テンプレートに直接書く <link href>。属性を限らず、読み込む先の綴りで見る
 	{
 		selector: `VAttribute[directive=false] > VLiteral[value=/${WEB_FONT_RESOURCE}/i]`,
 		message: WEB_FONT_MESSAGE,
@@ -412,7 +386,6 @@ const restrictions = {
 					message: `Vue の組み込み API は import を書かない。プリセットの auto-import が解決する。プリセットに無い名前（UnwrapRef 等）が要るときだけ eslint-disable を付けて import する。 ${AUTO_IMPORT_URL}`,
 				},
 				{
-					// scan: false のため #imports が出すのはプリセットの名前だけ。全部 auto-import される
 					name: '#imports',
 					message: `#imports から import を書かない。プリセットの auto-import が解決する。 ${AUTO_IMPORT_URL}`,
 				},
@@ -468,18 +441,14 @@ const restrictions = {
 	],
 }
 
-// 組み立ての綴りは4通りある。1つだけを見ると残りが抜け道になるので、同じ判定で見る
 const DOM_CREATE =
 	'create(?:Element(?:NS)?|TextNode|DocumentFragment|Comment|Attribute(?:NS)?|ContextualFragment)'
 const DOM_CLONE = 'cloneNode|importNode|adoptNode'
-// append は URLSearchParams / FormData / Headers も持つ名前なので、受け手を見ないここでは外す
 const DOM_INSERT =
 	'appendChild|insertBefore|insertNode|replaceChild|replaceChildren|insertAdjacent(?:Element|Text|HTML)|prepend|before|after|replaceWith'
 const DOM_FROM_STRING = 'parseFromString|parseHTML(?:Unsafe)?|setHTML(?:Unsafe)?'
 const DOM_ASSEMBLY_METHOD = `/^(?:${DOM_CREATE}|${DOM_CLONE}|${DOM_INSERT}|${DOM_FROM_STRING})$/`
-// new で作る要素。document を経由しないので、上の呼び出しの綴りには出ない
 const DOM_CONSTRUCTOR = '/^(?:Image|Option|Audio|Text|Comment|DocumentFragment|DOMParser)$/'
-// テンプレートを介さず描く経路。auto-import されるので import にも現れない
 const VNODE =
 	'/^(?:h|createVNode|createElementVNode|createElementBlock|createTextVNode|createCommentVNode|createStaticVNode|cloneVNode|createApp|defineComponent)$/'
 const HTML_SINK = '/^(?:inner|outer)HTML$/'
@@ -497,19 +466,16 @@ const DOM_ASSEMBLY = [
 		selector: `CallExpression[callee.name=${VNODE}]`,
 		message: DOM_ASSEMBLY_MESSAGE,
 	},
-	// 読み取りは通すので、代入だけを見る
 	{
 		selector: `AssignmentExpression:matches([left.property.name=${HTML_SINK}], [left.property.value=${HTML_SINK}])`,
 		message: DOM_ASSEMBLY_MESSAGE,
 	},
-	// write は clipboard にも stream にもあるので、document に呼ぶものだけを見る
 	{
 		selector: `CallExpression[callee.object.name='document'][callee.property.name=/^write(?:ln)?$/]`,
 		message: DOM_ASSEMBLY_MESSAGE,
 	},
 ]
 
-// 404 はページ側の判定を受けて composable が送出するので、ここでは落とさない
 const CALLED_LAYER_SYNTAX = [
 	...restrictions['no-restricted-syntax'].slice(1),
 	...ROUTE_ACCESS,
@@ -572,7 +538,6 @@ export default [
 			'imports/order': 'error',
 			'queries/location': 'error',
 			'queries/published': 'error',
-			// components: false 後もグローバル登録が残るのはNuxtの組み込みコンポーネントのみ
 			'vue/no-undef-components': [
 				'error',
 				{
@@ -581,7 +546,6 @@ export default [
 			],
 			...styleRules,
 			'roots/render-only': 'error',
-			// 並びが eslint-disable の届く先を決めるので、見た目ではなく抑制のために固定する
 			'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],
 			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS],
 		},
@@ -626,7 +590,6 @@ export default [
 		},
 	},
 	{
-		// 読む対象の DOM を組み立てるのはテストの仕事。実装側に課す判定だけを外す
 		files: ['tests/app/composables/**/*.ts', 'tests/app/utils/**/*.ts'],
 		rules: {
 			'no-restricted-syntax': [
@@ -654,7 +617,6 @@ export default [
 		},
 	},
 	{
-		// 設定ファイルは app/ の規約の外
 		files: ['*.config.ts'],
 		languageOptions: {
 			parser: tsParser,
@@ -668,7 +630,6 @@ export default [
 		},
 	},
 	{
-		// 読み取りを1本に保つ。集約先そのものは除く
 		files: withTest('.claude/hooks/**/*.mjs', 'scripts/**/*.mjs'),
 		ignores: ['scripts/stdin.mjs'],
 		rules: {
@@ -676,8 +637,6 @@ export default [
 		},
 	},
 	{
-		// 検査が読む口を1本に保つ。集約先そのものは除く。
-		// 対象は lint が回す検査と、そこが記事を読むのに通す1本。テストは入力を作る側なので入れない
 		files: ['scripts/check-*.mjs', 'scripts/article-files.mjs'],
 		ignores: [CHECK_IO],
 		rules: {

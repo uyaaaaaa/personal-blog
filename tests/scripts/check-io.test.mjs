@@ -21,7 +21,6 @@ describe('読めない入力', () => {
 		const { status, stderr } = run(body)
 		expect(status).toBe(1)
 		expect(stderr).toMatch(expected)
-		// スタックが出るなら、理由の1行ではなく素の例外が届いている
 		expect(stderr).not.toMatch(/\n {4}at /)
 	})
 

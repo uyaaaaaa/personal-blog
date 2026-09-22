@@ -8,7 +8,6 @@ const URL_IN_TEXT = new RegExp(`${REPO_URL}[^\\s)）」]+`, 'g')
 const FENCE = /^\s*(?:```|~~~)/
 const HEADING = /^#{1,6} +(\S.*?)\s*$/
 const MARKDOWN_LINK = /\[([^\]]*)\]\([^)]*\)/g
-// GitHub の見出しアンカーの作り方。小文字にし、文字・数字・空白・ハイフン・下線以外を落とし、空白をハイフンにする
 const ANCHOR_DROPPED = /[^\p{L}\p{N}\s_-]/gu
 
 const anchorOf = (heading) =>
@@ -32,8 +31,6 @@ const anchorsOf = (source) => {
 	return anchors
 }
 
-// 案内は meta.messages にも no-restricted-syntax の message にも書ける。
-// どちらに綴られても拾えるよう、ESLint が読む設定そのものを歩く
 const urlsIn = (config) => {
 	const seen = new WeakSet()
 	const urls = new Set()

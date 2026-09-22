@@ -7,8 +7,6 @@ export const fail = (...lines) => {
 	process.exit(1)
 }
 
-// 指定子はファイルにもパッケージにもなり、綴りだけでは何を読もうとしたか言えない。
-// 呼ぶ側が名乗れるよう where を受ける
 export const loaded = async (specifier, where = specifier) => {
 	try {
 		return await import(specifier)
@@ -17,8 +15,6 @@ export const loaded = async (specifier, where = specifier) => {
 	}
 }
 
-// 根はテストが一時ディレクトリに向けるので引数で受ける。パスは根からの相対でも絶対でもよく、
-// 報告には渡された綴りをそのまま出す
 export const inputs = (given) => {
 	const root = resolve(given ?? fileURLToPath(new URL('..', import.meta.url)))
 	const at = (path) => resolve(root, path)

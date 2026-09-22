@@ -3,16 +3,11 @@ import { fail, inputs } from './check-io.mjs'
 const SUBJECT_MIN = 12
 const SUBJECT_MAX = 50
 const EXEMPT = /^(Merge |Revert |fixup!|squash!|amend!)/
-// 分類の接頭辞。型名は回収先（CHANGELOG・semver）を持つ語の閉じた列で絞る。
-// 綴りを問わずに見ると、識別子で始まる件名（`run_in_background: true…`）に当たる
 const PREFIX =
 	/^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^()\s]*\))?!?[:：]/i
 const JAPANESE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u
-// 言い切りの語尾。動詞の終止形（う段のひらがな）と否定の「ない」だけを通す。
-// 体言止めの語を並べても「〜のバグ」「〜のリファクタリング」に当たらず、名詞は際限なく増える
 const ASSERTIVE = /(?:ない|[うくぐすつぬぶむる])$/u
 
-// 渡されるのは根ではなくファイル。git が渡す相対パスは cwd から辿る
 const { read } = inputs(process.cwd())
 
 const path = process.argv[2]

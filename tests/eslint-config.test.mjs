@@ -23,7 +23,6 @@ const DOM_ASSEMBLY = /DOM を組み立てない/
 const DISPLAY = /display: none を宣言に書かない/
 const MOTION = /決めた長さではない|モーションのクラスは用途の名前|transition の対象に all/
 
-// 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => WEB_FONT.test(message.message)).length
@@ -104,7 +103,6 @@ const assembliesIn = async (relative, code) => {
 	return result.messages.filter((message) => DOM_ASSEMBLY.test(message.message)).length
 }
 
-// 並びの指摘は綴りが eslint-plugin-vue のものなので、ルール名で数える
 const blockOrdersIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => message.ruleId === 'vue/block-order').length
@@ -563,7 +561,6 @@ describe('表示・非表示の出し分け', () => {
 		expect(await displaysIn('app/pages/a.vue', sfc('<p class="hidden md:block" />'))).toBe(0)
 	})
 
-	// v-show は許す側に決めた経路。判定が template まで広がるとここが落ちる
 	it('実行時に display を書く v-show は通す', async () => {
 		const code = sfc('<p v-show="open" />', 'const open = false')
 		expect(await displaysIn('app/pages/a.vue', code)).toBe(0)
@@ -871,7 +868,6 @@ describe('検査の入力の読み取り', () => {
 				"import { inputs } from './check-io.mjs'\ninputs().read('a')",
 			),
 		).toBe(0)
-		// 入力を作るテストと、lint が回さない probe は、読み取りの口の外
 		expect(
 			await checkInputsIn(
 				'tests/scripts/check-areas.test.mjs',
@@ -884,7 +880,6 @@ describe('検査の入力の読み取り', () => {
 				"import { readFileSync } from 'node:fs'",
 			),
 		).toBe(0)
-		// 読み取った文字列を解析する別の parse は、入力の読み取りではない
 		expect(await checkInputsIn(CHECK, 'postcss.parse(source)')).toBe(0)
 	})
 })

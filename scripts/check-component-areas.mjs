@@ -7,11 +7,9 @@ const CONFIG = 'eslint.config.mjs'
 const COMPONENTS = 'app/components'
 const ERROR = 2
 
-// 規約が成り立つ経路は文面と対象の2つ。対象は拡張子と根で設定が分かれるので、組み合わせで見る
 const PLACED = ['Probe.vue', 'probe.ts']
 const ROOTS = [COMPONENTS, `tests/${COMPONENTS}`]
 
-// 領域はディレクトリ。直下のファイルは検査が落とす側なので、行き先には数えない
 const directories = () =>
 	entries(COMPONENTS)
 		.filter((entry) => entry.isDirectory())
@@ -28,7 +26,6 @@ if (typeof message !== 'string') {
 
 const eslint = new ESLint({ cwd: ROOT })
 
-// 当たる設定ではなく報告そのものを見る。設定だけを見ると severity と selector を緩めても通る
 const reports = async (path) => {
 	let results
 	try {

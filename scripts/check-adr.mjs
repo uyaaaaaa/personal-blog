@@ -27,7 +27,6 @@ const listing = () =>
 		.map((entry) => entry.name)
 		.sort()
 
-// .DS_Store のような git の管理外のファイルで lint を止めない。拾うのは .md だけ
 const named = listing()
 	.filter((name) => name.endsWith('.md'))
 	.filter((name) => {
@@ -107,7 +106,6 @@ for (const row of rows) {
 		errors.push(`${INDEX}: ${row.at}行目の ${row.file} に当たる ADR が無い`)
 }
 
-// 同じ ADR を2度引く索引は既に落ちている。並びを見ても相手のいない行が出るだけ
 const listed = [...byFile.values()].filter((row) => known.has(row.file)).map((row) => row.file)
 const ordered = adrs.filter(({ name }) => byFile.has(name)).map(({ name }) => name)
 const turned = listed.findIndex((file, at) => file !== ordered[at])
@@ -115,7 +113,6 @@ if (turned !== -1) {
 	errors.push(`${INDEX}: 行は番号の順に並べる（${listed[turned]} が ${ordered[turned]} より先）`)
 }
 
-// 連番を機械が要求する以上、ADR を消せば詰め直しが起き、索引の外のリンクが黙って切れる
 for (const path of walk('').filter((path) => path.endsWith('.md'))) {
 	const source = read(path)
 	for (const match of source.matchAll(LINK)) {

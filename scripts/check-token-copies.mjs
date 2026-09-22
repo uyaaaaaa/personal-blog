@@ -6,8 +6,6 @@ const TOKENS = 'theme/tokens.ts'
 const MANIFEST = 'public/site.webmanifest'
 const CONFIG = 'nuxt.config.ts'
 
-// Shiki のテーマは nuxt.config.ts が選ぶ。設定は defineNuxtConfig と拡張子の無い import を持ち、
-// Nuxt の外では import できないので、構文木から値だけを読む
 const THEME_PATH = ['content', 'build', 'markdown', 'highlight', 'theme']
 
 const unreadable = (what) => fail(`${CONFIG} から Shiki のテーマを読み取れない:`, `  ${what}`)
@@ -21,7 +19,6 @@ const valueOf = (node, name) =>
 			)?.initializer
 		: undefined
 
-// defineNuxtConfig(...) でも素のオブジェクトでも、設定の実体まで降りる
 const configObject = (source) => {
 	const exported = source.statements.find(ts.isExportAssignment)?.expression
 	if (exported === undefined) return undefined
@@ -40,7 +37,6 @@ const themeNode = (source) => {
 	return node
 }
 
-// @nuxtjs/mdc は綴り1本を { default } に畳む。dark を持たない形も同じ入力として通す
 const highlightThemes = (source) => {
 	const node = themeNode(source)
 	if (ts.isStringLiteralLike(node)) return { default: node.text, dark: node.text }
@@ -56,8 +52,6 @@ const highlightThemes = (source) => {
 const foreground = async (name, chosen) => {
 	if (name === undefined) unreadable(`${THEME_PATH.join('.')}.${chosen} に綴りが無い`)
 
-	// テーマは依存に宣言せず、@nuxtjs/mdc が入れたものをそのまま読む。自前で足すと、
-	// ビルドが使うテーマと別のバージョンを突き合わせうる
 	const theme = (await loaded(`@shikijs/themes/${name}`, `Shiki のテーマ ${name}`)).default
 	const value = theme.colors?.['editor.foreground']
 	if (value === undefined) fail(`Shiki のテーマ ${name} が editor.foreground を持たない`)
@@ -68,8 +62,6 @@ const { colors, darkColors } = await load(TOKENS)
 const manifest = json(MANIFEST)
 const themes = highlightThemes(read(CONFIG))
 
-// webmanifest は JSON なのでトークンを読めず、地の色を直値で持つ。ずれるとインストール後の
-// 起動画面だけ違う地の色になる
 const bg = (name) => ({
 	where: `${MANIFEST} の ${name}`,
 	actual: manifest?.[name],
@@ -77,8 +69,6 @@ const bg = (name) => ({
 	source: `${TOKENS} の colors.bg`,
 })
 
-// ProsePre は diff のマーカーと変化した語に code-text を当てる。テーマの前景色とずれると、
-// 同じ行の隣のトークンだけ違う灰になる
 const codeText = async (name, palette, chosen) => ({
 	where: `${TOKENS} の ${name}['code-text']`,
 	actual: palette?.['code-text'],

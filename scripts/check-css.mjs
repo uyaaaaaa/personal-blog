@@ -3,7 +3,6 @@ import { findings } from '../eslint-rules/style-tokens.mjs'
 import { fail, inputs } from './check-io.mjs'
 
 const SKIP = new Set(['.git', '.nuxt', '.output', '.verify', 'dist', 'node_modules'])
-// バンドラが前処理なしで読む綴り。sass 等は依存を足す時点で差分に出る
 const STYLESHEET = /\.(css|pcss|postcss)$/i
 
 const { read, entries } = inputs(process.argv[2])

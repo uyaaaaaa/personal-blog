@@ -6,8 +6,6 @@ import { fail, inputs } from './check-io.mjs'
 const SKIP = new Set(['.git', '.nuxt', '.output', '.verify', 'dist', 'node_modules'])
 const SOURCE = /\.(vue|[cm]?[jt]sx?)$/i
 
-// ESLint がディレクティブと見るのは、コメントの先頭がこの綴りのものだけ。
-// ファイル全体に効く eslint-disable と、重さを書き換える eslint はブロックコメントでしか効かない
 const DISABLE = /^eslint-disable(?:-next-line|-line)?(?![\w-])/
 const LINE_DISABLE = /^eslint-disable-(?:next-line|line)(?![\w-])/
 const CONFIG = /^eslint(?![\w-])/
@@ -18,7 +16,6 @@ const { read, entries } = inputs(process.argv[2])
 const disables = (comment) =>
 	(comment.type === 'Block' ? DISABLE : LINE_DISABLE).test(comment.value.trim())
 
-// 重さの書き換えは位置に依らずファイル全体に効くので、並びを固定しても届く先が変わらない
 const configures = (comment) => comment.type === 'Block' && CONFIG.test(comment.value.trim())
 
 function* sources(directory) {
@@ -38,7 +35,6 @@ const parserOptions = {
 	range: true,
 }
 
-// 読む口は ESLint と同じパーサーにする。文字列に書いた綴りをコメントと数えないため
 const commentsOf = (code, file) =>
 	extname(file).toLowerCase() === '.vue'
 		? vueParser.parseForESLint(code, { ...parserOptions, parser: tsParser }).ast.comments

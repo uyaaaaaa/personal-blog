@@ -13,11 +13,8 @@ const walk = (directory) =>
 		return entry.isDirectory() ? walk(path) : [path]
 	})
 
-// vitest の既定の include に合わせる。名前を .spec. にして検査から外れる道を作らない
 const TEST = /^(.*)\.(?:test|spec)\.([cm]?[jt]sx?)$/
 
-// vitest の既定の exclude は *.config.* をテストごと落とす。設定ファイルのテストは
-// eslint-config.test.mjs のようにハイフンで名乗るので、実装は元の名前でも探す
 const sourcesOf = (test) => {
 	const [, name, extension] = test.match(TEST)
 	const names = [name, name.replace(/-config$/, '.config')]
@@ -30,7 +27,6 @@ const sourcesOf = (test) => {
 	]
 }
 
-// 探す側も TEST と同じ綴りを見る。方向によって通る入力が変わらないようにする
 const testsOf = (source) =>
 	['test', 'spec'].map((kind) => `${TESTS}/${source.replace(/\.([cm]?[jt]sx?)$/, `.${kind}.$1`)}`)
 
@@ -44,7 +40,6 @@ const errors = []
 
 const hookCommands = () =>
 	SETTINGS.filter(exists).flatMap((path) => {
-		// 設定は手で書くので、辿る先はどの段でも欠けうる。欠けた段はコマンドを持たない
 		const { hooks } = json(path) ?? {}
 		return Object.values(hooks ?? {})
 			.flat()
@@ -55,7 +50,6 @@ const hookCommands = () =>
 
 const runners = () => {
 	const { scripts } = json('package.json') ?? {}
-	// 回している検査はここから辿る。入口が無ければ何も辿れない
 	if (typeof scripts?.lint !== 'string') fail('package.json が scripts.lint を持たない')
 
 	const queue = [
