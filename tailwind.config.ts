@@ -17,12 +17,16 @@ const baseStyles = plugin(({ addBase }) => {
 	addBase({
 		':root': toCssVariables(),
 		'.dark': toDarkCssVariables(),
-		// ダブルタップズームとタップ遅延を無効にする。ピンチズームは残る
 		body: { touchAction: 'manipulation' },
+		'@media (prefers-reduced-motion: reduce)': {
+			'*, *::before, *::after': {
+				transitionDuration: '0s !important',
+				animationDuration: '0s !important',
+			},
+		},
 	})
 })
 
-// 用途ごとに1つのクラスにする。対象のプロパティと長さが離れると、同じ用途に別の長さが付く
 const motion = plugin(({ addUtilities, theme }) => {
 	addUtilities(
 		Object.fromEntries(
@@ -47,17 +51,12 @@ export default <Config>{
 		'./app/app.vue',
 		'./app/error.vue',
 	],
-	// remark-gfmが脚注セクションの見出しに付ける。ソースに現れないためパージされる
 	safelist: ['sr-only'],
 	darkMode: 'class',
 	theme: {
-		// extend の下だと Tailwind の既定が残り、トークンに無い名前
-		// （bg-red-500 / sm: / text-lg）が書ける。ここに置くと既定ごと置き換わる
 		colors: toTailwindColors(),
 		screens,
 		fontSize,
-		// 長さを別に書くクラス（duration- / delay- / animate-）と、用途の決まらない transition-*
-		// を消す。モーションのクラスは motion が用途ごとに1つずつ持つ
 		transitionProperty: {},
 		transitionDuration: {},
 		transitionDelay: {},
