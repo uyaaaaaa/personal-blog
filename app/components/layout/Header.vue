@@ -76,6 +76,7 @@
 	const isInlineSearchOpen = ref(false)
 	const inlineSearchRef = ref<InstanceType<typeof HeaderSearch> | null>(null)
 	const mobileSearchRef = ref<HTMLElement | null>(null)
+	const DRAWER_QUERY = '(min-width: 768px)'
 
 	let searchOpener: HTMLElement | null = null
 
@@ -123,7 +124,16 @@
 		openSearchFrom(mobileSearchRef.value)
 	}
 
-	onMounted(() => window.addEventListener('keydown', onSearchShortcut))
+	onMounted(() => {
+		window.addEventListener('keydown', onSearchShortcut)
+
+		const media = window.matchMedia(DRAWER_QUERY)
+		const onCross = () => {
+			if (media.matches) closeMenu()
+		}
+		media.addEventListener('change', onCross)
+		onBeforeUnmount(() => media.removeEventListener('change', onCross))
+	})
 	onBeforeUnmount(() => window.removeEventListener('keydown', onSearchShortcut))
 
 	watch([isMenuOpen, isSearchOpen, isInlineSearchOpen], (open) => {
