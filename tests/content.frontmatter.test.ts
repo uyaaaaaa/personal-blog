@@ -69,7 +69,9 @@ describe('readFrontMatter', () => {
 		expect(files.length).toBeGreaterThan(0)
 
 		for (const name of files) {
-			const data = readFrontMatter(read(name))
+			const body = read(name)
+			if (body === undefined) throw new Error(`${name} not found`)
+			const data = readFrontMatter(body)
 			expect(articleSchema.safeParse(data).success, name).toBe(true)
 		}
 	})
