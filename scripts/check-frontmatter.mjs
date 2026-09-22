@@ -1,10 +1,9 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { readFrontMatter } from '../content.frontmatter.ts'
 import { articleSchema } from '../content.schema.ts'
-import { articleFiles, fail } from './article-files.mjs'
+import { articleFiles } from './article-files.mjs'
+import { fail } from './inputs.mjs'
 
-const { dir, files } = articleFiles(process.argv[2])
+const { files, read } = articleFiles(process.argv[2])
 
 const unreadable = []
 const mismatched = []
@@ -12,7 +11,7 @@ const mismatched = []
 for (const name of files) {
 	let data
 	try {
-		data = readFrontMatter(readFileSync(join(dir, name), 'utf8'))
+		data = readFrontMatter(read(name))
 	} catch (error) {
 		unreadable.push(`${name}: ${error.message}`)
 		continue
@@ -30,7 +29,9 @@ for (const name of files) {
 const indented = (lines) => lines.map((line) => `  ${line}`)
 
 const report = [
-	...(unreadable.length > 0 ? ['記事を読み取れない:', ...indented(unreadable)] : []),
+	...(unreadable.length > 0
+		? ['フロントマターを YAML として読めない:', ...indented(unreadable)]
+		: []),
 	...(mismatched.length > 0
 		? ['フロントマターがスキーマ（content.schema.ts）に合わない:', ...indented(mismatched)]
 		: []),

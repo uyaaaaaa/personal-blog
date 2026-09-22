@@ -192,12 +192,31 @@ describe('実装からテスト', () => {
 		expect(check().status).toBe(0)
 	})
 
+	it.each([
+		['hook の並びが無い', { hooks: { PreToolUse: null } }],
+		['命令の並びが無い', { hooks: { PreToolUse: [{ matcher: 'Skill' }] } }],
+		['命令が空', { hooks: { PreToolUse: [{ hooks: [null] }] } }],
+	])('%s設定は、スタックで落ちずに通す', (_, shape) => {
+		write('.claude/settings.json', JSON.stringify(shape))
+		const { status, stderr } = check()
+		expect(status).toBe(0)
+		expect(stderr).toBe('')
+	})
+
+	it('scripts を持たない package.json は、理由の1行を出して落とす', () => {
+		write('package.json', '{}')
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/scripts\.lint を持たない/)
+		expect(stderr).not.toMatch(/\n {4}at /)
+	})
+
 	it('読めない設定は、どちらのファイルでも理由の1行を出して落とす', () => {
 		for (const file of ['settings.json', 'settings.local.json']) {
 			write(`.claude/${file}`, '{')
 			const { status, stderr } = check()
 			expect(status).toBe(1)
-			expect(stderr).toMatch(`${file}: hooks を読めない`)
+			expect(stderr).toMatch(`${file} を JSON として読めない`)
 			rmSync(join(root, '.claude', file))
 		}
 	})

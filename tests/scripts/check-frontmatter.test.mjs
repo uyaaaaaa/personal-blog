@@ -84,7 +84,7 @@ describe('check-frontmatter', () => {
 		write('a.md', ...article(...lines))
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/記事を読み取れない/)
+		expect(stderr).toMatch(/YAML として読めない/)
 		expect(stderr).toMatch(/a\.md/)
 	})
 
@@ -100,7 +100,7 @@ describe('check-frontmatter', () => {
 		symlinkSync(`${root}.md`, join(root, 'content/article/a.md'))
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/記事を読み取れない/)
+		expect(stderr).toMatch(/a\.md を読み取れない/)
 		expect(stderr).not.toMatch(/at readFileSync/)
 	})
 
@@ -116,7 +116,7 @@ describe('check-frontmatter', () => {
 		rmSync(join(root, 'content/article'), { recursive: true })
 		const { status, stderr } = check()
 		expect(status).toBe(1)
-		expect(stderr).toMatch(/記事のディレクトリを読み取れない/)
+		expect(stderr).toMatch(/content\/article\/ を読み取れない/)
 	})
 
 	it('Markdown でないファイルは見ない', () => {

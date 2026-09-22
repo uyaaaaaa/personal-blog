@@ -1,12 +1,11 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { dirname, relative, resolve } from 'node:path'
+import { fail, ignores, inputs } from './inputs.mjs'
 
-const ROOT = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)))
+const { root: ROOT, read, entries, exists } = inputs(process.argv[2])
 const ADR = 'docs/adr'
 const INDEX = 'docs/DECISIONS.md'
 const POINTS = ['検討した案', '対価', '戻す条件']
-const IGNORED = new Set(['node_modules', '.git', '.nuxt', '.output', 'dist', '.verify'])
+const IGNORED = new Set(ignores)
 
 const NAME = /^(\d{2})-[a-z\d]+(?:-[a-z\d]+)*\.md$/
 const HEADING = /^# (\S.*)$/
@@ -14,21 +13,8 @@ const POINT = /^- \*\*(.+?)\*\*/gm
 const ROW = /^- \[(\d+) (.+)\]\(\.\/adr\/(.+?)\)$/gm
 const LINK = /\]\(([^)\s]+)\)/g
 
-const fail = (...lines) => {
-	for (const line of lines) console.error(line)
-	process.exit(1)
-}
-
-const read = (path) => {
-	try {
-		return readFileSync(join(ROOT, path), 'utf8')
-	} catch (error) {
-		fail(`${path} を読み取れない:`, `  ${error.message}`)
-	}
-}
-
 const walk = (directory) =>
-	readdirSync(join(ROOT, directory), { withFileTypes: true }).flatMap((entry) => {
+	entries(directory).flatMap((entry) => {
 		if (IGNORED.has(entry.name)) return []
 		const path = directory === '' ? entry.name : `${directory}/${entry.name}`
 		return entry.isDirectory() ? walk(path) : [path]
@@ -36,15 +22,11 @@ const walk = (directory) =>
 
 const errors = []
 
-const listing = () => {
-	try {
-		return readdirSync(join(ROOT, ADR)).sort()
-	} catch (error) {
-		fail(`${ADR} を読み取れない:`, `  ${error.message}`)
-	}
-}
+const listing = () =>
+	entries(ADR)
+		.map((entry) => entry.name)
+		.sort()
 
-// .DS_Store のような git の管理外のファイルで lint を止めない。拾うのは .md だけ
 const named = listing()
 	.filter((name) => name.endsWith('.md'))
 	.filter((name) => {
@@ -124,7 +106,6 @@ for (const row of rows) {
 		errors.push(`${INDEX}: ${row.at}行目の ${row.file} に当たる ADR が無い`)
 }
 
-// 同じ ADR を2度引く索引は既に落ちている。並びを見ても相手のいない行が出るだけ
 const listed = [...byFile.values()].filter((row) => known.has(row.file)).map((row) => row.file)
 const ordered = adrs.filter(({ name }) => byFile.has(name)).map(({ name }) => name)
 const turned = listed.findIndex((file, at) => file !== ordered[at])
@@ -132,7 +113,6 @@ if (turned !== -1) {
 	errors.push(`${INDEX}: 行は番号の順に並べる（${listed[turned]} が ${ordered[turned]} より先）`)
 }
 
-// 連番を機械が要求する以上、ADR を消せば詰め直しが起き、索引の外のリンクが黙って切れる
 for (const path of walk('').filter((path) => path.endsWith('.md'))) {
 	const source = read(path)
 	for (const match of source.matchAll(LINK)) {
@@ -141,7 +121,7 @@ for (const path of walk('').filter((path) => path.endsWith('.md'))) {
 		if (target === '' || href.includes('://')) continue
 
 		const to = relative(ROOT, resolve(ROOT, dirname(path), target))
-		if (!to.startsWith(`${ADR}/`) || existsSync(join(ROOT, to))) continue
+		if (!to.startsWith(`${ADR}/`) || exists(to)) continue
 
 		const line = source.slice(0, match.index).split('\n').length
 		errors.push(`${path}:${line}: ${href} の先が無い`)

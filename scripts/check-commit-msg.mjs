@@ -1,26 +1,19 @@
-import { readFileSync } from 'node:fs'
+import { fail, inputs } from './inputs.mjs'
 
 const SUBJECT_MIN = 12
 const SUBJECT_MAX = 50
 const EXEMPT = /^(Merge |Revert |fixup!|squash!|amend!)/
-// 分類の接頭辞。型名は回収先（CHANGELOG・semver）を持つ語の閉じた列で絞る。
-// 綴りを問わずに見ると、識別子で始まる件名（`run_in_background: true…`）に当たる
 const PREFIX =
 	/^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^()\s]*\))?!?[:：]/i
 const JAPANESE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u
-// 言い切りの語尾。動詞の終止形（う段のひらがな）と否定の「ない」だけを通す。
-// 体言止めの語を並べても「〜のバグ」「〜のリファクタリング」に当たらず、名詞は際限なく増える
 const ASSERTIVE = /(?:ない|[うくぐすつぬぶむる])$/u
 
-const fail = (...lines) => {
-	for (const line of lines) console.error(line)
-	process.exit(1)
-}
+const { read } = inputs(process.cwd())
 
 const path = process.argv[2]
 if (!path) fail('コミットメッセージのファイルが渡されていない')
 
-const lines = readFileSync(path, 'utf8')
+const lines = read(path)
 	.split(/^#\s*-+\s*>8\s*-+.*$/m)[0]
 	.split(/\r?\n/)
 	.filter((line) => !line.startsWith('#'))

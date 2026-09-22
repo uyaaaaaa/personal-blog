@@ -16,13 +16,13 @@ const STYLESHEET = /スタイルシートを組み立てない/
 const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前のクラス/
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
+const CHECK_INPUT = /検査が入力を読む口は/
 const PUBLISHED = /記事のクエリには公開制御/
 const QUERY_LOCATION = /記事の取得を組み立てるのは/
 const DOM_ASSEMBLY = /DOM を組み立てない/
 const DISPLAY = /display: none を宣言に書かない/
 const MOTION = /決めた長さではない|モーションのクラスは用途の名前|transition の対象に all/
 
-// 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => WEB_FONT.test(message.message)).length
@@ -83,6 +83,11 @@ const stdinReadsIn = async (relative, code) => {
 	return result.messages.filter((message) => STDIN.test(message.message)).length
 }
 
+const checkInputsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => CHECK_INPUT.test(message.message)).length
+}
+
 const queryLocationsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => QUERY_LOCATION.test(message.message)).length
@@ -98,7 +103,6 @@ const assembliesIn = async (relative, code) => {
 	return result.messages.filter((message) => DOM_ASSEMBLY.test(message.message)).length
 }
 
-// 並びの指摘は綴りが eslint-plugin-vue のものなので、ルール名で数える
 const blockOrdersIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => message.ruleId === 'vue/block-order').length
@@ -557,7 +561,6 @@ describe('表示・非表示の出し分け', () => {
 		expect(await displaysIn('app/pages/a.vue', sfc('<p class="hidden md:block" />'))).toBe(0)
 	})
 
-	// v-show は許す側に決めた経路。判定が template まで広がるとここが落ちる
 	it('実行時に display を書く v-show は通す', async () => {
 		const code = sfc('<p v-show="open" />', 'const open = false')
 		expect(await displaysIn('app/pages/a.vue', code)).toBe(0)
@@ -822,5 +825,58 @@ describe('composable の DOM の組み立て', () => {
 		expect(
 			await assembliesIn('tests/app/utils/shelf.test.ts', body("host.appendChild(h('p'))")),
 		).toBe(0)
+	})
+})
+
+describe('検査の入力の読み取り', () => {
+	const CHECK = 'scripts/check-areas.mjs'
+
+	it('綴りを変えた読み取りも落とす', async () => {
+		expect(
+			await checkInputsIn(CHECK, "import { readFileSync } from 'node:fs'"),
+		).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, "import fs from 'fs/promises'")).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, "await import('./a.mjs')")).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, 'const data = JSON.parse(source)')).toBeGreaterThan(0)
+		expect(
+			await checkInputsIn(CHECK, 'const data = globalThis.JSON.parse(source)'),
+		).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, 'const { parse } = JSON')).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, 'const parse = JSON.parse')).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, "const fs = require('node:fs')")).toBeGreaterThan(0)
+		expect(
+			await checkInputsIn(CHECK, 'const need = createRequire(import.meta.url)'),
+		).toBeGreaterThan(0)
+		expect(
+			await checkInputsIn(CHECK, "const fs = process.getBuiltinModule('node:fs')"),
+		).toBeGreaterThan(0)
+		expect(
+			await checkInputsIn(
+				'scripts/article-files.mjs',
+				"import { readdirSync } from 'node:fs'",
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('集約先そのものと、通して読む側は通す', async () => {
+		expect(
+			await checkInputsIn('scripts/inputs.mjs', "import { readFileSync } from 'node:fs'"),
+		).toBe(0)
+		expect(
+			await checkInputsIn(CHECK, "import { inputs } from './inputs.mjs'\ninputs().read('a')"),
+		).toBe(0)
+		expect(
+			await checkInputsIn(
+				'tests/scripts/check-areas.test.mjs',
+				"import { writeFileSync } from 'node:fs'",
+			),
+		).toBe(0)
+		expect(
+			await checkInputsIn(
+				'scripts/overlay-probe.mjs',
+				"import { readFileSync } from 'node:fs'",
+			),
+		).toBe(0)
+		expect(await checkInputsIn(CHECK, 'postcss.parse(source)')).toBe(0)
 	})
 })
