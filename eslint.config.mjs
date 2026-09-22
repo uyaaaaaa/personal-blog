@@ -237,7 +237,8 @@ const STYLESHEET_ASSEMBLY = [
 	},
 ]
 
-// 2つとも scripts/check-component-areas.mjs が app/components/ と突き合わせるので export する
+// 2つとも scripts/check-component-areas.mjs が app/components/ と突き合わせ、一覧は
+// .dependency-cruiser.mjs が領域どうしの依存を見る綴りとして引くので export する
 export const COMPONENT_AREAS = ['layout', 'article', 'content', 'error', 'ui']
 
 export const AREA_DIRECTORY_MESSAGE = `components/ の直下にファイルを置かない。${COMPONENT_AREAS.join(' / ')} のいずれかに入れる。 ${ARCHITECTURE_URL}`
