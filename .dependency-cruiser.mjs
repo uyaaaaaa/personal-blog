@@ -1,7 +1,30 @@
+import { COMPONENT_AREAS } from './eslint.config.mjs'
+
 const RULE_URL =
 	'https://github.com/uyaaaaaa/personal-blog/blob/main/docs/ARCHITECTURE.md#層と依存方向'
 
-const DOMAINS = 'article|layout|content|error'
+const UI = 'ui'
+
+// 選択肢に入る綴りを限る。| や . を含む名前は、領域でない経路まで当てる
+const AREA = /^[a-z][a-z0-9-]*$/
+
+const reject = (reason) => {
+	throw new Error(`eslint.config.mjs の COMPONENT_AREAS ${reason}`)
+}
+
+if (!Array.isArray(COMPONENT_AREAS) || !COMPONENT_AREAS.every((area) => AREA.test(area))) {
+	reject(`が ${AREA.source} に合う文字列の配列でない`)
+}
+if (!COMPONENT_AREAS.includes(UI)) {
+	reject(`に ${UI} が無い`)
+}
+
+const domains = COMPONENT_AREAS.filter((area) => area !== UI)
+if (domains.length === 0) {
+	reject(`が ${UI} 以外の領域を挙げていない`)
+}
+
+const DOMAINS = domains.join('|')
 
 const WITH_TEST = '^(?:tests/)?'
 
@@ -11,7 +34,7 @@ const upperLayers = {
 	components: `${WITH_TEST}app/(pages|layouts)/|${WITH_TEST}app/(app|error)\\.vue$`,
 }
 
-module.exports = {
+export default {
 	forbidden: [
 		{
 			name: 'no-circular',
@@ -55,8 +78,11 @@ module.exports = {
 			name: 'ui-no-domains',
 			severity: 'error',
 			comment: `ui は題材を知らない。components の他を import しない。${RULE_URL}`,
-			from: { path: `${WITH_TEST}app/components/ui/` },
-			to: { path: `${WITH_TEST}app/components/`, pathNot: `${WITH_TEST}app/components/ui/` },
+			from: { path: `${WITH_TEST}app/components/${UI}/` },
+			to: {
+				path: `${WITH_TEST}app/components/`,
+				pathNot: `${WITH_TEST}app/components/${UI}/`,
+			},
 		},
 		{
 			name: 'tests-only-from-tests',

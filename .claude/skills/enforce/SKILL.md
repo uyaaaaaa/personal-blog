@@ -20,7 +20,7 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約のうち�
 ## 2. 置き場で落とす
 
 判定に何が要るかで置き場を決める。基準は `docs/ARCHITECTURE.md` の「検査の置き場」。
-そこに無い置き場が2つ。**`<style>` の中身**は ESLint（`eslint-rules/style-tokens.mjs` が postcss で読んでいる）。**コミットの本文**は `.githooks/`。ブラウザの probe は lint では回らず `verify` から叩く。
+そこに無い置き場が2つ。**`<style>` の中身**は ESLint（`eslint-rules/style-tokens.mjs` が postcss で読んでいる）。**コミットの本文**は `.githooks/`。
 
 決まらなければ落とす。
 
@@ -30,7 +30,7 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約のうち�
 
 ## 3. 既に落ちるか試す
 
-**その規約を破る最小の例を書いて `npm run lint`・`npm test`・`scripts/` の probe にかける。** どのツールが何を見ているかを設定から読み解かない。読み解くと、既に効いている検査をもう一度足す issue が出る。
+**その規約を破る最小の例を書いて、lint・test と `scripts/` の probe にかける**（打ち方は `verify`）。どのツールが何を見ているかを設定から読み解かない。読み解くと、既に効いている検査をもう一度足す issue が出る。
 
 **probe は lint に乗っていない。** そこだけで守られている規約を「未強制」と読み違えやすい（→ `verify`）。試した細工はコミットに含めない（→ `.claude/rules/commit.md`）。
 
