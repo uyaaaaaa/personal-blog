@@ -1,4 +1,4 @@
-import { fail, inputs } from './check-io.mjs'
+import { fail, inputs } from './inputs.mjs'
 
 const { read, exists, load } = inputs(process.argv[2])
 const CONFIG = 'eslint.config.mjs'

@@ -1,11 +1,11 @@
 import { dirname, relative, resolve } from 'node:path'
-import { fail, inputs } from './check-io.mjs'
+import { fail, ignores, inputs } from './inputs.mjs'
 
 const { root: ROOT, read, entries, exists } = inputs(process.argv[2])
 const ADR = 'docs/adr'
 const INDEX = 'docs/DECISIONS.md'
 const POINTS = ['検討した案', '対価', '戻す条件']
-const IGNORED = new Set(['node_modules', '.git', '.nuxt', '.output', 'dist', '.verify'])
+const IGNORED = new Set(ignores)
 
 const NAME = /^(\d{2})-[a-z\d]+(?:-[a-z\d]+)*\.md$/
 const HEADING = /^# (\S.*)$/

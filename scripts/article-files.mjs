@@ -1,5 +1,5 @@
 import { join, relative } from 'node:path'
-import { fail, inputs } from './check-io.mjs'
+import { fail, inputs } from './inputs.mjs'
 
 const ARTICLES = 'content/article'
 

@@ -1,8 +1,8 @@
 import postcss from 'postcss'
 import { findings } from '../eslint-rules/style-tokens.mjs'
-import { fail, inputs } from './check-io.mjs'
+import { fail, ignores, inputs } from './inputs.mjs'
 
-const SKIP = new Set(['.git', '.nuxt', '.output', '.verify', 'dist', 'node_modules'])
+const SKIP = new Set(ignores)
 const STYLESHEET = /\.(css|pcss|postcss)$/i
 
 const { read, entries } = inputs(process.argv[2])

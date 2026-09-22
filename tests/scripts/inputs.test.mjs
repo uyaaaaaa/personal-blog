@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { describe, expect, it } from 'vitest'
 
-const MODULE = new URL('../../scripts/check-io.mjs', import.meta.url)
+const MODULE = new URL('../../scripts/inputs.mjs', import.meta.url)
 
 const run = (body) =>
 	spawnSync(

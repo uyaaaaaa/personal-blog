@@ -1,9 +1,9 @@
 import { extname } from 'node:path'
 import tsParser from '@typescript-eslint/parser'
 import * as vueParser from 'vue-eslint-parser'
-import { fail, inputs } from './check-io.mjs'
+import { fail, ignores, inputs } from './inputs.mjs'
 
-const SKIP = new Set(['.git', '.nuxt', '.output', '.verify', 'dist', 'node_modules'])
+const SKIP = new Set(ignores)
 const SOURCE = /\.(vue|[cm]?[jt]sx?)$/i
 
 const DISABLE = /^eslint-disable(?:-next-line|-line)?(?![\w-])/

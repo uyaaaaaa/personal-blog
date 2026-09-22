@@ -1,7 +1,7 @@
 import { readFrontMatter } from '../content.frontmatter.ts'
 import { articleSchema } from '../content.schema.ts'
 import { articleFiles } from './article-files.mjs'
-import { fail } from './check-io.mjs'
+import { fail } from './inputs.mjs'
 
 const { files, read } = articleFiles(process.argv[2])
 

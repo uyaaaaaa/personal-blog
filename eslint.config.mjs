@@ -1,6 +1,7 @@
 import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
+import { ignores } from './scripts/inputs.mjs'
 import articleQueries from './eslint-rules/article-queries.mjs'
 import importLayers from './eslint-rules/import-layers.mjs'
 import rootFiles from './eslint-rules/root-files.mjs'
@@ -82,8 +83,8 @@ const STDIN_READ = [
 	},
 ]
 
-const CHECK_IO = 'scripts/check-io.mjs'
-const CHECK_INPUT_MESSAGE = `検査が入力を読む口は ${CHECK_IO} だけ。素の読み取りは、どの入力がなぜ駄目かの1行を出さずにスタックで落ちる。`
+const INPUTS_MJS = 'scripts/inputs.mjs'
+const CHECK_INPUT_MESSAGE = `検査が入力を読む口は ${INPUTS_MJS} だけ。素の読み取りは、どの入力がなぜ駄目かの1行を出さずにスタックで落ちる。`
 
 const CHECK_INPUT_MODULES = [
 	'fs',
@@ -490,7 +491,7 @@ const withTest = (...patterns) => patterns.flatMap((pattern) => [pattern, `tests
 
 export default [
 	{
-		ignores: ['.nuxt/**', '.output/**', 'dist/**', 'node_modules/**'],
+		ignores: ignores.map((name) => `${name}/**`),
 	},
 	{
 		files: withTest('app/**/*.ts'),
@@ -638,7 +639,7 @@ export default [
 	},
 	{
 		files: ['scripts/check-*.mjs', 'scripts/article-files.mjs'],
-		ignores: [CHECK_IO],
+		ignores: [INPUTS_MJS],
 		rules: {
 			'no-restricted-imports': [
 				'error',

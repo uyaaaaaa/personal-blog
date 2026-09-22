@@ -860,13 +860,10 @@ describe('検査の入力の読み取り', () => {
 
 	it('集約先そのものと、通して読む側は通す', async () => {
 		expect(
-			await checkInputsIn('scripts/check-io.mjs', "import { readFileSync } from 'node:fs'"),
+			await checkInputsIn('scripts/inputs.mjs', "import { readFileSync } from 'node:fs'"),
 		).toBe(0)
 		expect(
-			await checkInputsIn(
-				CHECK,
-				"import { inputs } from './check-io.mjs'\ninputs().read('a')",
-			),
+			await checkInputsIn(CHECK, "import { inputs } from './inputs.mjs'\ninputs().read('a')"),
 		).toBe(0)
 		expect(
 			await checkInputsIn(

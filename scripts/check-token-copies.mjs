@@ -1,5 +1,5 @@
 import ts from 'typescript'
-import { fail, inputs, loaded } from './check-io.mjs'
+import { fail, inputs, loaded } from './inputs.mjs'
 
 const { read, json, load } = inputs(process.argv[2])
 const TOKENS = 'theme/tokens.ts'

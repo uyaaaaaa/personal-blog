@@ -1,6 +1,6 @@
 import { tagToSlug } from '../app/utils/tag.ts'
 import { articleFiles } from './article-files.mjs'
-import { fail } from './check-io.mjs'
+import { fail } from './inputs.mjs'
 
 const readFrontmatter = (source) => {
 	const matched = source.match(/^---\r?\n([\s\S]*?)\r?\n---/)

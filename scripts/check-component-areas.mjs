@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { ESLint } from 'eslint'
-import { fail, inputs } from './check-io.mjs'
+import { fail, inputs } from './inputs.mjs'
 
 const { root: ROOT, entries, load } = inputs(process.argv[2])
 const CONFIG = 'eslint.config.mjs'

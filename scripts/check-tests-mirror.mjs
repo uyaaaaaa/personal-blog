@@ -1,10 +1,10 @@
-import { fail, inputs } from './check-io.mjs'
+import { fail, ignores, inputs } from './inputs.mjs'
 
 const { read, entries, json, exists } = inputs(process.argv[2])
 const TESTS = 'tests'
 const HOOKS = '.githooks'
 const SETTINGS = ['.claude/settings.json', '.claude/settings.local.json']
-const IGNORED = new Set(['node_modules', '.git', '.nuxt', '.output', 'dist', '.verify'])
+const IGNORED = new Set(ignores)
 
 const walk = (directory) =>
 	entries(directory).flatMap((entry) => {

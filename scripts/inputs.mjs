@@ -15,6 +15,8 @@ export const loaded = async (specifier, where = specifier) => {
 	}
 }
 
+export const ignores = ['.git', '.nuxt', '.output', '.verify', 'dist', 'node_modules']
+
 export const inputs = (given) => {
 	const root = resolve(given ?? fileURLToPath(new URL('..', import.meta.url)))
 	const at = (path) => resolve(root, path)

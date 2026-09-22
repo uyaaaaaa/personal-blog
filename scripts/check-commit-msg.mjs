@@ -1,4 +1,4 @@
-import { fail, inputs } from './check-io.mjs'
+import { fail, inputs } from './inputs.mjs'
 
 const SUBJECT_MIN = 12
 const SUBJECT_MAX = 50
