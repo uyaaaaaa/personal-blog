@@ -78,12 +78,10 @@
 	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useArticleSearch } from '~/composables/useArticleSearch'
+	import { useCloseWhenHidden } from '~/composables/useCloseWhenHidden'
 	import { useSearchKeys } from '~/composables/useSearchKeys'
 
 	const LIST_ID = 'header-search-results'
-
-	// Tailwind の md。この入れ物を出し分ける幅とずれると、隠れたまま開いて誰も閉じられなくなる
-	const INLINE_SEARCH_QUERY = '(min-width: 768px)'
 
 	const emit = defineEmits<{
 		(e: 'update:open', value: boolean): void
@@ -182,15 +180,10 @@
 		if (!trapRef.value?.contains(event.target as Node)) dismiss()
 	}
 
+	useCloseWhenHidden(isOpen, trapRef, close)
+
 	onMounted(() => {
 		document.addEventListener('pointerdown', onDocumentPointerdown)
-
-		const media = window.matchMedia(INLINE_SEARCH_QUERY)
-		const onCross = () => {
-			if (!media.matches) close()
-		}
-		media.addEventListener('change', onCross)
-		onBeforeUnmount(() => media.removeEventListener('change', onCross))
 	})
 
 	onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPointerdown))

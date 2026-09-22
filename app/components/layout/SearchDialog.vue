@@ -55,6 +55,7 @@
 
 			<p
 				v-if="results.length > 0"
+				ref="searchKeysRef"
 				class="search-keys hidden md:block"
 			>
 				↑↓ to move, ⏎ to open, esc to close
@@ -86,6 +87,7 @@
 	const { query, results, activeIndex, startComposition, endComposition, clear } = search
 
 	const inputRef = ref<HTMLInputElement | null>(null)
+	const searchKeysRef = ref<HTMLElement | null>(null)
 
 	const emptyMessage = computed(() =>
 		query.value.trim() === ''
@@ -103,9 +105,7 @@
 		if (pressedOnOverlay) emit('close')
 	}
 
-	const KEYBOARD_SELECT_QUERY = '(min-width: 768px)'
-
-	const canSelectByKey = () => window.matchMedia(KEYBOARD_SELECT_QUERY).matches
+	const canSelectByKey = () => (searchKeysRef.value?.getClientRects().length ?? 0) > 0
 
 	const { onKeydown: onInputKeydown, trapRef } = useSearchKeys(search, {
 		canSelect: canSelectByKey,

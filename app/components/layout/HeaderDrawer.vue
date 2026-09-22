@@ -213,6 +213,7 @@
 	import UserIcon from '~/components/ui/UserIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { releaseBackdrop, useBackdropInert } from '~/composables/useBackdropInert'
+	import { useCloseWhenHidden } from '~/composables/useCloseWhenHidden'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 	import type { MenuGroups } from '~/utils/menuGroup'
@@ -238,6 +239,7 @@
 	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), closeDrawer)
 
 	useBackdropInert(toRef(props, 'isOpen'), trapRef)
+	useCloseWhenHidden(toRef(props, 'isOpen'), trapRef, closeDrawer)
 
 	const { lockRef } = useTouchScrollLock()
 

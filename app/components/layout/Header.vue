@@ -123,7 +123,9 @@
 		openSearchFrom(mobileSearchRef.value)
 	}
 
-	onMounted(() => window.addEventListener('keydown', onSearchShortcut))
+	onMounted(() => {
+		window.addEventListener('keydown', onSearchShortcut)
+	})
 	onBeforeUnmount(() => window.removeEventListener('keydown', onSearchShortcut))
 
 	watch([isMenuOpen, isSearchOpen, isInlineSearchOpen], (open) => {
