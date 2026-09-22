@@ -20,7 +20,6 @@ describe('typography', () => {
 	})
 })
 
-// 長さを持つのは用途のクラス。生成した CSS で確かめる
 const utilities = async (raw: string) => {
 	const { css } = await postcss([
 		tailwind({ ...config, content: [{ raw, extension: 'html' }] }),
@@ -64,7 +63,6 @@ describe('モーションのクラス', () => {
 	})
 })
 
-// 減らす設定を見る記述は1箇所。用途のクラスも <style> の transition もここで長さを失う
 const reducedMotionRules = (css: string) => {
 	const found: { selector: string; declarations: string[] }[] = []
 	postcss.parse(css).walkAtRules('media', (atRule) => {

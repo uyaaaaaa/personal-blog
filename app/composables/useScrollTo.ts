@@ -1,8 +1,6 @@
 const SETTLED_FRAMES = 4
 const JUMP_LIMIT_MS = 1200
 
-// OS の「動きを減らす」設定。呼び出しが渡す behavior は CSS の scroll-behavior より
-// 優先されるので、送り方を決めるここが読む
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 
 const scrollBehavior = (): ScrollBehavior =>

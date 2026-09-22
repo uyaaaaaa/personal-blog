@@ -2,7 +2,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useScrollTo } from '~/composables/useScrollTo'
 
-// useScrollTo が読む OS の設定
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 
 const frames = new Map<number, FrameRequestCallback>()
@@ -61,7 +60,6 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-	// 送りの追従はモジュールスコープに残る。止めずに終わると、次のテストが送っている最中から始まる
 	while (frames.size > 0) runFrame()
 
 	vi.unstubAllGlobals()
