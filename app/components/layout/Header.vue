@@ -77,15 +77,12 @@
 	const inlineSearchRef = ref<InstanceType<typeof HeaderSearch> | null>(null)
 	const mobileSearchRef = ref<HTMLElement | null>(null)
 
-	// 戻し先はデスクトップとSPで別のボタンになるので、押されたものを覚える
 	let searchOpener: HTMLElement | null = null
 
 	const toggleMenu = () => {
 		isMenuOpen.value = !isMenuOpen.value
 	}
 
-	// 閉じた直後に背面へフォーカスを寄せる経路がある。prop がドロワーに伝わるのを待つと、
-	// 寄せ先が inert のままになる
 	const closeMenu = () => {
 		isMenuOpen.value = false
 		releaseBackdrop()
@@ -93,7 +90,6 @@
 
 	const openSearchFrom = (opener: HTMLElement | null) => {
 		searchOpener = opener
-		// Safari と Firefox は click で button にフォーカスを移さないので、開く前に寄せる
 		focusByGesture(opener)
 		isSearchOpen.value = true
 	}
@@ -111,16 +107,12 @@
 
 	const onSearchShortcut = (event: KeyboardEvent) => {
 		if (!isSearchShortcut(event)) return
-		// 変換中の Ctrl+K は mac の IME がカタカナ変換に使う。横取りしない
 		if (event.isComposing) return
 
 		event.preventDefault()
 
-		// 開き直すと入力済みが消えるので、開いている間はブラウザの検索を止めるだけ
 		if (isSearchOpen.value) return
 
-		// ドロワーは幅を跨いでも開いたまま残る。閉じずに寄せると、背後を止めたまま
-		// 閉じるものが画面から消える。戻し先のボタンを覆うのも同じ
 		closeMenu()
 
 		if (inlineSearchRef.value?.isVisible()) {
@@ -138,7 +130,6 @@
 		document.body.classList.toggle('scroll-locked', open.some(Boolean))
 	})
 
-	// リンクを踏まない移動（ブラウザバック）でも、被せたものは残さない
 	watch(
 		() => props.location,
 		() => {

@@ -229,8 +229,6 @@
 
 	const menuButtonRef = ref<HTMLButtonElement | null>(null)
 
-	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる。
-	// そのハンバーガーは被せている間の背面なので、移す前に inert から外す
 	const closeDrawer = () => {
 		releaseBackdrop()
 		focusByGesture(menuButtonRef.value)

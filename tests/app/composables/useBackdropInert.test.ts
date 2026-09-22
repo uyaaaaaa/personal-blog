@@ -5,7 +5,6 @@ import { releaseBackdrop, useBackdropInert } from '~/composables/useBackdropIner
 
 const mounted: Array<() => void> = []
 
-// happy-dom は箱を持たず getClientRects が常に空なので、見えているかどうかは自分で持たせる
 const boxed = (element: HTMLElement, shown: boolean) => {
 	Object.defineProperty(element, 'getClientRects', {
 		value: () => (shown ? [{}] : []),
@@ -15,7 +14,6 @@ const boxed = (element: HTMLElement, shown: boolean) => {
 
 const frame = () => new Promise((done) => requestAnimationFrame(() => done(undefined)))
 
-// 背面は被せたものと別の枝に置く。同じ枝に置くと、unmount で背面ごと文書から外れる
 const mountBackdrop = () => {
 	const isOpen = ref(false)
 
@@ -100,7 +98,6 @@ describe('useBackdropInert', () => {
 		expect(backdrop.inert('.behind')).toBe(false)
 	})
 
-	// 幅を跨いで被せたものが display で消えても isOpen は残る。外したままだと行き先が無くなる
 	it('被せたものが箱を持たなくなったら背面を戻す', async () => {
 		const backdrop = mountBackdrop()
 		await backdrop.open(true)
