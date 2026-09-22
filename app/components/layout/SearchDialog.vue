@@ -10,11 +10,11 @@
 			ref="trapRef"
 			class="search-dialog rounded-card border border-border bg-surface shadow-lg"
 			role="dialog"
+			aria-modal="true"
 			aria-label="Search articles"
 		>
 			<div class="search-field">
 				<SearchIcon class="search-field-icon" />
-				<!-- WebKit は type="search" にクリアボタンを足す。クラスを付けられない擬似要素なので、type では出させず、役割は role、仮想キーボードの検索キーは enterkeyhint で補う -->
 				<input
 					ref="inputRef"
 					v-model="query"
@@ -68,6 +68,7 @@
 	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useArticleSearch } from '~/composables/useArticleSearch'
+	import { useBackdropInert } from '~/composables/useBackdropInert'
 	import { useSearchKeys } from '~/composables/useSearchKeys'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 
@@ -92,8 +93,6 @@
 			: 'No articles found.',
 	)
 
-	// 押した位置が外側のときだけ閉じる。入力欄からドラッグして外で離すと click は
-	// オーバーレイに来るため、click だけで判定すると選択のたびに閉じてしまう
 	let pressedOnOverlay = false
 
 	const onOverlayPointerDown = (event: PointerEvent) => {
@@ -104,9 +103,6 @@
 		if (pressedOnOverlay) emit('close')
 	}
 
-	// Tailwind の md。ヘッダーが検索の入口を PC 用と SP 用に出し分けるのと同じ幅で、
-	// テンプレートが選択中の縦線とキーの案内を出すのもここから。ずれると見えない選択に
-	// キーが効き、効かないキーを名乗る
 	const KEYBOARD_SELECT_QUERY = '(min-width: 768px)'
 
 	const canSelectByKey = () => window.matchMedia(KEYBOARD_SELECT_QUERY).matches
@@ -119,9 +115,8 @@
 
 	const { lockRef } = useTouchScrollLock()
 
-	// 閉じるアニメーションの間も結果を出したままにするため、消すのは開くとき。
-	// フォーカスは押したときと同じ tick で寄せる。フレームを待つと、多くのモバイル
-	// ブラウザが仮想キーボードを自動表示する判定から外れる（表示の確定は CSS 側が持つ）
+	useBackdropInert(toRef(props, 'isOpen'), trapRef)
+
 	watch(
 		() => props.isOpen,
 		(isOpen) => {
