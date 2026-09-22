@@ -20,7 +20,6 @@ export const articleFiles = (given) => {
 	}
 
 	return {
-		dir,
 		files: found.map((entry) => entry.name),
 		read: (name) => read(`${ARTICLES}/${name}`),
 	}

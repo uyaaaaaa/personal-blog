@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { readFrontMatter } from '../content.frontmatter'
 import { articleSchema } from '../content.schema'
@@ -67,11 +65,11 @@ describe('readFrontMatter', () => {
 	})
 
 	it('いまある記事は通る', () => {
-		const { dir, files } = articleFiles()
+		const { files, read } = articleFiles()
 		expect(files.length).toBeGreaterThan(0)
 
 		for (const name of files) {
-			const data = readFrontMatter(readFileSync(join(dir, name), 'utf8'))
+			const data = readFrontMatter(read(name))
 			expect(articleSchema.safeParse(data).success, name).toBe(true)
 		}
 	})
