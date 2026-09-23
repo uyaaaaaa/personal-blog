@@ -27,4 +27,18 @@ describe('Toast', () => {
 		expect(wrapper.get('[role="status"]').text()).toBe('Link copied')
 		expect(wrapper.get('[role="status"]').classes()).not.toContain('invisible')
 	})
+
+	it('SP ではヘッダー直下で目次の前面にリンクアイコンとともに置く', async () => {
+		const wrapper = await mountSuspended(Toast)
+		const toast = wrapper.get('[role="status"]')
+
+		expect(toast.classes()).toContain('top-below-header-sm')
+		expect(toast.classes()).toContain('md:top-below-header')
+		expect(toast.classes()).toContain('z-50')
+		expect(toast.classes()).toContain('lg:hidden')
+		expect(toast.find('svg').exists()).toBe(true)
+		expect(toast.find('path').attributes('d')).toBe(
+			'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71',
+		)
+	})
 })
