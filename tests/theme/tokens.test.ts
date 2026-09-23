@@ -35,11 +35,29 @@ function contrast(a: string, b: string): number {
 	return (hi! + 0.05) / (lo! + 0.05)
 }
 
+type Token = keyof typeof colors
+
+const pageBackgrounds = ['bg', 'surface', 'surface-subtle'] as const
+
+const pairs: [Token, readonly Token[], number][] = [
+	['main', pageBackgrounds, 4.5],
+	['sub', pageBackgrounds, 4.5],
+	['accent', pageBackgrounds, 4.5],
+	['accent-hover', pageBackgrounds, 4.5],
+	['code-text', pageBackgrounds, 4.5],
+	['accent-contrast', ['accent', 'accent-hover'], 4.5],
+	['border-field', pageBackgrounds, 3],
+]
+
 describe.each([
 	['light', colors],
 	['dark', darkColors],
-])('%s の border-field', (_, palette) => {
-	it.each(['bg', 'surface', 'surface-subtle'] as const)('%s に対し 3:1 以上', (background) => {
-		expect(contrast(palette['border-field'], palette[background])).toBeGreaterThanOrEqual(3)
+])('%s のコントラスト', (_, palette) => {
+	it.each(
+		pairs.flatMap(([foreground, backgrounds, min]) =>
+			backgrounds.map((background) => [foreground, background, min] as const),
+		),
+	)('%s は %s に対し %s:1 以上', (foreground, background, min) => {
+		expect(contrast(palette[foreground], palette[background])).toBeGreaterThanOrEqual(min)
 	})
 })
