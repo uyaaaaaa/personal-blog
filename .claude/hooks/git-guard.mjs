@@ -210,10 +210,22 @@ const gh = (segment) => {
 const PR_ACTION =
 	/(?:^|[\s`(])(?:[^\s`(]*\/)?gh\s+(?:[^\s;|&`()]+\s+)*?pr\s+(create|new|edit|ready|merge)\b/
 
+// コメントは読まず、引用の中は二重引用の置換だけを見る
+const visible = (all) => {
+	const kept = []
+	let commented = false
+	for (const token of all) {
+		if (token === '\n') commented = false
+		else if (commented) continue
+		else if (token.startsWith('#')) commented = true
+		else if (!/["']/.test(token)) kept.push(token)
+		else kept.push(...(token.replace(/'[^']*'/g, '').match(/\$\([^)]*\)|`[^`]*`/g) ?? []))
+	}
+	return kept
+}
+
 const anywhere = (command) => {
-	const bare = tokens(command)
-		.filter((token) => !/["']/.test(token))
-		.join(' ')
+	const bare = visible(tokens(command)).join(' ')
 	const [, action] = PR_ACTION.exec(bare) ?? []
 	if (action === undefined) return null
 	if (action === 'merge') return MERGE
