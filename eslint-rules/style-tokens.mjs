@@ -293,6 +293,8 @@ function motionFindings(property, value) {
 const MOTION_DECLARATION = /^(?:transition|animation)(?:-[\w-]+)?$/i
 const MOTION_CLASS = '(?:transition|duration|delay|animate)(?![\\w])'
 const IMPORTANT_MOTION_CLASS = new RegExp(`(?:^|[\\s:])(?:[a-z-]+:)*!${MOTION_CLASS}`)
+// cssText や style 属性に組む宣言の文字列
+const IMPORTANT_MOTION_TEXT = /(?:transition|animation)[\w-]*\s*:[^;]*!\s*important/i
 // @apply の末尾の !important は、並べたクラス全部に掛かる
 const IMPORTANT_APPLY = new RegExp(`(?:^|[\\s:])${MOTION_CLASS}[\\s\\S]*!important\\s*$`)
 
@@ -535,7 +537,19 @@ const CHECKS = {
 		script: (context) => ({
 			'Literal, TemplateElement'(node) {
 				const value = node.type === 'Literal' ? node.value : node.value.cooked
-				if (typeof value === 'string' && IMPORTANT_MOTION_CLASS.test(value))
+				if (
+					typeof value === 'string' &&
+					(IMPORTANT_MOTION_CLASS.test(value) || IMPORTANT_MOTION_TEXT.test(value))
+				)
+					context.report({ node, messageId: 'important' })
+			},
+			// el.style の !important はインラインなので、全称セレクタの !important より強い
+			"CallExpression[callee.property.name='setProperty']"(node) {
+				const [property, , priority] = node.arguments
+				if (
+					MOTION_DECLARATION.test(property?.value ?? '') &&
+					priority?.value === 'important'
+				)
 					context.report({ node, messageId: 'important' })
 			},
 		}),

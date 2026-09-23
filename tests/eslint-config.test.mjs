@@ -662,6 +662,27 @@ describe('動きを減らす設定', () => {
 		).toBe(0)
 	})
 
+	it('el.style に書くモーションの !important を落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('transition-duration', '1s', 'important')",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => (el.style.cssText = 'transition: opacity 1s !important')",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('--panel', '1s', 'important')",
+			),
+		).toBe(0)
+	})
+
 	it('用途のクラスと直に書いた長さは通す', async () => {
 		expect(
 			await reducedMotionsIn('app/pages/a.vue', sfc('<p class="transition-color" />')),
