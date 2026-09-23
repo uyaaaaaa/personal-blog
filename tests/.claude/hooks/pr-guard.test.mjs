@@ -37,6 +37,7 @@ describe('decide', () => {
 		expect(denied(create({ body: '- x' }))).toMatch('型で書く')
 		expect(denied(create({ body: '<!--\n## やったこと\n-->' }))).toMatch('型で書く')
 		expect(denied(create({ body: '```\n## やったこと\n\n- x\n```' }))).toMatch('型で書く')
+		expect(denied(create({ body: '## やったこと\n\n---' }))).toMatch('型で書く')
 		expect(denied(create({ body: '## やったこと\n\nClaude-Session: https://a' }))).toMatch(
 			'型で書く',
 		)
@@ -65,16 +66,15 @@ describe('pending', () => {
 			pending('## 判断してほしいこと\n\n<!-- 無ければ消す -->\n\n## やったこと\n\n- y'),
 		).toBe(false)
 		expect(pending('## やったこと\n\n```\n## 判断してほしいこと\n\n- x\n```')).toBe(false)
+		expect(pending('## 判断してほしいこと\n\n## 判断してほしいこと\n\n- x')).toBe(true)
 	})
 
-	it('判断が残ったまま更新で ready にするのを止める', () => {
+	it('判断が残る本文の更新には draft の明示を求める', () => {
 		const update = (tool_input) => ({
 			tool_name: 'mcp__github__update_pull_request',
 			tool_input,
 		})
-		expect(denied(update({ draft: false, body: '## 判断してほしいこと\n\n- x' }))).toMatch(
-			'draft',
-		)
+		expect(denied(update({ body: '## 判断してほしいこと\n\n- x' }))).toMatch('draft')
 		expect(denied(update({ draft: false }))).toBeNull()
 	})
 

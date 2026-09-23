@@ -46,31 +46,30 @@ const DECISION = '判断してほしいこと'
 
 const COMMENT = /^\s*<!--[\s\S]*-->\s*$/
 
+const text = (node) => node.value ?? (node.children ?? []).map(text).join('')
+
+const shown = (node) =>
+	node.type !== 'thematicBreak' &&
+	!(node.type === 'html' && COMMENT.test(node.value)) &&
+	(node.type === 'image' || node.type === 'code' || text(node).trim() !== '')
+
 const filled = (body, heading) => {
-	const nodes = unified().use(remarkParse).parse(body).children
-	const at = nodes.findIndex(
-		(node) =>
-			node.type === 'heading' &&
-			node.depth === 2 &&
-			node.children
-				.map((child) => child.value ?? '')
-				.join('')
-				.trim() === heading,
-	)
-	if (at === -1) return false
-	const after = nodes.slice(at + 1)
-	const end = after.findIndex((node) => node.type === 'heading' && node.depth <= 2)
-	return (end === -1 ? after : after.slice(0, end)).some(
-		(node) => !(node.type === 'html' && COMMENT.test(node.value)),
-	)
+	const sections = []
+	for (const node of unified().use(remarkParse).parse(body).children) {
+		if (node.type === 'heading' && node.depth <= 2) {
+			sections.push({ open: node.depth === 2 && text(node).trim() === heading, nodes: [] })
+		} else {
+			sections.at(-1)?.nodes.push(node)
+		}
+	}
+	return sections.some(({ open, nodes }) => open && nodes.some(shown))
 }
 
 export const pending = (body) => filled(body, DECISION)
 
-// 更新で draft を省いたときは今の状態を保つので、ready にする更新だけを見る
-const undrafted = (args, creating) => {
-	const readying = creating ? args.draft !== true : args.draft === false
-	if (!readying || typeof args.body !== 'string' || !pending(args.body)) return null
+// 更新で draft を省くと今の状態が保たれ、draft かどうかが見えないので、判断が残る本文には draft の明示を求める
+const undrafted = (args) => {
+	if (args.draft === true || typeof args.body !== 'string' || !pending(args.body)) return null
 	return `「${DECISION}」が残っている。draft で出す`
 }
 
@@ -88,7 +87,7 @@ const blocking = (args, ask) => {
 	if (typeof args.body !== 'string' || !filled(args.body, 'やったこと')) {
 		return `本文を ${TEMPLATE} の型で書く`
 	}
-	const undecided = undrafted(args, true)
+	const undecided = undrafted(args)
 	if (undecided) return undecided
 
 	const dirty = ask.dirty()
@@ -118,7 +117,7 @@ export const decide = (input, ask = ASK) => {
 	const body = typeof given.body === 'string' ? unsigned(given.body) : null
 	const args = body === null ? given : { ...given, body }
 	const creating = tool === 'create_pull_request'
-	const reason = creating ? blocking(args, ask) : undrafted(args, false)
+	const reason = creating ? blocking(args, ask) : undrafted(args)
 	if (reason) return { deny: reason }
 
 	const found = {
