@@ -9,7 +9,7 @@
 		<main
 			id="main-content"
 			tabindex="-1"
-			class="flex-1 scroll-mt-below-header-sm px-5 pb-16 pt-7 md:scroll-mt-below-header md:px-10 md:pb-24 md:pt-14"
+			class="main-content flex-1 scroll-mt-below-header-sm px-5 pb-16 pt-7 md:scroll-mt-below-header md:px-10 md:pb-24 md:pt-14"
 		>
 			<div
 				class="mx-auto w-full"
@@ -102,6 +102,10 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
+	}
+
+	.main-content:focus-visible {
+		outline-offset: -2px;
 	}
 
 	.skip-link {
