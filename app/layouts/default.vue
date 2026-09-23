@@ -37,17 +37,17 @@
 	)
 
 	// 戻る・進むはブラウザが位置を戻すので触らない
-	let traversing = false
+	let traversedTo: string | undefined
 	let stopListening: (() => void) | undefined
 	let stopAfterEach: (() => void) | undefined
 
 	onMounted(() => {
-		stopListening = router.options.history.listen(() => {
-			traversing = true
+		stopListening = router.options.history.listen((to) => {
+			traversedTo = router.resolve(to).fullPath
 		})
 		stopAfterEach = router.afterEach((to, from, failure) => {
-			const byHistory = traversing
-			traversing = false
+			const byHistory = to.fullPath === traversedTo
+			if (byHistory) traversedTo = undefined
 			if (failure || byHistory || to.path === from.path) return
 
 			nextTick(focusMainContent)
