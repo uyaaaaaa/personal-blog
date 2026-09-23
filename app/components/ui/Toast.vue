@@ -5,7 +5,7 @@
 		:class="isVisible ? 'opacity-100' : 'invisible opacity-0'"
 	>
 		<LinkIcon class="shrink-0" />
-		{{ message }}
+		<span :key="shownCount">{{ message }}</span>
 	</div>
 </template>
 
@@ -13,7 +13,7 @@
 	import LinkIcon from '~/components/ui/LinkIcon.vue'
 	import { useToast } from '~/composables/useToast'
 
-	const { message, isVisible } = useToast()
+	const { message, isVisible, shownCount } = useToast()
 
 	defineOptions({
 		name: 'Toast',

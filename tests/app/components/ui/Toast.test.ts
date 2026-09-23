@@ -28,6 +28,20 @@ describe('Toast', () => {
 		expect(wrapper.get('[role="status"]').classes()).not.toContain('invisible')
 	})
 
+	it('同じ文面を出し直すたびに、読み上げられるよう文面を差し替える', async () => {
+		const wrapper = await mountSuspended(Toast)
+
+		show('Link copied')
+		await nextTick()
+		const first = wrapper.get('[role="status"] span').element
+
+		show('Link copied')
+		await nextTick()
+
+		expect(wrapper.get('[role="status"] span').element).not.toBe(first)
+		expect(wrapper.get('[role="status"]').text()).toBe('Link copied')
+	})
+
 	it('PC でも出す', async () => {
 		const wrapper = await mountSuspended(Toast)
 
