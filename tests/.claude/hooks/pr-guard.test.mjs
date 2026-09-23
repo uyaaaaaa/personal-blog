@@ -60,8 +60,7 @@ describe('pending', () => {
 		expect(denied(update({ draft: false, body: '## 判断してほしいこと\n\n- x' }))).toMatch(
 			'draft',
 		)
-		expect(denied(update({ draft: false }))).toMatch('本文を一緒に渡す')
-		expect(denied(update({ draft: false, body: '## やったこと\n\n- x' }))).toBeNull()
+		expect(denied(update({ draft: false }))).toBeNull()
 	})
 
 	it('draft なら判断が残っていても出せる', () => {

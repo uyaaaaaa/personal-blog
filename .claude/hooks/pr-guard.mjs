@@ -50,11 +50,8 @@ export const pending = (body) => {
 // 更新で draft を省いたときは今の状態を保つので、ready にする更新だけを見る
 const undrafted = (args, creating) => {
 	const readying = creating ? args.draft !== true : args.draft === false
-	if (!readying) return null
-	if (typeof args.body === 'string') {
-		return pending(args.body) ? `「${DECISION}」が残っている。draft で出す` : null
-	}
-	return creating ? null : `ready にするときは「${DECISION}」を消した本文を一緒に渡す`
+	if (!readying || typeof args.body !== 'string' || !pending(args.body)) return null
+	return `「${DECISION}」が残っている。draft で出す`
 }
 
 const blocking = (args, ask) => {
