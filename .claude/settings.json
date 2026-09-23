@@ -6,6 +6,7 @@
 		{ "serverName": "Google_Calendar" }
 	],
 	"skillOverrides": {
+		"pr": "off",
 		"code-review": "name-only",
 		"security-review": "name-only",
 		"claude-api": "name-only",

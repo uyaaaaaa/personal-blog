@@ -1,6 +1,6 @@
 ---
 name: followup
-description: "自分が出した PR を、購読から CI とレビューへの追従まで見届ける。`pr` で出した後に続けて使う。"
+description: "自分が出した PR を、購読から CI とレビューへの追従まで見届ける。`pull-request` で出した後に続けて使う。"
 ---
 
 # PR の見届け

@@ -7,7 +7,7 @@ description: "番号で名指しされた GitHub issue を1本、着手から PR
 
 **対象は issue 番号のある依頼だけ。** 症状だけの依頼は `ui-change`、記事は `article`、番号の無い課題は `create-issues`。
 
-**実装の手順はここに無い。** UI は `ui-change`、記事は `article`、実測は `verify`、PR の型は `pr`、出した後は `followup` に従う。ここが持つのは、issue 1本を PR にするまでの進め方。
+**実装の手順はここに無い。** UI は `ui-change`、記事は `article`、実測は `verify`、PR の型は `pull-request`、出した後は `followup` に従う。ここが持つのは、issue 1本を PR にするまでの進め方。
 
 ## 1. 読む
 
@@ -39,7 +39,7 @@ description: "番号で名指しされた GitHub issue を1本、着手から PR
 
 文書は原則書かない（→ `.claude/rules/docs.md`）。方針に触れたときだけ、該当箇所を直す。
 
-**PR の型は `pr` に従う。** issue 対応で必ず入れるのは3つ。
+**PR の型は `pull-request` に従う。** issue 対応で必ず入れるのは3つ。
 
 - `Closes #<番号>`
 - 書かれた手段を採らなかったときの「issue から変えた点」
