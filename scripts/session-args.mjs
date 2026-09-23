@@ -27,7 +27,7 @@ const issue = (rest, tail) => {
 	return {
 		title: `issue #${number}`,
 		branch: `claude/issue-${number}-${tail}`,
-		body: `assign スキルに従って #${number} を進める。`,
+		body: `#${number} に対応して PR を出す。`,
 	}
 }
 
