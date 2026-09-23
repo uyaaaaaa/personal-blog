@@ -58,7 +58,7 @@ function contrast(foreground: string, background: string[]): number {
 
 type Token = keyof typeof colors
 
-const pageBackgrounds: Token[][] = [['bg'], ['surface'], ['surface-subtle']]
+const pageBackgrounds: Token[][] = [['bg'], ['bg', 'header-bg'], ['surface'], ['surface-subtle']]
 
 const codeBackgrounds: Token[][] = [
 	['surface-subtle'],
