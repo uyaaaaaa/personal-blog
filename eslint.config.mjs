@@ -2,6 +2,7 @@ import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
 import { ignores } from './scripts/inputs.mjs'
+import accessibility from './eslint-rules/accessibility.mjs'
 import articleQueries from './eslint-rules/article-queries.mjs'
 import importLayers from './eslint-rules/import-layers.mjs'
 import rootFiles from './eslint-rules/root-files.mjs'
@@ -137,6 +138,19 @@ const PAGE_SCROLLER = '/^(documentElement|body|scrollingElement)$/'
 const SCROLL_METHOD = '/^scroll(To|By)?$/'
 const SCROLL_BEHAVIOR_KEY = '/^scrollBehavior(Type)?$/'
 
+const SMOOTH_SCROLL_MESSAGE = `滑らかな送りは useScrollTo の外で指定しない。動きを減らす設定を読んで送り方を決めるのは useScrollTo だけ。 ${INVARIANT_URL}`
+
+const SMOOTH_VALUE =
+	":matches(Literal[value='smooth'], TemplateLiteral:has(> TemplateElement[value.cooked='smooth']))"
+const BEHAVIOR_KEY = ':matches([key.name=/behavior$/i], [key.value=/behavior$/i])'
+const BEHAVIOR_BINDING =
+	":matches([id.name=/behavior$/i], [id.typeAnnotation.typeAnnotation.typeName.name='ScrollBehavior'])"
+
+const SMOOTH_SCROLL = {
+	selector: `:matches(Property${BEHAVIOR_KEY}, VariableDeclarator${BEHAVIOR_BINDING}, AssignmentPattern[left.name=/behavior$/i]) ${SMOOTH_VALUE}`,
+	message: SMOOTH_SCROLL_MESSAGE,
+}
+
 const PAGE_SCROLL = [
 	{
 		selector: `CallExpression[callee.object.name=/^(window|globalThis|self)$/][callee.property.name=${SCROLL_METHOD}]`,
@@ -162,6 +176,7 @@ const PAGE_SCROLL = [
 		selector: scriptSpellingSelector('no-scroll-behavior'),
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
+	SMOOTH_SCROLL,
 ]
 
 const SCROLL_SUBSCRIPTION = [
@@ -495,7 +510,7 @@ export default [
 	},
 	{
 		files: withTest('app/**/*.ts'),
-		plugins: { imports: importLayers, queries: articleQueries },
+		plugins: { style: styleTokens, imports: importLayers, queries: articleQueries },
 		languageOptions: {
 			parser: tsParser,
 			parserOptions: {
@@ -505,6 +520,7 @@ export default [
 		},
 		rules: {
 			...restrictions,
+			'style/no-motion-important': 'error',
 			'imports/order': 'error',
 			'queries/location': 'error',
 			'queries/published': 'error',
@@ -525,6 +541,7 @@ export default [
 			imports: importLayers,
 			roots: rootFiles,
 			queries: articleQueries,
+			a11y: accessibility,
 		},
 		languageOptions: {
 			parser: vueParser,
@@ -547,6 +564,11 @@ export default [
 			],
 			...styleRules,
 			'roots/render-only': 'error',
+			'a11y/accessible-name': 'error',
+			'a11y/field-label': 'error',
+			'a11y/no-focusable-in-hidden': 'error',
+			'a11y/no-positive-tabindex': 'error',
+			'a11y/decorative-root': 'error',
 			'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],
 			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS],
 		},
@@ -618,6 +640,17 @@ export default [
 		},
 	},
 	{
+		files: ['tests/app/composables/useScrollTo.test.ts'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				...CALLED_LAYER_SYNTAX.filter(
+					(rule) => !DOM_ASSEMBLY.includes(rule) && rule !== SMOOTH_SCROLL,
+				),
+			],
+		},
+	},
+	{
 		files: ['*.config.ts'],
 		languageOptions: {
 			parser: tsParser,
@@ -626,8 +659,10 @@ export default [
 				sourceType: 'module',
 			},
 		},
+		plugins: { style: styleTokens },
 		rules: {
 			'no-restricted-syntax': ['error', ...WEB_FONT, ...PAGE_SCROLL],
+			'style/no-motion-important': 'error',
 		},
 	},
 	{

@@ -22,6 +22,8 @@ const QUERY_LOCATION = /記事の取得を組み立てるのは/
 const DOM_ASSEMBLY = /DOM を組み立てない/
 const DISPLAY = /display: none を宣言に書かない/
 const MOTION = /決めた長さではない|モーションのクラスは用途の名前|transition の対象に all/
+const REDUCED_MOTION =
+	/滑らかな送りは useScrollTo の外で指定しない|モーションの宣言に !important を付けない/
 
 const webFontsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
@@ -68,6 +70,11 @@ const motionsIn = async (relative, code) => {
 	return result.messages.filter((message) => MOTION.test(message.message)).length
 }
 
+const reducedMotionsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => REDUCED_MOTION.test(message.message)).length
+}
+
 const displaysIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => DISPLAY.test(message.message)).length
@@ -101,6 +108,11 @@ const publishedIn = async (relative, code) => {
 const assembliesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => DOM_ASSEMBLY.test(message.message)).length
+}
+
+const accessibilityIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => message.ruleId?.startsWith('a11y/')).length
 }
 
 const blockOrdersIn = async (relative, code) => {
@@ -586,6 +598,152 @@ describe('モーションの長さ', () => {
 	})
 })
 
+describe('動きを減らす設定', () => {
+	const style = (css) => `${sfc('<p class="a" />')}\n<style scoped>${css}</style>`
+
+	it('設定を読まずに滑らかに送る指定を落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/components/layout/a.vue',
+				sfc(
+					'<div />',
+					"const panel = ref<HTMLElement | null>(null)\npanel.value?.scrollTo({ top: 0, behavior: 'smooth' })",
+				),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"const behavior: ScrollBehavior = 'smooth'\nexport const useA = (el: HTMLElement) => el.scrollBy({ top: 8, behavior })",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/pages/a.vue',
+				sfc('<button @click="$el.scrollTo({ behavior: \'smooth\' })" />'),
+			),
+		).toBe(1)
+	})
+
+	it('送り方でない smooth は通す', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/utils/a.ts',
+				"export const texture = 'smooth'\nexport const pick = (a: string) => ({ finish: a || 'smooth' })",
+			),
+		).toBe(0)
+	})
+
+	it('設定を読む useScrollTo は通す', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useScrollTo.ts',
+				"export const useScrollTo = () => window.scrollTo({ top: 0, behavior: 'smooth' })",
+			),
+		).toBe(0)
+	})
+
+	it('設定より強いモーションの宣言を落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/pages/a.vue',
+				style('.a { transition: transform 0.2s !important; }'),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', style('.a { @apply !transition-move; }')),
+		).toBe(1)
+	})
+
+	it('script で組んだ ! 付きのモーションのクラスを落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/components/ui/a.vue',
+				sfc('<p :class="cls" />', "const cls = 'md:!transition-move'"),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/utils/a.ts',
+				"export const cls = (open: boolean) => `${open ? '!transition-color' : ''}`",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/components/ui/a.vue',
+				sfc('<p :class="cls" />', "const cls = 'transition-move !mt-0'"),
+			),
+		).toBe(0)
+	})
+
+	it('Tailwind の設定から出す !important のモーションを落とす', async () => {
+		const tailwind = (body) =>
+			`import plugin from 'tailwindcss/plugin'\nexport default { ${body} }`
+		expect(await reducedMotionsIn('tailwind.config.ts', tailwind('important: true'))).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/utils/a.ts',
+				"export const badge = { label: 'new', important: true }",
+			),
+		).toBe(0)
+		expect(
+			await reducedMotionsIn(
+				'tailwind.config.ts',
+				tailwind(
+					"plugins: [plugin(({ addUtilities }) => addUtilities({ '.a': { transitionDuration: '1s !important' } }))]",
+				),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'tailwind.config.ts',
+				tailwind(
+					"plugins: [plugin(({ addBase }) => addBase({ '*': { transitionDuration: '0s !important' } }))]",
+				),
+			),
+		).toBe(0)
+	})
+
+	it('el.style に書くモーションの !important を落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('transition-duration', '1s', 'important')",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => (el.style.cssText = 'transition: opacity 1s !important')",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('--panel', '1s', 'important')",
+			),
+		).toBe(0)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('transition', 'none', 'important')",
+			),
+		).toBe(0)
+	})
+
+	it('用途のクラスと直に書いた長さは通す', async () => {
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', sfc('<p class="transition-color" />')),
+		).toBe(0)
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', style('.a { @apply md:transition-move; }')),
+		).toBe(0)
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', style('.a { transition: color 0.15s; }')),
+		).toBe(0)
+	})
+})
+
 describe('制限の抑制', () => {
 	const template = '<template><div /></template>'
 	const script = (body = '') => `<script setup lang="ts">${body}</script>`
@@ -878,5 +1036,29 @@ describe('検査の入力の読み取り', () => {
 			),
 		).toBe(0)
 		expect(await checkInputsIn(CHECK, 'postcss.parse(source)')).toBe(0)
+	})
+})
+
+describe('テンプレートのアクセシビリティ', () => {
+	it('app/ のテンプレートに掛かる', async () => {
+		for (const relative of [
+			'app/components/ui/Button.vue',
+			'app/pages/index.vue',
+			'app/app.vue',
+		])
+			expect(
+				await accessibilityIn(
+					relative,
+					sfc('<button type="button"><CloseIcon /></button>'),
+				),
+			).toBe(1)
+	})
+
+	it('ルートの隠し方とファイル名の食い違いを見る', async () => {
+		expect(await accessibilityIn('app/components/ui/CloseIcon.vue', sfc('<svg />'))).toBe(1)
+		expect(
+			await accessibilityIn('app/components/ui/Logo.vue', sfc('<svg aria-hidden="true" />')),
+		).toBe(1)
+		expect(await accessibilityIn('app/components/ui/Logo.vue', sfc('<svg />'))).toBe(0)
 	})
 })

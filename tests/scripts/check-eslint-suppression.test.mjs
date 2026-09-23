@@ -49,6 +49,16 @@ describe('check-eslint-suppression', () => {
 		expect(stderr).toMatch(/理由を -- の後ろに書く/)
 	})
 
+	it('動きを減らす設定より強い宣言は、理由があっても抑制させない', () => {
+		write(
+			'a.vue',
+			sfc('/* eslint-disable style/no-important, style/no-motion-important -- 第三者由来 */'),
+		)
+		const { status, stderr } = check()
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/style\/no-motion-important は抑制できない/)
+	})
+
 	it('文字列に書いた綴りと、効かない行コメントは数えない', () => {
 		write('a.mjs', "const code = '/* eslint-disable */'\nexport default code\n")
 		write('b.mjs', '// eslint-disable が届く先の話\nexport default 1\n')

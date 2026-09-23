@@ -10,6 +10,7 @@ const DISABLE = /^eslint-disable(?:-next-line|-line)?(?![\w-])/
 const LINE_DISABLE = /^eslint-disable-(?:next-line|line)(?![\w-])/
 const CONFIG = /^eslint(?![\w-])/
 const DESCRIPTION = '--'
+const UNSUPPRESSIBLE = ['style/no-motion-important']
 
 const { read, entries } = inputs(process.argv[2])
 
@@ -46,6 +47,8 @@ const reasonsAgainst = (value) => {
 	const reasons = []
 	if (rules.trim() === '')
 		reasons.push('ルール名を書く。書かないと、その先の制限が全部まとめて消える')
+	for (const rule of rules.split(',').map((name) => name.trim()))
+		if (UNSUPPRESSIBLE.includes(rule)) reasons.push(`${rule} は抑制できない`)
 	if (description.join(DESCRIPTION).trim() === '')
 		reasons.push(`理由を ${DESCRIPTION} の後ろに書く`)
 	return reasons
