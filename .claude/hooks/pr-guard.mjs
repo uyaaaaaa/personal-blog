@@ -38,6 +38,15 @@ export const unsigned = (body) => {
 	return lines.slice(0, top).join('\n').trimEnd()
 }
 
+const DECISION = '判断してほしいこと'
+
+export const pending = (body) => {
+	const [, rest] = body.split(new RegExp(`^## ${DECISION}[ \\t]*$`, 'm'))
+	if (rest === undefined) return false
+	const [section] = rest.split(/^## /m)
+	return section.replace(/<!--[\s\S]*?-->/g, '').trim() !== ''
+}
+
 const blocking = (args, ask) => {
 	const branch = ask.head()
 	if (branch === '') return 'HEAD のブランチ名を読めない'
@@ -46,6 +55,10 @@ const blocking = (args, ask) => {
 	}
 	if (typeof args.head === 'string' && args.head !== branch) {
 		return `head が ${args.head} で、出す前の条件を測る作業ツリー（${branch}）と違う`
+	}
+
+	if (typeof args.body === 'string' && pending(args.body) && args.draft !== true) {
+		return `「${DECISION}」が残っている。draft で出す`
 	}
 
 	const dirty = ask.dirty()

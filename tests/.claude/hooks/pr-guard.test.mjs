@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { decide, unsigned } from '~~/.claude/hooks/pr-guard.mjs'
+import { decide, pending, unsigned } from '~~/.claude/hooks/pr-guard.mjs'
 
 const ask = {
 	head: () => 'claude/issue-292-m5eszm',
@@ -27,6 +27,7 @@ describe('decide', () => {
 		expect(denied(create(), { unpushed: () => 'origin/x が無い' })).toMatch('push していない')
 		expect(denied(create(), { head: () => '' })).toMatch('読めない')
 		expect(denied(create(), { dirty: () => null })).toMatch('読めない')
+		expect(denied(create({ body: '## 判断してほしいこと\n\n- x' }))).toMatch('draft')
 	})
 
 	it('CI が打つものを通し、落ちたら出力を添えて止める', () => {
@@ -40,6 +41,21 @@ describe('decide', () => {
 		expect(decide(update, { ...ask, head: () => 'main' })).toBeNull()
 		expect(decide({ tool_name: 'mcp__github__merge_pull_request' }, ask)).toBeNull()
 		expect(decide({ tool_name: 'Bash', tool_input: { command: 'x' } }, ask)).toBeNull()
+	})
+})
+
+describe('pending', () => {
+	it('判断の節に中身があるときだけ残りとみなす', () => {
+		expect(
+			pending('## 判断してほしいこと\n\n<!-- 無ければ消す -->\n\n## やったこと\n\n- y'),
+		).toBe(false)
+		expect(pending('## やったこと\n\n- 判断してほしいこと')).toBe(false)
+	})
+
+	it('draft なら判断が残っていても出せる', () => {
+		expect(
+			decide(create({ body: '## 判断してほしいこと\n\n- x', draft: true }), ask),
+		).toBeNull()
 	})
 })
 
