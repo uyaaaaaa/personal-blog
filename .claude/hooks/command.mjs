@@ -7,7 +7,7 @@ const LAUNCHER = new Set(['env', 'command', 'exec', 'builtin', 'nohup', 'time'])
 const LAUNCHER_VALUED = new Set(['-u', '--unset', '-C', '--chdir', '-a', '-f', '-o'])
 
 // env -S は値そのものをコマンドとして割って起こす
-const SPLIT = /^(?:-S|--split-string=?)([\s\S]*)$/
+const SPLIT = /^(?:-[A-Za-z]*S|--split-string=?)([\s\S]*)$/
 
 export const SEPARATOR = new Set(['&&', '||', ';', '|', '&', '\n', '(', ')', '{', '}'])
 export const REDIRECT = /^\d*[<>]+/
