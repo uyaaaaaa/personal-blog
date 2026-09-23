@@ -1,7 +1,7 @@
 # Design Guideline
 
 新しい要素を作るときに引く、デザインの判断基準です。**値・構造・機能の一覧は持ちません**（実装が正）。
-原則を覆したときは同じ変更でここを直します（[ADR](./DECISIONS.md) が持つのは構造と依存の判断だけです）。アイコンの仕様は [ICON_GUIDELINE.md](./ICON_GUIDELINE.md) にあります。
+原則を覆したときは同じ変更でここを直します（[ADR](./DECISIONS.md) が持つのは公開 URL とディレクトリ全体の判断だけです）。アイコンの仕様は [ICON_GUIDELINE.md](./ICON_GUIDELINE.md) にあります。
 
 ---
 
