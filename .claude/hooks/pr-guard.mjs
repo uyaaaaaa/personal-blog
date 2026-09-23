@@ -47,6 +47,16 @@ export const pending = (body) => {
 	return section.replace(/<!--[\s\S]*?-->/g, '').trim() !== ''
 }
 
+// 更新で draft を省いたときは今の状態を保つので、ready にする更新だけを見る
+const undrafted = (args, creating) => {
+	const readying = creating ? args.draft !== true : args.draft === false
+	if (!readying) return null
+	if (typeof args.body === 'string') {
+		return pending(args.body) ? `「${DECISION}」が残っている。draft で出す` : null
+	}
+	return creating ? null : `ready にするときは「${DECISION}」を消した本文を一緒に渡す`
+}
+
 const blocking = (args, ask) => {
 	const branch = ask.head()
 	if (branch === '') return 'HEAD のブランチ名を読めない'
@@ -57,9 +67,8 @@ const blocking = (args, ask) => {
 		return `head が ${args.head} で、出す前の条件を測る作業ツリー（${branch}）と違う`
 	}
 
-	if (typeof args.body === 'string' && pending(args.body) && args.draft !== true) {
-		return `「${DECISION}」が残っている。draft で出す`
-	}
+	const undecided = undrafted(args, true)
+	if (undecided) return undecided
 
 	const dirty = ask.dirty()
 	if (dirty === null) return 'git status を読めない'
@@ -87,6 +96,9 @@ export const decide = (input, ask = ASK) => {
 	const args = input.tool_input ?? {}
 	if (tool === 'create_pull_request') {
 		const reason = blocking(args, ask)
+		if (reason) return { deny: reason }
+	} else {
+		const reason = undrafted(args, false)
 		if (reason) return { deny: reason }
 	}
 

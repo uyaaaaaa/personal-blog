@@ -52,6 +52,18 @@ describe('pending', () => {
 		expect(pending('## やったこと\n\n- 判断してほしいこと')).toBe(false)
 	})
 
+	it('判断が残ったまま更新で ready にするのを止める', () => {
+		const update = (tool_input) => ({
+			tool_name: 'mcp__github__update_pull_request',
+			tool_input,
+		})
+		expect(denied(update({ draft: false, body: '## 判断してほしいこと\n\n- x' }))).toMatch(
+			'draft',
+		)
+		expect(denied(update({ draft: false }))).toMatch('本文を一緒に渡す')
+		expect(denied(update({ draft: false, body: '## やったこと\n\n- x' }))).toBeNull()
+	})
+
 	it('draft なら判断が残っていても出せる', () => {
 		expect(
 			decide(create({ body: '## 判断してほしいこと\n\n- x', draft: true }), ask),
