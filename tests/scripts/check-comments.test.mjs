@@ -91,6 +91,16 @@ describe('check-comments', () => {
 		fails('.githooks/commit-msg', '#!/bin/sh\n# 一\n# 二\nexit 0\n')
 	})
 
+	it('YAML のブロックスカラーに並んだ # は値として通し、行末のコメントは数える', () => {
+		write('a.yml', 'body: |\n  # 一\n  # 二\n')
+		expect(check().status).toBe(0)
+		fails('b.yml', 'on: push # 一\n# 二\njobs: {}\n')
+	})
+
+	it('.githooks の下の入れ子のファイルも読む', () => {
+		fails('.githooks/lib/check', '# 一\n# 二\nexit 0\n')
+	})
+
 	it('解析できないファイルは理由を出して落ちる', () => {
 		write('a.ts', 'const = = =\n')
 		const { status, stderr } = check()

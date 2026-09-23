@@ -1,16 +1,17 @@
 import { extname } from 'node:path'
 import tsParser from '@typescript-eslint/parser'
 import postcss from 'postcss'
+import { Parser } from 'yaml'
 import * as vueParser from 'vue-eslint-parser'
 import { fail, ignores, inputs } from './inputs.mjs'
 
 const SKIP = new Set(ignores)
 const SOURCE = /\.(vue|ts|mjs|cjs)$/i
-const HASH = /\.ya?ml$/i
-const HOOKS = '.githooks'
+const YAML = /\.ya?ml$/i
+const HOOKS = '.githooks/'
 
 const DIRECTIVE = /^(?:eslint|@ts-|prettier-ignore|@vitest-|globals?\s)/
-const HASH_LINE = /^\s*#(?!!)/
+const SHELL_LINE = /^\s*#(?!!)/
 const BLANK_LINE = /\n[^\S\n]*\n/
 
 const { read, entries } = inputs(process.argv[2])
@@ -20,7 +21,8 @@ function* files(directory) {
 		if (SKIP.has(entry.name)) continue
 		const path = directory === '' ? entry.name : `${directory}/${entry.name}`
 		if (entry.isDirectory()) yield* files(path)
-		else if (SOURCE.test(entry.name) || HASH.test(entry.name) || directory === HOOKS) yield path
+		else if (SOURCE.test(entry.name) || YAML.test(entry.name) || path.startsWith(HOOKS))
+			yield path
 	}
 }
 
@@ -71,11 +73,33 @@ const sourceComments = (code, file) => {
 	]
 }
 
-const hashComments = (code) => {
+const lineAt = (code, offset) => code.slice(0, offset).split('\n').length
+
+const yamlComments = (code) => {
+	const found = []
+	const walk = (node) => {
+		if (Array.isArray(node)) return node.forEach(walk)
+		if (node === null || typeof node !== 'object') return
+		if (node.type === 'comment') {
+			const line = lineAt(code, node.offset)
+			found.push({
+				value: node.source.slice(1),
+				start: line,
+				end: line,
+				range: [node.offset, node.offset + node.source.length],
+			})
+		}
+		for (const [key, value] of Object.entries(node)) if (key !== 'source') walk(value)
+	}
+	for (const token of new Parser().parse(code)) walk(token)
+	return found
+}
+
+const shellComments = (code) => {
 	const found = []
 	let offset = 0
 	for (const [at, line] of code.split('\n').entries()) {
-		const match = HASH_LINE.exec(line)
+		const match = SHELL_LINE.exec(line)
 		if (match) {
 			const start = offset + line.indexOf('#')
 			found.push({
@@ -115,7 +139,11 @@ for (const file of [...files('')]) {
 	const code = read(file)
 	let comments
 	try {
-		comments = SOURCE.test(file) ? sourceComments(code, file) : hashComments(code)
+		comments = SOURCE.test(file)
+			? sourceComments(code, file)
+			: YAML.test(file)
+				? yamlComments(code)
+				: shellComments(code)
 	} catch (error) {
 		errors.push(`${file}: ソースとして解析できない（${error.message}）`)
 		continue
