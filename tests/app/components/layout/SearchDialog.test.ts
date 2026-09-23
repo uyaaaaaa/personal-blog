@@ -89,6 +89,7 @@ describe('SearchDialog', () => {
 		const status = () => wrapper.get('.sr-only[role="status"]')
 
 		expect(status().text()).toBe('')
+		expect(wrapper.get('.search-note').text()).toBe('Type to search articles by title or tag.')
 
 		await wrapper.get('input').setValue('vim')
 
