@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { read } from '../../scripts/stdin.mjs'
 
 const HOOKS_PATH = '.githooks'
-const EVIDENCE = '.verify'
 const INSTALL_TIMEOUT = 15 * 60 * 1000
-
-// resume / compact は同じセッションの続きで、測り終えていない証跡がある
-const FRESH = new Set(['startup', 'clear'])
 
 const why = (error) =>
 	String(error.stderr || error.stdout || error.message)
@@ -17,7 +13,7 @@ const why = (error) =>
 		.split('\n')
 		.at(-1)
 
-export const setup = ({ has, run, remake, source }) => {
+export const setup = ({ has, run }) => {
 	const done = []
 
 	try {
@@ -38,25 +34,11 @@ export const setup = ({ has, run, remake, source }) => {
 		}
 	}
 
-	if (FRESH.has(source)) {
-		try {
-			remake(EVIDENCE)
-			done.push(`${EVIDENCE}/ 作り直し`)
-		} catch (error) {
-			done.push(`${EVIDENCE}/ を作り直せない（${why(error)}）`)
-		}
-	}
-
 	return done.join('、')
 }
 
 if (process.argv[1]?.endsWith('session-start.mjs')) {
 	const root = process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
-	let source
-	try {
-		source = JSON.parse((await read()) || '{}').source
-	} catch {}
-
 	process.stdout.write(
 		`${setup({
 			has: (path) => existsSync(join(root, path)),
@@ -67,11 +49,6 @@ if (process.argv[1]?.endsWith('session-start.mjs')) {
 					stdio: ['ignore', 'pipe', 'pipe'],
 					timeout,
 				}),
-			remake: (path) => {
-				rmSync(join(root, path), { recursive: true, force: true })
-				mkdirSync(join(root, path), { recursive: true })
-			},
-			source,
 		})}\n`,
 	)
 }
