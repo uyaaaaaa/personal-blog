@@ -20,7 +20,7 @@ describe('Header', () => {
 			global: {
 				stubs: {
 					HeaderSearch: true,
-					LogoMark: true,
+					LogoMarkIcon: true,
 					Navigation,
 					SearchDialog: true,
 					ThemeToggle: true,

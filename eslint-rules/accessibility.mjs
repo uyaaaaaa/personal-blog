@@ -9,6 +9,9 @@ const TABINDEX_MESSAGE =
 const DECORATIVE_MESSAGE =
 	'名前が Icon で終わるコンポーネントは飾りとして数える。ルートを aria-hidden="true" の要素か、別の Icon コンポーネントにする。名前を持たせる図は Icon で終わらない名前にする。'
 
+const UNNAMED_DECORATIVE_MESSAGE =
+	'ルートを支援技術から隠したコンポーネントは、名前を Icon で終わらせる。名前の判定は Icon で終わるものだけを飾りとして数えるので、他の名前だと中身として数えられ、名前の無いボタンやリンクが通る。'
+
 const UNKNOWN = Symbol('unknown')
 
 const LINK_COMPONENTS = new Set(['nuxtlink', 'routerlink'])
@@ -285,14 +288,40 @@ const noPositiveTabindex = templateRule(TABINDEX_MESSAGE, (template) =>
 	),
 )
 
-const decorativeRoot = templateRule(DECORATIVE_MESSAGE, (template) => {
-	const roots = template.children.filter(
-		(child) =>
-			child.type === 'VElement' || (child.type === 'VText' && child.value.trim() !== ''),
-	)
-	if (roots.length === 1 && (isDecorative(roots[0]) || isHidden(roots[0]))) return []
-	return roots.length === 1 ? roots : [template]
-})
+const DECORATIVE_FILE = /Icon\.vue$/
+
+const decorativeRoot = {
+	meta: {
+		type: 'problem',
+		schema: [],
+		messages: { visible: DECORATIVE_MESSAGE, unnamed: UNNAMED_DECORATIVE_MESSAGE },
+	},
+	create(context) {
+		return {
+			'Program:exit'(program) {
+				if (!program.templateBody) return
+				const template = program.templateBody
+				const roots = template.children.filter(
+					(child) =>
+						child.type === 'VElement' ||
+						(child.type === 'VText' && child.value.trim() !== ''),
+				)
+				const hiddenRoot =
+					roots.length === 1 &&
+					roots[0].type === 'VElement' &&
+					(isDecorative(roots[0]) || isHidden(roots[0]))
+				const named = DECORATIVE_FILE.test(context.filename)
+				if (named && !hiddenRoot)
+					context.report({
+						loc: (roots.length === 1 ? roots[0] : template).loc,
+						messageId: 'visible',
+					})
+				if (!named && hiddenRoot)
+					context.report({ loc: roots[0].loc, messageId: 'unnamed' })
+			},
+		}
+	},
+}
 
 export default {
 	rules: {

@@ -901,8 +901,11 @@ describe('テンプレートのアクセシビリティ', () => {
 			).toBe(1)
 	})
 
-	it('Icon で終わる名前のファイルだけ、ルートが隠れているかを見る', async () => {
+	it('ルートの隠し方とファイル名の食い違いを見る', async () => {
 		expect(await accessibilityIn('app/components/ui/CloseIcon.vue', sfc('<svg />'))).toBe(1)
+		expect(
+			await accessibilityIn('app/components/ui/Logo.vue', sfc('<svg aria-hidden="true" />')),
+		).toBe(1)
 		expect(await accessibilityIn('app/components/ui/Logo.vue', sfc('<svg />'))).toBe(0)
 	})
 })

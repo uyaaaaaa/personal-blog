@@ -35,6 +35,7 @@ describe('accessible-name', () => {
 				'<NuxtLink to="/"><HomeIcon /></NuxtLink>',
 				'<nuxt-link to="/"><HomeIcon /></nuxt-link>',
 				'<RouterLink to="/"><HomeIcon /></RouterLink>',
+				'<NuxtLink to="/"><LogoMarkIcon /></NuxtLink>',
 				'<a href="/"><svg><path d="M0 0" /></svg></a>',
 				'<a :href="href"><img src="/a.png" alt=""></a>',
 				'<div role="button" tabindex="0"><MenuIcon /></div>',
@@ -61,7 +62,7 @@ describe('accessible-name', () => {
 				'<button type="button"><CloseIcon /><span class="sr-only">Close</span></button>',
 				'<button type="button"><span><b>Close</b></span></button>',
 				'<button type="button"><slot /></button>',
-				'<button type="button"><LogoMark /></button>',
+				'<button type="button"><UserCard /></button>',
 				'<button type="button"><component :is="icon" /></button>',
 				'<button type="button"><svg><title>Close</title></svg></button>',
 				'<button type="button"><img src="/a.png" alt="Close"></button>',
@@ -165,18 +166,38 @@ describe('no-positive-tabindex', () => {
 })
 
 describe('decorative-root', () => {
-	it('ルートが隠れていない Icon を落とす', () => {
-		run('decorative-root', {
-			invalid: ['<svg><path d="M0 0" /></svg>', '<LogoMark />', '<svg /><Icon />'],
+	const ICON = 'app/components/ui/CloseIcon.vue'
+	const CARD = 'app/components/ui/UserCard.vue'
+	const at = (filename, templates) =>
+		templates.map((template) => ({ filename, code: sfc(template) }))
+
+	it('ルートが隠れていない Icon と、ルートを隠した Icon 以外の名前を落とす', () => {
+		vue.run('decorative-root', accessibility.rules['decorative-root'], {
+			valid: [],
+			invalid: [
+				...at(ICON, [
+					'<svg><path d="M0 0" /></svg>',
+					'<UserCard />',
+					'<svg /><Icon />',
+				]).map((test) => ({ ...test, errors: [{ messageId: 'visible' }] })),
+				...at(CARD, [
+					'<svg aria-hidden="true"><path d="M0 0" /></svg>',
+					'<CloseIcon />',
+				]).map((test) => ({ ...test, errors: [{ messageId: 'unnamed' }] })),
+			],
 		})
 	})
 
-	it('ルートが aria-hidden か別の Icon のものを通す', () => {
-		run('decorative-root', {
+	it('名前とルートの隠し方が揃ったものを通す', () => {
+		vue.run('decorative-root', accessibility.rules['decorative-root'], {
 			valid: [
-				'<svg aria-hidden="true"><path d="M0 0" /></svg>',
-				'<Icon><path d="M0 0" /></Icon>',
+				...at(ICON, [
+					'<svg aria-hidden="true"><path d="M0 0" /></svg>',
+					'<Icon><path d="M0 0" /></Icon>',
+				]),
+				...at(CARD, ['<article><h2>Name</h2></article>', '<svg><title>Logo</title></svg>']),
 			],
+			invalid: [],
 		})
 	})
 })

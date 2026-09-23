@@ -553,14 +553,9 @@ export default [
 			'a11y/field-label': 'error',
 			'a11y/no-focusable-in-hidden': 'error',
 			'a11y/no-positive-tabindex': 'error',
+			'a11y/decorative-root': 'error',
 			'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],
 			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS],
-		},
-	},
-	{
-		files: withTest('app/**/*Icon.vue'),
-		rules: {
-			'a11y/decorative-root': 'error',
 		},
 	},
 	{

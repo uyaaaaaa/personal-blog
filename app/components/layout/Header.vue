@@ -6,7 +6,7 @@
 				class="logo text-logo"
 				@click="closeMenu"
 			>
-				<LogoMark />
+				<LogoMarkIcon />
 				<span>Tech Blog</span>
 			</NuxtLink>
 
@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 	import HeaderSearch from '~/components/layout/HeaderSearch.vue'
-	import LogoMark from '~/components/layout/LogoMark.vue'
+	import LogoMarkIcon from '~/components/layout/LogoMarkIcon.vue'
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
