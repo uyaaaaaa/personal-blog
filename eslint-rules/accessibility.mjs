@@ -43,8 +43,13 @@ const DEFAULT_NAMED_INPUTS = new Set(['submit', 'reset'])
 
 const asName = (name) => name.toLowerCase().replaceAll('-', '')
 
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg'
+
 const isNative = (element) =>
-	element.rawName === element.rawName.toLowerCase() && !element.rawName.includes('-')
+	!element.rawName.includes('-') &&
+	(element.namespace === SVG_NAMESPACE
+		? /^[a-z]/.test(element.rawName)
+		: element.rawName === element.rawName.toLowerCase())
 
 const isDecorative = (element) => !isNative(element) && /(?:^|-)icon$|Icon$/.test(element.rawName)
 
