@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto'
 
-const MODEL = 'claude-opus-5'
+const MODEL = 'claude-opus-5-5'
 const SOURCE_URL = 'https://github.com/uyaaaaaa/personal-blog'
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789'
