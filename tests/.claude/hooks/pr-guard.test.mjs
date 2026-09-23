@@ -38,6 +38,7 @@ describe('decide', () => {
 		expect(denied(create(), { dirty: () => null })).toMatch('読めない')
 		expect(denied(create({ body: '- x' }))).toMatch('型で書く')
 		expect(denied(create({ body: '<!--\n## やったこと\n-->' }))).toMatch('型で書く')
+		expect(denied(create({ body: '## やったこと\n\n<!-- x' }))).toMatch('型で書く')
 		expect(denied(create({ body: '```\n## やったこと\n\n- x\n```' }))).toMatch('型で書く')
 		expect(denied(create({ body: '## やったこと\n\n---' }))).toMatch('型で書く')
 		expect(denied(create({ body: '## やったこと\n\n```\n```\n\n<div></div>' }))).toMatch(

@@ -7,13 +7,16 @@ const LAUNCHER = new Set(['env', 'command', 'exec', 'builtin', 'nohup', 'time'])
 const LAUNCHER_VALUED = new Set(['-u', '--unset', '-C', '--chdir', '-a', '-f', '-o'])
 
 // env -S は値そのものをコマンドとして割って起こす
-const SPLIT = /^(?:-S|--split-string)(?:=([\s\S]*))?$/
+const SPLIT = /^(?:-S|--split-string=?)([\s\S]*)$/
 
 export const SEPARATOR = new Set(['&&', '||', ';', '|', '&', '\n', '(', ')', '{', '}'])
 export const REDIRECT = /^\d*[<>]+/
 
+// 語の中の引用とエスケープを、Bash が渡す値に戻す
 export const unquote = (token) =>
-	token.replace(/^"([\s\S]*)"$/, '$1').replace(/^'([\s\S]*)'$/, '$1')
+	token.replace(/"((?:[^"\\]|\\.)*)"|'([^']*)'|\\(.)/g, (_, double, single, escaped) =>
+		double !== undefined ? double.replace(/\\(.)/g, '$1') : (single ?? escaped),
+	)
 
 const withoutHeredocs = (command) => {
 	const kept = []
@@ -43,7 +46,8 @@ export const invoked = (found, name) => {
 			launched = true
 			at += 1
 		} else if (launched && SPLIT.test(found[at])) {
-			const [, attached] = SPLIT.exec(found[at])
+			const [, joined] = SPLIT.exec(found[at])
+			const attached = joined === '' ? undefined : joined
 			const rest = found.slice(at + (attached === undefined ? 2 : 1))
 			return invoked(
 				[...tokens(unquote(attached ?? found[at + 1] ?? '')).map(unquote), ...rest],
