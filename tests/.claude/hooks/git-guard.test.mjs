@@ -164,6 +164,7 @@ describe('decide', () => {
 		expect(decide(bash('gh -R uyaaaaaa/personal-blog pr new'), ask)).toMatch(
 			'create_pull_request',
 		)
+		expect(decide(bash('command gh pr create'), ask)).toMatch('create_pull_request')
 		expect(decide(bash('gh pr view 580'), ask)).toBeNull()
 	})
 
