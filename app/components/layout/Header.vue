@@ -13,7 +13,6 @@
 			<HeaderSearch
 				ref="inlineSearchRef"
 				@update:open="isInlineSearchOpen = $event"
-				@select="expectSearchNavigation"
 			/>
 
 			<div class="flex items-stretch gap-1 self-stretch md:gap-5">
@@ -54,7 +53,6 @@
 	<SearchDialog
 		:is-open="isSearchOpen"
 		@close="closeSearch"
-		@select="expectSearchNavigation"
 	/>
 </template>
 
@@ -73,10 +71,6 @@
 		location: string
 	}>()
 
-	const emit = defineEmits<{
-		(e: 'search-navigation'): void
-	}>()
-
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)
 	const isInlineSearchOpen = ref(false)
@@ -84,11 +78,6 @@
 	const mobileSearchRef = ref<HTMLElement | null>(null)
 
 	let searchOpener: HTMLElement | null = null
-	let expectedSearchLocation: string | null = null
-
-	const expectSearchNavigation = (path: string) => {
-		expectedSearchLocation = path === props.location ? null : path
-	}
 
 	const toggleMenu = () => {
 		isMenuOpen.value = !isMenuOpen.value
@@ -149,14 +138,6 @@
 			closeMenu()
 			closeSearch()
 			inlineSearchRef.value?.close()
-
-			if (expectedSearchLocation !== props.location) {
-				expectedSearchLocation = null
-				return
-			}
-
-			expectedSearchLocation = null
-			emit('search-navigation')
 		},
 	)
 </script>

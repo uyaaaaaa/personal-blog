@@ -49,13 +49,12 @@
 				:id="LIST_ID"
 				:results="results"
 				:active-index="activeIndex"
-				@select="select"
+				@select="emit('close')"
 				@activate="activeIndex = $event"
 			/>
 
 			<p
 				v-if="results.length > 0"
-				ref="searchKeysRef"
 				class="search-keys hidden md:block"
 			>
 				↑↓ to move, ⏎ to open, esc to close
@@ -81,14 +80,12 @@
 
 	const emit = defineEmits<{
 		(e: 'close'): void
-		(e: 'select', path: string): void
 	}>()
 
 	const search = useArticleSearch()
 	const { query, results, activeIndex, startComposition, endComposition, clear } = search
 
 	const inputRef = ref<HTMLInputElement | null>(null)
-	const searchKeysRef = ref<HTMLElement | null>(null)
 
 	const emptyMessage = computed(() =>
 		query.value.trim() === ''
@@ -106,17 +103,9 @@
 		if (pressedOnOverlay) emit('close')
 	}
 
-	const canSelectByKey = () => (searchKeysRef.value?.getClientRects().length ?? 0) > 0
-
-	const select = (path?: string) => {
-		if (path) emit('select', path)
-		emit('close')
-	}
-
 	const { onKeydown: onInputKeydown, trapRef } = useSearchKeys(search, {
-		canSelect: canSelectByKey,
+		canSelect: () => results.value.length > 0,
 		isTrapped: toRef(props, 'isOpen'),
-		select: (path) => emit('select', path),
 		close: () => emit('close'),
 	})
 

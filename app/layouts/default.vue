@@ -5,13 +5,9 @@
 			class="skip-link"
 			>Skip to content</a
 		>
-		<Header
-			:location="route.fullPath"
-			@search-navigation="focusMain"
-		/>
+		<Header :location="route.fullPath" />
 		<main
 			id="main-content"
-			ref="mainRef"
 			tabindex="-1"
 			class="flex-1 scroll-mt-below-header-sm px-5 pb-16 pt-7 md:scroll-mt-below-header md:px-10 md:pb-24 md:pt-14"
 		>
@@ -31,15 +27,8 @@
 	import Header from '~/components/layout/Header.vue'
 	import Footer from '~/components/layout/Footer.vue'
 	import Toast from '~/components/ui/Toast.vue'
-	import { focusByGesture } from '~/composables/gestureFocus'
 
 	const route = useRoute()
-	const mainRef = ref<HTMLElement | null>(null)
-
-	const focusMain = async () => {
-		await nextTick()
-		focusByGesture(mainRef.value)
-	}
 
 	const measure = computed(() =>
 		route.meta.sideColumn ? 'max-w-column lg:max-w-article' : 'max-w-column',

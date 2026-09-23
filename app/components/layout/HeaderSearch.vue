@@ -58,7 +58,7 @@
 					:id="LIST_ID"
 					:results="results"
 					:active-index="activeIndex"
-					@select="select"
+					@select="dismiss"
 					@activate="activeIndex = $event"
 				/>
 
@@ -85,7 +85,6 @@
 
 	const emit = defineEmits<{
 		(e: 'update:open', value: boolean): void
-		(e: 'select', path: string): void
 	}>()
 
 	const search = useArticleSearch()
@@ -101,11 +100,6 @@
 
 	const dismiss = () => {
 		dismissed.value = true
-	}
-
-	const select = (path?: string) => {
-		dismiss()
-		if (path) emit('select', path)
 	}
 
 	const close = () => {
@@ -151,7 +145,6 @@
 	const { onKeydown: onSelectKeydown, trapRef } = useSearchKeys(search, {
 		canSelect: () => isOpen.value,
 		isTrapped: hasList,
-		select: (path) => emit('select', path),
 		close: () => {
 			returnFocus()
 			dismiss()

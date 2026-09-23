@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useSearchKeys } from '~/composables/useSearchKeys'
 
-const navigate = vi.fn()
+const navigate = vi.fn().mockResolvedValue(undefined)
 
 mockNuxtImport('navigateTo', () => (path: string) => navigate(path))
 
@@ -17,7 +17,10 @@ const mountKeys = (
 	const activeArticle = ref<{ path: string } | undefined>({ path: '/article/vim-abbreviation' })
 	const moveActive = vi.fn()
 	const close = vi.fn()
-	const select = vi.fn()
+	const main = document.createElement('main')
+	main.id = 'main-content'
+	main.tabIndex = -1
+	document.body.append(main)
 
 	let keys: ReturnType<typeof useSearchKeys> | undefined
 
@@ -30,7 +33,7 @@ const mountKeys = (
 						moveActive,
 						isComposingKey: () => composing,
 					},
-					{ canSelect: () => canSelect, isTrapped, close, select },
+					{ canSelect: () => canSelect, isTrapped, close },
 				)
 
 				return () => h('div', { ref: keys!.trapRef })
@@ -39,9 +42,12 @@ const mountKeys = (
 		{ attachTo: document.body },
 	)
 
-	mounted.push(() => wrapper.unmount())
+	mounted.push(() => {
+		wrapper.unmount()
+		main.remove()
+	})
 
-	return { onKeydown: keys!.onKeydown, activeArticle, moveActive, close, select, isTrapped }
+	return { onKeydown: keys!.onKeydown, activeArticle, moveActive, close, main, isTrapped }
 }
 
 const press = (key: string) => new KeyboardEvent('keydown', { key, cancelable: true })
@@ -66,19 +72,17 @@ describe('useSearchKeys', () => {
 		expect(up.defaultPrevented).toBe(true)
 	})
 
-	it('Enter は閉じてから選んだ記事へ移る', () => {
-		const { onKeydown, close, select } = mountKeys()
+	it('Enter は閉じてから選んだ記事へ移り、メインコンテンツへフォーカスする', async () => {
+		const { onKeydown, close, main } = mountKeys()
 
-		onKeydown(press('Enter'))
+		await onKeydown(press('Enter'))
 
 		expect(close).toHaveBeenCalledTimes(1)
-		expect(select).toHaveBeenCalledWith('/article/vim-abbreviation')
 		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
-		const [selectOrder = 0] = select.mock.invocationCallOrder
 		const [closeOrder = 0] = close.mock.invocationCallOrder
 		const [navigateOrder = 0] = navigate.mock.invocationCallOrder
-		expect(selectOrder).toBeLessThan(closeOrder)
 		expect(closeOrder).toBeLessThan(navigateOrder)
+		expect(document.activeElement).toBe(main)
 	})
 
 	it('割り当ての無いキーは素通しする', () => {
@@ -138,8 +142,7 @@ describe('useSearchKeys', () => {
 		expect(close).toHaveBeenCalledTimes(1)
 	})
 
-	// SP の全画面検索は ↑↓・Enter が効かない幅で、閉じる手が Escape しか無い
-	it('選べない幅でも Escape は閉じる', async () => {
+	it('選べない状態でも Escape は閉じる', async () => {
 		const { close, isTrapped } = mountKeys({ canSelect: false }, ref(false))
 		isTrapped.value = true
 		await nextTick()

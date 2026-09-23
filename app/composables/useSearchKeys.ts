@@ -1,3 +1,4 @@
+import { focusMainContent } from '~/composables/gestureFocus'
 import { useFocusTrap } from '~/composables/useFocusTrap'
 
 type Search = {
@@ -10,23 +11,23 @@ type SearchKeysOptions = {
 	canSelect: () => boolean
 	isTrapped: Ref<boolean>
 	close: () => void
-	select: (path: string) => void
 }
 
 export const useSearchKeys = (
 	search: Search,
-	{ canSelect, isTrapped, close, select }: SearchKeysOptions,
+	{ canSelect, isTrapped, close }: SearchKeysOptions,
 ) => {
-	const openActive = () => {
+	const openActive = async () => {
 		const article = search.activeArticle.value
 		if (!article) return
 
-		select(article.path)
 		close()
-		navigateTo(article.path)
+		await navigateTo(article.path)
+		await nextTick()
+		focusMainContent()
 	}
 
-	const ACTIONS: Record<string, () => void> = {
+	const ACTIONS: Record<string, () => void | Promise<void>> = {
 		ArrowDown: () => search.moveActive(1),
 		ArrowUp: () => search.moveActive(-1),
 		Enter: openActive,
@@ -40,7 +41,7 @@ export const useSearchKeys = (
 		if (!action) return
 
 		event.preventDefault()
-		action()
+		return action()
 	}
 
 	const { trapRef } = useFocusTrap(isTrapped, (event) => {

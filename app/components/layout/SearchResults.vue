@@ -19,7 +19,7 @@
 				role="option"
 				:aria-selected="index === activeIndex"
 				prefetch-on="interaction"
-				@click="emit('select', currentTabPath(article.path, $event))"
+				@click="onSelect(article.path, $event)"
 				@pointermove="emit('activate', index)"
 			>
 				<span class="search-result-title">{{ article.title }}</span>
@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+	import { focusMainContent } from '~/composables/gestureFocus'
 	import { formatDate } from '~/utils/date'
 	import { deltaToReveal } from '~/utils/scroll'
 
@@ -50,7 +51,7 @@
 	}>()
 
 	const emit = defineEmits<{
-		(e: 'select', path?: string): void
+		(e: 'select'): void
 		(e: 'activate', index: number): void
 	}>()
 
@@ -58,10 +59,24 @@
 
 	const optionId = (index: number) => `${props.id}-${index}`
 
-	const currentTabPath = (path: string, event: MouseEvent) =>
-		event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
-			? path
-			: undefined
+	const onSelect = async (path: string, event: MouseEvent) => {
+		emit('select')
+
+		if (
+			event.button !== 0 ||
+			event.metaKey ||
+			event.ctrlKey ||
+			event.shiftKey ||
+			event.altKey
+		) {
+			return
+		}
+
+		event.preventDefault()
+		await navigateTo(path)
+		await nextTick()
+		focusMainContent()
+	}
 
 	watch(
 		() => props.results,

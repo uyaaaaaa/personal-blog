@@ -39,3 +39,7 @@ export const focusByGesture = (
 		element.addEventListener('blur', unmark, { once: true })
 	}
 }
+
+export const focusMainContent = () => {
+	focusByGesture(document.getElementById('main-content'))
+}
