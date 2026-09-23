@@ -677,6 +677,12 @@ describe('動きを減らす設定', () => {
 		expect(await reducedMotionsIn('tailwind.config.ts', tailwind('important: true'))).toBe(1)
 		expect(
 			await reducedMotionsIn(
+				'app/utils/a.ts',
+				"export const badge = { label: 'new', important: true }",
+			),
+		).toBe(0)
+		expect(
+			await reducedMotionsIn(
 				'tailwind.config.ts',
 				tailwind(
 					"plugins: [plugin(({ addUtilities }) => addUtilities({ '.a': { transitionDuration: '1s !important' } }))]",

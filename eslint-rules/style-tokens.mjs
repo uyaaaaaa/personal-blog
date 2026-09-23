@@ -547,8 +547,9 @@ const CHECKS = {
 				if (typeof value === 'string' && importantMotionIn(value))
 					context.report({ node, messageId: 'important' })
 			},
-			// el.style の !important はインラインなので、全称セレクタの !important より強い
-			"Property[key.name='important'][value.value=true]"(node) {
+			"ExportDefaultDeclaration > ObjectExpression > Property[key.name='important'][value.value=true], ExportDefaultDeclaration > * > ObjectExpression > Property[key.name='important'][value.value=true]"(
+				node,
+			) {
 				context.report({ node, messageId: 'important' })
 			},
 			Property(node) {
@@ -563,6 +564,7 @@ const CHECKS = {
 				)
 					context.report({ node, messageId: 'important' })
 			},
+			// el.style の !important はインラインなので、全称セレクタの !important より強い
 			"CallExpression[callee.property.name='setProperty']"(node) {
 				const [property, value, priority] = node.arguments
 				if (
