@@ -23,29 +23,58 @@ describe('sizes', () => {
 	})
 })
 
-function luminance(hex: string): number {
-	const [r, g, b] = [1, 3, 5]
-		.map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+function channels(color: string): [number, number, number, number] {
+	if (color.startsWith('#')) {
+		const [r, g, b] = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16))
+		return [r!, g!, b!, 1]
+	}
+	const [r, g, b, a] = color.match(/[\d.]+/g)!.map(Number)
+	return [r!, g!, b!, a!]
+}
+
+function flatten(layers: string[]): [number, number, number] {
+	return layers.reduce<[number, number, number]>(
+		(under, layer) => {
+			const [r, g, b, a] = channels(layer)
+			return [r, g, b].map((c, i) => c * a + under[i]! * (1 - a)) as [number, number, number]
+		},
+		[0, 0, 0],
+	)
+}
+
+function luminance(layers: string[]): number {
+	const [r, g, b] = flatten(layers)
+		.map((c) => c / 255)
 		.map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
 	return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!
 }
 
-function contrast(a: string, b: string): number {
-	const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+function contrast(foreground: string, background: string[]): number {
+	const [hi, lo] = [luminance([...background, foreground]), luminance(background)].sort(
+		(x, y) => y - x,
+	)
 	return (hi! + 0.05) / (lo! + 0.05)
 }
 
 type Token = keyof typeof colors
 
-const pageBackgrounds = ['bg', 'surface', 'surface-subtle'] as const
+const pageBackgrounds: Token[][] = [['bg'], ['surface'], ['surface-subtle']]
 
-const pairs: [Token, readonly Token[], number][] = [
+const codeBackgrounds: Token[][] = [
+	['surface-subtle'],
+	['surface-subtle', 'diff-add-bg'],
+	['surface-subtle', 'diff-remove-bg'],
+	['surface-subtle', 'diff-add-bg', 'diff-add-word-bg'],
+	['surface-subtle', 'diff-remove-bg', 'diff-remove-word-bg'],
+]
+
+const pairs: [Token, Token[][], number][] = [
 	['main', pageBackgrounds, 4.5],
 	['sub', pageBackgrounds, 4.5],
 	['accent', pageBackgrounds, 4.5],
 	['accent-hover', pageBackgrounds, 4.5],
-	['code-text', pageBackgrounds, 4.5],
-	['accent-contrast', ['accent', 'accent-hover'], 4.5],
+	['code-text', codeBackgrounds, 4.5],
+	['accent-contrast', [['accent'], ['accent-hover']], 4.5],
 	['border-field', pageBackgrounds, 3],
 ]
 
@@ -55,9 +84,14 @@ describe.each([
 ])('%s のコントラスト', (_, palette) => {
 	it.each(
 		pairs.flatMap(([foreground, backgrounds, min]) =>
-			backgrounds.map((background) => [foreground, background, min] as const),
+			backgrounds.map((layers) => [foreground, layers.join(' + '), min, layers] as const),
 		),
-	)('%s は %s に対し %s:1 以上', (foreground, background, min) => {
-		expect(contrast(palette[foreground], palette[background])).toBeGreaterThanOrEqual(min)
+	)('%s は %s に対し %s:1 以上', (foreground, _name, min, layers) => {
+		expect(
+			contrast(
+				palette[foreground],
+				layers.map((token) => palette[token]),
+			),
+		).toBeGreaterThanOrEqual(min)
 	})
 })
