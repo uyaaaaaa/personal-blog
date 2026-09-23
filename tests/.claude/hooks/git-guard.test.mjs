@@ -165,6 +165,7 @@ describe('decide', () => {
 			'create_pull_request',
 		)
 		expect(decide(bash('gh pr view 580'), ask)).toBeNull()
+		expect(decide(bash('gh pr create --help'), ask)).toBeNull()
 	})
 
 	it('git 以外のツールと読み取れない入力は通す', () => {

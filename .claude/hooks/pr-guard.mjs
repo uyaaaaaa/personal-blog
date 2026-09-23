@@ -73,22 +73,26 @@ const undrafted = (args) => {
 	return `「${DECISION}」が残っている。draft で出す`
 }
 
+// 更新は渡された値だけを見る。渡されていない値は今のままで、ここからは見えない
+const shaped = (args) => {
+	if (args.base !== undefined && args.base !== TRUNK) return `base は ${TRUNK} にする`
+	if (typeof args.body !== 'string') return null
+	if (!filled(args.body, 'やったこと')) return `本文を ${TEMPLATE} の型で書く`
+	return undrafted(args)
+}
+
 const blocking = (args, ask) => {
 	const branch = ask.head()
 	if (branch === '') return 'HEAD のブランチ名を読めない'
 	if (branch === TRUNK || branch === 'HEAD') {
 		return `${TRUNK} から PR は出せない。claude/<主題>-<英数字4〜6> のブランチに移す`
 	}
-	if (args.base !== TRUNK) return `base は ${TRUNK} にする`
 	if (typeof args.head === 'string' && args.head !== branch) {
 		return `head が ${args.head} で、出す前の条件を測る作業ツリー（${branch}）と違う`
 	}
-
-	if (typeof args.body !== 'string' || !filled(args.body, 'やったこと')) {
-		return `本文を ${TEMPLATE} の型で書く`
-	}
-	const undecided = undrafted(args)
-	if (undecided) return undecided
+	if (typeof args.body !== 'string') return `本文を ${TEMPLATE} の型で書く`
+	const shape = shaped(args)
+	if (shape) return shape
 
 	const dirty = ask.dirty()
 	if (dirty === null) return 'git status を読めない'
@@ -117,7 +121,7 @@ export const decide = (input, ask = ASK) => {
 	const body = typeof given.body === 'string' ? unsigned(given.body) : null
 	const args = body === null ? given : { ...given, body }
 	const creating = tool === 'create_pull_request'
-	const reason = creating ? blocking(args, ask) : undrafted(args)
+	const reason = creating ? blocking(args, ask) : shaped(args)
 	if (reason) return { deny: reason }
 
 	const found = {

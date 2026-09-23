@@ -53,7 +53,10 @@ describe('decide', () => {
 	})
 
 	it('作成以外は条件を測らず、他のツールは見ない', () => {
-		const update = { tool_name: 'mcp__github__update_pull_request', tool_input: { body: 'x' } }
+		const update = {
+			tool_name: 'mcp__github__update_pull_request',
+			tool_input: { body: '## やったこと\n\n- x' },
+		}
 		expect(decide(update, { ...ask, head: () => 'main' })).toBeNull()
 		expect(decide({ tool_name: 'mcp__github__merge_pull_request' }, ask)).toBeNull()
 		expect(decide({ tool_name: 'Bash', tool_input: { command: 'x' } }, ask)).toBeNull()
@@ -69,12 +72,16 @@ describe('pending', () => {
 		expect(pending('## 判断してほしいこと\n\n## 判断してほしいこと\n\n- x')).toBe(true)
 	})
 
-	it('判断が残る本文の更新には draft の明示を求める', () => {
+	it('更新でも渡された本文と base を作成と同じ型で見る', () => {
 		const update = (tool_input) => ({
 			tool_name: 'mcp__github__update_pull_request',
 			tool_input,
 		})
-		expect(denied(update({ body: '## 判断してほしいこと\n\n- x' }))).toMatch('draft')
+		expect(
+			denied(update({ body: '## 判断してほしいこと\n\n- x\n\n## やったこと\n\n- y' })),
+		).toMatch('draft')
+		expect(denied(update({ body: '- x' }))).toMatch('型で書く')
+		expect(denied(update({ base: 'release' }))).toMatch('base は main')
 		expect(denied(update({ draft: false }))).toBeNull()
 	})
 
