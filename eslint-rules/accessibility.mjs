@@ -301,11 +301,27 @@ const DECORATIVE_FILE = /Icon\.vue$/
 const DECORATIVE_NAME = /Icon$/
 const VUE_MODULE = /\.vue$/
 
-const declaredName = (node) => {
-	for (let it = node; it; it = it.parent)
-		if (it.type === 'VariableDeclarator') return it.id.type === 'Identifier' ? it.id : null
+const ASYNC_COMPONENT = 'defineAsyncComponent'
+
+const asyncComponentName = (node) => {
+	for (let it = node.parent; it; it = it.parent) {
+		if (it.type === 'VariableDeclarator') return null
+		if (it.type !== 'CallExpression' || it.callee.type !== 'Identifier') continue
+		if (it.callee.name !== ASYNC_COMPONENT) continue
+		const declarator = it.parent
+		return declarator?.type === 'VariableDeclarator' &&
+			declarator.init === it &&
+			declarator.id.type === 'Identifier'
+			? declarator.id
+			: null
+	}
 	return null
 }
+
+const isDefaultImport = (specifier) =>
+	specifier.type === 'ImportDefaultSpecifier' ||
+	(specifier.type === 'ImportSpecifier' &&
+		(specifier.imported.name ?? specifier.imported.value) === 'default')
 
 const decorativeRoot = {
 	meta: {
@@ -329,11 +345,10 @@ const decorativeRoot = {
 		return {
 			ImportDeclaration(node) {
 				for (const specifier of node.specifiers)
-					if (specifier.type === 'ImportDefaultSpecifier')
-						checkAlias(node.source, specifier.local)
+					if (isDefaultImport(specifier)) checkAlias(node.source, specifier.local)
 			},
 			ImportExpression(node) {
-				checkAlias(node.source, declaredName(node))
+				checkAlias(node.source, asyncComponentName(node))
 			},
 			'Program:exit'(program) {
 				if (!program.templateBody) return

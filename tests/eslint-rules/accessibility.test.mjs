@@ -205,6 +205,8 @@ describe('decorative-root', () => {
 				"import Close from '~/components/ui/CloseIcon.vue'",
 				"import CardIcon from '~/components/ui/UserCard.vue'",
 				"const Close = defineAsyncComponent(() => import('~/components/ui/CloseIcon.vue'))",
+				"const Close = defineAsyncComponent({ loader: () => import('~/components/ui/CloseIcon.vue') })",
+				"import { default as Close } from '~/components/ui/CloseIcon.vue'",
 			].map((script) => ({
 				filename: CARD,
 				code: `${sfc('<article>x</article>')}\n<script setup lang="ts">\n${script}\n</script>\n`,
@@ -228,6 +230,9 @@ describe('decorative-root', () => {
 					"import Navigation from '~/components/layout/HeaderNavigation.vue'",
 					"import AllArticles from './-AllArticles.vue'",
 					"import { formatDate } from '~/utils/date'",
+					"import { default as CloseIcon } from '~/components/ui/CloseIcon.vue'",
+					"const load = () => import('~/components/ui/CloseIcon.vue')",
+					"const CloseIcon = defineAsyncComponent(() => import('~/components/ui/CloseIcon.vue'))",
 				].map((script) => ({
 					filename: CARD,
 					code: `${sfc('<article>x</article>')}\n<script setup lang="ts">\n${script}\n</script>\n`,
