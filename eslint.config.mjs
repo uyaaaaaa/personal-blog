@@ -503,7 +503,7 @@ export default [
 	},
 	{
 		files: withTest('app/**/*.ts'),
-		plugins: { imports: importLayers, queries: articleQueries },
+		plugins: { style: styleTokens, imports: importLayers, queries: articleQueries },
 		languageOptions: {
 			parser: tsParser,
 			parserOptions: {
@@ -513,6 +513,7 @@ export default [
 		},
 		rules: {
 			...restrictions,
+			'style/no-motion-important': 'error',
 			'imports/order': 'error',
 			'queries/location': 'error',
 			'queries/published': 'error',

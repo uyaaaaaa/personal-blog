@@ -531,6 +531,14 @@ const CHECKS = {
 			})
 			return found
 		},
+		// script で組んだクラスの文字列も :class に渡る。テンプレートの綴りは vue/no-restricted-syntax が抑制させずに落とす
+		script: (context) => ({
+			'Literal, TemplateElement'(node) {
+				const value = node.type === 'Literal' ? node.value : node.value.cooked
+				if (typeof value === 'string' && IMPORTANT_MOTION_CLASS.test(value))
+					context.report({ node, messageId: 'important' })
+			},
+		}),
 	},
 
 	'no-custom-breakpoint': {
@@ -675,6 +683,7 @@ export function findings(root) {
 const ruleOf = (check) => ({
 	meta: { type: 'problem', schema: [], messages: check.messages },
 	create: (context) => ({
+		...check.script?.(context),
 		Program() {
 			eachStyleBlock(context, (root, locate) => {
 				for (const { node, messageId, data } of check.find(root)) {

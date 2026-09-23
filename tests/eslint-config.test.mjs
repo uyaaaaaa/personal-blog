@@ -641,6 +641,27 @@ describe('動きを減らす設定', () => {
 		).toBe(1)
 	})
 
+	it('script で組んだ ! 付きのモーションのクラスを落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/components/ui/a.vue',
+				sfc('<p :class="cls" />', "const cls = 'md:!transition-move'"),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/utils/a.ts',
+				"export const cls = (open: boolean) => `${open ? '!transition-color' : ''}`",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/components/ui/a.vue',
+				sfc('<p :class="cls" />', "const cls = 'transition-move !mt-0'"),
+			),
+		).toBe(0)
+	})
+
 	it('用途のクラスと直に書いた長さは通す', async () => {
 		expect(
 			await reducedMotionsIn('app/pages/a.vue', sfc('<p class="transition-color" />')),
