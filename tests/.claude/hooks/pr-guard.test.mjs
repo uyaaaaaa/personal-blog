@@ -5,6 +5,7 @@ const ask = {
 	head: () => 'claude/issue-292-m5eszm',
 	dirty: () => '',
 	unpushed: () => '',
+	behind: () => false,
 	check: () => ({ code: 0, log: '' }),
 }
 
@@ -32,6 +33,7 @@ describe('decide', () => {
 		expect(denied(create({ base: 'release' }))).toMatch('base は main')
 		expect(denied(create(), { dirty: () => ' M app/x.vue' })).toMatch('app/x.vue')
 		expect(denied(create(), { unpushed: () => 'origin/x が無い' })).toMatch('push していない')
+		expect(denied(create(), { behind: () => true })).toMatch('マージしてから')
 		expect(denied(create(), { head: () => '' })).toMatch('読めない')
 		expect(denied(create(), { dirty: () => null })).toMatch('読めない')
 		expect(denied(create({ body: '- x' }))).toMatch('型で書く')

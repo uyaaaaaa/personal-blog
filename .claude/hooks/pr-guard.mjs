@@ -103,6 +103,8 @@ const blocking = (args, ask) => {
 	const unpushed = ask.unpushed(branch)
 	if (unpushed !== '') return `push していない: ${unpushed}`
 
+	if (ask.behind()) return `origin/${TRUNK} を取り込んでいない。${TRUNK} をマージしてから出す`
+
 	for (const [name, argv] of CHECKS) {
 		const { code, log } = ask.check(name, argv)
 		if (code !== 0) {
@@ -170,6 +172,10 @@ const ASK = {
 		if (ahead === null) return `origin/${branch} との差を数えられない`
 		return ahead === '0' ? '' : `origin/${branch} より ${ahead} コミット先`
 	},
+	// 取得か判定に失敗したときは判定できないので通す
+	behind: () =>
+		git('fetch', '--quiet', 'origin', TRUNK) !== null &&
+		run('git', ['merge-base', '--is-ancestor', `origin/${TRUNK}`, 'HEAD']).code === 1,
 	check: (_name, argv) => run('npm', argv),
 }
 
