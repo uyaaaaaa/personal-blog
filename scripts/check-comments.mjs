@@ -10,8 +10,8 @@ const SOURCE = /\.(vue|ts|mjs|cjs)$/i
 const YAML = /\.ya?ml$/i
 const HOOKS = '.githooks/'
 
-const DIRECTIVE = /^(?:eslint|@ts-|prettier-ignore|@vitest-|globals?\s)/
-const SHELL_LINE = /^\s*#(?!!)/
+const DIRECTIVE = /^(?:eslint|@ts-|prettier-ignore|@vitest-|globals?\s|\/\s*<reference)/
+const SHEBANG = '#!'
 const BLANK_LINE = /\n[^\S\n]*\n/
 
 const { read, entries } = inputs(process.argv[2])
@@ -95,18 +95,28 @@ const yamlComments = (code) => {
 	return found
 }
 
+const commentStart = (line) => {
+	let quote = null
+	for (const [at, char] of [...line].entries()) {
+		if (quote !== null) {
+			if (char === quote) quote = null
+		} else if (char === "'" || char === '"') quote = char
+		else if (char === '#' && (at === 0 || /\s/.test(line[at - 1]))) return at
+	}
+	return -1
+}
+
 const shellComments = (code) => {
 	const found = []
 	let offset = 0
 	for (const [at, line] of code.split('\n').entries()) {
-		const match = SHELL_LINE.exec(line)
-		if (match) {
-			const start = offset + line.indexOf('#')
+		const column = at === 0 && line.startsWith(SHEBANG) ? -1 : commentStart(line)
+		if (column >= 0) {
 			found.push({
-				value: line.slice(line.indexOf('#') + 1),
+				value: line.slice(column + 1),
 				start: at + 1,
 				end: at + 1,
-				range: [start, offset + line.length],
+				range: [offset + column, offset + line.length],
 			})
 		}
 		offset += line.length + 1

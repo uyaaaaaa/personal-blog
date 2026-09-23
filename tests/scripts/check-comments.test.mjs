@@ -45,7 +45,7 @@ describe('check-comments', () => {
 			'<template><div /></template>\n<style>\n/* 一 */\n\n/* 二 */\na {\n}\n</style>\n',
 		)
 		write('d.yml', 'on: push\n# 一\njobs: {}\n')
-		write('.githooks/pre-commit', '#!/bin/sh\n# 一\nexit 0\n')
+		write('.githooks/pre-commit', '#!/bin/sh\n# 一\necho "a # b" ${#x}\n# 二\nexit 0\n')
 		expect(check().status).toBe(0)
 	})
 
@@ -57,7 +57,7 @@ describe('check-comments', () => {
 	it('複数行にわたるディレクティブは数えない', () => {
 		write(
 			'a.mjs',
-			'/* eslint-disable no-console --\n  第三者由来 */\n// @ts-expect-error 型が無い\nconsole.log(1)\n',
+			'/// <reference types="a" />\n/// <reference types="b" />\n/* eslint-disable no-console --\n  第三者由来 */\n// @ts-expect-error 型が無い\nconsole.log(1)\n',
 		)
 		expect(check().status).toBe(0)
 	})
@@ -89,6 +89,8 @@ describe('check-comments', () => {
 		fails('a.yml', '# 一\n# 二\non: push\n')
 		rmSync(join(root, 'a.yml'))
 		fails('.githooks/commit-msg', '#!/bin/sh\n# 一\n# 二\nexit 0\n')
+		rmSync(join(root, '.githooks/commit-msg'))
+		fails('.githooks/pre-commit', 'exit 0 # 一\n# 二\n')
 	})
 
 	it('YAML のブロックスカラーに並んだ # は値として通し、行末のコメントは数える', () => {
