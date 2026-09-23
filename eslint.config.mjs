@@ -34,7 +34,8 @@ const styleRules = Object.fromEntries(
 )
 
 const ARCHITECTURE_URL = `${DOCS_URL}/ARCHITECTURE.md#層と依存方向`
-const AUTO_IMPORT_URL = `${DOCS_URL}/adr/02-no-auto-import.md`
+const AUTO_IMPORT_URL =
+	'https://github.com/uyaaaaaa/personal-blog/blob/main/.claude/rules/structure.md'
 
 const BREAKPOINT_MESSAGE = `表示を出し分ける境界は ${BREAKPOINT_LABEL}の2つだけ。他の境界を作らない。 ${BREAKPOINT_URL}`
 const MAX_WIDTH_MESSAGE = `幅の出し分けは ${BREAKPOINT_LABEL}から上に向けて書く。max-* で下に向けて書くと、同じ境界を指す書き方が2通りになる。 ${BREAKPOINT_URL}`
