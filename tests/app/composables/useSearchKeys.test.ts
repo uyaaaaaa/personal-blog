@@ -17,6 +17,7 @@ const mountKeys = (
 	const activeArticle = ref<{ path: string } | undefined>({ path: '/article/vim-abbreviation' })
 	const moveActive = vi.fn()
 	const close = vi.fn()
+	const select = vi.fn()
 
 	let keys: ReturnType<typeof useSearchKeys> | undefined
 
@@ -29,7 +30,7 @@ const mountKeys = (
 						moveActive,
 						isComposingKey: () => composing,
 					},
-					{ canSelect: () => canSelect, isTrapped, close },
+					{ canSelect: () => canSelect, isTrapped, close, select },
 				)
 
 				return () => h('div', { ref: keys!.trapRef })
@@ -40,7 +41,7 @@ const mountKeys = (
 
 	mounted.push(() => wrapper.unmount())
 
-	return { onKeydown: keys!.onKeydown, activeArticle, moveActive, close, isTrapped }
+	return { onKeydown: keys!.onKeydown, activeArticle, moveActive, close, select, isTrapped }
 }
 
 const press = (key: string) => new KeyboardEvent('keydown', { key, cancelable: true })
@@ -66,14 +67,17 @@ describe('useSearchKeys', () => {
 	})
 
 	it('Enter は閉じてから選んだ記事へ移る', () => {
-		const { onKeydown, close } = mountKeys()
+		const { onKeydown, close, select } = mountKeys()
 
 		onKeydown(press('Enter'))
 
 		expect(close).toHaveBeenCalledTimes(1)
+		expect(select).toHaveBeenCalledTimes(1)
 		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
+		const [selectOrder = 0] = select.mock.invocationCallOrder
 		const [closeOrder = 0] = close.mock.invocationCallOrder
 		const [navigateOrder = 0] = navigate.mock.invocationCallOrder
+		expect(selectOrder).toBeLessThan(closeOrder)
 		expect(closeOrder).toBeLessThan(navigateOrder)
 	})
 

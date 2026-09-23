@@ -26,4 +26,13 @@ describe('HeaderSearch', () => {
 		expect(wrapper.get('.search-panel-layer').classes()).toContain('is-open')
 		expect(wrapper.findAll('[role="option"]')).toHaveLength(1)
 	})
+
+	it('候補をクリックすると選択を親へ伝える', async () => {
+		const wrapper = await mountSuspended(HeaderSearch)
+
+		await wrapper.get('input').setValue('vim')
+		await wrapper.get('[role="option"]').trigger('click')
+
+		expect(wrapper.emitted('select')).toHaveLength(1)
+	})
 })

@@ -49,7 +49,7 @@
 				:id="LIST_ID"
 				:results="results"
 				:active-index="activeIndex"
-				@select="emit('close')"
+				@select="select"
 				@activate="activeIndex = $event"
 			/>
 
@@ -81,6 +81,7 @@
 
 	const emit = defineEmits<{
 		(e: 'close'): void
+		(e: 'select'): void
 	}>()
 
 	const search = useArticleSearch()
@@ -107,9 +108,15 @@
 
 	const canSelectByKey = () => (searchKeysRef.value?.getClientRects().length ?? 0) > 0
 
+	const select = () => {
+		emit('select')
+		emit('close')
+	}
+
 	const { onKeydown: onInputKeydown, trapRef } = useSearchKeys(search, {
 		canSelect: canSelectByKey,
 		isTrapped: toRef(props, 'isOpen'),
+		select: () => emit('select'),
 		close: () => emit('close'),
 	})
 

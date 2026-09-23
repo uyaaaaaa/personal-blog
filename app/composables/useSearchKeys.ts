@@ -10,16 +10,18 @@ type SearchKeysOptions = {
 	canSelect: () => boolean
 	isTrapped: Ref<boolean>
 	close: () => void
+	select: () => void
 }
 
 export const useSearchKeys = (
 	search: Search,
-	{ canSelect, isTrapped, close }: SearchKeysOptions,
+	{ canSelect, isTrapped, close, select }: SearchKeysOptions,
 ) => {
 	const openActive = () => {
 		const article = search.activeArticle.value
 		if (!article) return
 
+		select()
 		close()
 		navigateTo(article.path)
 	}
