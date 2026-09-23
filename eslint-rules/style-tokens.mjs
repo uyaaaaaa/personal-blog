@@ -289,11 +289,9 @@ function motionFindings(property, value) {
 	return found
 }
 
-// 動きを減らす設定は全称セレクタの !important で長さを 0 にする。!important を重ねた宣言だけがそれに勝つ
 const MOTION_DECLARATION = /^(?:transition|animation)(?:-[\w-]+)?$/i
 const MOTION_CLASS = '(?:transition|duration|delay|animate)(?![\\w])'
 const IMPORTANT_MOTION_CLASS = new RegExp(`(?:^|[\\s:])(?:[a-z-]+:)*!${MOTION_CLASS}`)
-// cssText や style 属性に組む宣言の文字列
 const IMPORTANT_MOTION_TEXT = /(?:transition|animation)[\w-]*\s*:[^;]*!\s*important/i
 // @apply の末尾の !important は、並べたクラス全部に掛かる
 const IMPORTANT_APPLY = new RegExp(`(?:^|[\\s:])${MOTION_CLASS}[\\s\\S]*!important\\s*$`)
@@ -533,7 +531,6 @@ const CHECKS = {
 			})
 			return found
 		},
-		// script で組んだクラスの文字列も :class に渡る。テンプレートの綴りは vue/no-restricted-syntax が抑制させずに落とす
 		script: (context) => ({
 			'Literal, TemplateElement'(node) {
 				const value = node.type === 'Literal' ? node.value : node.value.cooked

@@ -10,7 +10,6 @@ const DISABLE = /^eslint-disable(?:-next-line|-line)?(?![\w-])/
 const LINE_DISABLE = /^eslint-disable-(?:next-line|line)(?![\w-])/
 const CONFIG = /^eslint(?![\w-])/
 const DESCRIPTION = '--'
-// 動きを減らす設定より強い宣言は、どんな理由でも設定を無効にする
 const UNSUPPRESSIBLE = ['style/no-motion-important']
 
 const { read, entries } = inputs(process.argv[2])
