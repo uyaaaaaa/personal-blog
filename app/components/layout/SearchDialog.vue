@@ -38,9 +38,16 @@
 			</div>
 
 			<p
+				class="sr-only"
+				role="status"
+			>
+				{{ statusMessage }}
+			</p>
+
+			<p
 				v-if="results.length === 0"
 				class="search-note"
-				role="status"
+				aria-hidden="true"
 			>
 				{{ emptyMessage }}
 			</p>
@@ -83,15 +90,17 @@
 	}>()
 
 	const search = useArticleSearch()
-	const { query, results, activeIndex, startComposition, endComposition, clear } = search
+	const { query, results, countMessage, activeIndex, startComposition, endComposition, clear } =
+		search
 
 	const inputRef = ref<HTMLInputElement | null>(null)
 
+	const isTyped = computed(() => query.value.trim() !== '')
+
 	const emptyMessage = computed(() =>
-		query.value.trim() === ''
-			? 'Type to search articles by title or tag.'
-			: 'No articles found.',
+		isTyped.value ? countMessage.value : 'Type to search articles by title or tag.',
 	)
+	const statusMessage = computed(() => (isTyped.value ? countMessage.value : ''))
 
 	let pressedOnOverlay = false
 

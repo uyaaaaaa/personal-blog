@@ -74,4 +74,27 @@ describe('HeaderSearch', () => {
 
 		wrapper.unmount()
 	})
+
+	it('件数を読み上げる状態は、候補を出している間だけ持つ', async () => {
+		const wrapper = await mountSuspended(HeaderSearch)
+		const status = () => wrapper.get('.sr-only[role="status"]')
+
+		await wrapper.get('input').setValue('vim')
+
+		expect(status().text()).toBe('1 article found.')
+
+		await wrapper.get('.header-search').trigger('focusout')
+
+		expect(status().text()).toBe('')
+	})
+
+	it('0件も常設の領域に載せ、案内は今までの文のまま出す', async () => {
+		const wrapper = await mountSuspended(HeaderSearch)
+
+		await wrapper.get('input').setValue('docker')
+
+		expect(wrapper.get('.sr-only[role="status"]').text()).toBe('No articles found.')
+		expect(wrapper.get('.search-note').text()).toBe('No articles found.')
+		expect(wrapper.get('.search-note').attributes('aria-hidden')).toBe('true')
+	})
 })

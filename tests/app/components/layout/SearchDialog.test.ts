@@ -83,4 +83,22 @@ describe('SearchDialog', () => {
 
 		wrapper.unmount()
 	})
+
+	it('件数は常設の領域に出し、打つ前は何も言わない', async () => {
+		const wrapper = await mountSuspended(SearchDialog, { props: { isOpen: true } })
+		const status = () => wrapper.get('.sr-only[role="status"]')
+
+		expect(status().text()).toBe('')
+		expect(wrapper.get('.search-note').text()).toBe('Type to search articles by title or tag.')
+
+		await wrapper.get('input').setValue('vim')
+
+		expect(status().text()).toBe('1 article found.')
+
+		await wrapper.get('input').setValue('docker')
+
+		expect(status().text()).toBe('No articles found.')
+		expect(wrapper.get('.search-note').text()).toBe('No articles found.')
+		expect(wrapper.get('.search-note').attributes('aria-hidden')).toBe('true')
+	})
 })

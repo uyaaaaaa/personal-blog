@@ -38,6 +38,13 @@
 			>
 		</label>
 
+		<p
+			class="sr-only"
+			role="status"
+		>
+			{{ statusMessage }}
+		</p>
+
 		<div
 			class="search-panel-layer"
 			:class="{ 'is-open': isOpen }"
@@ -49,9 +56,9 @@
 				<p
 					v-if="results.length === 0"
 					class="search-note"
-					role="status"
+					aria-hidden="true"
 				>
-					No articles found.
+					{{ countMessage }}
 				</p>
 				<SearchResults
 					v-else
@@ -88,8 +95,16 @@
 	}>()
 
 	const search = useArticleSearch()
-	const { query, results, activeIndex, startComposition, endComposition, isComposingKey, clear } =
-		search
+	const {
+		query,
+		results,
+		countMessage,
+		activeIndex,
+		startComposition,
+		endComposition,
+		isComposingKey,
+		clear,
+	} = search
 
 	const inputRef = ref<HTMLInputElement | null>(null)
 
@@ -97,6 +112,7 @@
 
 	const isOpen = computed(() => !dismissed.value && query.value.trim() !== '')
 	const hasList = computed(() => isOpen.value && results.value.length > 0)
+	const statusMessage = computed(() => (isOpen.value ? countMessage.value : ''))
 
 	const dismiss = () => {
 		dismissed.value = true

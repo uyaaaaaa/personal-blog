@@ -15,3 +15,6 @@ export const searchArticles = <T extends SearchableArticle>(articles: T[], query
 		return terms.every((term) => title.includes(term) || tags.some((tag) => tag.includes(term)))
 	})
 }
+
+export const resultCountMessage = (count: number): string =>
+	count === 0 ? 'No articles found.' : `${count} article${count === 1 ? '' : 's'} found.`
