@@ -179,7 +179,7 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.75rem 1rem;
-		border-bottom: 1px solid var(--color-border);
+		border-bottom: 1px solid var(--color-border-field);
 	}
 
 	.search-field:focus-within {
