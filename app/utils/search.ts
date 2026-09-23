@@ -16,6 +16,5 @@ export const searchArticles = <T extends SearchableArticle>(articles: T[], query
 	})
 }
 
-// 0件の案内は各画面が持つ文が出す。ここが返すと同じ内容が二重に読まれる
 export const resultCountMessage = (count: number): string =>
-	count === 0 ? '' : `${count} article${count === 1 ? '' : 's'} found.`
+	count === 0 ? 'No articles found.' : `${count} article${count === 1 ? '' : 's'} found.`

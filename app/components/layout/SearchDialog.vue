@@ -41,13 +41,12 @@
 				class="sr-only"
 				role="status"
 			>
-				{{ countMessage }}
+				{{ statusMessage }}
 			</p>
 
 			<p
 				v-if="results.length === 0"
 				class="search-note"
-				role="status"
 			>
 				{{ emptyMessage }}
 			</p>
@@ -95,11 +94,12 @@
 
 	const inputRef = ref<HTMLInputElement | null>(null)
 
+	const isTyped = computed(() => query.value.trim() !== '')
+
 	const emptyMessage = computed(() =>
-		query.value.trim() === ''
-			? 'Type to search articles by title or tag.'
-			: 'No articles found.',
+		isTyped.value ? countMessage.value : 'Type to search articles by title or tag.',
 	)
+	const statusMessage = computed(() => (isTyped.value ? countMessage.value : ''))
 
 	let pressedOnOverlay = false
 

@@ -84,11 +84,14 @@ describe('SearchDialog', () => {
 		wrapper.unmount()
 	})
 
-	it('候補が出たら件数を読み上げる状態に出す', async () => {
+	it('件数は常設の領域に出し、打つ前は何も言わない', async () => {
 		const wrapper = await mountSuspended(SearchDialog, { props: { isOpen: true } })
+		const status = () => wrapper.get('.sr-only[role="status"]')
+
+		expect(status().text()).toBe('')
 
 		await wrapper.get('input').setValue('vim')
 
-		expect(wrapper.get('.sr-only[role="status"]').text()).toBe('1 article found.')
+		expect(status().text()).toBe('1 article found.')
 	})
 })

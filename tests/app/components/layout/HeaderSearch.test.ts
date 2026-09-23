@@ -75,7 +75,7 @@ describe('HeaderSearch', () => {
 		wrapper.unmount()
 	})
 
-	it('件数を読み上げる状態は、候補が並んでいる間だけ持つ', async () => {
+	it('件数を読み上げる状態は、候補を出している間だけ持つ', async () => {
 		const wrapper = await mountSuspended(HeaderSearch)
 		const status = () => wrapper.get('.sr-only[role="status"]')
 
@@ -88,12 +88,12 @@ describe('HeaderSearch', () => {
 		expect(status().text()).toBe('')
 	})
 
-	it('0件でも読み上げ用の領域は消さず、案内は今までの文のまま出す', async () => {
+	it('0件も常設の領域に載せ、案内は今までの文のまま出す', async () => {
 		const wrapper = await mountSuspended(HeaderSearch)
 
 		await wrapper.get('input').setValue('docker')
 
-		expect(wrapper.get('.sr-only[role="status"]').text()).toBe('')
+		expect(wrapper.get('.sr-only[role="status"]').text()).toBe('No articles found.')
 		expect(wrapper.get('.search-note').text()).toBe('No articles found.')
 	})
 })

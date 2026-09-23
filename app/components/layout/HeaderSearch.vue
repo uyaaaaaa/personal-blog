@@ -56,9 +56,8 @@
 				<p
 					v-if="results.length === 0"
 					class="search-note"
-					role="status"
 				>
-					No articles found.
+					{{ countMessage }}
 				</p>
 				<SearchResults
 					v-else
@@ -112,7 +111,7 @@
 
 	const isOpen = computed(() => !dismissed.value && query.value.trim() !== '')
 	const hasList = computed(() => isOpen.value && results.value.length > 0)
-	const statusMessage = computed(() => (hasList.value ? countMessage.value : ''))
+	const statusMessage = computed(() => (isOpen.value ? countMessage.value : ''))
 
 	const dismiss = () => {
 		dismissed.value = true

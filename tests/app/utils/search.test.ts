@@ -78,7 +78,7 @@ describe('resultCountMessage', () => {
 		expect(resultCountMessage(4)).toBe('4 articles found.')
 	})
 
-	it('0件では何も言わない', () => {
-		expect(resultCountMessage(0)).toBe('')
+	it('0件はその旨を返す', () => {
+		expect(resultCountMessage(0)).toBe('No articles found.')
 	})
 })
