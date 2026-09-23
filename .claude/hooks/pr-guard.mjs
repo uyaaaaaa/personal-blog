@@ -42,12 +42,14 @@ export const unsigned = (body) => {
 
 const DECISION = '判断してほしいこと'
 
-export const pending = (body) => {
-	const [, rest] = body.split(new RegExp(`^## ${DECISION}[ \\t]*$`, 'm'))
+const filled = (body, heading) => {
+	const [, rest] = body.split(new RegExp(`^## ${heading}[ \\t]*$`, 'm'))
 	if (rest === undefined) return false
 	const [section] = rest.split(/^## /m)
 	return section.replace(/<!--[\s\S]*?-->/g, '').trim() !== ''
 }
+
+export const pending = (body) => filled(body, DECISION)
 
 // 更新で draft を省いたときは今の状態を保つので、ready にする更新だけを見る
 const undrafted = (args, creating) => {
@@ -67,7 +69,7 @@ const blocking = (args, ask) => {
 		return `head が ${args.head} で、出す前の条件を測る作業ツリー（${branch}）と違う`
 	}
 
-	if (typeof args.body !== 'string' || !/^## やったこと[ \t]*$/m.test(args.body)) {
+	if (typeof args.body !== 'string' || !filled(args.body, 'やったこと')) {
 		return `本文を ${TEMPLATE} の型で書く`
 	}
 	const undecided = undrafted(args, true)
