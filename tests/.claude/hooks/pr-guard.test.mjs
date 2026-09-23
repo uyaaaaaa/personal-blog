@@ -36,6 +36,7 @@ describe('decide', () => {
 		expect(denied(create(), { dirty: () => null })).toMatch('読めない')
 		expect(denied(create({ body: '- x' }))).toMatch('型で書く')
 		expect(denied(create({ body: '<!--\n## やったこと\n-->' }))).toMatch('型で書く')
+		expect(denied(create({ body: '```\n## やったこと\n\n- x\n```' }))).toMatch('型で書く')
 		expect(denied(create({ body: '## やったこと\n\nClaude-Session: https://a' }))).toMatch(
 			'型で書く',
 		)
@@ -63,7 +64,7 @@ describe('pending', () => {
 		expect(
 			pending('## 判断してほしいこと\n\n<!-- 無ければ消す -->\n\n## やったこと\n\n- y'),
 		).toBe(false)
-		expect(pending('## やったこと\n\n- 判断してほしいこと')).toBe(false)
+		expect(pending('## やったこと\n\n```\n## 判断してほしいこと\n\n- x\n```')).toBe(false)
 	})
 
 	it('判断が残ったまま更新で ready にするのを止める', () => {

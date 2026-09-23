@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process'
+import remarkParse from 'remark-parse'
+import { unified } from 'unified'
 import { read } from '../../scripts/stdin.mjs'
 
 const TRUNK = 'main'
@@ -42,12 +44,25 @@ export const unsigned = (body) => {
 
 const DECISION = '判断してほしいこと'
 
+const COMMENT = /^\s*<!--[\s\S]*-->\s*$/
+
 const filled = (body, heading) => {
-	const visible = body.replace(/<!--[\s\S]*?-->/g, '')
-	const [, rest] = visible.split(new RegExp(`^## ${heading}[ \\t]*$`, 'm'))
-	if (rest === undefined) return false
-	const [section] = rest.split(/^## /m)
-	return section.trim() !== ''
+	const nodes = unified().use(remarkParse).parse(body).children
+	const at = nodes.findIndex(
+		(node) =>
+			node.type === 'heading' &&
+			node.depth === 2 &&
+			node.children
+				.map((child) => child.value ?? '')
+				.join('')
+				.trim() === heading,
+	)
+	if (at === -1) return false
+	const after = nodes.slice(at + 1)
+	const end = after.findIndex((node) => node.type === 'heading' && node.depth <= 2)
+	return (end === -1 ? after : after.slice(0, end)).some(
+		(node) => !(node.type === 'html' && COMMENT.test(node.value)),
+	)
 }
 
 export const pending = (body) => filled(body, DECISION)
