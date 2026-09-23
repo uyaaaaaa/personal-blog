@@ -157,6 +157,13 @@ describe('decide', () => {
 		expect(decide(mcp('create_pull_request'), ask)).toBeNull()
 	})
 
+	it('pr-guard を通らない PR の作成を止める', () => {
+		expect(decide(bash('gh pr create --base main --body x'), ask)).toMatch(
+			'create_pull_request',
+		)
+		expect(decide(bash('gh pr view 580'), ask)).toBeNull()
+	})
+
 	it('git 以外のツールと読み取れない入力は通す', () => {
 		expect(decide({ tool_name: 'Edit', tool_input: { file_path: 'a.ts' } }, ask)).toBeNull()
 		expect(decide(bash('npm run build'), ask)).toBeNull()

@@ -157,6 +157,13 @@ const git = (segment, ask) => {
 	return null
 }
 
+const gh = (segment) => {
+	const found = invoked(segment, 'gh')
+	return found?.[1] === 'pr' && found[2] === 'create'
+		? 'PR は GitHub MCP の create_pull_request で作る。pr-guard の検査を通すため'
+		: null
+}
+
 const run = (...args) => {
 	try {
 		return execFileSync('git', args, {
@@ -207,7 +214,7 @@ export const decide = (input, ask = ASK) => {
 	if (typeof command !== 'string') return null
 
 	for (const segment of segments(command)) {
-		const reason = git(segment, ask)
+		const reason = git(segment, ask) ?? gh(segment)
 		if (reason) return reason
 	}
 	return null
