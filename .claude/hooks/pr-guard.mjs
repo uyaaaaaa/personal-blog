@@ -48,6 +48,7 @@ const text = (node) =>
 	node.type === 'html'
 		? node.value
 				.replace(/<!--[\s\S]*?(?:-->|$)/g, '')
+				.replace(/<(script|style)\b[\s\S]*?(?:<\/\1\s*>|$)/gi, '')
 				.replace(/<(?!(?:img|video|svg|iframe)\b)[^>]*>/gi, '')
 		: node.type === 'image'
 			? node.url
