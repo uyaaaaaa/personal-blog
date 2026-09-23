@@ -98,14 +98,15 @@ export const decide = (input, ask = ASK) => {
 	const tool = name.slice('mcp__github__'.length)
 	if (tool !== 'create_pull_request' && tool !== 'update_pull_request') return null
 
-	const args = input.tool_input ?? {}
+	const given = input.tool_input ?? {}
+	const body = typeof given.body === 'string' ? unsigned(given.body) : null
+	const args = body === null ? given : { ...given, body }
 	const creating = tool === 'create_pull_request'
 	const reason = creating ? blocking(args, ask) : undrafted(args, false)
 	if (reason) return { deny: reason }
 
-	const body = typeof args.body === 'string' ? unsigned(args.body) : null
 	const found = {
-		...(body === null ? {} : { updatedInput: { ...args, body } }),
+		...(body === null ? {} : { updatedInput: args }),
 		...(creating ? { context: `作成したら ${LABEL} ラベルを付ける` } : {}),
 	}
 	return Object.keys(found).length === 0 ? null : found

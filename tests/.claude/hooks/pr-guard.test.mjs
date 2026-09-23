@@ -36,6 +36,9 @@ describe('decide', () => {
 		expect(denied(create(), { dirty: () => null })).toMatch('読めない')
 		expect(denied(create({ body: '- x' }))).toMatch('型で書く')
 		expect(denied(create({ body: '## やったこと\n\n<!-- x -->' }))).toMatch('型で書く')
+		expect(denied(create({ body: '## やったこと\n\nClaude-Session: https://a' }))).toMatch(
+			'型で書く',
+		)
 		expect(
 			denied(create({ body: '## 判断してほしいこと\n\n- x\n\n## やったこと\n\n- y' })),
 		).toMatch('draft')
