@@ -103,6 +103,11 @@ const assembliesIn = async (relative, code) => {
 	return result.messages.filter((message) => DOM_ASSEMBLY.test(message.message)).length
 }
 
+const accessibilityIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => message.ruleId?.startsWith('a11y/')).length
+}
+
 const blockOrdersIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => message.ruleId === 'vue/block-order').length
@@ -878,5 +883,29 @@ describe('検査の入力の読み取り', () => {
 			),
 		).toBe(0)
 		expect(await checkInputsIn(CHECK, 'postcss.parse(source)')).toBe(0)
+	})
+})
+
+describe('テンプレートのアクセシビリティ', () => {
+	it('app/ のテンプレートに掛かる', async () => {
+		for (const relative of [
+			'app/components/ui/Button.vue',
+			'app/pages/index.vue',
+			'app/app.vue',
+		])
+			expect(
+				await accessibilityIn(
+					relative,
+					sfc('<button type="button"><CloseIcon /></button>'),
+				),
+			).toBe(1)
+	})
+
+	it('ルートの隠し方とファイル名の食い違いを見る', async () => {
+		expect(await accessibilityIn('app/components/ui/CloseIcon.vue', sfc('<svg />'))).toBe(1)
+		expect(
+			await accessibilityIn('app/components/ui/Logo.vue', sfc('<svg aria-hidden="true" />')),
+		).toBe(1)
+		expect(await accessibilityIn('app/components/ui/Logo.vue', sfc('<svg />'))).toBe(0)
 	})
 })
