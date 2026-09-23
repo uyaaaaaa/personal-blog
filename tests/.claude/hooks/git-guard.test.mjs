@@ -165,6 +165,7 @@ describe('decide', () => {
 			'create_pull_request',
 		)
 		expect(decide(bash('command gh pr create'), ask)).toMatch('create_pull_request')
+		expect(decide(bash('/usr/bin/env -u X gh pr create'), ask)).toMatch('create_pull_request')
 		expect(decide(bash('gh pr view 580'), ask)).toBeNull()
 	})
 

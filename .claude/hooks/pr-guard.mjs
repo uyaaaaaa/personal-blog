@@ -46,7 +46,7 @@ const DECISION = '判断してほしいこと'
 
 const text = (node) =>
 	node.type === 'html'
-		? ''
+		? node.value.replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]*>/g, '')
 		: node.type === 'image'
 			? node.url
 			: node.type === 'imageReference'

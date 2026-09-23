@@ -3,7 +3,18 @@ const TOKEN =
 	/\d*(?:>>|<<-?|[<>])&?\d*|&&|\|\||[;|&\n(){}]|"(?:[^"\\]|\\.)*"|'[^']*'|[^\s;|&\n(){}"']+/g
 const HEREDOC = /<<-?\s*(["']?)([A-Za-z_][A-Za-z0-9_]*)\1/g
 const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/
-const LAUNCHER = new Set(['env', '--', 'command', 'exec', 'builtin', 'nohup', 'time'])
+const LAUNCHER = new Set(['env', 'command', 'exec', 'builtin', 'nohup', 'time'])
+const LAUNCHER_VALUED = new Set([
+	'-u',
+	'--unset',
+	'-C',
+	'--chdir',
+	'-S',
+	'--split-string',
+	'-a',
+	'-f',
+	'-o',
+])
 
 export const SEPARATOR = new Set(['&&', '||', ';', '|', '&', '\n', '(', ')', '{', '}'])
 export const REDIRECT = /^\d*[<>]+/
@@ -30,7 +41,17 @@ export const tokens = (command) =>
 
 // 先頭の代入と、後ろのコマンドをそのまま起こす語を読み飛ばし、その名前で呼ばれているときだけ引数ごと返す
 export const invoked = (found, name) => {
+	const base = (token) => token?.replace(/^.*\//, '')
 	let at = 0
-	while (at < found.length && (ASSIGNMENT.test(found[at]) || LAUNCHER.has(found[at]))) at += 1
-	return found[at]?.replace(/^.*\//, '') === name ? found.slice(at) : null
+	let launched = false
+	while (at < found.length) {
+		if (ASSIGNMENT.test(found[at])) at += 1
+		else if (LAUNCHER.has(base(found[at]))) {
+			launched = true
+			at += 1
+		} else if (launched && found[at].startsWith('-')) {
+			at += LAUNCHER_VALUED.has(found[at]) ? 2 : 1
+		} else break
+	}
+	return base(found[at]) === name ? found.slice(at) : null
 }
