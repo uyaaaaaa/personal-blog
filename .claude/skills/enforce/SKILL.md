@@ -5,7 +5,7 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約のうち�
 
 # 規約を検査に移す
 
-**ここでは実装しない。** 探して issue にするところまで。実装は `assign` が持つ。
+**ここでは実装しない。** 探して issue にするところまで。
 
 **検査を足すことと、移った規約の行を消すことで1つの変換。** 片方だけだと二重管理が残る（→ `docs/ARCHITECTURE.md`）。
 
