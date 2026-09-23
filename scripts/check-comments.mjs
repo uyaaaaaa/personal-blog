@@ -10,9 +10,9 @@ const SOURCE = /\.(vue|ts|mjs|cjs)$/i
 const YAML = /\.yml$/i
 const HOOKS = '.githooks/'
 
-const DIRECTIVE = /^(?:eslint|@ts-|prettier-ignore|@vitest-|globals?\s|\/\s*<reference)/
+const DIRECTIVE =
+	/^(?:eslint(?:-(?:disable(?:-next-line|-line)?|enable|env))?(?:$|\s+(?:--|[@\w./-]))|@ts-(?:check|nocheck|ignore|expect-error)\b|prettier-ignore(?:-attribute|-start|-end)?\b|@vitest-(?:environment|environment-options)\b|globals?\s+[$\w]|\/\s*<reference\b)/
 const SHEBANG = '#!'
-const HEREDOC = /<<-?\s*['"]?(\w+)['"]?/g
 const BLANK_LINE = /\n[^\S\n]*\n/
 
 const { read, entries } = inputs(process.argv[2])
@@ -96,41 +96,84 @@ const yamlComments = (code) => {
 	return found
 }
 
-const commentStart = (line) => {
-	let quote = null
+const heredocAt = (line, at) => {
+	let cursor = at + 2
+	if (line[cursor] === '-') cursor += 1
+	while (/\s/.test(line[cursor] ?? '')) cursor += 1
+	const quote = line[cursor]
+	if (quote === "'" || quote === '"') {
+		const end = line.indexOf(quote, cursor + 1)
+		if (end < 0) return null
+		return { delimiter: line.slice(cursor + 1, end), end }
+	}
+	const start = cursor
+	while (cursor < line.length && !/[\s;&|()<>]/.test(line[cursor])) cursor += 1
+	if (cursor === start) return null
+	return { delimiter: line.slice(start, cursor), end: cursor - 1 }
+}
+
+const shellLine = (line, state) => {
+	let { quote, arithmeticDepth } = state
+	const heredocs = []
 	for (let at = 0; at < line.length; at += 1) {
 		const char = line[at]
 		if (quote !== null) {
+			if (char === '\\' && quote === '"') at += 1
 			if (char === quote) quote = null
-		} else if (char === "'" || char === '"') quote = char
-		else if (char === '#' && (at === 0 || /\s/.test(line[at - 1]))) return at
+			continue
+		}
+		if (char === '\\') {
+			at += 1
+			continue
+		}
+		if (char === "'" || char === '"') {
+			quote = char
+			continue
+		}
+		if (line.startsWith('((', at)) {
+			arithmeticDepth += 1
+			at += 1
+			continue
+		}
+		if (arithmeticDepth > 0 && line.startsWith('))', at)) {
+			arithmeticDepth -= 1
+			at += 1
+			continue
+		}
+		if (arithmeticDepth > 0) continue
+		if (line.startsWith('<<<', at)) {
+			at += 2
+			continue
+		}
+		if (line.startsWith('<<', at)) {
+			const heredoc = heredocAt(line, at)
+			if (heredoc !== null) {
+				heredocs.push(heredoc.delimiter)
+				at = heredoc.end
+				continue
+			}
+		}
+		if (char === '#' && (at === 0 || /\s/.test(line[at - 1])))
+			return { column: at, heredocs, quote, arithmeticDepth }
 	}
-	return -1
-}
-
-const heredocDelimiter = (command) => {
-	for (const match of command.matchAll(HEREDOC)) {
-		const before = command.slice(0, match.index)
-		if (before.endsWith('<')) continue
-		if (before.lastIndexOf('((') > before.lastIndexOf('))')) continue
-		return match[1]
-	}
-	return null
+	return { column: -1, heredocs, quote, arithmeticDepth }
 }
 
 const shellComments = (code) => {
 	const found = []
 	let offset = 0
-	let heredoc = null
+	let heredocs = []
+	let state = { quote: null, arithmeticDepth: 0 }
 	for (const [at, line] of code.split('\n').entries()) {
-		if (heredoc !== null) {
-			if (line.trim() === heredoc) heredoc = null
+		if (heredocs.length > 0) {
+			if (line.trim() === heredocs[0]) heredocs.shift()
 			offset += line.length + 1
 			continue
 		}
-		const column = at === 0 && line.startsWith(SHEBANG) ? -1 : commentStart(line)
-		const command = column >= 0 ? line.slice(0, column) : line
-		heredoc = heredocDelimiter(command)
+		const scanned = shellLine(line, state)
+		state = { quote: scanned.quote, arithmeticDepth: scanned.arithmeticDepth }
+		heredocs.push(...scanned.heredocs)
+		const column = at === 0 && line.startsWith(SHEBANG) ? -1 : scanned.column
 		if (column >= 0) {
 			found.push({
 				value: line.slice(column + 1),

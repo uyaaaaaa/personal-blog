@@ -62,6 +62,10 @@ describe('check-comments', () => {
 		expect(check().status).toBe(0)
 	})
 
+	it('ディレクティブに似ただけの説明は通常のコメントとして数える', () => {
+		fails('a.mjs', '// eslint-disable が届く先の話\n// 続き\nexport default 1\n')
+	})
+
 	it('続けて並べた行コメントを落とす', () => {
 		fails('a.ts', '// 一\n// 二\nexport default 1\n')
 	})
@@ -105,10 +109,35 @@ describe('check-comments', () => {
 		expect(check().status).toBe(0)
 	})
 
+	it('フックの記号を含む区切りのヒアドキュメントを読み飛ばす', () => {
+		write('.githooks/pre-commit', "cat <<'END-TEXT'\n# 一\n# 二\nEND-TEXT\nexit 0\n")
+		expect(check().status).toBe(0)
+	})
+
+	it('フックの複数のヒアドキュメントを順番に読み飛ばす', () => {
+		write(
+			'.githooks/pre-commit',
+			'cat <<FIRST <<SECOND\n# 一\n# 二\nFIRST\n# 三\n# 四\nSECOND\nexit 0\n',
+		)
+		expect(check().status).toBe(0)
+	})
+
+	it('フックのヒアドキュメントの後ろに続くコメントを数える', () => {
+		fails(
+			'.githooks/pre-commit',
+			"cat <<'END-TEXT'\n# 本文一\n# 本文二\nEND-TEXT\n# 一\n# 二\nexit 0\n",
+		)
+	})
+
 	it('フックの算術シフトと here-string をヒアドキュメントとして扱わない', () => {
 		fails('.githooks/pre-commit', 'value=$((1 << 2))\n# 一\n# 二\nexit 0\n')
 		rmSync(join(root, '.githooks/pre-commit'))
 		fails('.githooks/commit-msg', 'read value <<< input\n# 一\n# 二\nexit 0\n')
+	})
+
+	it('フックの複数行にわたる引用符の中をコメントとして扱わない', () => {
+		write('.githooks/pre-commit', `printf '%s' "\n# 一\n# 二\n"\nexit 0\n`)
+		expect(check().status).toBe(0)
 	})
 
 	it('.githooks の下の入れ子のファイルも読む', () => {
