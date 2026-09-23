@@ -92,6 +92,18 @@ describe('useScrollableRegion', () => {
 		expect(result.value).toEqual({})
 	})
 
+	it('外した後は焦点が外れても読まない', () => {
+		const { element, result, unmount } = region(600, 300)
+
+		element.setAttribute('tabindex', '0')
+		element.focus()
+		widths(element, 300, 300)
+		unmount()
+		element.blur()
+
+		expect(result.value).toEqual(TABLE)
+	})
+
 	it('外した後は幅が変わっても読まない', () => {
 		const { element, result, unmount } = region(300, 300)
 
