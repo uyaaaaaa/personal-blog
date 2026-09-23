@@ -176,6 +176,11 @@ describe('decide', () => {
 		expect(decide(bash('env -Sgh\\ pr\\ create'), ask)).toMatch('create_pull_request')
 		expect(decide(bash('gh pr edit 1 --base release'), ask)).toMatch('update_pull_request')
 		expect(decide(bash('/usr/bin/env -u X gh pr create'), ask)).toMatch('create_pull_request')
+		expect(decide(bash('gh pr \\\n create'), ask)).toMatch('create_pull_request')
+		expect(decide(bash('gh api repos/o/r/pulls -f base=main'), ask)).toMatch(
+			'create_pull_request',
+		)
+		expect(decide(bash('gh api repos/o/r/pulls/1'), ask)).toBeNull()
 		expect(decide(bash('gh pr view 580'), ask)).toBeNull()
 	})
 

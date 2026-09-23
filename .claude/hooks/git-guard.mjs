@@ -159,6 +159,20 @@ const git = (segment, ask) => {
 
 const GH_VALUED = new Set(['-R', '--repo'])
 
+const FIELD = /^(?:-[fF]|--field|--raw-field|--input)(?:=|$)|^-[fF]./
+const METHOD = /^(?:-X|--method)(?:=?)(.*)$/
+
+// gh api は値を付けると POST になり、-X で PATCH も打てる
+const pulled = (found, positional) => {
+	if (!positional.some((arg) => /(?:^|\/)pulls(?:\/|$)/.test(arg))) return null
+	const at = found.findIndex((arg) => METHOD.test(arg))
+	const method = at === -1 ? '' : METHOD.exec(found[at])[1] || (found[at + 1] ?? '')
+	const writing = method === '' ? found.some((arg) => FIELD.test(arg)) : !/^get$/i.test(method)
+	return writing
+		? 'PR は GitHub MCP の create_pull_request と update_pull_request で扱う。pr-guard の検査を通すため'
+		: null
+}
+
 const gh = (segment) => {
 	const found = invoked(segment, 'gh')
 	if (found === null) return null
@@ -167,6 +181,7 @@ const gh = (segment) => {
 		if (GH_VALUED.has(found[at])) at += 1
 		else if (!found[at].startsWith('-')) positional.push(found[at])
 	}
+	if (positional[0] === 'api') return pulled(found, positional)
 	if (positional[0] !== 'pr') return null
 	if (['create', 'new'].includes(positional[1])) {
 		return 'PR は GitHub MCP の create_pull_request で作る。pr-guard の検査を通すため'

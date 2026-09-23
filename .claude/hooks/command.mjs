@@ -33,7 +33,7 @@ const withoutHeredocs = (command) => {
 }
 
 export const tokens = (command) =>
-	[...withoutHeredocs(command).matchAll(TOKEN)].map(([token]) => token)
+	[...withoutHeredocs(command).replace(/\\\n/g, '').matchAll(TOKEN)].map(([token]) => token)
 
 // 先頭の代入と、後ろのコマンドをそのまま起こす語を読み飛ばし、その名前で呼ばれているときだけ引数ごと返す
 export const invoked = (found, name) => {
