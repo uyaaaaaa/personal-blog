@@ -43,10 +43,11 @@ export const unsigned = (body) => {
 const DECISION = '判断してほしいこと'
 
 const filled = (body, heading) => {
-	const [, rest] = body.split(new RegExp(`^## ${heading}[ \\t]*$`, 'm'))
+	const visible = body.replace(/<!--[\s\S]*?-->/g, '')
+	const [, rest] = visible.split(new RegExp(`^## ${heading}[ \\t]*$`, 'm'))
 	if (rest === undefined) return false
 	const [section] = rest.split(/^## /m)
-	return section.replace(/<!--[\s\S]*?-->/g, '').trim() !== ''
+	return section.trim() !== ''
 }
 
 export const pending = (body) => filled(body, DECISION)
