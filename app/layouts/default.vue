@@ -27,12 +27,38 @@
 	import Header from '~/components/layout/Header.vue'
 	import Footer from '~/components/layout/Footer.vue'
 	import Toast from '~/components/ui/Toast.vue'
+	import { focusMainContent } from '~/composables/gestureFocus'
 
 	const route = useRoute()
+	const router = useRouter()
 
 	const measure = computed(() =>
 		route.meta.sideColumn ? 'max-w-column lg:max-w-article' : 'max-w-column',
 	)
+
+	// 押したリンクが残る位置（ヘッダー・フッター）から Tab が続かないよう、移った先の本文に寄せる。
+	// 戻る・進むはブラウザが位置を戻すので触らない
+	let traversing = false
+	let stopListening: (() => void) | undefined
+	let stopAfterEach: (() => void) | undefined
+
+	onMounted(() => {
+		stopListening = router.options.history.listen(() => {
+			traversing = true
+		})
+		stopAfterEach = router.afterEach((to, from, failure) => {
+			const byHistory = traversing
+			traversing = false
+			if (failure || byHistory || to.path === from.path) return
+
+			nextTick(focusMainContent)
+		})
+	})
+
+	onUnmounted(() => {
+		stopListening?.()
+		stopAfterEach?.()
+	})
 
 	/* eslint-disable style/no-outline-removal -- 目印が付くのはポインタで移したフォーカスと、開いた直後に自動で寄せたフォーカスだけ */
 </script>
