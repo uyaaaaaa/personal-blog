@@ -8,7 +8,7 @@
 		"
 	>
 		<label
-			class="search-field flex w-full items-center gap-2 rounded-md border border-border bg-surface-subtle px-4 py-2 transition-color focus-within:border-accent"
+			class="search-field flex w-full items-center gap-2 rounded-md border border-border-field bg-surface-subtle px-4 py-2 transition-color focus-within:border-accent"
 			@pointerdown="onPointerdown"
 		>
 			<SearchIcon class="search-field-icon" />
