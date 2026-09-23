@@ -1,8 +1,6 @@
 // scrollWidth と clientWidth は整数に丸まるので、端数だけの差が 1px の溢れに見える
 const ROUNDING = 1
 
-// 横に溢れた箱は、ポインタを持たない利用者には右端が読めない。溢れている間だけタブ順に入れ、
-// 溢れていない箱は読むもののない停止になるので入れない
 export const useScrollableRegion = (host: Ref<HTMLElement | null>, label: string) => {
 	const overflows = ref(false)
 
@@ -42,8 +40,7 @@ export const useScrollableRegion = (host: Ref<HTMLElement | null>, label: string
 		watched = undefined
 	})
 
-	// role を持たない要素に付けた名前は読み上げられない。ランドマークにすると記事の箱の数だけ
-	// 同じ名前が一覧に並ぶので、名前だけを持つ group にする
+	// role の無い要素の名前は読み上げられず、ランドマークだと箱の数だけ一覧に並ぶので group にする
 	return computed(() =>
 		overflows.value ? { tabindex: 0, role: 'group', 'aria-label': label } : {},
 	)
