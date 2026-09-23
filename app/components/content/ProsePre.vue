@@ -12,13 +12,16 @@
 			>
 		</figcaption>
 		<pre
+			ref="host"
 			:class="['text-code', $props.class]"
-			v-bind="$attrs"
+			v-bind="{ ...$attrs, ...region }"
 		><slot /></pre>
 	</figure>
 </template>
 
 <script setup lang="ts">
+	import { useScrollableRegion } from '~/composables/useScrollableRegion'
+
 	defineOptions({
 		name: 'ProsePre',
 		inheritAttrs: false,
@@ -39,6 +42,9 @@
 	const label = computed(() =>
 		props.language && !PLAIN_LANGUAGES.includes(props.language) ? props.language : null,
 	)
+
+	const host = ref<HTMLElement | null>(null)
+	const region = useScrollableRegion(host, 'Code')
 </script>
 
 <style scoped>
@@ -72,6 +78,11 @@
 		padding: 0.75rem var(--code-block-padding-x);
 		background-color: transparent;
 		color: var(--color-code-text);
+	}
+
+	/* 輪郭は code-block の overflow: hidden に切られるので、内側に引く */
+	pre:focus-visible {
+		outline-offset: -2px;
 	}
 
 	pre :deep(code) {
