@@ -167,9 +167,14 @@ const gh = (segment) => {
 		if (GH_VALUED.has(found[at])) at += 1
 		else if (!found[at].startsWith('-')) positional.push(found[at])
 	}
-	return positional[0] === 'pr' && ['create', 'new'].includes(positional[1])
-		? 'PR は GitHub MCP の create_pull_request で作る。pr-guard の検査を通すため'
-		: null
+	if (positional[0] !== 'pr') return null
+	if (['create', 'new'].includes(positional[1])) {
+		return 'PR は GitHub MCP の create_pull_request で作る。pr-guard の検査を通すため'
+	}
+	if (['edit', 'ready'].includes(positional[1])) {
+		return 'PR は GitHub MCP の update_pull_request で直す。pr-guard の検査を通すため'
+	}
+	return null
 }
 
 const run = (...args) => {
