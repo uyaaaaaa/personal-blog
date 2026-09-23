@@ -55,7 +55,7 @@ node scripts/issue-shape.mjs < .verify/issues.json
 node scripts/session-args.mjs issue <番号>
 ```
 
-**出力を書き換えない。** `model` を省くと呼び出し元のモデルを継ぎ、`source_url` を省くと起きたセッションから GitHub に投稿できず、ブランチ名を変えると次の回の重複判定（`claude/issue-<番号>-`）が外れる。
+**出力を書き換えない。** `model` は渡さず呼び出し元のモデルを継ぐので足さない。`source_url` を省くと起きたセッションから GitHub に投稿できず、ブランチ名を変えると次の回の重複判定（`claude/issue-<番号>-`）が外れる。
 
 **実装の方針を渡さない。** issue の読み方は `assign` が持っている。
 
