@@ -1,4 +1,6 @@
 {
+	"advisorModel": "fable",
+	"promptSuggestionEnabled": false,
 	"deniedMcpServers": [
 		{ "serverName": "Gmail" },
 		{ "serverName": "Linear" },
