@@ -157,9 +157,17 @@ const git = (segment, ask) => {
 	return null
 }
 
+const GH_VALUED = new Set(['-R', '--repo'])
+
 const gh = (segment) => {
 	const found = invoked(segment, 'gh')
-	return found?.[1] === 'pr' && found[2] === 'create'
+	if (found === null) return null
+	const positional = []
+	for (let at = 1; at < found.length; at += 1) {
+		if (GH_VALUED.has(found[at])) at += 1
+		else if (!found[at].startsWith('-')) positional.push(found[at])
+	}
+	return positional[0] === 'pr' && ['create', 'new'].includes(positional[1])
 		? 'PR は GitHub MCP の create_pull_request で作る。pr-guard の検査を通すため'
 		: null
 }
