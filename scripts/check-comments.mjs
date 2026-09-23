@@ -7,11 +7,12 @@ import { fail, ignores, inputs } from './inputs.mjs'
 
 const SKIP = new Set(ignores)
 const SOURCE = /\.(vue|ts|mjs|cjs)$/i
-const YAML = /\.ya?ml$/i
+const YAML = /\.yml$/i
 const HOOKS = '.githooks/'
 
 const DIRECTIVE = /^(?:eslint|@ts-|prettier-ignore|@vitest-|globals?\s|\/\s*<reference)/
 const SHEBANG = '#!'
+const HEREDOC = /<<-?\s*['"]?(\w+)['"]?/
 const BLANK_LINE = /\n[^\S\n]*\n/
 
 const { read, entries } = inputs(process.argv[2])
@@ -97,7 +98,8 @@ const yamlComments = (code) => {
 
 const commentStart = (line) => {
 	let quote = null
-	for (const [at, char] of [...line].entries()) {
+	for (let at = 0; at < line.length; at += 1) {
+		const char = line[at]
 		if (quote !== null) {
 			if (char === quote) quote = null
 		} else if (char === "'" || char === '"') quote = char
@@ -109,8 +111,16 @@ const commentStart = (line) => {
 const shellComments = (code) => {
 	const found = []
 	let offset = 0
+	let heredoc = null
 	for (const [at, line] of code.split('\n').entries()) {
+		if (heredoc !== null) {
+			if (line.trim() === heredoc) heredoc = null
+			offset += line.length + 1
+			continue
+		}
 		const column = at === 0 && line.startsWith(SHEBANG) ? -1 : commentStart(line)
+		const command = column >= 0 ? line.slice(0, column) : line
+		heredoc = HEREDOC.exec(command)?.[1] ?? null
 		if (column >= 0) {
 			found.push({
 				value: line.slice(column + 1),

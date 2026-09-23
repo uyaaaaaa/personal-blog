@@ -99,6 +99,12 @@ describe('check-comments', () => {
 		fails('b.yml', 'on: push # 一\n# 二\njobs: {}\n')
 	})
 
+	it('フックのヒアドキュメントと、規約の適用先に無い .yaml は読まない', () => {
+		write('.githooks/commit-msg', "cat <<'EOF'\n# 一\n# 二\nEOF\nexit 0\n")
+		write('a.yaml', '# 一\n# 二\non: push\n')
+		expect(check().status).toBe(0)
+	})
+
 	it('.githooks の下の入れ子のファイルも読む', () => {
 		fails('.githooks/lib/check', '# 一\n# 二\nexit 0\n')
 	})
