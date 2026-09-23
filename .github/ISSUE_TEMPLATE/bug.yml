@@ -6,43 +6,31 @@ body:
       attributes:
           value: |
               - タイトルは1行の言い切り。分類の接頭辞は付けない
-              - 本文40行以内、1節5項目以内、1項目1行。リストと体言止めで書き、言い切る
-              - 実装案・編集の手順・ライブラリや API の名前を書かない
-              - 書き手が決めるまで動かせないなら `needs-decision` を足す
+              - 本文40行以内、1節3項目以内、1項目1行
     - type: textarea
       id: goal
       attributes:
           label: ゴール
-          description: 何がどうなってほしいか。1〜2文の言い切り
+          description: 何がどうなってほしいか
       validations:
           required: true
     - type: textarea
       id: current
       attributes:
           label: 現状
-          description: 観測できる事実だけ。再現手順・出力・該当箇所。確かめられなかったことは「推測」と明示する
+          description: 再現手順・出力・該当箇所
       validations:
           required: true
     - type: textarea
       id: done
       attributes:
           label: 完了条件
-          description: 満たしたかを外から判定できる状態。手段を含めない。3つまで（4つ以上なら issue が2本に割れている）
+          description: 満たしたかを外から判定できる状態
           value: '- [ ] '
       validations:
           required: true
     - type: textarea
-      id: constraints
-      attributes:
-          label: 前提・制約
-          description: 触らないもの、既にある判断へのリンク
-    - type: textarea
       id: hints
       attributes:
           label: 手がかり
-          description: 読む場所と観測した事実。指示ではない
-    - type: textarea
-      id: out-of-scope
-      attributes:
-          label: 範囲外
-          description: 今回やらないこと。送り先の issue 番号
+          description: 読む場所と観測した事実

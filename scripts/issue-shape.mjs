@@ -9,11 +9,9 @@ export const FORMS = '.github/ISSUE_TEMPLATE'
 const FORM = /^(?!config\.ya?ml$).+\.ya?ml$/
 
 const CHECKLIST = /^\s*-\s+\[ \]/
-const CRITERIA = /(\d+)つまで/
 const LENGTH = /本文(\d+)行以内/
 const PER_SECTION = /1節(\d+)項目以内/
 const ONE_LINE = /1項目1行/
-const ADDED = /`([a-z-]+)` を足す/g
 const NO_PREFIX = /接頭辞は付けない/
 
 const HEADING = /^#{2,3}\s+(\S.*?)\s*$/
@@ -45,11 +43,9 @@ const form = ({ labels, body }) => {
 			required: validations?.required === true,
 			checklist: attributes === checklist?.attributes,
 		})),
-		criteria: Number(CRITERIA.exec(checklist?.attributes?.description ?? '')?.[1]),
 		length: Number(LENGTH.exec(prose)?.[1]),
 		items: Number(PER_SECTION.exec(prose)?.[1]),
 		oneLine: ONE_LINE.test(prose),
-		extras: [...prose.matchAll(ADDED)].map(([, name]) => name),
 		unprefixed: NO_PREFIX.test(prose),
 	}
 }
@@ -63,7 +59,7 @@ export const complete = (it) =>
 			typeof each.kind === 'string' &&
 			each.sections.some(({ required }) => required) &&
 			each.sections.some(({ checklist }) => checklist) &&
-			[each.criteria, each.length, each.items].every(Number.isFinite),
+			[each.length, each.items].every(Number.isFinite),
 	)
 
 const split = (lines, names) => {
@@ -107,10 +103,6 @@ const inSection = ({ name, lines }, it) => {
 	if (spec.checklist) {
 		if (items.length === 0 || items.some((line) => !CHECKED.test(line))) {
 			found.push(`## ${name} を - [ ] のチェックリストで書く`)
-		} else if (items.length > it.criteria) {
-			found.push(
-				`## ${name} が ${items.length} つ（${it.criteria}つまで。issue が2本に割れている）`,
-			)
 		}
 	}
 	if (it.oneLine && spanned(lines)) found.push(`## ${name} の項目が2行にまたがっている`)
@@ -154,18 +146,13 @@ const text = (value) => (typeof value === 'string' ? value : '')
 const list = (value) =>
 	Array.isArray(value) ? value.map(named).filter((name) => typeof name === 'string') : []
 
+// 種別以外のラベルは問わない。付けるかは書き手が決める
 const labelled = (labels, forms) => {
-	const found = []
 	const all = forms.map(({ kind }) => kind)
-	const extras = forms.flatMap(({ extras }) => extras)
 	const kinds = labels.filter((label) => all.includes(label))
-	if (kinds.length !== 1) {
-		const now = kinds.length === 0 ? '今はなし' : `今は ${kinds.join(' / ')}`
-		found.push(`ラベルは ${all.join(' / ')} から1つ（${now}）`)
-	}
-	const rest = labels.filter((label) => !all.includes(label) && !extras.includes(label))
-	if (rest.length > 0) found.push(`型に無いラベル: ${rest.join(' / ')}`)
-	return found
+	if (kinds.length === 1) return []
+	const now = kinds.length === 0 ? '今はなし' : `今は ${kinds.join(' / ')}`
+	return [`ラベルは ${all.join(' / ')} から1つ（${now}）`]
 }
 
 // 種別のラベルが決まらないときも、本文は先頭のフォームで見る。理由を1度に出し切る
