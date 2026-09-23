@@ -41,11 +41,19 @@ const click = async (init: MouseEventInit = {}, headingId = 'section') => {
 }
 
 describe('HeadingAnchor', () => {
-	it('読み上げと Tab からは外す', async () => {
+	it('Tab で届き、何をするかを名前で伝える', async () => {
+		const wrapper = await mountSuspended(HeadingAnchor, { props: { headingId: 'section' } })
+		const anchor = wrapper.get('a')
+
+		expect(anchor.attributes('aria-hidden')).toBeUndefined()
+		expect(anchor.attributes('tabindex')).toBeUndefined()
+		expect(anchor.attributes('aria-label')).toBe('Copy link to this section')
+	})
+
+	it('PC でもフォーカスが当たれば見せる', async () => {
 		const wrapper = await mountSuspended(HeadingAnchor, { props: { headingId: 'section' } })
 
-		expect(wrapper.get('a').attributes('aria-hidden')).toBe('true')
-		expect(wrapper.get('a').attributes('tabindex')).toBe('-1')
+		expect(wrapper.get('a').classes()).toContain('lg:focus-visible:opacity-100')
 	})
 
 	it('押すと節へ移動し、その見出しの URL をクリップボードに入れる', async () => {
