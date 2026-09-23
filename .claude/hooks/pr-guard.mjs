@@ -49,7 +49,9 @@ const text = (node) =>
 		? ''
 		: node.type === 'image'
 			? node.url
-			: (node.value ?? (node.children ?? []).map(text).join(''))
+			: node.type === 'imageReference'
+				? node.identifier
+				: (node.value ?? (node.children ?? []).map(text).join(''))
 
 const shown = (node) => text(node).trim() !== ''
 
