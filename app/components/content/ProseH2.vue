@@ -5,7 +5,7 @@
 		:class="{ relative: !isHidden }"
 	>
 		<span
-			class="lg:cursor-pointer"
+			:class="{ 'lg:cursor-pointer': props.id && !isHidden }"
 			@click.exact="jump"
 		>
 			<slot />

@@ -79,4 +79,12 @@ describe.each([
 
 		expect(wrapper.get(`${tag} > span`).classes()).toContain('lg:cursor-pointer')
 	})
+
+	it('押せない見出し本文にはポインターカーソルを出さない', async () => {
+		const withoutId = await mount(component)
+		const hidden = await mountHidden(component)
+
+		expect(withoutId.get(`${tag} > span`).classes()).not.toContain('lg:cursor-pointer')
+		expect(hidden.get(`${tag} > span`).classes()).not.toContain('lg:cursor-pointer')
+	})
 })

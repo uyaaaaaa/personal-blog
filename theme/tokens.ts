@@ -148,9 +148,6 @@ export const sizes = {
 		'toc-top': TOC_TOP,
 		'menu-panel': '960px',
 	},
-	zIndex: {
-		toast: '130',
-	},
 }
 
 const isHex = (value: string) => value.startsWith('#')
