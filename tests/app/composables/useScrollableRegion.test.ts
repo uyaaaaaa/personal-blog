@@ -14,6 +14,7 @@ beforeEach(() => {
 afterEach(() => {
 	for (const unmount of mounted.splice(0)) unmount()
 	observer.restore()
+	document.body.replaceChildren()
 })
 
 const widths = (element: HTMLElement, scrollWidth: number, clientWidth: number) => {
@@ -25,6 +26,7 @@ const region = (scrollWidth: number, clientWidth: number) => {
 	const element = document.createElement('div')
 	const content = document.createElement('table')
 	element.append(content)
+	document.body.append(element)
 	widths(element, scrollWidth, clientWidth)
 
 	const host = ref<HTMLElement | null>(element)
@@ -45,6 +47,10 @@ describe('useScrollableRegion', () => {
 		expect(region(300, 300).result.value).toEqual({})
 	})
 
+	it('丸めで出る 1px の差では停止を作らない', () => {
+		expect(region(301, 300).result.value).toEqual({})
+	})
+
 	it('箱の幅が変わって溢れたらタブ順に入れる', () => {
 		const { element, result } = region(300, 300)
 
@@ -61,6 +67,29 @@ describe('useScrollableRegion', () => {
 		observer.resize(content)
 
 		expect(result.value).toEqual(TABLE)
+	})
+
+	it('読んでいる箱は、溢れが消えてもタブ順に残す', () => {
+		const { element, result } = region(600, 300)
+
+		element.setAttribute('tabindex', '0')
+		element.focus()
+		widths(element, 300, 300)
+		observer.resize(element)
+
+		expect(result.value).toEqual(TABLE)
+	})
+
+	it('読み終えて焦点が外れたら、残していた停止を畳む', () => {
+		const { element, result } = region(600, 300)
+
+		element.setAttribute('tabindex', '0')
+		element.focus()
+		widths(element, 300, 300)
+		observer.resize(element)
+		element.blur()
+
+		expect(result.value).toEqual({})
 	})
 
 	it('外した後は幅が変わっても読まない', () => {
