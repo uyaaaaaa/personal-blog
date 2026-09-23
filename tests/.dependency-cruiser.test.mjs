@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { cruise } from 'dependency-cruiser'
@@ -30,7 +30,8 @@ let root
 let violations
 
 beforeAll(async () => {
-	root = mkdtempSync(join(tmpdir(), 'dependency-cruiser-'))
+	// macOS の tmpdir はシンボリックリンク越しで、解決先は実体の経路になる。baseDir も実体に揃える
+	root = realpathSync(mkdtempSync(join(tmpdir(), 'dependency-cruiser-')))
 	for (const directory of ROOTS) {
 		for (const area of COMPONENT_AREAS) {
 			mkdirSync(join(root, directory, area), { recursive: true })
