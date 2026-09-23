@@ -1,70 +1,70 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { parse } from 'yaml'
 import { read } from './stdin.mjs'
 
-const SKILL = new URL('../.claude/skills/create-issues/SKILL.md', import.meta.url)
+export const FORMS = '.github/ISSUE_TEMPLATE'
+// config.yml はフォームではなく、選ぶ画面の設定
+const FORM = /^(?!config\.ya?ml$).+\.ya?ml$/
 
-const NEEDS = new Set(['必須', '任意'])
-const CHECKLIST = 'チェックリスト'
-const CRITERIA = /完了条件は(\d+)つまで/
+const CHECKLIST = /^\s*-\s+\[ \]/
+const CRITERIA = /(\d+)つまで/
 const LENGTH = /本文(\d+)行以内/
 const PER_SECTION = /1節(\d+)項目以内/
 const ONE_LINE = /1項目1行/
-const LABELS = /ラベルは((?:\s*`[a-z-]+`\s*\/?)+)から(\d+)つ/
 const ADDED = /`([a-z-]+)` を足す/g
 const NO_PREFIX = /接頭辞は付けない/
-const NAMED = /`([a-z-]+)`/g
 
-const SEPARATOR = /^\|\s*:?-{3,}/
-const HEADING = /^##\s+(\S.*?)\s*$/
+const HEADING = /^#{2,3}\s+(\S.*?)\s*$/
 const ITEM = /^\s*[-*]\s+/
 const CHECKED = /^\s*[-*]\s+\[[ xX]\]\s+/
 // 分類の接頭辞として実際に付く綴り。`fix:` `feat(ui):` `[bug]`
 const PREFIX = /^(?:\[[^\]]+\]|[A-Za-z][\w .-]*(?:\([^)]*\))?\s*[:：])/
 
-// 表の本体は区切り行の次から読む。見出しの行を名前で外すと、節の名前を2箇所に持つ
-const rows = (source) => {
-	const lines = source.split('\n')
-	const found = []
-	for (const [at, line] of lines.entries()) {
-		if (!SEPARATOR.test(line)) continue
-		for (let next = at + 1; lines[next]?.startsWith('|'); next += 1) {
-			found.push(
-				lines[next]
-					.split('|')
-					.slice(1, -1)
-					.map((cell) => cell.trim()),
-			)
-		}
-	}
-	return found
+export const load = (root = fileURLToPath(new URL('..', import.meta.url))) => {
+	const dir = join(root, FORMS)
+	return readdirSync(dir)
+		.filter((name) => FORM.test(name))
+		.sort()
+		.map((name) => parse(readFileSync(join(dir, name), 'utf8')))
 }
 
-export const rules = (source) => {
-	const labels = LABELS.exec(source)
+// フォームは種別を1つ選んで書くので、種別のラベルもフォームごとに1つ
+const form = ({ labels, body }) => {
+	const fields = Array.isArray(body) ? body : []
+	const inputs = fields.filter(({ type }) => type !== 'markdown')
+	const prose = fields
+		.map(({ attributes }) => [attributes?.value, attributes?.description].join('\n'))
+		.join('\n')
+	const checklist = inputs.find(({ attributes }) => CHECKLIST.test(attributes?.value ?? ''))
 	return {
-		sections: rows(source)
-			.filter((row) => row.length === 3 && NEEDS.has(row[2]))
-			.map(([name, means, need]) => ({
-				name,
-				required: need === '必須',
-				checklist: means.includes(CHECKLIST),
-			})),
-		criteria: Number(CRITERIA.exec(source)?.[1]),
-		length: Number(LENGTH.exec(source)?.[1]),
-		items: Number(PER_SECTION.exec(source)?.[1]),
-		oneLine: ONE_LINE.test(source),
-		kinds: labels ? [...labels[1].matchAll(NAMED)].map(([, name]) => name) : [],
-		kindCount: Number(labels?.[2]),
-		extras: [...source.matchAll(ADDED)].map(([, name]) => name),
-		unprefixed: NO_PREFIX.test(source),
+		kind: [labels].flat().filter((label) => typeof label === 'string')[0],
+		sections: inputs.map(({ attributes, validations }) => ({
+			name: attributes?.label,
+			required: validations?.required === true,
+			checklist: attributes === checklist?.attributes,
+		})),
+		criteria: Number(CRITERIA.exec(checklist?.attributes?.description ?? '')?.[1]),
+		length: Number(LENGTH.exec(prose)?.[1]),
+		items: Number(PER_SECTION.exec(prose)?.[1]),
+		oneLine: ONE_LINE.test(prose),
+		extras: [...prose.matchAll(ADDED)].map(([, name]) => name),
+		unprefixed: NO_PREFIX.test(prose),
 	}
 }
+
+export const rules = (forms) => (Array.isArray(forms) ? forms : []).map(form)
 
 export const complete = (it) =>
-	it.sections.some(({ required }) => required) &&
-	it.sections.some(({ checklist }) => checklist) &&
-	it.kinds.length > 0 &&
-	[it.criteria, it.length, it.items, it.kindCount].every(Number.isFinite)
+	it.length > 0 &&
+	it.every(
+		(each) =>
+			typeof each.kind === 'string' &&
+			each.sections.some(({ required }) => required) &&
+			each.sections.some(({ checklist }) => checklist) &&
+			[each.criteria, each.length, each.items].every(Number.isFinite),
+	)
 
 const split = (lines, names) => {
 	const sections = []
@@ -154,23 +154,32 @@ const text = (value) => (typeof value === 'string' ? value : '')
 const list = (value) =>
 	Array.isArray(value) ? value.map(named).filter((name) => typeof name === 'string') : []
 
-const labelled = (labels, it) => {
+const labelled = (labels, forms) => {
 	const found = []
-	const kinds = labels.filter((label) => it.kinds.includes(label))
-	if (kinds.length !== it.kindCount) {
+	const all = forms.map(({ kind }) => kind)
+	const extras = forms.flatMap(({ extras }) => extras)
+	const kinds = labels.filter((label) => all.includes(label))
+	if (kinds.length !== 1) {
 		const now = kinds.length === 0 ? '今はなし' : `今は ${kinds.join(' / ')}`
-		found.push(`ラベルは ${it.kinds.join(' / ')} から${it.kindCount}つ（${now}）`)
+		found.push(`ラベルは ${all.join(' / ')} から1つ（${now}）`)
 	}
-	const rest = labels.filter((label) => !it.kinds.includes(label) && !it.extras.includes(label))
+	const rest = labels.filter((label) => !all.includes(label) && !extras.includes(label))
 	if (rest.length > 0) found.push(`型に無いラベル: ${rest.join(' / ')}`)
 	return found
 }
 
-export const findings = ({ title, body, labels }, it) => [
-	...(it.unprefixed && PREFIX.test(text(title)) ? ['タイトルに分類の接頭辞が付いている'] : []),
-	...labelled(list(labels), it),
-	...shaped(text(body), it),
-]
+// 種別のラベルが決まらないときも、本文は先頭のフォームで見る。理由を1度に出し切る
+export const findings = ({ title, body, labels }, forms) => {
+	const names = list(labels)
+	const it = forms.find(({ kind }) => names.includes(kind)) ?? forms[0]
+	return [
+		...(it.unprefixed && PREFIX.test(text(title))
+			? ['タイトルに分類の接頭辞が付いている']
+			: []),
+		...labelled(names, forms),
+		...shaped(text(body), it),
+	]
+}
 
 const main = async () => {
 	let issues
@@ -186,9 +195,12 @@ const main = async () => {
 		process.exit(1)
 	}
 
-	const it = rules(readFileSync(SKILL, 'utf8'))
+	let it = []
+	try {
+		it = rules(load())
+	} catch {}
 	if (!complete(it)) {
-		console.error(`型を ${SKILL.pathname} から読めない`)
+		console.error(`型を ${FORMS}/ から読めない`)
 		process.exit(1)
 	}
 

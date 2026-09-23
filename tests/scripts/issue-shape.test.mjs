@@ -1,15 +1,9 @@
 import { execFileSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { complete, findings, rules } from '~~/scripts/issue-shape.mjs'
+import { complete, findings, load, rules } from '~~/scripts/issue-shape.mjs'
 
-const SOURCE = readFileSync(
-	new URL('../../.claude/skills/create-issues/SKILL.md', import.meta.url),
-	'utf8',
-)
-
-const RULES = rules(SOURCE)
+const RULES = rules(load())
 
 const body = (sections) =>
 	Object.entries(sections)
@@ -32,31 +26,47 @@ const issue = (over = {}) => ({
 const found = (over) => findings(issue(over), RULES)
 
 describe('rules', () => {
-	it('create-issues の手順書から型を読める', () => {
+	it('issue テンプレートから型を読める', () => {
 		expect(complete(RULES)).toBe(true)
-		expect(RULES.sections.filter(({ required }) => required).map(({ name }) => name)).toEqual([
-			'ゴール',
-			'現状',
-			'完了条件',
-		])
-		expect(RULES).toMatchObject({
-			criteria: 3,
-			length: 40,
-			items: 5,
-			oneLine: true,
-			kindCount: 1,
-		})
-		expect(RULES.kinds).toEqual(['bug', 'enhancement', 'documentation'])
+		expect(RULES.map(({ kind }) => kind)).toEqual(['bug', 'enhancement'])
+		for (const form of RULES) {
+			expect(
+				form.sections.filter(({ required }) => required).map(({ name }) => name),
+			).toEqual(['ゴール', '現状', '完了条件'])
+			expect(form).toMatchObject({ criteria: 3, length: 40, items: 5, oneLine: true })
+		}
 	})
 
-	it('読めない手順書からは判定を組み立てない', () => {
-		expect(complete(rules(''))).toBe(false)
+	it('読めないテンプレートからは判定を組み立てない', () => {
+		expect(complete(rules([]))).toBe(false)
+		expect(complete(rules([{ labels: ['bug'], body: [] }]))).toBe(false)
 	})
 })
 
 describe('findings', () => {
 	it('型に合う issue には何も出さない', () => {
 		expect(found()).toEqual([])
+	})
+
+	it('フォームから出た本文を通す', () => {
+		const form = [
+			'### ゴール',
+			'',
+			'タグの一覧に他のタグの記事が混ざらない。',
+			'',
+			'### 現状',
+			'',
+			'- 日本語だけのタグで一覧が混ざる',
+			'',
+			'### 完了条件',
+			'',
+			'- [ ] 日本語だけのタグでも一覧が混ざらない',
+			'',
+			'### 前提・制約',
+			'',
+			'_No response_',
+		].join('\n')
+		expect(found({ body: form, labels: ['enhancement'] })).toEqual([])
 	})
 
 	it('任意の節を足しても、順に並んでいれば通す', () => {
@@ -86,7 +96,7 @@ describe('findings', () => {
 	it('節の順が型と違えば落とす', () => {
 		const { ゴール, ...rest } = SHAPED
 		expect(found({ body: body({ ...rest, ゴール }) })).toContain(
-			`節は ${RULES.sections.map(({ name }) => name).join(' → ')} の順に並べる`,
+			`節は ${RULES[0].sections.map(({ name }) => name).join(' → ')} の順に並べる`,
 		)
 	})
 
@@ -123,11 +133,9 @@ describe('findings', () => {
 			'タイトルに分類の接頭辞が付いている',
 		)
 		expect(found({ labels: ['bug', 'enhancement'] })).toContain(
-			'ラベルは bug / enhancement / documentation から1つ（今は bug / enhancement）',
+			'ラベルは bug / enhancement から1つ（今は bug / enhancement）',
 		)
-		expect(found({ labels: [] })).toContain(
-			'ラベルは bug / enhancement / documentation から1つ（今はなし）',
-		)
+		expect(found({ labels: [] })).toContain('ラベルは bug / enhancement から1つ（今はなし）')
 		expect(found({ labels: ['bug', 'good first issue'] })).toContain(
 			'型に無いラベル: good first issue',
 		)
