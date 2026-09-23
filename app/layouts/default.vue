@@ -104,7 +104,6 @@
 		min-height: 100vh;
 	}
 
-	/* ヘッダーと画面の左右端に接していて、外側に描くと全辺が隠れる */
 	.main-content:focus-visible {
 		outline-offset: -2px;
 	}
