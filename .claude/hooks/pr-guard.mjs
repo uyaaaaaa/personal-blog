@@ -3,6 +3,8 @@ import { execFileSync } from 'node:child_process'
 import { read } from '../../scripts/stdin.mjs'
 
 const TRUNK = 'main'
+const TEMPLATE = '.github/pull_request_template.md'
+const LABEL = 'agent'
 
 const CHECKS = [
 	['lint', ['run', 'lint']],
@@ -64,6 +66,9 @@ const blocking = (args, ask) => {
 		return `head が ${args.head} で、出す前の条件を測る作業ツリー（${branch}）と違う`
 	}
 
+	if (typeof args.body !== 'string' || !/^## やったこと[ \t]*$/m.test(args.body)) {
+		return `本文を ${TEMPLATE} の型で書く`
+	}
 	const undecided = undrafted(args, true)
 	if (undecided) return undecided
 
@@ -91,17 +96,16 @@ export const decide = (input, ask = ASK) => {
 	if (tool !== 'create_pull_request' && tool !== 'update_pull_request') return null
 
 	const args = input.tool_input ?? {}
-	if (tool === 'create_pull_request') {
-		const reason = blocking(args, ask)
-		if (reason) return { deny: reason }
-	} else {
-		const reason = undrafted(args, false)
-		if (reason) return { deny: reason }
-	}
+	const creating = tool === 'create_pull_request'
+	const reason = creating ? blocking(args, ask) : undrafted(args, false)
+	if (reason) return { deny: reason }
 
-	if (typeof args.body !== 'string') return null
-	const body = unsigned(args.body)
-	return body === null ? null : { updatedInput: { ...args, body } }
+	const body = typeof args.body === 'string' ? unsigned(args.body) : null
+	const found = {
+		...(body === null ? {} : { updatedInput: { ...args, body } }),
+		...(creating ? { context: `作成したら ${LABEL} ラベルを付ける` } : {}),
+	}
+	return Object.keys(found).length === 0 ? null : found
 }
 
 const run = (command, argv) => {
@@ -157,14 +161,15 @@ if (process.argv[1]?.endsWith('pr-guard.mjs')) {
 					},
 				}),
 			)
-		} else if (found?.updatedInput) {
+		} else if (found) {
 			process.stdout.write(
 				JSON.stringify({
 					hookSpecificOutput: {
 						hookEventName: 'PreToolUse',
-						updatedInput: found.updatedInput,
+						...(found.updatedInput ? { updatedInput: found.updatedInput } : {}),
+						...(found.context ? { additionalContext: found.context } : {}),
 					},
-					systemMessage: '本文の署名を落とした',
+					...(found.updatedInput ? { systemMessage: '本文の署名を落とした' } : {}),
 				}),
 			)
 		}

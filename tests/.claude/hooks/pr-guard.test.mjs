@@ -10,14 +10,20 @@ const ask = {
 
 const create = (tool_input = {}) => ({
 	tool_name: 'mcp__github__create_pull_request',
-	tool_input: { title: 'x', head: 'claude/issue-292-m5eszm', base: 'main', ...tool_input },
+	tool_input: {
+		title: 'x',
+		head: 'claude/issue-292-m5eszm',
+		base: 'main',
+		body: '## やったこと\n\n- x',
+		...tool_input,
+	},
 })
 
 const denied = (input, extra) => decide(input, { ...ask, ...extra })?.deny ?? null
 
 describe('decide', () => {
-	it('条件が揃った作成は通す', () => {
-		expect(decide(create(), ask)).toBeNull()
+	it('条件が揃った作成は通し、ラベルを付けるよう伝える', () => {
+		expect(decide(create(), ask)).toEqual({ context: '作成したら agent ラベルを付ける' })
 	})
 
 	it('欠いた条件を理由に止める', () => {
@@ -27,7 +33,10 @@ describe('decide', () => {
 		expect(denied(create(), { unpushed: () => 'origin/x が無い' })).toMatch('push していない')
 		expect(denied(create(), { head: () => '' })).toMatch('読めない')
 		expect(denied(create(), { dirty: () => null })).toMatch('読めない')
-		expect(denied(create({ body: '## 判断してほしいこと\n\n- x' }))).toMatch('draft')
+		expect(denied(create({ body: '- x' }))).toMatch('型で書く')
+		expect(
+			denied(create({ body: '## 判断してほしいこと\n\n- x\n\n## やったこと\n\n- y' })),
+		).toMatch('draft')
 	})
 
 	it('CI が打つものを通し、落ちたら出力を添えて止める', () => {
@@ -64,9 +73,8 @@ describe('pending', () => {
 	})
 
 	it('draft なら判断が残っていても出せる', () => {
-		expect(
-			decide(create({ body: '## 判断してほしいこと\n\n- x', draft: true }), ask),
-		).toBeNull()
+		const body = '## 判断してほしいこと\n\n- x\n\n## やったこと\n\n- y'
+		expect(denied(create({ body, draft: true }))).toBeNull()
 	})
 })
 
