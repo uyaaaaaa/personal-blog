@@ -56,6 +56,7 @@
 				<p
 					v-if="results.length === 0"
 					class="search-note"
+					aria-hidden="true"
 				>
 					{{ countMessage }}
 				</p>

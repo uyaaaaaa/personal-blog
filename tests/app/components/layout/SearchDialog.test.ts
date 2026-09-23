@@ -93,5 +93,11 @@ describe('SearchDialog', () => {
 		await wrapper.get('input').setValue('vim')
 
 		expect(status().text()).toBe('1 article found.')
+
+		await wrapper.get('input').setValue('docker')
+
+		expect(status().text()).toBe('No articles found.')
+		expect(wrapper.get('.search-note').text()).toBe('No articles found.')
+		expect(wrapper.get('.search-note').attributes('aria-hidden')).toBe('true')
 	})
 })

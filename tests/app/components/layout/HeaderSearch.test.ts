@@ -95,5 +95,6 @@ describe('HeaderSearch', () => {
 
 		expect(wrapper.get('.sr-only[role="status"]').text()).toBe('No articles found.')
 		expect(wrapper.get('.search-note').text()).toBe('No articles found.')
+		expect(wrapper.get('.search-note').attributes('aria-hidden')).toBe('true')
 	})
 })
