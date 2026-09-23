@@ -167,6 +167,7 @@ describe('decide', () => {
 		expect(decide(bash('command gh pr create'), ask)).toMatch('create_pull_request')
 		expect(decide(bash('FOO="a b" gh pr create'), ask)).toMatch('create_pull_request')
 		expect(decide(bash("env -S 'gh pr create'"), ask)).toMatch('create_pull_request')
+		expect(decide(bash("env -S 'gh pr' create"), ask)).toMatch('create_pull_request')
 		expect(decide(bash('/usr/bin/env -u X gh pr create'), ask)).toMatch('create_pull_request')
 		expect(decide(bash('gh pr view 580'), ask)).toBeNull()
 	})

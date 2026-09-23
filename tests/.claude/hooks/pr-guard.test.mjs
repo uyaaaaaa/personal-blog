@@ -77,6 +77,7 @@ describe('pending', () => {
 		expect(pending('## 判断してほしいこと\n\n## 判断してほしいこと\n\n- x')).toBe(true)
 		expect(pending('## 判断してほしいこと\n\n![選択肢](choice.png)')).toBe(true)
 		expect(pending('## 判断してほしいこと\n\n<p>どちらにする？</p>')).toBe(true)
+		expect(pending('## 判断してほしいこと\n\n<img src="c.png">')).toBe(true)
 		expect(pending('## 判断してほしいこと\n\n![選択肢][c]\n\n[c]: c.png')).toBe(true)
 	})
 

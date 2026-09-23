@@ -44,7 +44,8 @@ export const invoked = (found, name) => {
 			at += 1
 		} else if (launched && SPLIT.test(found[at])) {
 			const [, attached] = SPLIT.exec(found[at])
-			return invoked(tokens(attached ?? found[at + 1] ?? '').map(unquote), name)
+			const rest = found.slice(at + (attached === undefined ? 2 : 1))
+			return invoked([...tokens(attached ?? found[at + 1] ?? '').map(unquote), ...rest], name)
 		} else if (launched && found[at].startsWith('-')) {
 			at += LAUNCHER_VALUED.has(found[at]) ? 2 : 1
 		} else break
