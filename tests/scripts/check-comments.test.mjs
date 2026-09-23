@@ -105,6 +105,12 @@ describe('check-comments', () => {
 		expect(check().status).toBe(0)
 	})
 
+	it('フックの算術シフトと here-string をヒアドキュメントとして扱わない', () => {
+		fails('.githooks/pre-commit', 'value=$((1 << 2))\n# 一\n# 二\nexit 0\n')
+		rmSync(join(root, '.githooks/pre-commit'))
+		fails('.githooks/commit-msg', 'read value <<< input\n# 一\n# 二\nexit 0\n')
+	})
+
 	it('.githooks の下の入れ子のファイルも読む', () => {
 		fails('.githooks/lib/check', '# 一\n# 二\nexit 0\n')
 	})

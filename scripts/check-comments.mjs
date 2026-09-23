@@ -12,7 +12,7 @@ const HOOKS = '.githooks/'
 
 const DIRECTIVE = /^(?:eslint|@ts-|prettier-ignore|@vitest-|globals?\s|\/\s*<reference)/
 const SHEBANG = '#!'
-const HEREDOC = /<<-?\s*['"]?(\w+)['"]?/
+const HEREDOC = /<<-?\s*['"]?(\w+)['"]?/g
 const BLANK_LINE = /\n[^\S\n]*\n/
 
 const { read, entries } = inputs(process.argv[2])
@@ -108,6 +108,16 @@ const commentStart = (line) => {
 	return -1
 }
 
+const heredocDelimiter = (command) => {
+	for (const match of command.matchAll(HEREDOC)) {
+		const before = command.slice(0, match.index)
+		if (before.endsWith('<')) continue
+		if (before.lastIndexOf('((') > before.lastIndexOf('))')) continue
+		return match[1]
+	}
+	return null
+}
+
 const shellComments = (code) => {
 	const found = []
 	let offset = 0
@@ -120,7 +130,7 @@ const shellComments = (code) => {
 		}
 		const column = at === 0 && line.startsWith(SHEBANG) ? -1 : commentStart(line)
 		const command = column >= 0 ? line.slice(0, column) : line
-		heredoc = HEREDOC.exec(command)?.[1] ?? null
+		heredoc = heredocDelimiter(command)
 		if (column >= 0) {
 			found.push({
 				value: line.slice(column + 1),
