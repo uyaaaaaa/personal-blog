@@ -44,7 +44,7 @@
   collection の全件 ──▶ プリレンダの起点 ──▶ 全ページを静的生成 ──▶ 出ていないパスは404
 ```
 
-route を読める入口は lint が持ち、他の条件の細目と理由は [rules/structure.md](../.claude/rules/structure.md) が持ちます。
+各条件の細目と理由は [rules/structure.md](../.claude/rules/structure.md) が持ちます。
 
 ## 検査の置き場
 
