@@ -42,7 +42,7 @@
 			class="sr-only"
 			role="status"
 		>
-			{{ countMessage }}
+			{{ statusMessage }}
 		</p>
 
 		<div
@@ -112,6 +112,7 @@
 
 	const isOpen = computed(() => !dismissed.value && query.value.trim() !== '')
 	const hasList = computed(() => isOpen.value && results.value.length > 0)
+	const statusMessage = computed(() => (hasList.value ? countMessage.value : ''))
 
 	const dismiss = () => {
 		dismissed.value = true

@@ -26,11 +26,25 @@ describe('HeaderSearch', () => {
 		expect(wrapper.get('.search-panel-layer').classes()).toContain('is-open')
 		expect(wrapper.findAll('[role="option"]')).toHaveLength(1)
 	})
-	it('候補が出たら件数を読み上げる状態に出す', async () => {
+	it('件数を読み上げる状態は、候補が並んでいる間だけ持つ', async () => {
 		const wrapper = await mountSuspended(HeaderSearch)
+		const status = () => wrapper.get('.sr-only[role="status"]')
 
 		await wrapper.get('input').setValue('vim')
 
-		expect(wrapper.get('[role="status"]').text()).toBe('1 article found.')
+		expect(status().text()).toBe('1 article found.')
+
+		await wrapper.get('.header-search').trigger('focusout')
+
+		expect(status().text()).toBe('')
+	})
+
+	it('0件でも読み上げ用の領域は消さず、案内は今までの文のまま出す', async () => {
+		const wrapper = await mountSuspended(HeaderSearch)
+
+		await wrapper.get('input').setValue('docker')
+
+		expect(wrapper.get('.sr-only[role="status"]').text()).toBe('')
+		expect(wrapper.get('.search-note').text()).toBe('No articles found.')
 	})
 })
