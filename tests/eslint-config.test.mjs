@@ -620,6 +620,15 @@ describe('動きを減らす設定', () => {
 		).toBe(1)
 	})
 
+	it('送り方でない smooth は通す', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/utils/a.ts',
+				"export const texture = 'smooth'\nexport const pick = (a: string) => ({ finish: a || 'smooth' })",
+			),
+		).toBe(0)
+	})
+
 	it('設定を読む useScrollTo は通す', async () => {
 		expect(
 			await reducedMotionsIn(

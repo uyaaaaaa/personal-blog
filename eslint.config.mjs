@@ -139,8 +139,15 @@ const SCROLL_BEHAVIOR_KEY = '/^scrollBehavior(Type)?$/'
 
 const SMOOTH_SCROLL_MESSAGE = `滑らかな送りは useScrollTo の外で指定しない。動きを減らす設定を読んで送り方を決めるのは useScrollTo だけ。 ${INVARIANT_URL}`
 
+// 送り方を渡す口は behavior の鍵と ScrollBehavior の値。語の smooth そのものは他の意味でも使う
+const SMOOTH_VALUE =
+	":matches(Literal[value='smooth'], TemplateLiteral:has(> TemplateElement[value.cooked='smooth']))"
+const BEHAVIOR_KEY = ':matches([key.name=/behavior$/i], [key.value=/behavior$/i])'
+const BEHAVIOR_BINDING =
+	":matches([id.name=/behavior$/i], [id.typeAnnotation.typeAnnotation.typeName.name='ScrollBehavior'])"
+
 const SMOOTH_SCROLL = {
-	selector: ":matches(Literal[value='smooth'], TemplateElement[value.cooked='smooth'])",
+	selector: `:matches(Property${BEHAVIOR_KEY}, VariableDeclarator${BEHAVIOR_BINDING}, AssignmentPattern[left.name=/behavior$/i]) ${SMOOTH_VALUE}`,
 	message: SMOOTH_SCROLL_MESSAGE,
 }
 
