@@ -34,6 +34,7 @@ const NAMED_ROLES = new Set([
 	'treeitem',
 ])
 const FIELDS = new Set(['select', 'textarea'])
+const DISABLEABLE = new Set(['button', 'input', 'select', 'textarea'])
 const FOCUSABLE_NATIVES = new Set(['button', 'select', 'textarea', 'summary', 'iframe'])
 const DEFAULT_NAMED_INPUTS = new Set(['submit', 'reset'])
 
@@ -166,7 +167,7 @@ const nameSource = (element) => {
 
 const isInsideLabel = (element) => {
 	for (let it = element.parent; it?.type === 'VElement'; it = it.parent)
-		if (it.rawName === 'label') return true
+		if (it.rawName === 'label') return isNamed(it, 'content')
 	return false
 }
 
@@ -186,7 +187,7 @@ const elementsOf = (root) => {
 const labelTargets = (elements) => {
 	const targets = new Set()
 	for (const element of elements) {
-		if (element.rawName !== 'label') continue
+		if (element.rawName !== 'label' || !isNamed(element, 'content')) continue
 		for (const value of read(element, 'for') ?? [])
 			targets.add(isJudgeable(value) ? value : UNKNOWN)
 	}
@@ -224,7 +225,7 @@ const isFocusable = (element) => {
 	if (read(element, 'tabindex') !== null) return false
 	if (isLinkComponent(element)) return !isPresent(element, 'custom')
 	if (!isNative(element)) return false
-	if (read(element, 'disabled') !== null) return false
+	if (DISABLEABLE.has(element.rawName) && isPresent(element, 'disabled')) return false
 	if (isPresent(element, 'contenteditable'))
 		return !read(element, 'contenteditable').every((value) => String(value) === 'false')
 	if (element.rawName === 'a' || element.rawName === 'area') return read(element, 'href') !== null

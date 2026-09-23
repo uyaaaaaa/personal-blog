@@ -87,6 +87,8 @@ describe('field-label', () => {
 				'<textarea></textarea>',
 				'<select><option>A</option></select>',
 				'<label for="other">Name</label><input id="name">',
+				'<label><input></label>',
+				'<label for="name"></label><input id="name">',
 			],
 		})
 	})
@@ -119,6 +121,8 @@ describe('no-focusable-in-hidden', () => {
 				'<div :aria-hidden="!open"><button type="button">Close</button></div>',
 				'<div :aria-hidden="true"><button type="button">Close</button></div>',
 				'<a href="/" aria-hidden="true">Home</a>',
+				'<div aria-hidden="true"><a href="/" disabled>Home</a></div>',
+				'<div aria-hidden="true"><button type="button" :disabled="false">Close</button></div>',
 			],
 		})
 	})
@@ -131,6 +135,7 @@ describe('no-focusable-in-hidden', () => {
 				'<div :aria-hidden="!open" :inert="!open"><button type="button">Close</button></div>',
 				'<div aria-hidden="true"><button type="button" tabindex="-1">Close</button></div>',
 				'<div aria-hidden="true"><button type="button" disabled>Close</button></div>',
+				'<div aria-hidden="true"><button type="button" :disabled="pending">Close</button></div>',
 				'<div aria-hidden="true"><a>Home</a></div>',
 				'<div aria-hidden="true"><input type="hidden"></div>',
 				'<div aria-hidden="false"><button type="button">Close</button></div>',
@@ -179,6 +184,7 @@ describe('decorative-root', () => {
 					'<svg><path d="M0 0" /></svg>',
 					'<UserCard />',
 					'<svg /><Icon />',
+					'text',
 				]).map((test) => ({ ...test, errors: [{ messageId: 'visible' }] })),
 				...at(CARD, [
 					'<svg aria-hidden="true"><path d="M0 0" /></svg>',
