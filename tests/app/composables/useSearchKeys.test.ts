@@ -72,7 +72,7 @@ describe('useSearchKeys', () => {
 		onKeydown(press('Enter'))
 
 		expect(close).toHaveBeenCalledTimes(1)
-		expect(select).toHaveBeenCalledTimes(1)
+		expect(select).toHaveBeenCalledWith('/article/vim-abbreviation')
 		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
 		const [selectOrder = 0] = select.mock.invocationCallOrder
 		const [closeOrder = 0] = close.mock.invocationCallOrder

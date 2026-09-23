@@ -19,7 +19,7 @@
 				role="option"
 				:aria-selected="index === activeIndex"
 				prefetch-on="interaction"
-				@click="emit('select')"
+				@click="emit('select', currentTabPath(article.path, $event))"
 				@pointermove="emit('activate', index)"
 			>
 				<span class="search-result-title">{{ article.title }}</span>
@@ -50,13 +50,18 @@
 	}>()
 
 	const emit = defineEmits<{
-		(e: 'select'): void
+		(e: 'select', path?: string): void
 		(e: 'activate', index: number): void
 	}>()
 
 	const listRef = ref<HTMLElement | null>(null)
 
 	const optionId = (index: number) => `${props.id}-${index}`
+
+	const currentTabPath = (path: string, event: MouseEvent) =>
+		event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
+			? path
+			: undefined
 
 	watch(
 		() => props.results,

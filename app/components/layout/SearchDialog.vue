@@ -81,7 +81,7 @@
 
 	const emit = defineEmits<{
 		(e: 'close'): void
-		(e: 'select'): void
+		(e: 'select', path: string): void
 	}>()
 
 	const search = useArticleSearch()
@@ -108,15 +108,15 @@
 
 	const canSelectByKey = () => (searchKeysRef.value?.getClientRects().length ?? 0) > 0
 
-	const select = () => {
-		emit('select')
+	const select = (path?: string) => {
+		if (path) emit('select', path)
 		emit('close')
 	}
 
 	const { onKeydown: onInputKeydown, trapRef } = useSearchKeys(search, {
 		canSelect: canSelectByKey,
 		isTrapped: toRef(props, 'isOpen'),
-		select: () => emit('select'),
+		select: (path) => emit('select', path),
 		close: () => emit('close'),
 	})
 

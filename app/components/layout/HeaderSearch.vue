@@ -85,7 +85,7 @@
 
 	const emit = defineEmits<{
 		(e: 'update:open', value: boolean): void
-		(e: 'select'): void
+		(e: 'select', path: string): void
 	}>()
 
 	const search = useArticleSearch()
@@ -103,9 +103,9 @@
 		dismissed.value = true
 	}
 
-	const select = () => {
+	const select = (path?: string) => {
 		dismiss()
-		emit('select')
+		if (path) emit('select', path)
 	}
 
 	const close = () => {
@@ -151,7 +151,7 @@
 	const { onKeydown: onSelectKeydown, trapRef } = useSearchKeys(search, {
 		canSelect: () => isOpen.value,
 		isTrapped: hasList,
-		select: () => emit('select'),
+		select: (path) => emit('select', path),
 		close: () => {
 			returnFocus()
 			dismiss()

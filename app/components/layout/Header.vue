@@ -84,10 +84,10 @@
 	const mobileSearchRef = ref<HTMLElement | null>(null)
 
 	let searchOpener: HTMLElement | null = null
-	let focusContentAfterNavigation = false
+	let expectedSearchLocation: string | null = null
 
-	const expectSearchNavigation = () => {
-		focusContentAfterNavigation = true
+	const expectSearchNavigation = (path: string) => {
+		expectedSearchLocation = path === props.location ? null : path
 	}
 
 	const toggleMenu = () => {
@@ -150,9 +150,12 @@
 			closeSearch()
 			inlineSearchRef.value?.close()
 
-			if (!focusContentAfterNavigation) return
+			if (expectedSearchLocation !== props.location) {
+				expectedSearchLocation = null
+				return
+			}
 
-			focusContentAfterNavigation = false
+			expectedSearchLocation = null
 			emit('search-navigation')
 		},
 	)

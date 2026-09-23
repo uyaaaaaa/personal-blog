@@ -35,7 +35,7 @@ describe('SearchDialog', () => {
 		await wrapper.get('input').setValue('vim')
 		await wrapper.get('[role="option"]').trigger('click')
 
-		expect(wrapper.emitted('select')).toHaveLength(1)
+		expect(wrapper.emitted('select')).toEqual([['/article/vim-abbreviation']])
 		expect(wrapper.emitted('close')).toHaveLength(1)
 	})
 })

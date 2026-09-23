@@ -33,6 +33,15 @@ describe('HeaderSearch', () => {
 		await wrapper.get('input').setValue('vim')
 		await wrapper.get('[role="option"]').trigger('click')
 
-		expect(wrapper.emitted('select')).toHaveLength(1)
+		expect(wrapper.emitted('select')).toEqual([['/article/vim-abbreviation']])
+	})
+
+	it('別タブで開くクリックは同一タブの遷移として伝えない', async () => {
+		const wrapper = await mountSuspended(HeaderSearch)
+
+		await wrapper.get('input').setValue('vim')
+		await wrapper.get('[role="option"]').trigger('click', { metaKey: true })
+
+		expect(wrapper.emitted('select')).toBeUndefined()
 	})
 })
