@@ -1,9 +1,18 @@
 // @vitest-environment nuxt
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import ProseTable from '~/components/content/ProseTable.vue'
+import { stubResizeObserver } from '~~/tests/app/resizeObserver.test-helper'
 
-const frame = () => new Promise((done) => requestAnimationFrame(() => done(undefined)))
+let observer: ReturnType<typeof stubResizeObserver>
+
+beforeEach(() => {
+	observer = stubResizeObserver()
+})
+
+afterEach(() => {
+	observer.restore()
+})
 
 const mount = async (scrollWidth: number, clientWidth: number) => {
 	const wrapper = await mountSuspended(ProseTable, {
@@ -13,19 +22,18 @@ const mount = async (scrollWidth: number, clientWidth: number) => {
 
 	Object.defineProperty(box, 'scrollWidth', { value: scrollWidth, configurable: true })
 	Object.defineProperty(box, 'clientWidth', { value: clientWidth, configurable: true })
-	window.dispatchEvent(new Event('resize'))
-	await frame()
+	observer.resize()
 	await wrapper.vm.$nextTick()
 
 	return wrapper.get('.prose-table-scroll')
 }
 
 describe('ProseTable', () => {
-	it('横に溢れた表をタブ順に入れ、領域として読み上げさせる', async () => {
+	it('横に溢れた表をタブ順に入れ、名前を読み上げさせる', async () => {
 		const box = await mount(600, 300)
 
 		expect(box.attributes('tabindex')).toBe('0')
-		expect(box.attributes('role')).toBe('region')
+		expect(box.attributes('role')).toBe('group')
 		expect(box.attributes('aria-label')).toBe('Table')
 	})
 

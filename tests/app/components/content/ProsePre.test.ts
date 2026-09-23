@@ -1,9 +1,18 @@
 // @vitest-environment nuxt
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import ProsePre from '~/components/content/ProsePre.vue'
+import { stubResizeObserver } from '~~/tests/app/resizeObserver.test-helper'
 
-const frame = () => new Promise((done) => requestAnimationFrame(() => done(undefined)))
+let observer: ReturnType<typeof stubResizeObserver>
+
+beforeEach(() => {
+	observer = stubResizeObserver()
+})
+
+afterEach(() => {
+	observer.restore()
+})
 
 const mount = async (scrollWidth: number, clientWidth: number) => {
 	const wrapper = await mountSuspended(ProsePre, {
@@ -15,8 +24,7 @@ const mount = async (scrollWidth: number, clientWidth: number) => {
 
 	Object.defineProperty(box, 'scrollWidth', { value: scrollWidth, configurable: true })
 	Object.defineProperty(box, 'clientWidth', { value: clientWidth, configurable: true })
-	window.dispatchEvent(new Event('resize'))
-	await frame()
+	observer.resize()
 	await wrapper.vm.$nextTick()
 
 	return wrapper.get('pre')
@@ -27,7 +35,7 @@ describe('ProsePre', () => {
 		const code = await mount(600, 300)
 
 		expect(code.attributes('tabindex')).toBe('0')
-		expect(code.attributes('role')).toBe('region')
+		expect(code.attributes('role')).toBe('group')
 		expect(code.attributes('aria-label')).toBe('Code')
 		expect(code.attributes('data-from-content')).toBe('shiki')
 	})
