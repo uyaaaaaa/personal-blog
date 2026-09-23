@@ -7,5 +7,5 @@ paths:
 
 - issue とレビュー指摘は仮説として読み、原因を実装で確かめる
 - 依頼の範囲から出るときと、issue に書かれた手段を採らないときは、先に書き手に聞く
-- PR で受けたレビュー指摘は、見届けを終えるときに1回だけ、要旨と直し方を `node scripts/harness-journal.mjs append <PR番号>` の標準入力に渡して台帳に残す
+- PR で受けたレビュー指摘は、判定が Approve になるか再レビューの打ち切りに達したときに1回だけ、要旨と直し方を `node scripts/harness-journal.mjs append <PR番号>` の標準入力に渡して台帳に残す
 - `npm run dev` を起こしたまま build・test・lint を打たない（`.nuxt` を共有する）
