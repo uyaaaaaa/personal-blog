@@ -1,7 +1,9 @@
 ---
 paths:
   - "docs/**"
-  - ".claude/**"
+  - ".claude/rules/**"
+  - ".claude/skills/**"
+  - ".claude/agents/**"
   - "CLAUDE.md"
 ---
 
