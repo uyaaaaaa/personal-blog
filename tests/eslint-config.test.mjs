@@ -671,6 +671,28 @@ describe('動きを減らす設定', () => {
 		).toBe(0)
 	})
 
+	it('Tailwind の設定から出す !important のモーションを落とす', async () => {
+		const tailwind = (body) =>
+			`import plugin from 'tailwindcss/plugin'\nexport default { ${body} }`
+		expect(await reducedMotionsIn('tailwind.config.ts', tailwind('important: true'))).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'tailwind.config.ts',
+				tailwind(
+					"plugins: [plugin(({ addUtilities }) => addUtilities({ '.a': { transitionDuration: '1s !important' } }))]",
+				),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'tailwind.config.ts',
+				tailwind(
+					"plugins: [plugin(({ addBase }) => addBase({ '*': { transitionDuration: '0s !important' } }))]",
+				),
+			),
+		).toBe(0)
+	})
+
 	it('el.style に書くモーションの !important を落とす', async () => {
 		expect(
 			await reducedMotionsIn(

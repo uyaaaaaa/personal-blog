@@ -652,8 +652,10 @@ export default [
 				sourceType: 'module',
 			},
 		},
+		plugins: { style: styleTokens },
 		rules: {
 			'no-restricted-syntax': ['error', ...WEB_FONT, ...PAGE_SCROLL],
+			'style/no-motion-important': 'error',
 		},
 	},
 	{

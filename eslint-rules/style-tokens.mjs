@@ -294,6 +294,8 @@ const MOTION_CLASS = '(?:transition|duration|delay|animate)(?![\\w])'
 const IMPORTANT_MOTION_CLASS = new RegExp(`(?:^|[\\s:])(?:[a-z-]+:)*!${MOTION_CLASS}`)
 const IMPORTANT_MOTION_TEXT = /(?:transition|animation)[\w-]*\s*:([^;]*)!\s*important/gi
 
+const MOTION_KEY = /^(?:transition|animation)(?:-?[\w-]+)?$/i
+
 const keepsMotion = (value) =>
 	/var\(/i.test(value) ||
 	[...value.matchAll(TIME)].some(([, number, unit]) => toMilliseconds(number, unit) !== 0)
@@ -546,6 +548,21 @@ const CHECKS = {
 					context.report({ node, messageId: 'important' })
 			},
 			// el.style の !important はインラインなので、全称セレクタの !important より強い
+			"Property[key.name='important'][value.value=true]"(node) {
+				context.report({ node, messageId: 'important' })
+			},
+			Property(node) {
+				const key = node.key.name ?? node.key.value
+				const { value } = node.value
+				if (
+					typeof key === 'string' &&
+					MOTION_KEY.test(key) &&
+					typeof value === 'string' &&
+					/!\s*important/i.test(value) &&
+					keepsMotion(value)
+				)
+					context.report({ node, messageId: 'important' })
+			},
 			"CallExpression[callee.property.name='setProperty']"(node) {
 				const [property, value, priority] = node.arguments
 				if (
