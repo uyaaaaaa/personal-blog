@@ -1,6 +1,7 @@
 ---
 paths:
   - "app/**"
+  - "nuxt.config.ts"
 ---
 
 # 置き場とデータの流れ
