@@ -292,7 +292,15 @@ function motionFindings(property, value) {
 const MOTION_DECLARATION = /^(?:transition|animation)(?:-[\w-]+)?$/i
 const MOTION_CLASS = '(?:transition|duration|delay|animate)(?![\\w])'
 const IMPORTANT_MOTION_CLASS = new RegExp(`(?:^|[\\s:])(?:[a-z-]+:)*!${MOTION_CLASS}`)
-const IMPORTANT_MOTION_TEXT = /(?:transition|animation)[\w-]*\s*:[^;]*!\s*important/i
+const IMPORTANT_MOTION_TEXT = /(?:transition|animation)[\w-]*\s*:([^;]*)!\s*important/gi
+
+const keepsMotion = (value) =>
+	/var\(/i.test(value) ||
+	[...value.matchAll(TIME)].some(([, number, unit]) => toMilliseconds(number, unit) !== 0)
+
+const importantMotionIn = (text) =>
+	IMPORTANT_MOTION_CLASS.test(text) ||
+	[...text.matchAll(IMPORTANT_MOTION_TEXT)].some(([, value]) => keepsMotion(value))
 // @apply の末尾の !important は、並べたクラス全部に掛かる
 const IMPORTANT_APPLY = new RegExp(`(?:^|[\\s:])${MOTION_CLASS}[\\s\\S]*!important\\s*$`)
 
@@ -522,7 +530,7 @@ const CHECKS = {
 		find(root) {
 			const found = []
 			root.walkDecls((decl) => {
-				if (decl.important && MOTION_DECLARATION.test(decl.prop))
+				if (decl.important && MOTION_DECLARATION.test(decl.prop) && keepsMotion(decl.value))
 					found.push({ node: decl, messageId: 'important' })
 			})
 			root.walkAtRules('apply', (rule) => {
@@ -534,18 +542,16 @@ const CHECKS = {
 		script: (context) => ({
 			'Literal, TemplateElement'(node) {
 				const value = node.type === 'Literal' ? node.value : node.value.cooked
-				if (
-					typeof value === 'string' &&
-					(IMPORTANT_MOTION_CLASS.test(value) || IMPORTANT_MOTION_TEXT.test(value))
-				)
+				if (typeof value === 'string' && importantMotionIn(value))
 					context.report({ node, messageId: 'important' })
 			},
 			// el.style の !important はインラインなので、全称セレクタの !important より強い
 			"CallExpression[callee.property.name='setProperty']"(node) {
-				const [property, , priority] = node.arguments
+				const [property, value, priority] = node.arguments
 				if (
 					MOTION_DECLARATION.test(property?.value ?? '') &&
-					priority?.value === 'important'
+					priority?.value === 'important' &&
+					(typeof value?.value !== 'string' || keepsMotion(value.value))
 				)
 					context.report({ node, messageId: 'important' })
 			},

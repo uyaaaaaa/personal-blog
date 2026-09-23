@@ -127,6 +127,8 @@ describe('no-motion-important', () => {
 				},
 				{ filename: 'a.vue', code: sfc('.a { margin: 0 !important; }') },
 				{ filename: 'a.vue', code: sfc('.a { @apply !mt-0; }') },
+				{ filename: 'a.vue', code: sfc('.a { transition: none !important; }') },
+				{ filename: 'a.vue', code: sfc('.a { animation-duration: 0s !important; }') },
 			],
 			invalid: [
 				{
@@ -136,7 +138,7 @@ describe('no-motion-important', () => {
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { animation-duration: 0.2s !important; }'),
+					code: sfc('.a { animation-duration: var(--panel) !important; }'),
 					errors: [{ messageId: 'important' }],
 				},
 				{

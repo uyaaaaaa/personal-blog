@@ -690,6 +690,12 @@ describe('動きを減らす設定', () => {
 				"export const useA = (el: HTMLElement) => el.style.setProperty('--panel', '1s', 'important')",
 			),
 		).toBe(0)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('transition', 'none', 'important')",
+			),
+		).toBe(0)
 	})
 
 	it('用途のクラスと直に書いた長さは通す', async () => {
