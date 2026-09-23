@@ -1,7 +1,7 @@
 # 判断の記録
 
 覆すと公開 URL かディレクトリ全体が動く判断だけを `docs/adr/` に1判断1ファイルで置きます。
-運用の設計（整形・検査の置き方・テストの走らせ方・デザインの大方針）は書きません。基準と書き方は [.claude/rules/docs.md](../.claude/rules/docs.md)、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md)、構造と検査の置き場は [ARCHITECTURE.md](./ARCHITECTURE.md) にあります。
+運用の設計（整形・検査の置き方・テストの置き場と走らせ方・デザインの大方針）は書きません。基準と書き方は [.claude/rules/docs.md](../.claude/rules/docs.md)、デザインの大方針は [DESIGN_GUIDELINE.md](./DESIGN_GUIDELINE.md)、構造と検査の置き場は [ARCHITECTURE.md](./ARCHITECTURE.md) にあります。
 
 番号は固定の識別子ではなく、リンクはファイル名で引きます。
 
