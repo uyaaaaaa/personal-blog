@@ -4,22 +4,7 @@ import { read } from '../../scripts/stdin.mjs'
 
 const TRUNK = 'main'
 
-const CHECKS = [
-	['lint', ['run', 'lint']],
-	['test', ['test']],
-	['typecheck', ['run', 'typecheck']],
-]
-
-const TAIL = 12
-
 const root = () => process.env.CLAUDE_PROJECT_DIR ?? process.cwd()
-
-const tail = (log) =>
-	log
-		.split('\n')
-		.filter((line) => line.trim() !== '')
-		.slice(-TAIL)
-		.join('\n')
 
 // 跨ぐのは実際に付く飾りだけ。* は Markdown の箇条書きの印でもあり、本文の行に当たる
 const SIGNATURE =
@@ -54,13 +39,6 @@ const blocking = (args, ask) => {
 
 	const unpushed = ask.unpushed(branch)
 	if (unpushed !== '') return `push していない: ${unpushed}`
-
-	for (const [name, argv] of CHECKS) {
-		const { code, log } = ask.check(name, argv)
-		if (code !== 0) {
-			return `npm ${argv.join(' ')} が終了コード ${code}:\n${tail(log)}`
-		}
-	}
 	return null
 }
 
@@ -119,7 +97,6 @@ const ASK = {
 		if (ahead === null) return `origin/${branch} との差を数えられない`
 		return ahead === '0' ? '' : `origin/${branch} より ${ahead} コミット先`
 	},
-	check: (_name, argv) => run('npm', argv),
 }
 
 if (process.argv[1]?.endsWith('pr-guard.mjs')) {

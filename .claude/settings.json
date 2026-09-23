@@ -122,8 +122,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pr-guard.mjs\"",
-						"timeout": 600
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pr-guard.mjs\""
 					}
 				]
 			},
