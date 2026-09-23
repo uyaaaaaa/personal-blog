@@ -344,17 +344,15 @@ const decorativeRoot = {
 						(child.type === 'VText' && child.value.trim() !== ''),
 				)
 				const hiddenRoot =
-					roots.length === 1 &&
-					roots[0].type === 'VElement' &&
-					(isDecorative(roots[0]) || isHidden(roots[0]))
+					roots.length > 0 &&
+					roots.every(
+						(root) =>
+							root.type === 'VElement' && (isDecorative(root) || isHidden(root)),
+					)
+				const at = (roots.length === 1 ? roots[0] : template).loc
 				const named = DECORATIVE_FILE.test(context.filename)
-				if (named && !hiddenRoot)
-					context.report({
-						loc: (roots.length === 1 ? roots[0] : template).loc,
-						messageId: 'visible',
-					})
-				if (!named && hiddenRoot)
-					context.report({ loc: roots[0].loc, messageId: 'unnamed' })
+				if (named && !hiddenRoot) context.report({ loc: at, messageId: 'visible' })
+				if (!named && hiddenRoot) context.report({ loc: at, messageId: 'unnamed' })
 			},
 		}
 	},

@@ -192,6 +192,7 @@ describe('decorative-root', () => {
 				...at(CARD, [
 					'<svg aria-hidden="true"><path d="M0 0" /></svg>',
 					'<CloseIcon />',
+					'<SunIcon v-if="light" /><MoonIcon v-else />',
 				]).map((test) => ({ ...test, errors: [{ messageId: 'unnamed' }] })),
 			],
 		})
@@ -218,6 +219,7 @@ describe('decorative-root', () => {
 				...at(ICON, [
 					'<svg aria-hidden="true"><path d="M0 0" /></svg>',
 					'<Icon><path d="M0 0" /></Icon>',
+					'<SunIcon v-if="light" /><MoonIcon v-else />',
 				]),
 				...at(CARD, ['<article><h2>Name</h2></article>', '<svg><title>Logo</title></svg>']),
 				...[
