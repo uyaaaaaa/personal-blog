@@ -8,6 +8,8 @@ const BRANCH = /^claude\/[a-z0-9]+(?:-[a-z0-9]+)*-[a-z0-9]{4,6}$/
 const TRUNK = 'main'
 const HOOKS_PATH = '.githooks'
 
+const MERGE = 'マージするかは書き手が判断する'
+
 const TOOLS = {
 	push_files:
 		'GitHub 側でコミットが作られ、commit-msg も pre-commit も通らない。git で commit して push する',
@@ -16,8 +18,8 @@ const TOOLS = {
 	delete_file:
 		'GitHub 側でコミットが作られ、commit-msg も pre-commit も通らない。git で commit して push する',
 	update_pull_request_branch: `GitHub 側でマージコミットが作られ、フックを通らない。${TRUNK} をローカルでマージして push する`,
-	merge_pull_request: 'マージするかは書き手が判断する',
-	enable_pr_auto_merge: 'マージするかは書き手が判断する',
+	merge_pull_request: MERGE,
+	enable_pr_auto_merge: MERGE,
 }
 
 const segments = (command) => {
@@ -161,6 +163,7 @@ const GH_VALUED = new Set(['-R', '--repo'])
 
 const WRITE_PR =
 	'PR は GitHub MCP の create_pull_request と update_pull_request で扱う。pr-guard の検査を通すため'
+const MERGE_MUTATION = /\b(?:mergePullRequest|enablePullRequestAutoMerge)\b/
 const PR_MUTATION =
 	/\b(?:createPullRequest|updatePullRequest|markPullRequestReadyForReview|updatePullRequestBranch)\b/
 
@@ -170,6 +173,7 @@ const METHOD = /^(?:-X|--method)(?:=?)(.*)$/
 // gh api は値を付けると POST になり、-X で PATCH も打てる
 const pulled = (found, positional) => {
 	if (positional.includes('graphql')) {
+		if (found.some((arg) => MERGE_MUTATION.test(arg))) return MERGE
 		return found.some((arg) => PR_MUTATION.test(arg)) ? WRITE_PR : null
 	}
 	if (!positional.some((arg) => /(?:^|\/)pulls(?:\/|$)/.test(arg))) return null
@@ -192,6 +196,7 @@ const gh = (segment) => {
 	if (['create', 'new'].includes(positional[1])) {
 		return 'PR は GitHub MCP の create_pull_request で作る。pr-guard の検査を通すため'
 	}
+	if (positional[1] === 'merge') return MERGE
 	if (['edit', 'ready'].includes(positional[1])) {
 		return 'PR は GitHub MCP の update_pull_request で直す。pr-guard の検査を通すため'
 	}

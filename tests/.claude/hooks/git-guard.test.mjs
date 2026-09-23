@@ -181,6 +181,10 @@ describe('decide', () => {
 			'create_pull_request',
 		)
 		expect(decide(bash('gh api repos/o/r/pulls/1'), ask)).toBeNull()
+		expect(decide(bash('gh pr merge 1 --auto'), ask)).toMatch('書き手')
+		expect(
+			decide(bash("gh api graphql -f query='mutation { mergePullRequest }'"), ask),
+		).toMatch('書き手')
 		expect(
 			decide(
 				bash("gh api graphql -f query='mutation { createPullRequest(input: {}) { x } }'"),
