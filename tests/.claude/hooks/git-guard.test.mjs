@@ -192,6 +192,10 @@ describe('decide', () => {
 				ask,
 			),
 		).toMatch('create_pull_request')
+		expect(decide(bash('echo `gh pr create`'), ask)).toMatch('create_pull_request')
+		expect(decide(bash('timeout 5 gh pr create'), ask)).toMatch('create_pull_request')
+		expect(decide(bash("gh alias set pc 'pr create'"), ask)).toMatch('別名')
+		expect(decide(bash('git commit -m "gh pr create を止める"'), ask)).toBeNull()
 		expect(decide(bash('gh pr view 580'), ask)).toBeNull()
 	})
 

@@ -191,6 +191,9 @@ const gh = (segment) => {
 		if (GH_VALUED.has(found[at])) at += 1
 		else if (!found[at].startsWith('-')) positional.push(found[at])
 	}
+	if (positional[0] === 'alias' && ['set', 'import'].includes(positional[1])) {
+		return 'gh の別名は PR の検査を迂回できるので作らない'
+	}
 	if (positional[0] === 'api') return pulled(found, positional)
 	if (positional[0] !== 'pr') return null
 	if (['create', 'new'].includes(positional[1])) {
@@ -201,6 +204,22 @@ const gh = (segment) => {
 		return 'PR は GitHub MCP の update_pull_request で直す。pr-guard の検査を通すため'
 	}
 	return null
+}
+
+// 起動語・置換・入れ子の形を問わず、引用の外に gh の PR 操作の並びがあれば止める
+const PR_ACTION =
+	/(?:^|[\s`(])(?:[^\s`(]*\/)?gh\s+(?:[^\s;|&`()]+\s+)*?pr\s+(create|new|edit|ready|merge)\b/
+
+const anywhere = (command) => {
+	const bare = tokens(command)
+		.filter((token) => !/["']/.test(token))
+		.join(' ')
+	const [, action] = PR_ACTION.exec(bare) ?? []
+	if (action === undefined) return null
+	if (action === 'merge') return MERGE
+	return ['create', 'new'].includes(action)
+		? 'PR は GitHub MCP の create_pull_request で作る。pr-guard の検査を通すため'
+		: 'PR は GitHub MCP の update_pull_request で直す。pr-guard の検査を通すため'
 }
 
 const run = (...args) => {
@@ -256,7 +275,7 @@ export const decide = (input, ask = ASK) => {
 		const reason = git(segment, ask) ?? gh(segment)
 		if (reason) return reason
 	}
-	return null
+	return anywhere(command)
 }
 
 if (process.argv[1]?.endsWith('git-guard.mjs')) {
