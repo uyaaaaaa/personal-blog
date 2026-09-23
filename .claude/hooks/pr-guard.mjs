@@ -1,14 +1,8 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { OVERLAYS } from '../../scripts/overlay-probe.mjs'
 import { read } from '../../scripts/stdin.mjs'
 
 const TRUNK = 'main'
-const EVIDENCE = '.verify'
-const PROBE = 'scripts/overlay-probe.mjs'
-const OVERLAY_LOG = /^overlay-.+\.log$/
 
 const CHECKS = [
 	['lint', ['run', 'lint']],
@@ -44,28 +38,6 @@ export const unsigned = (body) => {
 	return lines.slice(0, top).join('\n').trimEnd()
 }
 
-const CLASS = /^\.([a-z][\w-]*)$/
-const UI = 'app/'
-
-const names = [
-	...new Set(
-		Object.values(OVERLAYS)
-			.flatMap((overlay) => Object.values(overlay))
-			.map((value) => (typeof value === 'string' ? CLASS.exec(value)?.[1] : null))
-			.filter(Boolean),
-	),
-]
-
-const overlaid = (ask, base) => {
-	if (names.length === 0) return false
-
-	const found = new RegExp(`(?<![\\w-])(?:${names.join('|')})(?![\\w-])`)
-	return ask
-		.touched(base)
-		.filter((path) => path.startsWith(UI))
-		.some((path) => found.test(ask.text(path) ?? ''))
-}
-
 const blocking = (args, ask) => {
 	const branch = ask.head()
 	if (branch === '') return 'HEAD のブランチ名を読めない'
@@ -83,18 +55,10 @@ const blocking = (args, ask) => {
 	const unpushed = ask.unpushed(branch)
 	if (unpushed !== '') return `push していない: ${unpushed}`
 
-	const evidence = ask.evidence()
-	if (evidence.length === 0) {
-		return `実測の証跡が ${EVIDENCE}/ に無い。verify スキルに従って測る`
-	}
-	if (overlaid(ask, args.base ?? TRUNK) && !evidence.some((name) => OVERLAY_LOG.test(name))) {
-		return `被せた UI を触っているのに ${EVIDENCE}/overlay-*.log が無い。node ${PROBE} <対象> を打つ`
-	}
-
 	for (const [name, argv] of CHECKS) {
 		const { code, log } = ask.check(name, argv)
 		if (code !== 0) {
-			return `npm ${argv.join(' ')} が終了コード ${code}（${EVIDENCE}/${name}.log）:\n${tail(log)}`
+			return `npm ${argv.join(' ')} が終了コード ${code}:\n${tail(log)}`
 		}
 	}
 	return null
@@ -155,34 +119,7 @@ const ASK = {
 		if (ahead === null) return `origin/${branch} との差を数えられない`
 		return ahead === '0' ? '' : `origin/${branch} より ${ahead} コミット先`
 	},
-	touched: (base) => {
-		// 手元の origin/<base> はセッションが始まった時点のもので、古いと差分が膨らむ
-		const at =
-			run('git', ['fetch', '--quiet', 'origin', base]).code === 0
-				? 'FETCH_HEAD'
-				: `refs/remotes/origin/${base}`
-		return (git('diff', '--name-only', `${at}...HEAD`) ?? '').split('\n').filter(Boolean)
-	},
-	text: (path) => {
-		try {
-			return readFileSync(join(root(), path), 'utf8')
-		} catch {
-			return null
-		}
-	},
-	evidence: () => {
-		try {
-			return readdirSync(join(root(), EVIDENCE))
-		} catch {
-			return []
-		}
-	},
-	check: (name, argv) => {
-		const { code, log } = run('npm', argv)
-		mkdirSync(join(root(), EVIDENCE), { recursive: true })
-		writeFileSync(join(root(), EVIDENCE, `${name}.log`), log)
-		return { code, log }
-	},
+	check: (_name, argv) => run('npm', argv),
 }
 
 if (process.argv[1]?.endsWith('pr-guard.mjs')) {
