@@ -4,6 +4,6 @@ paths:
   - "content/**"
 ---
 
-# import と依存のルール
+# import
 
-**markdown から名前で参照されるコンポーネントは import できない。**
+markdown から名前で参照されるコンポーネントは import できない。
