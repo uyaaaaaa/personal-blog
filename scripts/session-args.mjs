@@ -1,6 +1,5 @@
 import { randomBytes } from 'node:crypto'
 
-const MODEL = 'claude-opus-5-5'
 const SOURCE_URL = 'https://github.com/uyaaaaaa/personal-blog'
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789'
@@ -62,7 +61,6 @@ export const args = (kind, rest, tail = suffix()) => {
 
 	const { title, branch, body } = built
 	return {
-		model: MODEL,
 		source_url: SOURCE_URL,
 		title,
 		prompt: [body, ...(branch ? [`作業ブランチは ${branch} にする。`] : []), ALONE].join('\n'),
