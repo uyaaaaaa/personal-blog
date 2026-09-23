@@ -49,6 +49,11 @@ describe('check-comments', () => {
 		expect(check().status).toBe(0)
 	})
 
+	it('規約の適用先に無い拡張子は読まない', () => {
+		write('a.tsx', 'export default <div />\n// 一\n// 二\n')
+		expect(check().status).toBe(0)
+	})
+
 	it('複数行にわたるディレクティブは数えない', () => {
 		write(
 			'a.mjs',

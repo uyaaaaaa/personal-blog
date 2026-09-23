@@ -5,7 +5,7 @@ import * as vueParser from 'vue-eslint-parser'
 import { fail, ignores, inputs } from './inputs.mjs'
 
 const SKIP = new Set(ignores)
-const SOURCE = /\.(vue|[cm]?[jt]sx?)$/i
+const SOURCE = /\.(vue|ts|mjs|cjs)$/i
 const HASH = /\.ya?ml$/i
 const HOOKS = '.githooks'
 
