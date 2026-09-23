@@ -107,15 +107,13 @@
 		background-color: var(--color-diff-remove-bg);
 	}
 
-	/* github-light / github-dark はdiffのトークン自体にも背景色を持ち、行背景の上に文字幅の塗りが重なる。
-   Nuxt Contentが出す `html pre.shiki code .sXXXX`（特異度 0,2,3）に勝つセレクタで打ち消す */
+	/* github テーマは diff のトークンにも背景を持つので、Nuxt Content の pre.shiki code .sXXXX（0,2,3）に勝たせて消す */
 	pre.shiki :deep(code .line > span) {
 		--shiki-default-bg: transparent;
 		--shiki-dark-bg: transparent;
 	}
 
-	/* マーカーと変化した語の文字色はテーマの赤・緑ではなく本文色。
-   `html.dark .shiki span`（特異度 0,2,2）に勝つセレクタで当てる */
+	/* html.dark .shiki span（0,2,2）に勝たせて、マーカーと変化した語を本文色にする */
 	pre.shiki :deep(code .diff-marker),
 	pre.shiki :deep(code .diff-word) {
 		color: var(--color-code-text);

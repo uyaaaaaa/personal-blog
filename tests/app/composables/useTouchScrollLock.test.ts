@@ -5,8 +5,7 @@ import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 
 const mounted: Array<() => void> = []
 
-// happy-dom は箱を持たず scrollHeight も clientHeight も 0 なので、
-// 「中身があふれているスクローラ」は自分で作る
+// happy-dom は scrollHeight も clientHeight も 0 なので、あふれるスクローラは自分で作る
 const overflow = (element: HTMLElement, scrollHeight: number, clientHeight: number) => {
 	Object.defineProperty(element, 'scrollHeight', { value: scrollHeight, configurable: true })
 	Object.defineProperty(element, 'clientHeight', { value: clientHeight, configurable: true })
@@ -54,9 +53,7 @@ const mountLock = () => {
 	}
 }
 
-// happy-dom に TouchEvent が無いので、判定に使う分だけ持たせた touchmove を送る。
-// cancelable でない event は preventDefault を呼んでも defaultPrevented が立たず、
-// 触ったかどうかが結果に出ない。呼ばれたこと自体を見る
+// happy-dom に TouchEvent が無く、cancelable でない event は defaultPrevented が立たないので呼び出しを見る
 const touchMove = (from: HTMLElement, { fingers = 1, cancelable = true } = {}) => {
 	const event = new Event('touchmove', { bubbles: true, cancelable })
 	Object.defineProperty(event, 'touches', { value: new Array(fingers).fill({}) })

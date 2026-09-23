@@ -94,8 +94,7 @@
 
 	const isNotFound = computed(() => status.value === 'success' && !page.value)
 
-	// CloudflareのSSRでは@nuxt/contentのクエリが失敗しうる。この失敗はクライアントの
-	// 再取得で復帰するため、復帰するまではカードを出さない（出すと一瞬エラーが見えてしまう）
+	// Cloudflare の SSR では @nuxt/content のクエリが失敗し、クライアントの再取得で戻る
 	const recovering = ref(Boolean(error.value))
 	onMounted(async () => {
 		if (!recovering.value) return

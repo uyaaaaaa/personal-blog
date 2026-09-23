@@ -1,6 +1,4 @@
-// iOS Safari は body の overflow: hidden ではタッチのパンを止めないので、被せている間は
-// touchmove を止めて背後のページを動かさない。止めるのは被せた側の中に来た指だけで、
-// ページ全体では止めない
+// iOS Safari は body の overflow: hidden でタッチのパンを止めない
 
 const isScrollable = (element: Element) => {
 	const overflowY = getComputedStyle(element).overflowY
@@ -26,8 +24,7 @@ export const useTouchScrollLock = () => {
 	const lockRef = ref<HTMLElement | null>(null)
 
 	const onTouchMove = (event: TouchEvent) => {
-		// スクロールが始まったあとの touchmove は cancelable ではない。preventDefault は
-		// 通らず、コンソールに警告だけが出る
+		// スクロール開始後の touchmove は cancelable でなく、preventDefault は警告を出すだけ
 		if (!event.cancelable) return
 
 		// ピンチは指2本で来る。ここで止めると拡大ごと殺す

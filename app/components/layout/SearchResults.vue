@@ -125,8 +125,7 @@
 		justify-content: space-between;
 		gap: 1rem;
 		padding: 0.5rem 0.75rem;
-		/* 縦線は幅で出し分けるので border-left は Tailwind 側だけに置く。ここに書くと
-		   scoped の詳細度が md: のクラスに勝ち、色が黙って出なくなる */
+		/* border-left をここに書くと、scoped の詳細度が md: のクラスに勝つ */
 		border-radius: 0.375rem;
 		color: var(--color-main);
 		transition: background-color 0.15s;

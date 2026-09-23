@@ -1,7 +1,6 @@
 import { mount } from '@vue/test-utils'
 
-// onMounted / onUnmounted を持つ composable を呼ぶためだけのダミーコンポーネント。
-// effectScope ではマウントのフックが走らないので、実際にマウントして破棄まで測れる形にする
+// effectScope ではマウントのフックが走らないので、実際にマウントする
 export const withSetup = <T>(setup: () => T) => {
 	let result: T | undefined
 

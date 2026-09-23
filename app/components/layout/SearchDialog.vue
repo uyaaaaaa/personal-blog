@@ -154,8 +154,7 @@
 		visibility: hidden;
 		overflow: hidden;
 		overscroll-behavior: contain;
-		/* 閉じる側だけ遅らせる。開く側も遅らせると、算出値が hidden のままの
-		   1フレームが空き、そこに focus() を出しても黙って効かない */
+		/* 開く側も遅らせると visibility: hidden の1フレームが空き、そこで focus() が効かない */
 		transition:
 			opacity 0.2s ease-in-out,
 			visibility 0s linear 0.2s;

@@ -20,8 +20,7 @@ const mounted: Array<() => void> = []
 const frames = new Map<number, FrameRequestCallback>()
 let lastFrameId = 0
 
-// happy-dom はレイアウトを持たず top が常に 0 になるので、見出しごとに直接与える。
-// スクロールで動く値なので、要素ではなくこの表を正本にして読ませる
+// happy-dom はレイアウトを持たず top が常に 0 なので、見出しごとに与える
 const tops: Record<string, number> = {}
 
 const placeHeadings = (initial: Record<string, number>) => {

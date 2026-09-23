@@ -86,8 +86,7 @@ export default defineNuxtConfig({
 		},
 		cloudflare: {
 			pages: {
-				// 自動収集はワイルドカードに畳まず、上限を超えた分を黙って切り落とす。
-				// 畳んでから書く writeWorkerRoutes に _routes.json を持たせる
+				// 自動収集は上限を超えた分を黙って切り落とすので、_routes.json は writeWorkerRoutes が書く
 				defaultRoutes: false,
 			},
 		},

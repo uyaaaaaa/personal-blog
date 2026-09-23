@@ -1,5 +1,3 @@
-// セッションの記録（~/.claude/projects/<slug>/*.jsonl）から、入力トークンの内訳と
-// ターンごとの積み上がりを出す。どのターンで跳ねたかを、感覚ではなく記録から言うための道具。
 import { readFileSync, readdirSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
