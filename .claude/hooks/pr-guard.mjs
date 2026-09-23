@@ -62,6 +62,7 @@ const blocking = (args, ask) => {
 	if (branch === TRUNK || branch === 'HEAD') {
 		return `${TRUNK} から PR は出せない。claude/<主題>-<英数字4〜6> のブランチに移す`
 	}
+	if (args.base !== TRUNK) return `base は ${TRUNK} にする`
 	if (typeof args.head === 'string' && args.head !== branch) {
 		return `head が ${args.head} で、出す前の条件を測る作業ツリー（${branch}）と違う`
 	}

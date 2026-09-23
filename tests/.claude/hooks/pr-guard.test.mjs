@@ -29,6 +29,7 @@ describe('decide', () => {
 	it('欠いた条件を理由に止める', () => {
 		expect(denied(create(), { head: () => 'main' })).toMatch('main から PR は出せない')
 		expect(denied(create({ head: 'other' }))).toMatch('作業ツリー')
+		expect(denied(create({ base: 'release' }))).toMatch('base は main')
 		expect(denied(create(), { dirty: () => ' M app/x.vue' })).toMatch('app/x.vue')
 		expect(denied(create(), { unpushed: () => 'origin/x が無い' })).toMatch('push していない')
 		expect(denied(create(), { head: () => '' })).toMatch('読めない')
