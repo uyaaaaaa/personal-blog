@@ -167,7 +167,6 @@ const gh = (segment) => {
 		if (GH_VALUED.has(found[at])) at += 1
 		else if (!found[at].startsWith('-')) positional.push(found[at])
 	}
-	if (found.includes('--help') || found.includes('-h')) return null
 	return positional[0] === 'pr' && ['create', 'new'].includes(positional[1])
 		? 'PR は GitHub MCP の create_pull_request で作る。pr-guard の検査を通すため'
 		: null

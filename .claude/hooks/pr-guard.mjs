@@ -44,14 +44,10 @@ export const unsigned = (body) => {
 
 const DECISION = '判断してほしいこと'
 
-const COMMENT = /^\s*<!--[\s\S]*-->\s*$/
+const text = (node) =>
+	node.type === 'html' ? '' : (node.value ?? (node.children ?? []).map(text).join(''))
 
-const text = (node) => node.value ?? (node.children ?? []).map(text).join('')
-
-const shown = (node) =>
-	node.type !== 'thematicBreak' &&
-	!(node.type === 'html' && COMMENT.test(node.value)) &&
-	(node.type === 'image' || node.type === 'code' || text(node).trim() !== '')
+const shown = (node) => (node.type === 'image' ? Boolean(node.url) : text(node).trim() !== '')
 
 const filled = (body, heading) => {
 	const sections = []

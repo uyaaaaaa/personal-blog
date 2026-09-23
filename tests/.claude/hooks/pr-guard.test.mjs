@@ -38,6 +38,9 @@ describe('decide', () => {
 		expect(denied(create({ body: '<!--\n## やったこと\n-->' }))).toMatch('型で書く')
 		expect(denied(create({ body: '```\n## やったこと\n\n- x\n```' }))).toMatch('型で書く')
 		expect(denied(create({ body: '## やったこと\n\n---' }))).toMatch('型で書く')
+		expect(denied(create({ body: '## やったこと\n\n```\n```\n\n<div></div>' }))).toMatch(
+			'型で書く',
+		)
 		expect(denied(create({ body: '## やったこと\n\nClaude-Session: https://a' }))).toMatch(
 			'型で書く',
 		)
