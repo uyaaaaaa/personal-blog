@@ -12,6 +12,9 @@ const DECORATIVE_MESSAGE =
 const UNNAMED_DECORATIVE_MESSAGE =
 	'ルートを支援技術から隠したコンポーネントは、名前を Icon で終わらせる。名前の判定は Icon で終わるものだけを飾りとして数えるので、他の名前だと中身として数えられ、名前の無いボタンやリンクが通る。'
 
+const ALIAS_MESSAGE =
+	'.vue を import する名前は、ファイル名が Icon で終わるときだけ Icon で終わらせる。名前の判定はタグ名で飾りを見分けるので、食い違うとアイコンだけのボタンが通るか、中身のある部品が飾りとして数えられる。'
+
 const UNKNOWN = Symbol('unknown')
 
 const LINK_COMPONENTS = new Set(['nuxtlink', 'routerlink'])
@@ -290,15 +293,43 @@ const noPositiveTabindex = templateRule(TABINDEX_MESSAGE, (template) =>
 )
 
 const DECORATIVE_FILE = /Icon\.vue$/
+const DECORATIVE_NAME = /Icon$/
+const VUE_MODULE = /\.vue$/
+
+const declaredName = (node) => {
+	for (let it = node; it; it = it.parent)
+		if (it.type === 'VariableDeclarator') return it.id.type === 'Identifier' ? it.id : null
+	return null
+}
 
 const decorativeRoot = {
 	meta: {
 		type: 'problem',
 		schema: [],
-		messages: { visible: DECORATIVE_MESSAGE, unnamed: UNNAMED_DECORATIVE_MESSAGE },
+		messages: {
+			visible: DECORATIVE_MESSAGE,
+			unnamed: UNNAMED_DECORATIVE_MESSAGE,
+			alias: ALIAS_MESSAGE,
+		},
 	},
 	create(context) {
+		const checkAlias = (source, local) => {
+			if (local === null || source.type !== 'Literal' || typeof source.value !== 'string')
+				return
+			if (!VUE_MODULE.test(source.value)) return
+			if (DECORATIVE_FILE.test(source.value) !== DECORATIVE_NAME.test(local.name))
+				context.report({ node: local, messageId: 'alias' })
+		}
+
 		return {
+			ImportDeclaration(node) {
+				for (const specifier of node.specifiers)
+					if (specifier.type === 'ImportDefaultSpecifier')
+						checkAlias(node.source, specifier.local)
+			},
+			ImportExpression(node) {
+				checkAlias(node.source, declaredName(node))
+			},
 			'Program:exit'(program) {
 				if (!program.templateBody) return
 				const template = program.templateBody

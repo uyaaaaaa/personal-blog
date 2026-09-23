@@ -194,6 +194,21 @@ describe('decorative-root', () => {
 		})
 	})
 
+	it('.vue の import 名とファイル名で、Icon の終わり方が食い違うものを落とす', () => {
+		vue.run('decorative-root', accessibility.rules['decorative-root'], {
+			valid: [],
+			invalid: [
+				"import Close from '~/components/ui/CloseIcon.vue'",
+				"import CardIcon from '~/components/ui/UserCard.vue'",
+				"const Close = defineAsyncComponent(() => import('~/components/ui/CloseIcon.vue'))",
+			].map((script) => ({
+				filename: CARD,
+				code: `${sfc('<article>x</article>')}\n<script setup lang="ts">\n${script}\n</script>\n`,
+				errors: [{ messageId: 'alias' }],
+			})),
+		})
+	})
+
 	it('名前とルートの隠し方が揃ったものを通す', () => {
 		vue.run('decorative-root', accessibility.rules['decorative-root'], {
 			valid: [
@@ -202,6 +217,16 @@ describe('decorative-root', () => {
 					'<Icon><path d="M0 0" /></Icon>',
 				]),
 				...at(CARD, ['<article><h2>Name</h2></article>', '<svg><title>Logo</title></svg>']),
+				...[
+					"import CloseIcon from '~/components/ui/CloseIcon.vue'",
+					"import Icon, { type IconSize } from '~/components/ui/Icon.vue'",
+					"import Navigation from '~/components/layout/HeaderNavigation.vue'",
+					"import AllArticles from './-AllArticles.vue'",
+					"import { formatDate } from '~/utils/date'",
+				].map((script) => ({
+					filename: CARD,
+					code: `${sfc('<article>x</article>')}\n<script setup lang="ts">\n${script}\n</script>\n`,
+				})),
 			],
 			invalid: [],
 		})
