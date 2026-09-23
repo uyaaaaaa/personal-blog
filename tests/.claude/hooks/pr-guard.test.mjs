@@ -73,6 +73,7 @@ describe('pending', () => {
 		).toBe(false)
 		expect(pending('## やったこと\n\n```\n## 判断してほしいこと\n\n- x\n```')).toBe(false)
 		expect(pending('## 判断してほしいこと\n\n## 判断してほしいこと\n\n- x')).toBe(true)
+		expect(pending('## 判断してほしいこと\n\n![選択肢](choice.png)')).toBe(true)
 	})
 
 	it('更新でも渡された本文と base を作成と同じ型で見る', () => {

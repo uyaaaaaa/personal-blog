@@ -45,9 +45,13 @@ export const unsigned = (body) => {
 const DECISION = '判断してほしいこと'
 
 const text = (node) =>
-	node.type === 'html' ? '' : (node.value ?? (node.children ?? []).map(text).join(''))
+	node.type === 'html'
+		? ''
+		: node.type === 'image'
+			? node.url
+			: (node.value ?? (node.children ?? []).map(text).join(''))
 
-const shown = (node) => (node.type === 'image' ? Boolean(node.url) : text(node).trim() !== '')
+const shown = (node) => text(node).trim() !== ''
 
 const filled = (body, heading) => {
 	const sections = []
