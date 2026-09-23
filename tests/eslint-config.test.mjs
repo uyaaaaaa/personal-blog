@@ -22,6 +22,8 @@ const QUERY_LOCATION = /記事の取得を組み立てるのは/
 const DOM_ASSEMBLY = /DOM を組み立てない/
 const DISPLAY = /display: none を宣言に書かない/
 const MOTION = /決めた長さではない|モーションのクラスは用途の名前|transition の対象に all/
+const REDUCED_MOTION =
+	/滑らかな送りは useScrollTo の外で指定しない|モーションの宣言に !important を付けない/
 
 const webFontsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
@@ -66,6 +68,11 @@ const singleSourcesIn = async (relative, code) => {
 const motionsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => MOTION.test(message.message)).length
+}
+
+const reducedMotionsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => REDUCED_MOTION.test(message.message)).length
 }
 
 const displaysIn = async (relative, code) => {
@@ -582,6 +589,67 @@ describe('モーションの長さ', () => {
 		expect(await motionsIn('app/pages/a.vue', style('.a { @apply duration-[200ms]; }'))).toBe(1)
 		expect(
 			await motionsIn('app/pages/a.vue', style('.a { transition: transform 0.2s; }')),
+		).toBe(0)
+	})
+})
+
+describe('動きを減らす設定', () => {
+	const style = (css) => `${sfc('<p class="a" />')}\n<style scoped>${css}</style>`
+
+	it('設定を読まずに滑らかに送る指定を落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/components/layout/a.vue',
+				sfc(
+					'<div />',
+					"const panel = ref<HTMLElement | null>(null)\npanel.value?.scrollTo({ top: 0, behavior: 'smooth' })",
+				),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"const behavior: ScrollBehavior = 'smooth'\nexport const useA = (el: HTMLElement) => el.scrollBy({ top: 8, behavior })",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/pages/a.vue',
+				sfc('<button @click="$el.scrollTo({ behavior: \'smooth\' })" />'),
+			),
+		).toBe(1)
+	})
+
+	it('設定を読む useScrollTo は通す', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useScrollTo.ts',
+				"export const useScrollTo = () => window.scrollTo({ top: 0, behavior: 'smooth' })",
+			),
+		).toBe(0)
+	})
+
+	it('設定より強いモーションの宣言を落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/pages/a.vue',
+				style('.a { transition: transform 0.2s !important; }'),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', style('.a { @apply !transition-move; }')),
+		).toBe(1)
+	})
+
+	it('用途のクラスと直に書いた長さは通す', async () => {
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', sfc('<p class="transition-color" />')),
+		).toBe(0)
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', style('.a { @apply md:transition-move; }')),
+		).toBe(0)
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', style('.a { transition: color 0.15s; }')),
 		).toBe(0)
 	})
 })

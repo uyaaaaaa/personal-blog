@@ -289,6 +289,13 @@ function motionFindings(property, value) {
 	return found
 }
 
+// 動きを減らす設定は全称セレクタの !important で長さを 0 にする。!important を重ねた宣言だけがそれに勝つ
+const MOTION_DECLARATION = /^(?:transition|animation)(?:-[\w-]+)?$/i
+const MOTION_CLASS = '(?:transition|duration|delay|animate)(?![\\w])'
+const IMPORTANT_MOTION_CLASS = new RegExp(`(?:^|[\\s:])(?:[a-z-]+:)*!${MOTION_CLASS}`)
+// @apply の末尾の !important は、並べたクラス全部に掛かる
+const IMPORTANT_APPLY = new RegExp(`(?:^|[\\s:])${MOTION_CLASS}[\\s\\S]*!important\\s*$`)
+
 const MOTION_PURPOSES = Object.keys(durations).join('|')
 const MOTION_CLASSES = Object.keys(durations).map((purpose) => `transition-${purpose}`)
 // 長さを別に書くクラスの接頭辞
@@ -502,6 +509,25 @@ const CHECKS = {
 			root.walkAtRules('apply', (rule) => {
 				if (OFF_PURPOSE_MOTION.test(rule.params))
 					found.push({ node: rule, messageId: 'motionClass' })
+			})
+			return found
+		},
+	},
+
+	'no-motion-important': {
+		messages: {
+			important:
+				'モーションの宣言に !important を付けない。動きを減らす設定より強くなり、設定しても止まらなくなる。抑制でも通さない。',
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				if (decl.important && MOTION_DECLARATION.test(decl.prop))
+					found.push({ node: decl, messageId: 'important' })
+			})
+			root.walkAtRules('apply', (rule) => {
+				if (IMPORTANT_MOTION_CLASS.test(rule.params) || IMPORTANT_APPLY.test(rule.params))
+					found.push({ node: rule, messageId: 'important' })
 			})
 			return found
 		},

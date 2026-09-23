@@ -137,6 +137,13 @@ const PAGE_SCROLLER = '/^(documentElement|body|scrollingElement)$/'
 const SCROLL_METHOD = '/^scroll(To|By)?$/'
 const SCROLL_BEHAVIOR_KEY = '/^scrollBehavior(Type)?$/'
 
+const SMOOTH_SCROLL_MESSAGE = `滑らかな送りは useScrollTo の外で指定しない。動きを減らす設定を読んで送り方を決めるのは useScrollTo だけ。 ${INVARIANT_URL}`
+
+const SMOOTH_SCROLL = {
+	selector: ":matches(Literal[value='smooth'], TemplateElement[value.cooked='smooth'])",
+	message: SMOOTH_SCROLL_MESSAGE,
+}
+
 const PAGE_SCROLL = [
 	{
 		selector: `CallExpression[callee.object.name=/^(window|globalThis|self)$/][callee.property.name=${SCROLL_METHOD}]`,
@@ -162,6 +169,7 @@ const PAGE_SCROLL = [
 		selector: scriptSpellingSelector('no-scroll-behavior'),
 		message: SCROLL_BEHAVIOR_MESSAGE,
 	},
+	SMOOTH_SCROLL,
 ]
 
 const SCROLL_SUBSCRIPTION = [
@@ -614,6 +622,17 @@ export default [
 			'no-restricted-syntax': [
 				'error',
 				...CALLED_LAYER_SYNTAX.filter((rule) => !PAGE_SCROLL.includes(rule)),
+			],
+		},
+	},
+	{
+		files: ['tests/app/composables/useScrollTo.test.ts'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				...CALLED_LAYER_SYNTAX.filter(
+					(rule) => !DOM_ASSEMBLY.includes(rule) && rule !== SMOOTH_SCROLL,
+				),
 			],
 		},
 	},

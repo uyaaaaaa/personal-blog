@@ -116,6 +116,45 @@ describe('no-important', () => {
 	})
 })
 
+describe('no-motion-important', () => {
+	it('モーションに重ねた !important だけを落とす', () => {
+		tester.run('no-motion-important', styleTokens.rules['no-motion-important'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { transition: color 0.15s; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-color md:transition-move; }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { margin: 0 !important; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply !mt-0; }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: transform 0.2s !important; }'),
+					errors: [{ messageId: 'important' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation-duration: 0.2s !important; }'),
+					errors: [{ messageId: 'important' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply md:!transition-move; }'),
+					errors: [{ messageId: 'important' }],
+				},
+				// 末尾の !important は並べたクラス全部に掛かる
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-color !important; }'),
+					errors: [{ messageId: 'important' }],
+				},
+			],
+		})
+	})
+})
+
 describe('no-off-purpose-motion', () => {
 	it('用途に決めた長さだけを通す', () => {
 		tester.run('no-off-purpose-motion', styleTokens.rules['no-off-purpose-motion'], {
