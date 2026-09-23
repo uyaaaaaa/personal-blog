@@ -289,6 +289,23 @@ function motionFindings(property, value) {
 	return found
 }
 
+const MOTION_DECLARATION = /^(?:transition|animation)(?:-[\w-]+)?$/i
+const MOTION_CLASS = '(?:transition|duration|delay|animate)(?![\\w])'
+const IMPORTANT_MOTION_CLASS = new RegExp(`(?:^|[\\s:])(?:[a-z-]+:)*!${MOTION_CLASS}`)
+const IMPORTANT_MOTION_TEXT = /(?:transition|animation)[\w-]*\s*:([^;]*)!\s*important/gi
+
+const MOTION_KEY = /^(?:transition|animation)(?:-?[\w-]+)?$/i
+
+const keepsMotion = (value) =>
+	/var\(/i.test(value) ||
+	[...value.matchAll(TIME)].some(([, number, unit]) => toMilliseconds(number, unit) !== 0)
+
+const importantMotionIn = (text) =>
+	IMPORTANT_MOTION_CLASS.test(text) ||
+	[...text.matchAll(IMPORTANT_MOTION_TEXT)].some(([, value]) => keepsMotion(value))
+// @apply の末尾の !important は、並べたクラス全部に掛かる
+const IMPORTANT_APPLY = new RegExp(`(?:^|[\\s:])${MOTION_CLASS}[\\s\\S]*!important\\s*$`)
+
 const MOTION_PURPOSES = Object.keys(durations).join('|')
 const MOTION_CLASSES = Object.keys(durations).map((purpose) => `transition-${purpose}`)
 // 長さを別に書くクラスの接頭辞
@@ -507,6 +524,59 @@ const CHECKS = {
 		},
 	},
 
+	'no-motion-important': {
+		messages: {
+			important:
+				'モーションの宣言に !important を付けない。動きを減らす設定より強くなり、設定しても止まらなくなる。抑制でも通さない。',
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				if (decl.important && MOTION_DECLARATION.test(decl.prop) && keepsMotion(decl.value))
+					found.push({ node: decl, messageId: 'important' })
+			})
+			root.walkAtRules('apply', (rule) => {
+				if (IMPORTANT_MOTION_CLASS.test(rule.params) || IMPORTANT_APPLY.test(rule.params))
+					found.push({ node: rule, messageId: 'important' })
+			})
+			return found
+		},
+		script: (context) => ({
+			'Literal, TemplateElement'(node) {
+				const value = node.type === 'Literal' ? node.value : node.value.cooked
+				if (typeof value === 'string' && importantMotionIn(value))
+					context.report({ node, messageId: 'important' })
+			},
+			"ExportDefaultDeclaration > ObjectExpression > Property[key.name='important'][value.value=true], ExportDefaultDeclaration > * > ObjectExpression > Property[key.name='important'][value.value=true]"(
+				node,
+			) {
+				context.report({ node, messageId: 'important' })
+			},
+			Property(node) {
+				const key = node.key.name ?? node.key.value
+				const { value } = node.value
+				if (
+					typeof key === 'string' &&
+					MOTION_KEY.test(key) &&
+					typeof value === 'string' &&
+					/!\s*important/i.test(value) &&
+					keepsMotion(value)
+				)
+					context.report({ node, messageId: 'important' })
+			},
+			// el.style の !important はインラインなので、全称セレクタの !important より強い
+			"CallExpression[callee.property.name='setProperty']"(node) {
+				const [property, value, priority] = node.arguments
+				if (
+					MOTION_DECLARATION.test(property?.value ?? '') &&
+					priority?.value === 'important' &&
+					(typeof value?.value !== 'string' || keepsMotion(value.value))
+				)
+					context.report({ node, messageId: 'important' })
+			},
+		}),
+	},
+
 	'no-custom-breakpoint': {
 		messages: {
 			breakpoint: `{{literal}} で表示を出し分けない。ブレークポイントは ${BREAKPOINT_LABEL}の2つだけ。 ${BREAKPOINT_URL}`,
@@ -649,6 +719,7 @@ export function findings(root) {
 const ruleOf = (check) => ({
 	meta: { type: 'problem', schema: [], messages: check.messages },
 	create: (context) => ({
+		...check.script?.(context),
 		Program() {
 			eachStyleBlock(context, (root, locate) => {
 				for (const { node, messageId, data } of check.find(root)) {
