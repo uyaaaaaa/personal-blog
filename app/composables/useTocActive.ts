@@ -6,8 +6,7 @@ interface TocLink {
 	children?: TocLink[]
 }
 
-// 着地はスクロール位置の丸めで scroll-margin-top をまたぐ（実測で 115.6〜116.2）。
-// ちょうどで切ると、上に出た側の見出しが選ばれない
+// 着地はスクロール位置の丸めで scroll-margin-top を 1px 未満またぐ
 const SUBPIXEL_SLACK = 1
 
 export const useTocActive = (links: Ref<TocLink[]>, enabled: Ref<boolean>) => {
@@ -24,8 +23,6 @@ export const useTocActive = (links: Ref<TocLink[]>, enabled: Ref<boolean>) => {
 		return result
 	})
 
-	// 見出しが着地する位置は scroll-margin-top が持つ。判定にその数値を写すと、
-	// 着地位置を変えたときに片方だけ残って1つ前の見出しが選ばれ続ける
 	const landingOffset = (el: HTMLElement) =>
 		(parseFloat(getComputedStyle(el).scrollMarginTop) || 0) + SUBPIXEL_SLACK
 

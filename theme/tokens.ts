@@ -7,6 +7,7 @@ export const colors = {
 	'accent-contrast': '#FFFFFF',
 	border: '#E6E4DF',
 	'border-strong': '#1A1A1A',
+	'border-field': '#8A8883',
 	surface: '#FFFFFF',
 	'surface-subtle': '#F3F2EE',
 	'surface-muted': '#ECEAE4',
@@ -32,6 +33,7 @@ export const darkColors: Record<keyof typeof colors, string> = {
 	'accent-contrast': '#141414',
 	border: '#2E2E2E',
 	'border-strong': '#8A8A86',
+	'border-field': '#6E6E6A',
 	surface: '#1A1A1A',
 	'surface-subtle': '#1E1E1E',
 	'surface-muted': '#262626',
@@ -67,8 +69,7 @@ export const fontFamily = {
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 }
 
-// meta / ui / total / notice-title は Tailwind の既定の xs / sm / base / xl と同じ値。
-// 既定を閉じるのが目的で、大きさそのものは動かさない
+// Tailwind の既定の xs / sm / base / xl と同じ値。既定を閉じるためだけに持つ
 export const fontSize = {
 	'2xs': '11px',
 	meta: ['0.75rem', '1rem'],
@@ -90,7 +91,6 @@ export const durations = {
 	move: '0.2s',
 } as const
 
-// 用途のクラス（transition-color / transition-move）が動かすプロパティ。
 // color は Tailwind の transition-colors と同じ並び
 export const motionProperties: Record<keyof typeof durations, string[]> = {
 	color: ['color', 'background-color', 'border-color', 'text-decoration-color', 'fill', 'stroke'],

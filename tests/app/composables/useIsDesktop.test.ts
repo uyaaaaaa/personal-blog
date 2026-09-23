@@ -23,8 +23,6 @@ const changeTo = (matches: boolean) => {
 	for (const listener of listeners) listener({ matches })
 }
 
-// query をモジュールに1つだけ持ち、一度作ったら作り直さない実装なので、
-// 購読の本数を測るテストごとにモジュールごと入れ直す
 const load = async (matches: boolean) => {
 	listeners.clear()
 

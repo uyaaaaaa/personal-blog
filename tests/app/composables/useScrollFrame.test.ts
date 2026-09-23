@@ -3,8 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useScrollFrame } from '~/composables/useScrollFrame'
 import { withSetup } from './withSetup.test-helper'
 
-// 購読とフレームはモジュールスコープに持たれる。全員 unmount すれば購読が外れて素に戻るので、
-// モジュールを入れ直さずに、後片付けそのものを測る形にする
 const mounted: Array<() => void> = []
 
 const mountFrame = (read: () => void, enabled = ref(true)) => {

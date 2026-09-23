@@ -38,9 +38,16 @@
 			</div>
 
 			<p
+				class="sr-only"
+				role="status"
+			>
+				{{ statusMessage }}
+			</p>
+
+			<p
 				v-if="results.length === 0"
 				class="search-note"
-				role="status"
+				aria-hidden="true"
 			>
 				{{ emptyMessage }}
 			</p>
@@ -83,15 +90,17 @@
 	}>()
 
 	const search = useArticleSearch()
-	const { query, results, activeIndex, startComposition, endComposition, clear } = search
+	const { query, results, countMessage, activeIndex, startComposition, endComposition, clear } =
+		search
 
 	const inputRef = ref<HTMLInputElement | null>(null)
 
+	const isTyped = computed(() => query.value.trim() !== '')
+
 	const emptyMessage = computed(() =>
-		query.value.trim() === ''
-			? 'Type to search articles by title or tag.'
-			: 'No articles found.',
+		isTyped.value ? countMessage.value : 'Type to search articles by title or tag.',
 	)
+	const statusMessage = computed(() => (isTyped.value ? countMessage.value : ''))
 
 	let pressedOnOverlay = false
 
@@ -145,8 +154,7 @@
 		visibility: hidden;
 		overflow: hidden;
 		overscroll-behavior: contain;
-		/* 閉じる側だけ遅らせる。開く側も遅らせると、算出値が hidden のままの
-		   1フレームが空き、そこに focus() を出しても黙って効かない */
+		/* 開く側も遅らせると visibility: hidden の1フレームが空き、そこで focus() が効かない */
 		transition:
 			opacity 0.2s ease-in-out,
 			visibility 0s linear 0.2s;
@@ -179,7 +187,7 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.75rem 1rem;
-		border-bottom: 1px solid var(--color-border);
+		border-bottom: 1px solid var(--color-border-field);
 	}
 
 	.search-field:focus-within {

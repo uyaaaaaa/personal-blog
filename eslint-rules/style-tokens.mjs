@@ -22,8 +22,6 @@ export const STYLE_EXCEPTION =
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
 
-// フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
-// 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
 const FONT_FILE = '\\.(?:woff2?|otf|ttf|eot)\\b'
 const FONT_HOST = '\\b(?:(?:fontsource|fonts?)(?:[./]|$)|(?:typeface|typekit)[./-])'
 export const WEB_FONT_RESOURCE = `(?:${FONT_FILE}|${FONT_HOST})`
@@ -53,11 +51,8 @@ export const OUTLINE_REMOVAL_CLASS =
 	'(?:^|[\\s:])(?:[a-z-]+:)*!?outline-(?:none|0|transparent)(?![\\w-])'
 // 値の語の区切り。`0.5rem` の 0 と `#0ff` の 0 は語の一部で、値ではない
 const WORD_EDGE = '[\\w.%#-]'
-// 輪郭が消える値。線を持たない語か透明な色が1つでも入る。
-// 関数の中（`rgb(0 0 0)`）は色の一部なので数えない
 const OUTLINE_REMOVAL_VALUE = `(?<!${WORD_EDGE})(?:none|0[a-z%]*|transparent)(?!${WORD_EDGE})(?![^()]*\\))`
-// 初期値に戻す語。初期値が none なのは outline-style なので、輪郭が消えるのは
-// 一括指定と outline-style と all のときだけ（outline-color は色、outline-width は medium に戻る）
+// 初期値が none なのは outline-style だけなので、消えるのは一括指定と outline-style と all
 const OUTLINE_RESET_VALUE = `(?<!${WORD_EDGE})(?:unset|initial)(?!${WORD_EDGE})(?![^()]*\\))`
 // 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる
 const COLOR_PREFIX =
@@ -102,8 +97,6 @@ const NAMED_COLORS = new Set(
 	),
 )
 
-// 書体の名前でない語。font の一括指定が family の前に並べる語と、値を持たない CSS 全体のキーワード。
-// システムフォントの語（menu 等）は、トークンを通らない書体の指定なので入れない
 const FONT_KEYWORDS = new Set(
 	'inherit initial unset revert revert-layer var normal italic oblique small-caps bold bolder lighter ultra-condensed extra-condensed condensed semi-condensed semi-expanded expanded extra-expanded ultra-expanded xx-small x-small small medium large x-large xx-large xxx-large larger smaller'.split(
 		' ',
@@ -219,8 +212,6 @@ const DURATION_LABEL = Object.entries(durations)
 	.map(([purpose, value]) => `${purpose} は ${value}`)
 	.join('、')
 
-// 用途は2つ。色だけが変わるものと、それ以外の動き。
-// 辺ごとの色（border-top-color）も色なので、綴りの末尾でも読む
 const COLOR_PROPERTY = new RegExp(`^(?:${motionProperties.color.join('|')})$|-color$`, 'i')
 
 const purposeOf = (property) => (COLOR_PROPERTY.test(property) ? 'color' : 'move')
@@ -343,8 +334,7 @@ function isWhiteOrBlack(literal) {
 	)
 }
 
-// メディアクエリの em は初期フォントサイズが基準で、宣言の em（その要素の文字サイズ）と
-// 別物。PIXELS_PER と同じく rem として引く
+// メディアクエリの em は初期フォントサイズが基準なので rem として引く
 function untokenizedLengths(value, inMedia) {
 	const found = []
 	for (const [literal, , number, unit] of stripNonValues(value).matchAll(LENGTH)) {
@@ -399,8 +389,7 @@ function eachStyleBlock(context, visit) {
 
 const MEDIA_CONDITION = /\(([^()]*)\)/g
 const WIDTH_FEATURE = /\bwidth\b/i
-// colorMode の classSuffix が空なので、テーマは html の dark / light で表れる。
-// `html.dark` `.dark .callout` `:is(.light)` のいずれも綴りで拾い、`.darkroom` は後ろで外す
+// colorMode の classSuffix が空なので、テーマは html の .dark / .light に出る
 const THEME_SELECTOR = /\.(?:dark|light)(?![\w-])/
 const COLOR_SCHEME = /prefers-color-scheme/i
 const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
@@ -457,8 +446,7 @@ const CHECKS = {
 					found.push({ node, messageId: 'literal', data: { literal } })
 			}
 			root.walkDecls((decl) => check(decl.value, decl))
-			// walkDecls は at-rule を見ないので、@apply の任意値は別に歩く。
-			// 他の at-rule まで見ると、@keyframes の名前が色の名前に当たる
+			// postcss の walkDecls は at-rule を見ないので、@apply だけ別に歩く
 			root.walkAtRules('apply', (rule) => check(rule.params, rule))
 			return found
 		},

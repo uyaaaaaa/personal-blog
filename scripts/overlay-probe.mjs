@@ -1491,7 +1491,7 @@ const probes = [
 		},
 	},
 	{
-		name: '↑↓ の無い幅の ↓ と確定キー',
+		name: '↑↓ の案内の無い幅の ↓ と Enter',
 		input: true,
 		widths: [375],
 		run: async (p) => {
@@ -1500,13 +1500,14 @@ const probes = [
 			const from = await p.evaluate(`return $path()`)
 			await p.pressKey('ArrowDown')
 			await p.evaluate('await $frames(2)')
+			const line = await p.evaluate('return $line()')
 			await p.pressKey('Enter')
+			const moved = await p.waitFor(`$path() !== ${JSON.stringify(from)}`)
 			await sleep(TRANSITION)
 			const state = await p.evaluate('return $state()')
-			const line = await p.evaluate('return $line()')
 			return {
 				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}"`,
-				ok: state.overlay === 'visible' && state.path === from && line === TRANSPARENT,
+				ok: moved && state.overlay === 'hidden' && line === TRANSPARENT,
 			}
 		},
 	},

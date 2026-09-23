@@ -1,5 +1,5 @@
 import { usePublishedArticles } from '~/composables/usePublishedArticles'
-import { searchArticles } from '~/utils/search'
+import { resultCountMessage, searchArticles } from '~/utils/search'
 
 export const useArticleSearch = () => {
 	const { data: articles } = usePublishedArticles()
@@ -9,6 +9,7 @@ export const useArticleSearch = () => {
 
 	const results = computed(() => searchArticles(articles.value, query.value))
 	const activeArticle = computed(() => results.value[activeIndex.value])
+	const countMessage = computed(() => resultCountMessage(results.value.length))
 
 	const moveActive = (delta: number) => {
 		const count = results.value.length
@@ -21,9 +22,7 @@ export const useArticleSearch = () => {
 		activeIndex.value = 0
 	})
 
-	// 変換中のキーは IME のもの。横取りすると変換の確定も取り消しも奪う。
-	// Safari は compositionend を keydown より先に出すため確定と取り消しは
-	// isComposing が false で届き、変換の終わり際は自前で覚えておくしかない
+	// Safari は compositionend を keydown より先に出すので、変換の終わり際は自前で覚える
 	let composing = false
 	let endFrame = 0
 
@@ -49,6 +48,7 @@ export const useArticleSearch = () => {
 	return {
 		query,
 		results,
+		countMessage,
 		activeIndex,
 		activeArticle,
 		moveActive,

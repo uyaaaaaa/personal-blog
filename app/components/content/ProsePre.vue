@@ -12,13 +12,16 @@
 			>
 		</figcaption>
 		<pre
+			ref="host"
 			:class="['text-code', $props.class]"
-			v-bind="$attrs"
+			v-bind="{ ...$attrs, ...region }"
 		><slot /></pre>
 	</figure>
 </template>
 
 <script setup lang="ts">
+	import { useScrollableRegion } from '~/composables/useScrollableRegion'
+
 	defineOptions({
 		name: 'ProsePre',
 		inheritAttrs: false,
@@ -39,6 +42,9 @@
 	const label = computed(() =>
 		props.language && !PLAIN_LANGUAGES.includes(props.language) ? props.language : null,
 	)
+
+	const host = ref<HTMLElement | null>(null)
+	const region = useScrollableRegion(host, 'Code')
 </script>
 
 <style scoped>
@@ -74,6 +80,11 @@
 		color: var(--color-code-text);
 	}
 
+	/* 輪郭は code-block の overflow: hidden に切られるので、内側に引く */
+	pre:focus-visible {
+		outline-offset: -2px;
+	}
+
 	pre :deep(code) {
 		/* typography の段が code のサイズを持つので、コードブロックの中では pre の指定を継がせる */
 		font-size: inherit;
@@ -96,15 +107,13 @@
 		background-color: var(--color-diff-remove-bg);
 	}
 
-	/* github-light / github-dark はdiffのトークン自体にも背景色を持ち、行背景の上に文字幅の塗りが重なる。
-   Nuxt Contentが出す `html pre.shiki code .sXXXX`（特異度 0,2,3）に勝つセレクタで打ち消す */
+	/* github テーマは diff のトークンにも背景を持つので、Nuxt Content の pre.shiki code .sXXXX（0,2,3）に勝たせて消す */
 	pre.shiki :deep(code .line > span) {
 		--shiki-default-bg: transparent;
 		--shiki-dark-bg: transparent;
 	}
 
-	/* マーカーと変化した語の文字色はテーマの赤・緑ではなく本文色。
-   `html.dark .shiki span`（特異度 0,2,2）に勝つセレクタで当てる */
+	/* html.dark .shiki span（0,2,2）に勝たせて、マーカーと変化した語を本文色にする */
 	pre.shiki :deep(code .diff-marker),
 	pre.shiki :deep(code .diff-word) {
 		color: var(--color-code-text);

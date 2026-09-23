@@ -9,8 +9,7 @@ const ENTITY_MODULE = /(?:^|\/)-[^/]+\.vue$/
 // テンプレートの名前は PascalCase でも kebab-case でも同じ実体を指す
 const asName = (name) => name.toLowerCase().replaceAll('-', '')
 
-// Vue が要素ではなくコンポーネントとして解決する綴りだけを実体に数える。
-// 大文字始まりか、ハイフンを含む名前（ネイティブのタグ名にハイフンは無い）
+// Vue がコンポーネントとして解決する綴り（大文字始まりかハイフン入り）だけを数える
 const componentName = (rawName) =>
 	/^[A-Z]/.test(rawName) || rawName.includes('-') ? asName(rawName) : null
 

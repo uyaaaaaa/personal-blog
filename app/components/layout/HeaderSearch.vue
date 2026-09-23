@@ -8,7 +8,7 @@
 		"
 	>
 		<label
-			class="search-field flex w-full items-center gap-2 rounded-md border border-border bg-surface-subtle px-4 py-2 transition-color focus-within:border-accent"
+			class="search-field flex w-full items-center gap-2 rounded-md border border-border-field bg-surface-subtle px-4 py-2 transition-color focus-within:border-accent"
 			@pointerdown="onPointerdown"
 		>
 			<SearchIcon class="search-field-icon" />
@@ -38,6 +38,13 @@
 			>
 		</label>
 
+		<p
+			class="sr-only"
+			role="status"
+		>
+			{{ statusMessage }}
+		</p>
+
 		<div
 			class="search-panel-layer"
 			:class="{ 'is-open': isOpen }"
@@ -49,9 +56,9 @@
 				<p
 					v-if="results.length === 0"
 					class="search-note"
-					role="status"
+					aria-hidden="true"
 				>
-					No articles found.
+					{{ countMessage }}
 				</p>
 				<SearchResults
 					v-else
@@ -88,8 +95,16 @@
 	}>()
 
 	const search = useArticleSearch()
-	const { query, results, activeIndex, startComposition, endComposition, isComposingKey, clear } =
-		search
+	const {
+		query,
+		results,
+		countMessage,
+		activeIndex,
+		startComposition,
+		endComposition,
+		isComposingKey,
+		clear,
+	} = search
 
 	const inputRef = ref<HTMLInputElement | null>(null)
 
@@ -97,6 +112,7 @@
 
 	const isOpen = computed(() => !dismissed.value && query.value.trim() !== '')
 	const hasList = computed(() => isOpen.value && results.value.length > 0)
+	const statusMessage = computed(() => (isOpen.value ? countMessage.value : ''))
 
 	const dismiss = () => {
 		dismissed.value = true
@@ -115,8 +131,7 @@
 		input.select()
 	}
 
-	// ボタンを挟まず直にフォーカスされるので、ポインタで移した目印は自分で付ける。
-	// label の肩代わりは目印を落とすので止め、入力欄の上だけキャレットのために残す
+	// label の肩代わりはポインタの目印を落とすので止め、キャレットのため入力欄の上だけ残す
 	const onPointerdown = (event: PointerEvent) => {
 		if (event.target !== inputRef.value) event.preventDefault()
 		focusByGesture(inputRef.value)
