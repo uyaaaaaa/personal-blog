@@ -130,7 +130,7 @@ export const sizes = {
 	},
 	maxWidth: {
 		'search-trigger': '200px',
-		'search-open': '420px',
+		'search-open': '640px',
 		column: '680px',
 		article: '960px',
 		container: '1200px',

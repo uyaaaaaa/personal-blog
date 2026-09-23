@@ -8,7 +8,7 @@
 	>
 		<div
 			ref="trapRef"
-			class="search-dialog rounded-card border border-border bg-surface shadow-lg"
+			class="search-dialog max-w-search-open rounded-card border border-border bg-surface shadow-lg"
 			role="dialog"
 			aria-modal="true"
 			aria-label="Search articles"
@@ -168,7 +168,6 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
-		max-width: 36rem;
 		max-height: 100%;
 		overflow: hidden;
 		transform: translateY(-4px);

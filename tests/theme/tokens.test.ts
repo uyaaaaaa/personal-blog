@@ -17,4 +17,8 @@ describe('sizes', () => {
 
 		expect(shadowed).toEqual([])
 	})
+
+	it('検索を開いたとき、候補を横に走査できる幅を持つ', () => {
+		expect(sizes.maxWidth['search-open']).toBe('640px')
+	})
 })
