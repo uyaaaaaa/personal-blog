@@ -52,7 +52,7 @@ const styleComments = (document) => {
 					value: node.text,
 					start: base + node.source.start.line,
 					end: base + node.source.end.line,
-					range: [offset + node.source.start.offset, offset + node.source.end.offset + 1],
+					range: [offset + node.source.start.offset, offset + node.source.end.offset],
 				})
 			})
 		}

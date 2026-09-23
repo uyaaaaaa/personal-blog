@@ -40,6 +40,10 @@ describe('check-comments', () => {
 			'c.vue',
 			'<template>\n\t<!-- 一 -->\n\t<div />\n</template>\n<style>\n/* 一 */\na {\n}\n</style>\n',
 		)
+		write(
+			'e.vue',
+			'<template><div /></template>\n<style>\n/* 一 */\n\n/* 二 */\na {\n}\n</style>\n',
+		)
 		write('d.yml', 'on: push\n# 一\njobs: {}\n')
 		write('.githooks/pre-commit', '#!/bin/sh\n# 一\nexit 0\n')
 		expect(check().status).toBe(0)
