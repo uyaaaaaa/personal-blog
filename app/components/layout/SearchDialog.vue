@@ -38,6 +38,13 @@
 			</div>
 
 			<p
+				class="sr-only"
+				role="status"
+			>
+				{{ countMessage }}
+			</p>
+
+			<p
 				v-if="results.length === 0"
 				class="search-note"
 				role="status"
@@ -84,7 +91,8 @@
 	}>()
 
 	const search = useArticleSearch()
-	const { query, results, activeIndex, startComposition, endComposition, clear } = search
+	const { query, results, countMessage, activeIndex, startComposition, endComposition, clear } =
+		search
 
 	const inputRef = ref<HTMLInputElement | null>(null)
 	const searchKeysRef = ref<HTMLElement | null>(null)

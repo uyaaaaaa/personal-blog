@@ -26,4 +26,11 @@ describe('HeaderSearch', () => {
 		expect(wrapper.get('.search-panel-layer').classes()).toContain('is-open')
 		expect(wrapper.findAll('[role="option"]')).toHaveLength(1)
 	})
+	it('候補が出たら件数を読み上げる状態に出す', async () => {
+		const wrapper = await mountSuspended(HeaderSearch)
+
+		await wrapper.get('input').setValue('vim')
+
+		expect(wrapper.get('[role="status"]').text()).toBe('1 article found.')
+	})
 })

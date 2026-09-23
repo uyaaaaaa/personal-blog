@@ -15,3 +15,7 @@ export const searchArticles = <T extends SearchableArticle>(articles: T[], query
 		return terms.every((term) => title.includes(term) || tags.some((tag) => tag.includes(term)))
 	})
 }
+
+// 0件の案内は各画面が持つ文が出す。ここが返すと同じ内容が二重に読まれる
+export const resultCountMessage = (count: number): string =>
+	count === 0 ? '' : `${count} article${count === 1 ? '' : 's'} found.`

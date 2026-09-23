@@ -38,6 +38,13 @@
 			>
 		</label>
 
+		<p
+			class="sr-only"
+			role="status"
+		>
+			{{ countMessage }}
+		</p>
+
 		<div
 			class="search-panel-layer"
 			:class="{ 'is-open': isOpen }"
@@ -88,8 +95,16 @@
 	}>()
 
 	const search = useArticleSearch()
-	const { query, results, activeIndex, startComposition, endComposition, isComposingKey, clear } =
-		search
+	const {
+		query,
+		results,
+		countMessage,
+		activeIndex,
+		startComposition,
+		endComposition,
+		isComposingKey,
+		clear,
+	} = search
 
 	const inputRef = ref<HTMLInputElement | null>(null)
 
