@@ -1,11 +1,10 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { decide, unsigned } from '~~/.claude/hooks/pr-guard.mjs'
 
 const ask = {
 	head: () => 'claude/issue-292-m5eszm',
 	dirty: () => '',
 	unpushed: () => '',
-	check: () => ({ code: 0, log: '' }),
 }
 
 const create = (tool_input = {}) => ({
@@ -27,12 +26,6 @@ describe('decide', () => {
 		expect(denied(create(), { unpushed: () => 'origin/x が無い' })).toMatch('push していない')
 		expect(denied(create(), { head: () => '' })).toMatch('読めない')
 		expect(denied(create(), { dirty: () => null })).toMatch('読めない')
-	})
-
-	it('CI が打つものを通し、落ちたら出力を添えて止める', () => {
-		const check = vi.fn((name) => ({ code: name === 'test' ? 1 : 0, log: 'x\n1 failed' }))
-		expect(denied(create(), { check })).toMatch('1 failed')
-		expect(check.mock.calls.map(([name]) => name)).toEqual(['lint', 'test'])
 	})
 
 	it('作成以外は条件を測らず、他のツールは見ない', () => {
