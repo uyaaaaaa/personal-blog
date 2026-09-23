@@ -1,7 +1,7 @@
 <template>
 	<div
 		role="status"
-		class="pointer-events-none fixed left-1/2 top-6 z-40 flex -translate-x-1/2 items-center gap-2 rounded-card border border-border bg-surface/95 px-4 py-2 text-ui text-main shadow-sm backdrop-blur transition-move lg:hidden"
+		class="pointer-events-none fixed left-1/2 top-2 z-toast flex -translate-x-1/2 items-center gap-2 rounded-card border border-border bg-surface/95 px-4 py-2 text-ui text-main shadow-sm backdrop-blur transition-move lg:hidden"
 		:class="isVisible ? 'opacity-100' : 'invisible opacity-0'"
 	>
 		<LinkIcon class="shrink-0" />

@@ -28,11 +28,12 @@ describe('Toast', () => {
 		expect(wrapper.get('[role="status"]').classes()).not.toContain('invisible')
 	})
 
-	it('SP では画面上部にリンクアイコンとともに置く', async () => {
+	it('SP ではヘッダー内の前面にリンクアイコンとともに置く', async () => {
 		const wrapper = await mountSuspended(Toast)
 		const toast = wrapper.get('[role="status"]')
 
-		expect(toast.classes()).toContain('top-6')
+		expect(toast.classes()).toContain('top-2')
+		expect(toast.classes()).toContain('z-toast')
 		expect(toast.classes()).toContain('lg:hidden')
 		expect(toast.find('svg').exists()).toBe(true)
 		expect(toast.find('path').attributes('d')).toBe(
