@@ -159,18 +159,24 @@ const git = (segment, ask) => {
 
 const GH_VALUED = new Set(['-R', '--repo'])
 
+const WRITE_PR =
+	'PR は GitHub MCP の create_pull_request と update_pull_request で扱う。pr-guard の検査を通すため'
+const PR_MUTATION =
+	/\b(?:createPullRequest|updatePullRequest|markPullRequestReadyForReview|updatePullRequestBranch)\b/
+
 const FIELD = /^(?:-[fF]|--field|--raw-field|--input)(?:=|$)|^-[fF]./
 const METHOD = /^(?:-X|--method)(?:=?)(.*)$/
 
 // gh api は値を付けると POST になり、-X で PATCH も打てる
 const pulled = (found, positional) => {
+	if (positional.includes('graphql')) {
+		return found.some((arg) => PR_MUTATION.test(arg)) ? WRITE_PR : null
+	}
 	if (!positional.some((arg) => /(?:^|\/)pulls(?:\/|$)/.test(arg))) return null
 	const at = found.findIndex((arg) => METHOD.test(arg))
 	const method = at === -1 ? '' : METHOD.exec(found[at])[1] || (found[at + 1] ?? '')
 	const writing = method === '' ? found.some((arg) => FIELD.test(arg)) : !/^get$/i.test(method)
-	return writing
-		? 'PR は GitHub MCP の create_pull_request と update_pull_request で扱う。pr-guard の検査を通すため'
-		: null
+	return writing ? WRITE_PR : null
 }
 
 const gh = (segment) => {
