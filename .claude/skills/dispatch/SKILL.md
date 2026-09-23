@@ -27,7 +27,7 @@ open issue を上から順に落とす。
 | 完了条件が判断を含む | 「〜が決まっている」は、決めるのが書き手の仕事で、直す作業ではない |
 | `.claude/rules/docs.md` の ADR 基準を両方満たす判断を要求する | 既存の ADR を差し替えるものも同じ |
 
-**型は手で見ない。** 取得した JSON をそのままファイルに落として通す。判定は `.github/ISSUE_TEMPLATE/` の型で、ここに書き写さない。
+**型は手で見ない。** 取得した JSON をそのまま `.verify/issues.json`（無ければディレクトリから作る）に落として通す。判定は `.github/ISSUE_TEMPLATE/` の型で、ここに書き写さない。
 
 ```sh
 node scripts/issue-shape.mjs < .verify/issues.json
