@@ -44,6 +44,8 @@ describe('accessible-name', () => {
 				'<summary><ChevronDownIcon /></summary>',
 				'<input type="button">',
 				'<input type="image" src="/a.png">',
+				'<div role="slider" tabindex="0">50</div>',
+				'<div role="textbox" contenteditable>text</div>',
 			],
 		})
 	})
@@ -76,6 +78,8 @@ describe('accessible-name', () => {
 				'<input type="button" value="Go">',
 				'<input type="image" src="/a.png" alt="Go">',
 				'<input type="submit">',
+				'<div role="slider" tabindex="0" aria-label="Volume">50</div>',
+				'<label>Search <input role="combobox"></label>',
 			],
 		})
 	})

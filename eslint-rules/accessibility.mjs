@@ -18,7 +18,7 @@ const ALIAS_MESSAGE =
 const UNKNOWN = Symbol('unknown')
 
 const LINK_COMPONENTS = new Set(['nuxtlink', 'routerlink'])
-const NAMED_ROLES = new Set([
+const CONTENT_NAMED_ROLES = new Set([
 	'button',
 	'link',
 	'checkbox',
@@ -29,13 +29,9 @@ const NAMED_ROLES = new Set([
 	'menuitemcheckbox',
 	'menuitemradio',
 	'option',
-	'combobox',
-	'slider',
-	'spinbutton',
-	'searchbox',
-	'textbox',
 	'treeitem',
 ])
+const LABEL_NAMED_ROLES = new Set(['combobox', 'slider', 'spinbutton', 'searchbox', 'textbox'])
 const FIELDS = new Set(['select', 'textarea'])
 const DISABLEABLE = new Set(['button', 'input', 'select', 'textarea'])
 const FOCUSABLE_NATIVES = new Set(['button', 'select', 'textarea', 'summary', 'iframe'])
@@ -150,11 +146,7 @@ const inputType = (element) => {
 	return values.length === 1 && typeof values[0] === 'string' ? values[0].toLowerCase() : UNKNOWN
 }
 
-const nameSource = (element) => {
-	if (isLinkComponent(element)) return isPresent(element, 'custom') ? null : 'content'
-	if (!isNative(element)) return null
-	const role = read(element, 'role')
-	if (role !== null && role.some((value) => NAMED_ROLES.has(value))) return 'content'
+const nativeNameSource = (element) => {
 	switch (element.rawName) {
 		case 'button':
 		case 'summary':
@@ -171,6 +163,17 @@ const nameSource = (element) => {
 		default:
 			return FIELDS.has(element.rawName) ? 'field' : null
 	}
+}
+
+const nameSource = (element) => {
+	if (isLinkComponent(element)) return isPresent(element, 'custom') ? null : 'content'
+	if (!isNative(element)) return null
+	const native = nativeNameSource(element)
+	if (native === 'field') return native
+	const role = read(element, 'role') ?? []
+	if (role.some((value) => LABEL_NAMED_ROLES.has(value))) return 'label'
+	if (role.some((value) => CONTENT_NAMED_ROLES.has(value))) return 'content'
+	return native
 }
 
 const isInsideLabel = (element) => {
@@ -219,6 +222,8 @@ const isNamed = (element, source, targets) => {
 			return isLabelled(element) || hasAttributeName(element, ['value'])
 		case 'alt':
 			return isLabelled(element) || hasAttributeName(element, ['alt'])
+		case 'label':
+			return isLabelled(element)
 		default:
 			return isFieldLabelled(element, targets)
 	}
