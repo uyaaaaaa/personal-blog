@@ -1,13 +1,10 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { decide } from '~~/.claude/hooks/issue-guard.mjs'
+import { load } from '~~/scripts/issue-shape.mjs'
 
-const SOURCE = readFileSync(
-	new URL('../../../.claude/skills/create-issues/SKILL.md', import.meta.url),
-	'utf8',
-)
+const FORMS = load()
 
-const ask = (source = SOURCE) => ({ skill: () => source })
+const ask = (forms = FORMS) => ({ forms: () => forms })
 
 const BODY = [
 	'## ゴール',
@@ -46,7 +43,7 @@ describe('decide', () => {
 		const reason = decide(write({ body: BODY.split('\n').slice(0, 4).join('\n') }), ask())
 		expect(reason).toMatch('## 現状 が無い')
 		expect(reason).toMatch('## 完了条件 が無い')
-		expect(reason).toMatch('.claude/skills/create-issues/SKILL.md')
+		expect(reason).toMatch('.github/ISSUE_TEMPLATE/')
 	})
 
 	it('create で本文もラベルも渡さなければ止める', () => {
@@ -71,7 +68,7 @@ describe('decide', () => {
 		expect(decide({}, ask())).toBeNull()
 	})
 
-	it('手順書から型を読めなければ通す', () => {
-		expect(decide(write({ body: '' }), ask(''))).toBeNull()
+	it('テンプレートから型を読めなければ通す', () => {
+		expect(decide(write({ body: '' }), ask([]))).toBeNull()
 	})
 })
