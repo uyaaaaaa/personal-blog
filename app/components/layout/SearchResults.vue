@@ -12,28 +12,36 @@
 			role="presentation"
 		>
 			<NuxtLink
-				:id="optionId(index)"
+				v-slot="{ href }"
 				:to="article.path"
-				class="search-result border-l-2 border-l-transparent"
-				:class="{ 'is-active md:border-l-accent': index === activeIndex }"
-				role="option"
-				:aria-selected="index === activeIndex"
-				prefetch-on="interaction"
-				@click="emit('select')"
-				@pointermove="emit('activate', index)"
+				custom
 			>
-				<span class="search-result-title">{{ article.title }}</span>
-				<time
-					class="search-result-date"
-					:datetime="article.date"
-					>{{ formatDate(article.date) }}</time
+				<a
+					:id="optionId(index)"
+					:href="href"
+					class="search-result border-l-2 border-l-transparent"
+					:class="{ 'is-active md:border-l-accent': index === activeIndex }"
+					role="option"
+					:aria-selected="index === activeIndex"
+					@click="onSelect(article.path, $event)"
+					@focus="preloadRouteComponents(article.path)"
+					@pointerenter="preloadRouteComponents(article.path)"
+					@pointermove="emit('activate', index)"
 				>
+					<span class="search-result-title">{{ article.title }}</span>
+					<time
+						class="search-result-date"
+						:datetime="article.date"
+						>{{ formatDate(article.date) }}</time
+					>
+				</a>
 			</NuxtLink>
 		</li>
 	</ul>
 </template>
 
 <script setup lang="ts">
+	import { focusMainContent } from '~/composables/gestureFocus'
 	import { formatDate } from '~/utils/date'
 	import { deltaToReveal } from '~/utils/scroll'
 
@@ -57,6 +65,25 @@
 	const listRef = ref<HTMLElement | null>(null)
 
 	const optionId = (index: number) => `${props.id}-${index}`
+
+	const onSelect = async (path: string, event: MouseEvent) => {
+		emit('select')
+
+		if (
+			event.button !== 0 ||
+			event.metaKey ||
+			event.ctrlKey ||
+			event.shiftKey ||
+			event.altKey
+		) {
+			return
+		}
+
+		event.preventDefault()
+		await navigateTo(path)
+		await nextTick()
+		focusMainContent()
+	}
 
 	watch(
 		() => props.results,

@@ -1,20 +1,36 @@
 // @vitest-environment nuxt
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import SearchDialog from '~/components/layout/SearchDialog.vue'
+import { releaseBackdrop } from '~/composables/useBackdropInert'
 
-// queryCollection は Nuxt Content の SQLite を開く。記事を 2 本返すスタブで取得先を切る
+const navigate = vi.fn().mockResolvedValue(undefined)
+
+mockNuxtImport('navigateTo', () => (path: string) => navigate(path))
+
+// queryCollection は Nuxt Content の SQLite を開く。記事を1本返すスタブで取得先を切る
 mockNuxtImport('queryCollection', () => () => {
 	const builder = {
 		where: () => builder,
 		order: () => builder,
 		select: () => builder,
-		all: async () => [
-			{ path: '/article/vim-abbreviation', title: 'vim abbreviation', date: '2026-01-17' },
-			{ path: '/article/vim-macro', title: 'vim macro', date: '2026-01-18' },
-		],
+		all: async () => [{ path: '/article/vim-abbreviation', title: 'vim', date: '2026-01-17' }],
 	}
 	return builder
+})
+
+const mountMain = () => {
+	const main = document.createElement('main')
+	main.id = 'main-content'
+	main.tabIndex = -1
+	document.body.append(main)
+	return main
+}
+
+afterEach(() => {
+	releaseBackdrop()
+	document.getElementById('main-content')?.remove()
+	navigate.mockClear()
 })
 
 describe('SearchDialog', () => {
@@ -28,6 +44,44 @@ describe('SearchDialog', () => {
 		await wrapper.setProps({ isOpen: true })
 
 		expect(document.activeElement).toBe(wrapper.get('input').element)
+
+		wrapper.unmount()
+	})
+
+	it('候補をクリックすると閉じる要求を出してメインコンテンツへフォーカスする', async () => {
+		const main = mountMain()
+		const wrapper = await mountSuspended(SearchDialog, {
+			props: { isOpen: true, onClose: releaseBackdrop },
+			attachTo: document.body,
+		})
+
+		await wrapper.get('input').setValue('vim')
+		await wrapper.get('[role="option"]').trigger('click')
+		await nextTick()
+
+		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
+		expect(navigate).toHaveBeenCalledTimes(1)
+		expect(wrapper.emitted('close')).toHaveLength(1)
+		expect(document.activeElement).toBe(main)
+
+		wrapper.unmount()
+	})
+
+	it('表示幅によらず Enter で選び、メインコンテンツへフォーカスする', async () => {
+		const main = mountMain()
+		const wrapper = await mountSuspended(SearchDialog, {
+			props: { isOpen: true, onClose: releaseBackdrop },
+			attachTo: document.body,
+		})
+
+		await wrapper.get('input').setValue('vim')
+		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
+
+		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
+		expect(wrapper.emitted('close')).toHaveLength(1)
+		expect(document.activeElement).toBe(main)
+
+		wrapper.unmount()
 	})
 
 	it('候補が出たら件数を読み上げる状態に出す', async () => {
@@ -35,6 +89,6 @@ describe('SearchDialog', () => {
 
 		await wrapper.get('input').setValue('vim')
 
-		expect(wrapper.get('[role="status"]').text()).toBe('2 articles found.')
+		expect(wrapper.get('.sr-only[role="status"]').text()).toBe('1 article found.')
 	})
 })
