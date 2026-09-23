@@ -2,6 +2,7 @@ import tsParser from '@typescript-eslint/parser'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
 import { ignores } from './scripts/inputs.mjs'
+import accessibility from './eslint-rules/accessibility.mjs'
 import articleQueries from './eslint-rules/article-queries.mjs'
 import importLayers from './eslint-rules/import-layers.mjs'
 import rootFiles from './eslint-rules/root-files.mjs'
@@ -525,6 +526,7 @@ export default [
 			imports: importLayers,
 			roots: rootFiles,
 			queries: articleQueries,
+			a11y: accessibility,
 		},
 		languageOptions: {
 			parser: vueParser,
@@ -547,8 +549,18 @@ export default [
 			],
 			...styleRules,
 			'roots/render-only': 'error',
+			'a11y/accessible-name': 'error',
+			'a11y/field-label': 'error',
+			'a11y/no-focusable-in-hidden': 'error',
+			'a11y/no-positive-tabindex': 'error',
 			'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],
 			'vue/no-restricted-syntax': ['error', ...TEMPLATE_RESTRICTIONS],
+		},
+	},
+	{
+		files: withTest('app/**/*Icon.vue'),
+		rules: {
+			'a11y/decorative-root': 'error',
 		},
 	},
 	{
