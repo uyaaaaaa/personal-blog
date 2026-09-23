@@ -196,7 +196,8 @@ const gh = (segment) => {
 	}
 	if (positional[0] === 'api') return pulled(found, positional)
 	if (positional[0] !== 'pr') return null
-	if (['create', 'new'].includes(positional[1])) {
+	if (positional[1] === 'update-branch') return TOOLS.update_pull_request_branch
+	if (['create', 'new', 'revert'].includes(positional[1])) {
 		return 'PR は GitHub MCP の create_pull_request で作る。pr-guard の検査を通すため'
 	}
 	if (positional[1] === 'merge') return MERGE
@@ -208,16 +209,22 @@ const gh = (segment) => {
 
 // 起動語・置換・入れ子の形を問わず、引用の外に gh の PR 操作の並びがあれば止める
 const PR_ACTION =
-	/(?:^|[\s`(])(?:[^\s`(]*\/)?gh\s+(?:[^\s;|&`()]+\s+)*?pr\s+(create|new|edit|ready|merge)\b/
+	/(?:^|[\s`(])(?:[^\s`(]*\/)?gh\s+(?:[^\s;|&`()]+\s+)*?pr\s+(create|new|revert|edit|ready|merge|update-branch)\b/
 
-// コメントは読まず、引用の中は二重引用の置換だけを見る
+// コメントは読まず、引用の中はシェルに渡すスクリプトと二重引用の置換だけを見る
+const SHELL = new Set(['bash', 'sh', 'zsh', 'dash'])
+
+const scripted = (all, at) =>
+	all[at - 1] === 'eval' || (all[at - 1] === '-c' && SHELL.has(all[at - 2]?.replace(/^.*\//, '')))
+
 const visible = (all) => {
 	const kept = []
 	let commented = false
-	for (const token of all) {
+	for (const [at, token] of all.entries()) {
 		if (token === '\n') commented = false
 		else if (commented) continue
 		else if (token.startsWith('#')) commented = true
+		else if (scripted(all, at)) kept.push(...visible(tokens(unquote(token))))
 		else if (!/["']/.test(token)) kept.push(token)
 		else kept.push(...(token.replace(/'[^']*'/g, '').match(/\$\([^)]*\)|`[^`]*`/g) ?? []))
 	}
@@ -229,7 +236,8 @@ const anywhere = (command) => {
 	const [, action] = PR_ACTION.exec(bare) ?? []
 	if (action === undefined) return null
 	if (action === 'merge') return MERGE
-	return ['create', 'new'].includes(action)
+	if (action === 'update-branch') return TOOLS.update_pull_request_branch
+	return ['create', 'new', 'revert'].includes(action)
 		? 'PR は GitHub MCP の create_pull_request で作る。pr-guard の検査を通すため'
 		: 'PR は GitHub MCP の update_pull_request で直す。pr-guard の検査を通すため'
 }
