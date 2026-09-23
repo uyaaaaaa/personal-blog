@@ -166,15 +166,6 @@
 				]
 			},
 			{
-				"matcher": "Bash|mcp__.*__(create_pull_request|subscribe_pr_activity|set_session_title|actions_run_trigger)",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pr-followup.mjs\""
-					}
-				]
-			},
-			{
 				"matcher": "Bash|mcp__.*actions_run_trigger",
 				"hooks": [
 					{
@@ -199,10 +190,6 @@
 					{
 						"type": "command",
 						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-guard.mjs\""
-					},
-					{
-						"type": "command",
-						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pr-followup.mjs\""
 					}
 				]
 			}
