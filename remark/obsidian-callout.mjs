@@ -1,14 +1,4 @@
-/**
- * ```md
- * > [!note] タイトル（省略可）
- * > 本文
- * ```
- *
- * タイプ名の後ろの `-` は折りたたみ（初期状態: 閉）、`+` は折りたたみ（初期状態: 開）
- *
- * MDC(remark-mdc)は `[text]` をspan構文としてパースするため、
- * `[!note]` はプレーンテキストではなく textComponent(span) ノードとして届く。
- */
+// remark-mdc は [text] を span 構文として読むので、[!note] は textComponent ノードで届く
 
 const visitBlockquotes = (node, callback) => {
 	if (node.type === 'blockquote') callback(node)

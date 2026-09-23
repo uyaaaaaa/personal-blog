@@ -21,9 +21,7 @@ export const useArticleSearch = () => {
 		activeIndex.value = 0
 	})
 
-	// 変換中のキーは IME のもの。横取りすると変換の確定も取り消しも奪う。
-	// Safari は compositionend を keydown より先に出すため確定と取り消しは
-	// isComposing が false で届き、変換の終わり際は自前で覚えておくしかない
+	// Safari は compositionend を keydown より先に出すので、変換の終わり際は自前で覚える
 	let composing = false
 	let endFrame = 0
 

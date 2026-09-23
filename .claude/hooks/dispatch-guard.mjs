@@ -44,8 +44,6 @@ const branched = (prompt) => {
 	return { branch, tail: branch?.slice(branch.lastIndexOf('-') + 1) }
 }
 
-// どの種類の出力かは名乗らせず、出せる引数を総当たりで作って突き合わせる。
-// 種類ごとの題と本文の文面を、出す側と読む側の2箇所に持たないため
 const guesses = (title, prompt) => {
 	const numbers = [...new Set([...`${title}\n${prompt}`.matchAll(NUMBER)].map(([, it]) => it))]
 	const body = prompt

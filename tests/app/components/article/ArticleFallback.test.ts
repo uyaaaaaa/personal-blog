@@ -3,8 +3,6 @@ import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it, vi } from 'vitest'
 import ArticleFallback from '~/components/article/ArticleFallback.vue'
 
-// queryCollection は Nuxt Content の SQLite を開く。ここで測りたいのは props に対する
-// 描画なので、チェーンをそのまま返すだけのスタブに差し替えて取得先を切る
 const { recent } = vi.hoisted(() => ({
 	recent: vi.fn(() => [
 		{ path: '/article/first', title: '最初の記事', date: '2026-01-02' },

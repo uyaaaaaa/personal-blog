@@ -115,8 +115,7 @@
 		input.select()
 	}
 
-	// ボタンを挟まず直にフォーカスされるので、ポインタで移した目印は自分で付ける。
-	// label の肩代わりは目印を落とすので止め、入力欄の上だけキャレットのために残す
+	// label の肩代わりはポインタの目印を落とすので止め、キャレットのため入力欄の上だけ残す
 	const onPointerdown = (event: PointerEvent) => {
 		if (event.target !== inputRef.value) event.preventDefault()
 		focusByGesture(inputRef.value)

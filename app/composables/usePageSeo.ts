@@ -17,10 +17,7 @@ const DEFAULT_OGP_IMAGE = '/ogp.png'
 
 const NOINDEX = 'noindex, nofollow'
 
-/**
- * og:imageやog:urlは絶対URLでないとクローラが解決できないため、
- * runtimeConfig.public.siteUrl を基準に組み立てる。
- */
+// og:image と og:url は絶対 URL でないとクローラが解決できない
 export const usePageSeo = (input: PageSeoInput) => {
 	const { siteUrl } = useRuntimeConfig().public
 	const origin = String(siteUrl).replace(/\/+$/, '')
