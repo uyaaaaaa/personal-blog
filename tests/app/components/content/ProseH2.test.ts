@@ -73,4 +73,10 @@ describe.each([
 		await wrapper.get(`${tag} > span`).trigger('click')
 		expect(scrollIntoView).toHaveBeenCalledTimes(1)
 	})
+
+	it('PC では押せる見出し本文をリンクと同じカーソルにする', async () => {
+		const wrapper = await mount(component, { id: 'section' })
+
+		expect(wrapper.get(`${tag} > span`).classes()).toContain('lg:cursor-pointer')
+	})
 })
