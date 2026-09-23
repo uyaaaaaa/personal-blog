@@ -53,6 +53,7 @@ describe('HeaderSearch', () => {
 		await nextTick()
 
 		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
+		expect(navigate).toHaveBeenCalledTimes(1)
 		expect(document.activeElement).toBe(main)
 		expect(wrapper.get('.search-panel-layer').classes()).not.toContain('is-open')
 

@@ -60,6 +60,7 @@ describe('SearchDialog', () => {
 		await nextTick()
 
 		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
+		expect(navigate).toHaveBeenCalledTimes(1)
 		expect(wrapper.emitted('close')).toHaveLength(1)
 		expect(document.activeElement).toBe(main)
 

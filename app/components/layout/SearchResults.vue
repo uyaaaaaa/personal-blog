@@ -12,22 +12,29 @@
 			role="presentation"
 		>
 			<NuxtLink
-				:id="optionId(index)"
+				v-slot="{ href }"
 				:to="article.path"
-				class="search-result border-l-2 border-l-transparent"
-				:class="{ 'is-active md:border-l-accent': index === activeIndex }"
-				role="option"
-				:aria-selected="index === activeIndex"
-				prefetch-on="interaction"
-				@click="onSelect(article.path, $event)"
-				@pointermove="emit('activate', index)"
+				custom
 			>
-				<span class="search-result-title">{{ article.title }}</span>
-				<time
-					class="search-result-date"
-					:datetime="article.date"
-					>{{ formatDate(article.date) }}</time
+				<a
+					:id="optionId(index)"
+					:href="href"
+					class="search-result border-l-2 border-l-transparent"
+					:class="{ 'is-active md:border-l-accent': index === activeIndex }"
+					role="option"
+					:aria-selected="index === activeIndex"
+					@click="onSelect(article.path, $event)"
+					@focus="preloadRouteComponents(article.path)"
+					@pointerenter="preloadRouteComponents(article.path)"
+					@pointermove="emit('activate', index)"
 				>
+					<span class="search-result-title">{{ article.title }}</span>
+					<time
+						class="search-result-date"
+						:datetime="article.date"
+						>{{ formatDate(article.date) }}</time
+					>
+				</a>
 			</NuxtLink>
 		</li>
 	</ul>
