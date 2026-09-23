@@ -36,7 +36,6 @@
 		route.meta.sideColumn ? 'max-w-column lg:max-w-article' : 'max-w-column',
 	)
 
-	// 押したリンクが残る位置（ヘッダー・フッター）から Tab が続かないよう、移った先の本文に寄せる。
 	// 戻る・進むはブラウザが位置を戻すので触らない
 	let traversing = false
 	let stopListening: (() => void) | undefined
