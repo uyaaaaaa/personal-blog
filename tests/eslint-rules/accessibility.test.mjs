@@ -46,6 +46,12 @@ describe('accessible-name', () => {
 				'<input type="image" src="/a.png">',
 				'<div role="slider" tabindex="0">50</div>',
 				'<div role="textbox" contenteditable>text</div>',
+				'<component :is="\'button\'" type="button"><CloseIcon /></component>',
+				'<component is="button" type="button"><CloseIcon /></component>',
+				"<component :is=\"foldable ? 'button' : 'div'\"><CloseIcon /></component>",
+				'<component :is="NuxtLink" to="/"><HomeIcon /></component>',
+				'<button type="button"><component :is="CloseIcon" /></button>',
+				'<button type="button"><component :is="open ? CloseIcon : MenuIcon" /></button>',
 			],
 		})
 	})
@@ -80,6 +86,9 @@ describe('accessible-name', () => {
 				'<input type="submit">',
 				'<div role="slider" tabindex="0" aria-label="Volume">50</div>',
 				'<label>Search <input role="combobox"></label>',
+				"<component :is=\"foldable ? 'button' : 'div'\"><CloseIcon /><span>{{ title }}</span></component>",
+				'<component :is="`h${level}`"><CloseIcon /></component>',
+				'<button type="button"><component :is="UserCard" /></button>',
 			],
 		})
 	})
@@ -130,6 +139,7 @@ describe('no-focusable-in-hidden', () => {
 				'<a href="/" aria-hidden="true">Home</a>',
 				'<div aria-hidden="true"><a href="/" disabled>Home</a></div>',
 				'<div aria-hidden="true"><button type="button" :disabled="false">Close</button></div>',
+				'<div aria-hidden="true"><component :is="\'button\'" type="button">Close</component></div>',
 			],
 		})
 	})

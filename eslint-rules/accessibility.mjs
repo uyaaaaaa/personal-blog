@@ -51,6 +51,8 @@ const isDecorative = (element) => !isNative(element) && /(?:^|-)icon$|Icon$/.tes
 
 const isLinkComponent = (element) => LINK_COMPONENTS.has(asName(element.rawName))
 
+const COMPONENT_REFERENCE = /^[A-Z]/
+
 const possibleValues = (expression) => {
 	if (!expression) return [UNKNOWN]
 	switch (expression.type) {
@@ -95,6 +97,25 @@ const read = (element, name) => {
 	return spread ? [OPAQUE] : null
 }
 
+const tagValues = (expression) => {
+	if (expression?.type === 'Identifier' && COMPONENT_REFERENCE.test(expression.name))
+		return [expression.name]
+	if (expression?.type === 'ConditionalExpression')
+		return [...tagValues(expression.consequent), ...tagValues(expression.alternate)]
+	return possibleValues(expression)
+}
+
+const variants = (element) => {
+	if (element.rawName !== 'component') return [element]
+	const attribute = element.startTag.attributes.find((it) => attributeName(it) === 'is')
+	if (!attribute) return [element]
+	const tags = attribute.directive
+		? tagValues(attribute.value?.expression)
+		: [attribute.value?.value ?? '']
+	if (!tags.every((tag) => typeof tag === 'string' && tag !== '')) return [element]
+	return tags.map((tag) => ({ ...element, rawName: tag }))
+}
+
 const isPresent = (element, name) => {
 	const values = read(element, name)
 	return values !== null && values.some((value) => value !== false && value != null)
@@ -126,18 +147,22 @@ const mayBeHidden = (element) =>
 const isHidden = (element) =>
 	read(element, 'aria-hidden')?.every((value) => String(value) === 'true') ?? false
 
+const contributesName = (element) => {
+	if (isHidden(element) || isDecorative(element)) return false
+	if (!isNative(element) || element.rawName === 'slot' || element.rawName === 'component')
+		return true
+	if (element.rawName === 'img' && hasAttributeName(element, ['alt'])) return true
+	return isLabelled(element) || hasContent(element)
+}
+
 const hasContent = (element) => {
 	if (hasDirective(element, ['text', 'html'])) return true
-	for (const child of element.children) {
-		if (child.type === 'VText' && child.value.trim() !== '') return true
-		if (child.type === 'VExpressionContainer' && child.expression) return true
-		if (child.type !== 'VElement' || isHidden(child) || isDecorative(child)) continue
-		if (!isNative(child) || child.rawName === 'slot' || child.rawName === 'component')
-			return true
-		if (child.rawName === 'img' && hasAttributeName(child, ['alt'])) return true
-		if (isLabelled(child) || hasContent(child)) return true
-	}
-	return false
+	return element.children.some(
+		(child) =>
+			(child.type === 'VText' && child.value.trim() !== '') ||
+			(child.type === 'VExpressionContainer' && child.expression !== null) ||
+			(child.type === 'VElement' && variants(child).every(contributesName)),
+	)
 }
 
 const inputType = (element) => {
@@ -268,17 +293,21 @@ const templateRule = (message, check) => ({
 const accessibleName = templateRule(NAME_MESSAGE, (template) => {
 	const elements = elementsOf(template)
 	const targets = labelTargets(elements)
-	return elements.filter((element) => {
-		const source = nameSource(element)
-		return source !== null && source !== 'field' && !isNamed(element, source, targets)
-	})
+	return elements.filter((element) =>
+		variants(element).some((variant) => {
+			const source = nameSource(variant)
+			return source !== null && source !== 'field' && !isNamed(variant, source, targets)
+		}),
+	)
 })
 
 const fieldLabel = templateRule(LABEL_MESSAGE, (template) => {
 	const elements = elementsOf(template)
 	const targets = labelTargets(elements)
-	return elements.filter(
-		(element) => nameSource(element) === 'field' && !isNamed(element, 'field', targets),
+	return elements.filter((element) =>
+		variants(element).some(
+			(variant) => nameSource(variant) === 'field' && !isNamed(variant, 'field', targets),
+		),
 	)
 })
 
@@ -288,7 +317,7 @@ const noFocusableInHidden = templateRule(HIDDEN_MESSAGE, (template) => {
 		for (const child of node.children) {
 			if (child.type !== 'VElement' || isPresent(child, 'inert')) continue
 			const inside = hidden || mayBeHidden(child)
-			if (inside && isFocusable(child)) found.push(child)
+			if (inside && variants(child).some(isFocusable)) found.push(child)
 			visit(child, inside)
 		}
 	}
@@ -367,7 +396,10 @@ const decorativeRoot = {
 					roots.length > 0 &&
 					roots.every(
 						(root) =>
-							root.type === 'VElement' && (isDecorative(root) || isHidden(root)),
+							root.type === 'VElement' &&
+							variants(root).every(
+								(variant) => isDecorative(variant) || isHidden(variant),
+							),
 					)
 				const at = (roots.length === 1 ? roots[0] : template).loc
 				const named = DECORATIVE_FILE.test(context.filename)
