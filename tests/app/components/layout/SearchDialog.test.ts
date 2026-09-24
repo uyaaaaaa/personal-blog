@@ -107,23 +107,50 @@ describe('SearchDialog', () => {
 		wrapper.unmount()
 	})
 
-	it('ソフトキーボードが出ている間の Enter は記事へ移らず、キーボードだけ閉じる', async () => {
-		const viewport = { height: 800, scale: 1 }
+	const stubViewport = (width: number, height: number) => {
+		const viewport = { width, height, scale: 1 }
 		vi.stubGlobal('visualViewport', viewport)
+		vi.stubGlobal('innerWidth', width)
+		vi.stubGlobal('innerHeight', height)
+		return viewport
+	}
+
+	const openAndType = async () => {
+		const main = mountMain()
 		const wrapper = await mountSuspended(SearchDialog, {
-			props: { isOpen: false, location: '/' },
+			props: { isOpen: false, location: '/', onClose: releaseBackdrop },
 			attachTo: document.body,
 		})
-
 		await wrapper.setProps({ isOpen: true })
-		viewport.height = 450
 		await wrapper.get('input').setValue('vim')
+		return { main, wrapper }
+	}
+
+	it('ソフトキーボードが出ている間の Enter は記事へ移らず、キーボードだけ閉じる', async () => {
+		const viewport = stubViewport(375, 800)
+		const { wrapper } = await openAndType()
+
+		viewport.height = 450
 		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
 
 		expect(navigate).not.toHaveBeenCalled()
 		expect(wrapper.emitted('close')).toBeUndefined()
 		expect(document.activeElement).not.toBe(wrapper.get('input').element)
 		expect(wrapper.findAll('[role="option"]')).toHaveLength(1)
+
+		wrapper.unmount()
+		vi.unstubAllGlobals()
+	})
+
+	it('開いたあとに横へ回して低くなっても、キーボードの無い Enter は記事へ移る', async () => {
+		stubViewport(375, 800)
+		const { main, wrapper } = await openAndType()
+
+		stubViewport(800, 375)
+		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
+
+		expect(navigate).toHaveBeenCalledTimes(1)
+		expect(document.activeElement).toBe(main)
 
 		wrapper.unmount()
 		vi.unstubAllGlobals()

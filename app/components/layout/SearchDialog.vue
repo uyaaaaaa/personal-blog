@@ -182,20 +182,34 @@
 		},
 	)
 
-	// ソフトキーボードの Enter はハードウェアのものと区別できる値を持たない。出ている間は表示領域が縮むので、開いた時点の高さと比べる
+	// ソフトキーボードの Enter はハードウェアのものと区別できる値を持たない。出ている間は表示領域だけが縮む
 	const SOFT_KEYBOARD_MIN_HEIGHT = 120
 
-	let openedViewportHeight = 0
+	const visibleViewport = () => {
+		const viewport = window.visualViewport
+		if (!viewport) return undefined
 
-	const visibleViewportHeight = () =>
-		window.visualViewport ? window.visualViewport.height * window.visualViewport.scale : 0
+		return { width: viewport.width * viewport.scale, height: viewport.height * viewport.scale }
+	}
 
-	const isSoftKeyboardShown = () =>
-		openedViewportHeight - visibleViewportHeight() >= SOFT_KEYBOARD_MIN_HEIGHT
+	// レイアウトの高さごと縮めるブラウザもあるので、開いた時点の高さとも比べる。回転で幅が変わればその高さは使えない
+	let opened: ReturnType<typeof visibleViewport>
 
-	// 検索キーは候補を選ばず、キーボードだけ閉じて結果を見渡せるようにする
+	const isSoftKeyboardShown = () => {
+		const now = visibleViewport()
+		if (!now) return false
+
+		const openedHeight = opened?.width === now.width ? opened.height : 0
+		const fullHeight = Math.max(window.innerHeight, openedHeight)
+
+		return fullHeight - now.height >= SOFT_KEYBOARD_MIN_HEIGHT
+	}
+
+	const isSearchKeyOfSoftKeyboard = (event: KeyboardEvent) =>
+		event.key === 'Enter' && !isComposingKey(event) && isSoftKeyboardShown()
+
 	const onFieldKeydown = (event: KeyboardEvent) => {
-		if (event.key === 'Enter' && !isComposingKey(event) && isSoftKeyboardShown()) {
+		if (isSearchKeyOfSoftKeyboard(event)) {
 			event.preventDefault()
 			inputRef.value?.blur()
 			return
@@ -215,7 +229,7 @@
 
 			clear()
 			// フォーカスでキーボードが出る前に測る
-			openedViewportHeight = visibleViewportHeight()
+			opened = visibleViewport()
 			focusByGesture(inputRef.value, { asPointer: true })
 		},
 		{ flush: 'post' },
