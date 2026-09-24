@@ -11,7 +11,7 @@ type SearchKeysOptions = {
 	canSelect: () => boolean
 	isTrapped: Ref<boolean>
 	close: () => void
-	select: () => void
+	select: (path: string) => void
 }
 
 export const useSearchKeys = (
@@ -22,7 +22,7 @@ export const useSearchKeys = (
 		const article = search.activeArticle.value
 		if (!article) return
 
-		select()
+		select(article.path)
 		await navigateTo(article.path, { replace: true })
 		await nextTick()
 		focusMainContent()

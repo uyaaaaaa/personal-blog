@@ -47,6 +47,25 @@ describe('useBackToClose', () => {
 		expect(back).not.toHaveBeenCalled()
 	})
 
+	it('前に開いたときの印が残る履歴に戻っても閉じる', async () => {
+		const back = vi.spyOn(history, 'back').mockImplementation(() => {})
+		const { isOpen, close } = mountBack()
+
+		isOpen.value = true
+		await nextTick()
+		const earlier = history.state
+		isOpen.value = false
+		await nextTick()
+		back.mockClear()
+
+		isOpen.value = true
+		await nextTick()
+		popTo(earlier)
+		await nextTick()
+
+		expect(close).toHaveBeenCalledOnce()
+	})
+
 	it('戻る操作以外で閉じると、積んだ履歴を戻して消す', async () => {
 		const back = vi.spyOn(history, 'back').mockImplementation(() => {})
 		const { isOpen } = mountBack()

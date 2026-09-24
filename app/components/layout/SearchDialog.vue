@@ -93,6 +93,7 @@
 
 	const props = defineProps<{
 		isOpen: boolean
+		location: string
 	}>()
 
 	const emit = defineEmits<{
@@ -163,8 +164,11 @@
 
 	const { release } = useBackToClose(toRef(props, 'isOpen'), () => emit('close'))
 
-	const selectResult = () => {
-		release()
+	const pathOf = (location: string) => location.split(/[?#]/)[0]!.replace(/\/$/, '')
+
+	// vue-router は今のルートへの遷移を重複として捨て、積んだ履歴を置き換えない
+	const selectResult = (path: string) => {
+		if (pathOf(path) !== pathOf(props.location)) release()
 		emit('close')
 	}
 

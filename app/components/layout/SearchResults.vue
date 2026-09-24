@@ -58,7 +58,7 @@
 	}>()
 
 	const emit = defineEmits<{
-		(e: 'select'): void
+		(e: 'select', path: string): void
 		(e: 'close'): void
 		(e: 'activate', index: number): void
 	}>()
@@ -79,7 +79,7 @@
 			return
 		}
 
-		emit('select')
+		emit('select', path)
 		event.preventDefault()
 		await navigateTo(path, { replace: true })
 		await nextTick()
