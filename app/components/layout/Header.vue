@@ -59,6 +59,7 @@
 
 	<SearchDialog
 		:is-open="isSearchOpen"
+		:location="location"
 		@close="closeSearch"
 	/>
 </template>
