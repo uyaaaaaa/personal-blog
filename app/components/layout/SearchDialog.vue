@@ -192,7 +192,7 @@
 		return { width: viewport.width * viewport.scale, height: viewport.height * viewport.scale }
 	}
 
-	// レイアウトの高さごと縮めるブラウザもあるので、触って使う端末では開いた時点の高さとも比べる。回転で幅が変わればその高さは使えない
+	// レイアウトの高さごと縮めるブラウザもある
 	let opened: ReturnType<typeof visibleViewport>
 
 	const rememberViewportBeforeKeyboard = () => {

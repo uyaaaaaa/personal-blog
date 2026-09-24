@@ -146,6 +146,20 @@ describe('SearchDialog', () => {
 		vi.unstubAllGlobals()
 	})
 
+	it('レイアウトの高さごと縮む端末でも、キーボードが出ている間の Enter は記事へ移らない', async () => {
+		stubViewport(375, 800, { touch: true })
+		const { wrapper } = await openAndType()
+
+		stubViewport(375, 450, { touch: true })
+		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
+
+		expect(navigate).not.toHaveBeenCalled()
+		expect(wrapper.emitted('close')).toBeUndefined()
+
+		wrapper.unmount()
+		vi.unstubAllGlobals()
+	})
+
 	it('開いたあとに横へ回して低くなっても、キーボードの無い Enter は記事へ移る', async () => {
 		stubViewport(375, 800, { touch: true })
 		const { main, wrapper } = await openAndType()
