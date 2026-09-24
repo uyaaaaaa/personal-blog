@@ -109,6 +109,8 @@
 	}
 
 	const closeSearch = () => {
+		if (!isSearchOpen.value) return
+
 		isSearchOpen.value = false
 		releaseBackdrop()
 		focusByGesture(isShown(searchOpener) ? searchOpener : visibleTrigger())

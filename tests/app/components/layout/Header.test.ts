@@ -66,6 +66,18 @@ describe('Header', () => {
 		expect(wrapper.get('.search-trigger').attributes('aria-expanded')).toBe('true')
 	})
 
+	it('検索を開いていない遷移ではフォーカスを動かさない', async () => {
+		const wrapper = await mountHeader({ attachTo: document.body })
+		const trigger = wrapper.get('.search-trigger').element as HTMLElement
+		Object.defineProperty(trigger, 'getClientRects', { value: () => [{}] })
+
+		await wrapper.setProps({ location: '/article/vim-abbreviation' })
+
+		expect(document.activeElement).toBe(document.body)
+
+		wrapper.unmount()
+	})
+
 	it('開いている間の ⌘K で閉じ、開いたところへフォーカスを戻す', async () => {
 		const wrapper = await mountHeader({ attachTo: document.body })
 		const trigger = wrapper.get('.search-trigger').element as HTMLElement
