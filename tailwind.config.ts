@@ -12,6 +12,7 @@ import {
 	toDarkCssVariables,
 	toTailwindColors,
 } from './theme/tokens'
+import { TOC_COLLAPSED_ATTRIBUTE } from './app/utils/tocCollapse'
 
 const baseStyles = plugin(({ addBase }) => {
 	addBase({
@@ -40,6 +41,10 @@ const motion = plugin(({ addUtilities, theme }) => {
 			]),
 		),
 	)
+})
+
+const tocCollapsed = plugin(({ addVariant }) => {
+	addVariant('toc-collapsed', `html[${TOC_COLLAPSED_ATTRIBUTE}] &`)
 })
 
 export default <Config>{
@@ -101,5 +106,5 @@ export default <Config>{
 			...sizes,
 		},
 	},
-	plugins: [typography, baseStyles, motion],
+	plugins: [typography, baseStyles, motion, tocCollapsed],
 }
