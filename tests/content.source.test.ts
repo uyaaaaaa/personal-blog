@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { remoteCollection, type RemoteStore } from '../content.source'
 
-const VALID = ['title: 集めたもの', 'date: 2026-09-12']
+const VALID = [
+	'title: 集めたもの',
+	'date: 2026-09-12',
+	'source: https://github.com/yamadashy/tech-blog-rss-feed',
+]
 
 const md = (...lines: string[]) => `---\n${lines.join('\n')}\n---\n\n## 見出し\n`
 
@@ -98,7 +102,12 @@ describe('getItem', () => {
 	it.each([
 		['スキーマに無い項目', md(...VALID, 'category: blog'), SCHEMA],
 		['項目の型が違う', md('title: 集めたもの', 'date: 2026/09/12'), SCHEMA],
-		['項目が足りない', md('title: 集めたもの'), SCHEMA],
+		['項目が足りない', md('title: 集めたもの', 'date: 2026-09-12'), SCHEMA],
+		[
+			'出典が URL でない',
+			md('title: 集めたもの', 'date: 2026-09-12', 'source: 企業テックブログRSS'),
+			SCHEMA,
+		],
 		['フロントマターが無い', '## 見出し\n', SCHEMA],
 		[
 			'壊れた YAML が別の型に復元される',
