@@ -1,7 +1,7 @@
 ---
 name: review
 description: "PR 1本の差分を読み、このリポジトリの基準で絞ってグレードを付けた指摘を、PR に投稿できるレビューの JSON にして返す。投稿も修正もしない。"
-tools: Bash, Read, Grep, Glob
+tools: Bash, Read, Write, Grep, Glob
 model: opus
 ---
 
@@ -27,13 +27,7 @@ model: opus
 
 ## 3. 組み立てる
 
-書いたものを次の形でスクリプトに通す。
-
-```sh
-node scripts/review-args.mjs <<'EOF'
-<下の JSON>
-EOF
-```
+書いたものを次の形で `.review.json` に Write し、`node scripts/review-args.mjs .review.json` に通す。heredoc やパイプで渡さない。
 
 ```json
 {

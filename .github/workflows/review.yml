@@ -75,7 +75,7 @@ jobs:
                   claude -p "PR #$PR をレビューする" \
                       --agent review \
                       --max-turns 30 \
-                      --allowedTools "Bash(git:*),Bash(gh:*),Bash(cat:*),Bash(node scripts/review-args.mjs:*),Read,Grep,Glob" \
+                      --allowedTools "Bash(git:*),Bash(gh:*),Bash(cat:*),Bash(node scripts/review-args.mjs:*),Edit(./.review.json),Read,Grep,Glob" \
                       --settings '{"disableAllHooks": true}'
                   test -s "$REVIEW_OUT"
               env:
