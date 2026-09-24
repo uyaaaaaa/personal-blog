@@ -21,7 +21,7 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 ## プレビュー環境
 
-Cloudflare Pages の Git 連携が有効なため、Pull Request を作ると自動でプレビューがデプロイされます。リポジトリ側にワークフローの設定は不要です。PR では GitHub Actions の `Lint` と `Test` が並列に走ります（build は Actions では回しません）。
+Cloudflare Pages の Git 連携が有効なため、Pull Request を作ると自動でプレビューがデプロイされます。リポジトリ側にワークフローの設定は不要です。PR では GitHub Actions の `Article`・`Lint`・`Test`・`Typecheck`・`Build` が並列に走ります。`Build` は静的生成まで回し、プリレンダで落ちたページがあれば失敗します。
 
 ビルド完了後、Cloudflare のボットが2種類の URL をコメントします。
 
