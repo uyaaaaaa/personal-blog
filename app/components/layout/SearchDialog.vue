@@ -36,6 +36,16 @@
 					@compositionend="endComposition"
 				/>
 				<button
+					v-if="query !== ''"
+					type="button"
+					class="search-clear"
+					aria-label="Clear search"
+					@mousedown.prevent
+					@click="clearTyped"
+				>
+					<CloseIcon size="small" />
+				</button>
+				<button
 					type="button"
 					class="search-cancel -my-3 flex-none py-3 text-ui text-accent md:hidden"
 					@click="emit('close')"
@@ -80,6 +90,7 @@
 
 <script setup lang="ts">
 	import SearchResults from '~/components/layout/SearchResults.vue'
+	import CloseIcon from '~/components/ui/CloseIcon.vue'
 	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { useBackToClose } from '~/composables/useBackToClose'
@@ -144,6 +155,11 @@
 	}
 
 	const inputRef = ref<HTMLInputElement | null>(null)
+
+	const clearTyped = () => {
+		clear()
+		focusByGesture(inputRef.value)
+	}
 
 	const isTyped = computed(() => query.value.trim() !== '')
 
@@ -317,6 +333,21 @@
 		font-family: inherit;
 		font-size: 1rem;
 		color: var(--color-main);
+	}
+
+	.search-clear {
+		flex: none;
+		display: flex;
+		margin: -0.5rem;
+		padding: 0.5rem;
+		border: none;
+		background: none;
+		color: var(--color-sub);
+		cursor: pointer;
+	}
+
+	.search-clear:hover {
+		color: var(--color-accent);
 	}
 
 	.search-input::placeholder {

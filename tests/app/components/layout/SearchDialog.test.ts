@@ -198,6 +198,27 @@ describe('SearchDialog', () => {
 		expect(wrapper.emitted('close')).toHaveLength(1)
 	})
 
+	it('語があるときだけ消去ボタンを出し、押すと語を消して入力欄にフォーカスを残す', async () => {
+		const wrapper = await mountSuspended(SearchDialog, {
+			props: { isOpen: true, location: '/' },
+			attachTo: document.body,
+		})
+		const clearButton = () => wrapper.find('button[aria-label="Clear search"]')
+
+		expect(clearButton().exists()).toBe(false)
+
+		await wrapper.get('input').setValue('vim')
+		const pressed = wrapper.get<HTMLButtonElement>('button[aria-label="Clear search"]')
+		pressed.element.focus()
+		await pressed.trigger('click')
+
+		expect(wrapper.get('input').element.value).toBe('')
+		expect(document.activeElement).toBe(wrapper.get('input').element)
+		expect(clearButton().exists()).toBe(false)
+
+		wrapper.unmount()
+	})
+
 	it('件数は常設の領域に出し、打つ前は何も言わない', async () => {
 		const wrapper = await mountSuspended(SearchDialog, {
 			props: { isOpen: true, location: '/' },
