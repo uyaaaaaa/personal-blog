@@ -10,10 +10,22 @@
 				<span>Tech Blog</span>
 			</NuxtLink>
 
-			<HeaderSearch
-				ref="inlineSearchRef"
-				@update:open="isInlineSearchOpen = $event"
-			/>
+			<button
+				ref="desktopSearchRef"
+				type="button"
+				class="search-trigger mx-8 hidden max-w-search-trigger flex-1 items-center gap-2 rounded-md border border-border-field bg-surface-subtle px-4 py-2 transition-color hover:border-accent md:flex"
+				aria-haspopup="dialog"
+				:aria-expanded="isSearchOpen"
+				@click="openSearch"
+			>
+				<SearchIcon class="search-trigger-icon" />
+				<span class="search-trigger-label">Search...</span>
+				<span
+					class="search-trigger-kbd rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-meta text-sub"
+					aria-hidden="true"
+					>⌘K</span
+				>
+			</button>
 
 			<div class="flex items-stretch gap-1 self-stretch md:gap-5">
 				<button
@@ -45,11 +57,6 @@
 		</div>
 	</header>
 
-	<div
-		class="search-scrim"
-		:class="{ 'is-open': isInlineSearchOpen }"
-	/>
-
 	<SearchDialog
 		:is-open="isSearchOpen"
 		@close="closeSearch"
@@ -57,7 +64,6 @@
 </template>
 
 <script setup lang="ts">
-	import HeaderSearch from '~/components/layout/HeaderSearch.vue'
 	import LogoMarkIcon from '~/components/layout/LogoMarkIcon.vue'
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
@@ -73,8 +79,7 @@
 
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)
-	const isInlineSearchOpen = ref(false)
-	const inlineSearchRef = ref<InstanceType<typeof HeaderSearch> | null>(null)
+	const desktopSearchRef = ref<HTMLElement | null>(null)
 	const mobileSearchRef = ref<HTMLElement | null>(null)
 
 	let searchOpener: HTMLElement | null = null
@@ -88,6 +93,11 @@
 		releaseBackdrop()
 	}
 
+	const isShown = (element: HTMLElement | null) => (element?.getClientRects().length ?? 0) > 0
+
+	const visibleTrigger = () =>
+		[desktopSearchRef.value, mobileSearchRef.value].find(isShown) ?? null
+
 	const openSearchFrom = (opener: HTMLElement | null) => {
 		searchOpener = opener
 		focusByGesture(opener)
@@ -99,9 +109,11 @@
 	}
 
 	const closeSearch = () => {
+		if (!isSearchOpen.value) return
+
 		isSearchOpen.value = false
 		releaseBackdrop()
-		focusByGesture(searchOpener)
+		focusByGesture(isShown(searchOpener) ? searchOpener : visibleTrigger())
 		searchOpener = null
 	}
 
@@ -111,16 +123,13 @@
 
 		event.preventDefault()
 
-		if (isSearchOpen.value) return
-
-		closeMenu()
-
-		if (inlineSearchRef.value?.isVisible()) {
-			inlineSearchRef.value.focus()
+		if (isSearchOpen.value) {
+			closeSearch()
 			return
 		}
 
-		openSearchFrom(mobileSearchRef.value)
+		closeMenu()
+		openSearchFrom(visibleTrigger())
 	}
 
 	onMounted(() => {
@@ -128,7 +137,7 @@
 	})
 	onBeforeUnmount(() => window.removeEventListener('keydown', onSearchShortcut))
 
-	watch([isMenuOpen, isSearchOpen, isInlineSearchOpen], (open) => {
+	watch([isMenuOpen, isSearchOpen], (open) => {
 		document.body.classList.toggle('scroll-locked', open.some(Boolean))
 	})
 
@@ -137,7 +146,6 @@
 		() => {
 			closeMenu()
 			closeSearch()
-			inlineSearchRef.value?.close()
 		},
 	)
 </script>
@@ -183,27 +191,20 @@
 		letter-spacing: -0.025em;
 	}
 
-	.search-scrim {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100vh;
-		height: 100dvh;
-		background-color: var(--color-overlay-subtle);
-		z-index: 90;
-		opacity: 0;
-		visibility: hidden;
-		transition:
-			opacity 0.2s ease-in-out,
-			visibility 0s linear 0.2s;
+	.search-trigger-icon {
+		flex: none;
+		color: var(--color-sub);
 	}
 
-	.search-scrim.is-open {
-		opacity: 1;
-		visibility: visible;
-		transition:
-			opacity 0.2s ease-in-out,
-			visibility 0s;
+	.search-trigger-label {
+		flex: 1;
+		min-width: 0;
+		text-align: left;
+		font-size: 0.875rem;
+		color: var(--color-sub);
+	}
+
+	.search-trigger-kbd {
+		flex: none;
 	}
 </style>
