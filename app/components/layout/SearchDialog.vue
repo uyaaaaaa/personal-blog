@@ -1,14 +1,14 @@
 <template>
 	<div
 		ref="lockRef"
-		class="search-overlay"
+		class="search-overlay md:px-4 md:pb-4 md:pt-16"
 		:class="{ 'is-open': isOpen }"
 		@pointerdown="onOverlayPointerDown"
 		@click="onOverlayClick"
 	>
 		<div
 			ref="trapRef"
-			class="search-dialog max-w-search-open rounded-card border border-border bg-surface shadow-lg"
+			class="search-dialog h-full bg-surface md:h-auto md:max-w-search-open md:rounded-card md:border md:border-border md:shadow-lg"
 			role="dialog"
 			aria-modal="true"
 			aria-label="Search articles"
@@ -35,6 +35,13 @@
 					@compositionstart="startComposition"
 					@compositionend="endComposition"
 				/>
+				<button
+					type="button"
+					class="search-cancel -my-3 flex-none py-3 text-ui text-accent md:hidden"
+					@click="emit('close')"
+				>
+					Cancel
+				</button>
 			</div>
 
 			<p
@@ -56,7 +63,8 @@
 				:id="LIST_ID"
 				:results="results"
 				:active-index="activeIndex"
-				@select="emit('close')"
+				@select="selectResult"
+				@close="emit('close')"
 				@activate="activeIndex = $event"
 			/>
 
@@ -74,6 +82,7 @@
 	import SearchResults from '~/components/layout/SearchResults.vue'
 	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
+	import { useBackToClose } from '~/composables/useBackToClose'
 	import { useBackdropInert } from '~/composables/useBackdropInert'
 	import { usePublishedArticles } from '~/composables/usePublishedArticles'
 	import { useSearchKeys } from '~/composables/useSearchKeys'
@@ -152,12 +161,20 @@
 		if (pressedOnOverlay) emit('close')
 	}
 
+	const { release } = useBackToClose(toRef(props, 'isOpen'), () => emit('close'))
+
+	const selectResult = () => {
+		release()
+		emit('close')
+	}
+
 	const { onKeydown: onInputKeydown, trapRef } = useSearchKeys(
 		{ activeArticle, moveActive, isComposingKey },
 		{
 			canSelect: () => results.value.length > 0,
 			isTrapped: toRef(props, 'isOpen'),
 			close: () => emit('close'),
+			select: selectResult,
 		},
 	)
 
@@ -190,7 +207,6 @@
 		width: 100%;
 		height: 100vh;
 		height: 100dvh;
-		padding: 4rem 1rem 1rem;
 		background-color: var(--color-overlay);
 		z-index: 120;
 		opacity: 0;

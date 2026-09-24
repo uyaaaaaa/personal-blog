@@ -6,7 +6,7 @@ import { releaseBackdrop } from '~/composables/useBackdropInert'
 
 const navigate = vi.fn().mockResolvedValue(undefined)
 
-mockNuxtImport('navigateTo', () => (path: string) => navigate(path))
+mockNuxtImport('navigateTo', () => (path: string, options?: object) => navigate(path, options))
 
 // queryCollection は Nuxt Content の SQLite を開く。記事を1本返すスタブで取得先を切る
 mockNuxtImport('queryCollection', () => () => {
@@ -59,7 +59,7 @@ describe('SearchDialog', () => {
 		await wrapper.get('[role="option"]').trigger('click')
 		await nextTick()
 
-		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
+		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation', { replace: true })
 		expect(navigate).toHaveBeenCalledTimes(1)
 		expect(wrapper.emitted('close')).toHaveLength(1)
 		expect(document.activeElement).toBe(main)
@@ -77,11 +77,19 @@ describe('SearchDialog', () => {
 		await wrapper.get('input').setValue('vim')
 		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
 
-		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
+		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation', { replace: true })
 		expect(wrapper.emitted('close')).toHaveLength(1)
 		expect(document.activeElement).toBe(main)
 
 		wrapper.unmount()
+	})
+
+	it('Cancel を押すと閉じる要求を出す', async () => {
+		const wrapper = await mountSuspended(SearchDialog, { props: { isOpen: true } })
+
+		await wrapper.get('.search-cancel').trigger('click')
+
+		expect(wrapper.emitted('close')).toHaveLength(1)
 	})
 
 	it('件数は常設の領域に出し、打つ前は何も言わない', async () => {
