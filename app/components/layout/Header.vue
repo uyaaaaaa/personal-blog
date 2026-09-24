@@ -209,7 +209,6 @@
 		color: var(--color-sub);
 	}
 
-	/* 両方の表記を同じ升に重ね、幅を長いほうに固定する。OS を知る前後で幅が変わらない */
 	.search-trigger-kbd {
 		flex: none;
 		display: grid;
