@@ -21,6 +21,7 @@ jobs:
             contents: read
             pull-requests: read
             checks: read
+            statuses: read
         env:
             PR: ${{ github.event.pull_request.number || inputs.pr }}
             REPO: ${{ github.repository }}
@@ -73,7 +74,8 @@ jobs:
                   npm install -g @anthropic-ai/claude-code
                   claude -p "PR #$PR をレビューする" \
                       --agent review \
-                      --allowedTools "Bash(git:*) Bash(gh:*) Bash(cat:*) Bash(node scripts/review-args.mjs:*) Read Grep Glob" \
+                      --max-turns 30 \
+                      --allowedTools "Bash(git:*),Bash(gh:*),Bash(cat:*),Bash(node scripts/review-args.mjs:*),Read,Grep,Glob" \
                       --settings '{"disableAllHooks": true}'
                   test -s "$REVIEW_OUT"
               env:
