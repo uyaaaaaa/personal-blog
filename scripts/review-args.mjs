@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { complete, eventOf, judged, rules, source } from './review-rules.mjs'
 import { read } from './stdin.mjs'
@@ -8,8 +9,7 @@ const USAGE = [
 	'使い方: node scripts/review-args.mjs < findings.json',
 	'',
 	'渡す JSON:',
-	'  { "pr": 123,',
-	'    "reason": "判定の理由1文",',
+	'  { "reason": "判定の理由1文",',
 	'    "verified": "CI の lint / test / typecheck は緑",',
 	'    "comments": [',
 	'      { "grade": "must", "path": "app/x.vue", "line": 12,',
@@ -17,7 +17,7 @@ const USAGE = [
 	'    ] }',
 	'',
 	'判定・バッジ・件数の上限は review スキルから読む。',
-	'出力の JSON が発火に渡す値。workflow 名・PR 番号・レビュー本文を、組み替えずに渡す。',
+	'出力の JSON が PR に投稿するレビュー。REVIEW_OUT があれば、そのファイルにも書く。',
 ]
 
 const text = (value) => (typeof value === 'string' ? value.trim() : '')
@@ -86,7 +86,6 @@ export const findings = (review, it) => {
 	const comments = Array.isArray(review.comments) ? review.comments : []
 	const found = []
 
-	if (!Number.isInteger(review.pr) || review.pr < 1) found.push('pr に PR の番号を入れる')
 	if (!Array.isArray(review.comments)) found.push('comments は配列で渡す（0件なら空配列）')
 
 	const counts = counted(comments, it)
@@ -132,19 +131,12 @@ export const args = (review, it) => {
 	if (found.length > 0) return { error: found }
 
 	const chosen = verdict(review.comments, it)
-	const payload = {
+	return {
 		event: eventOf(chosen.name),
 		...(chosen.needs.length > 0 ? { body: summary(review, it) } : {}),
 		...(review.comments.length > 0
 			? { comments: review.comments.map((comment) => badged(comment, it)) }
 			: {}),
-	}
-
-	return {
-		method: 'run_workflow',
-		workflow_id: it.workflow,
-		ref: it.ref,
-		inputs: { pr: String(review.pr), review: JSON.stringify(payload) },
 	}
 }
 
@@ -165,14 +157,16 @@ const main = async () => {
 	}
 
 	const it = rules(source(fileURLToPath(new URL(`../${SKILL}`, import.meta.url))))
-	if (!complete(it) || !Number.isFinite(it.bodyLines) || typeof it.ref !== 'string') {
+	if (!complete(it) || !Number.isFinite(it.bodyLines)) {
 		fail([`判定とグレードを ${SKILL} から読めない`])
 	}
 
 	const built = args(review, it)
 	if (built.error) fail(built.error)
 
-	console.log(JSON.stringify(built, null, 2))
+	const out = JSON.stringify(built, null, 2)
+	if (process.env.REVIEW_OUT) writeFileSync(process.env.REVIEW_OUT, out)
+	console.log(out)
 }
 
 if (process.argv[1]?.endsWith('review-args.mjs')) await main()

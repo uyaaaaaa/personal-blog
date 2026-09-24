@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { decide } from '~~/.claude/hooks/review-guard.mjs'
 import { args, findings, verdict } from '~~/scripts/review-args.mjs'
 import { rules, source } from '~~/scripts/review-rules.mjs'
 
@@ -18,14 +17,13 @@ const comment = (over = {}) => ({
 })
 
 const review = (over = {}) => ({
-	pr: 123,
 	reason: '初期表示が閉じたままになる。',
 	verified: '`npm run lint` `npm test` は終了コード 0',
 	comments: [comment()],
 	...over,
 })
 
-const payload = (over) => JSON.parse(args(review(over), RULES).inputs.review)
+const payload = (over) => args(review(over), RULES)
 
 const graded = (...names) => names.map((grade) => comment({ grade }))
 
@@ -105,15 +103,8 @@ describe('findings', () => {
 
 describe('args', () => {
 	it('落とした指摘は組み立てずに理由を返す', () => {
-		expect(args(review({ pr: 0 }), RULES)).toEqual({ error: ['pr に PR の番号を入れる'] })
-	})
-
-	it('発火に渡す形で出す', () => {
-		expect(args(review(), RULES)).toMatchObject({
-			method: 'run_workflow',
-			workflow_id: 'review.yml',
-			ref: 'main',
-			inputs: { pr: '123' },
+		expect(args(review({ comments: 'x' }), RULES)).toEqual({
+			error: ['comments は配列で渡す（0件なら空配列）'],
 		})
 	})
 
@@ -149,26 +140,5 @@ describe('args', () => {
 
 	it('指摘が0件なら comments を渡さない', () => {
 		expect(payload({ comments: [] })).toEqual({ event: 'APPROVE' })
-	})
-})
-
-describe('review-guard', () => {
-	const guarded = (over) => ({
-		hook_event_name: 'PreToolUse',
-		tool_name: 'mcp__github__actions_run_trigger',
-		tool_input: args(review(over), RULES),
-	})
-
-	it.each([['must'], ['suggestion'], ['nits']])('組み立てた %s の投稿をガードが通す', (grade) => {
-		expect(decide(guarded({ comments: graded(grade) }))).toBeNull()
-	})
-
-	it('コード片を置いたコメントもガードが通す', () => {
-		const snippet = comment({ body: '理由。\n\n```js\nconst a = 1\n```' })
-		expect(decide(guarded({ comments: [snippet] }))).toBeNull()
-	})
-
-	it('指摘の無い Approve もガードが通す', () => {
-		expect(decide(guarded({ comments: [] }))).toBeNull()
 	})
 })
