@@ -60,7 +60,8 @@
 	}>()
 
 	const emit = defineEmits<{
-		(e: 'select'): void
+		(e: 'select', path: string): void
+		(e: 'close'): void
 		(e: 'activate', index: number): void
 	}>()
 
@@ -69,8 +70,6 @@
 	const optionId = (index: number) => `${props.id}-${index}`
 
 	const onSelect = async (path: string, event: MouseEvent) => {
-		emit('select')
-
 		if (
 			event.button !== 0 ||
 			event.metaKey ||
@@ -78,11 +77,13 @@
 			event.shiftKey ||
 			event.altKey
 		) {
+			emit('close')
 			return
 		}
 
+		emit('select', path)
 		event.preventDefault()
-		await navigateTo(path)
+		await navigateTo(path, { replace: true })
 		await nextTick()
 		focusMainContent()
 	}

@@ -6,7 +6,7 @@ import { releaseBackdrop } from '~/composables/useBackdropInert'
 
 const navigate = vi.fn().mockResolvedValue(undefined)
 
-mockNuxtImport('navigateTo', () => (path: string) => navigate(path))
+mockNuxtImport('navigateTo', () => (path: string, options?: object) => navigate(path, options))
 
 // queryCollection は Nuxt Content の SQLite を開く。記事を1本返すスタブで取得先を切る
 mockNuxtImport('queryCollection', () => () => {
@@ -28,6 +28,7 @@ const mountMain = () => {
 }
 
 afterEach(() => {
+	vi.restoreAllMocks()
 	releaseBackdrop()
 	document.getElementById('main-content')?.remove()
 	navigate.mockClear()
@@ -37,7 +38,7 @@ describe('SearchDialog', () => {
 	// フレームを跨ぐと、モバイルブラウザが仮想キーボードを自動表示する判定から外れる
 	it('開いた直後、フレームを待たずに入力欄へフォーカスする', async () => {
 		const wrapper = await mountSuspended(SearchDialog, {
-			props: { isOpen: false },
+			props: { isOpen: false, location: '/' },
 			attachTo: document.body,
 		})
 
@@ -51,7 +52,7 @@ describe('SearchDialog', () => {
 	it('候補をクリックすると閉じる要求を出してメインコンテンツへフォーカスする', async () => {
 		const main = mountMain()
 		const wrapper = await mountSuspended(SearchDialog, {
-			props: { isOpen: true, onClose: releaseBackdrop },
+			props: { isOpen: true, location: '/', onClose: releaseBackdrop },
 			attachTo: document.body,
 		})
 
@@ -59,7 +60,7 @@ describe('SearchDialog', () => {
 		await wrapper.get('[role="option"]').trigger('click')
 		await nextTick()
 
-		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
+		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation', { replace: true })
 		expect(navigate).toHaveBeenCalledTimes(1)
 		expect(wrapper.emitted('close')).toHaveLength(1)
 		expect(document.activeElement).toBe(main)
@@ -67,17 +68,39 @@ describe('SearchDialog', () => {
 		wrapper.unmount()
 	})
 
+	// 今のルートへの遷移は捨てられ、積んだ履歴は記事で置き換わらない
+	it.each([
+		['別の記事', 0, '/'],
+		['見出しを指す今の記事', 0, '/article/vim-abbreviation#usage'],
+		['今いる記事', 1, '/article/vim-abbreviation/'],
+	])('%sを選ぶと、開いたときに積んだ履歴を %i 回戻す', async (_, backs, location) => {
+		const back = vi.spyOn(history, 'back').mockImplementation(() => {})
+		const wrapper = await mountSuspended(SearchDialog, {
+			props: { isOpen: false, location },
+			attachTo: document.body,
+		})
+		await wrapper.setProps({ isOpen: true })
+
+		await wrapper.get('input').setValue('vim')
+		await wrapper.get('[role="option"]').trigger('click')
+		await wrapper.setProps({ isOpen: false })
+
+		expect(back).toHaveBeenCalledTimes(backs)
+
+		wrapper.unmount()
+	})
+
 	it('表示幅によらず Enter で選び、メインコンテンツへフォーカスする', async () => {
 		const main = mountMain()
 		const wrapper = await mountSuspended(SearchDialog, {
-			props: { isOpen: true, onClose: releaseBackdrop },
+			props: { isOpen: true, location: '/', onClose: releaseBackdrop },
 			attachTo: document.body,
 		})
 
 		await wrapper.get('input').setValue('vim')
 		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
 
-		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation')
+		expect(navigate).toHaveBeenCalledWith('/article/vim-abbreviation', { replace: true })
 		expect(wrapper.emitted('close')).toHaveLength(1)
 		expect(document.activeElement).toBe(main)
 
@@ -88,7 +111,7 @@ describe('SearchDialog', () => {
 		const viewport = { height: 800, scale: 1 }
 		vi.stubGlobal('visualViewport', viewport)
 		const wrapper = await mountSuspended(SearchDialog, {
-			props: { isOpen: false },
+			props: { isOpen: false, location: '/' },
 			attachTo: document.body,
 		})
 
@@ -106,8 +129,20 @@ describe('SearchDialog', () => {
 		vi.unstubAllGlobals()
 	})
 
+	it('Cancel を押すと閉じる要求を出す', async () => {
+		const wrapper = await mountSuspended(SearchDialog, {
+			props: { isOpen: true, location: '/' },
+		})
+
+		await wrapper.get('.search-cancel').trigger('click')
+
+		expect(wrapper.emitted('close')).toHaveLength(1)
+	})
+
 	it('件数は常設の領域に出し、打つ前は何も言わない', async () => {
-		const wrapper = await mountSuspended(SearchDialog, { props: { isOpen: true } })
+		const wrapper = await mountSuspended(SearchDialog, {
+			props: { isOpen: true, location: '/' },
+		})
 		const status = () => wrapper.get('.sr-only[role="status"]')
 
 		expect(status().text()).toBe('')
