@@ -93,15 +93,6 @@
 		],
 		"PreToolUse": [
 			{
-				"matcher": "Bash|mcp__.*(pull_request_review|actions_run_trigger|add_issue_comment|update_issue_comment|add_comment_to_pending_review|add_reply_to_pull_request_comment)",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/review-guard.mjs\""
-					}
-				]
-			},
-			{
 				"matcher": "Read|Bash",
 				"hooks": [
 					{
@@ -148,15 +139,6 @@
 			}
 		],
 		"PostToolUse": [
-			{
-				"matcher": "Bash|mcp__.*actions_run_trigger",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/review-guard.mjs\""
-					}
-				]
-			},
 			{
 				"matcher": "mcp__.*__(create_session|slack_send_message|slack_send_message_draft|slack_schedule_message)",
 				"hooks": [
