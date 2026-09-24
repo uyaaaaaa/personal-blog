@@ -1,8 +1,12 @@
 // @vitest-environment nuxt
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 import Toc from '~/components/article/Toc.vue'
-import { TOC_COLLAPSED_ATTRIBUTE, TOC_COLLAPSED_KEY } from '~/utils/tocCollapse'
+import {
+	TOC_COLLAPSED_ATTRIBUTE,
+	TOC_COLLAPSED_KEY,
+	followStoredTocCollapseScript,
+} from '~/utils/tocCollapse'
 
 const links = [
 	{ id: 'intro', text: 'はじめに' },
@@ -12,6 +16,8 @@ const links = [
 const mount = () => mountSuspended(Toc, { props: { links } })
 
 const collapsed = () => document.documentElement.hasAttribute(TOC_COLLAPSED_ATTRIBUTE)
+
+beforeAll(() => new Function(followStoredTocCollapseScript)())
 
 afterEach(() => {
 	localStorage.clear()
