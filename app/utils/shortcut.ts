@@ -4,3 +4,6 @@ export const isSearchShortcut = (event: KeyboardEvent): boolean =>
 	(event.metaKey || event.ctrlKey) &&
 	!event.altKey &&
 	!event.shiftKey
+
+// iPadOS の Safari は platform に MacIntel を返す
+export const usesCommandKey = (platform: string): boolean => /mac|iphone|ipad|ipod/i.test(platform)

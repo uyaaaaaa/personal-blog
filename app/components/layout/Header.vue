@@ -23,8 +23,10 @@
 				<span
 					class="search-trigger-kbd rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-meta text-sub"
 					aria-hidden="true"
-					>⌘K</span
 				>
+					<span :class="{ invisible: !isCommandKey }">⌘K</span>
+					<span :class="{ invisible: isCommandKey }">Ctrl K</span>
+				</span>
 			</button>
 
 			<div class="flex items-stretch gap-1 self-stretch md:gap-5">
@@ -72,7 +74,7 @@
 	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
 	import { releaseBackdrop } from '~/composables/useBackdropInert'
-	import { isSearchShortcut } from '~/utils/shortcut'
+	import { isSearchShortcut, usesCommandKey } from '~/utils/shortcut'
 
 	const props = defineProps<{
 		location: string
@@ -80,6 +82,7 @@
 
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)
+	const isCommandKey = ref(true)
 	const desktopSearchRef = ref<HTMLElement | null>(null)
 	const mobileSearchRef = ref<HTMLElement | null>(null)
 
@@ -134,6 +137,7 @@
 	}
 
 	onMounted(() => {
+		isCommandKey.value = usesCommandKey(navigator.platform)
 		window.addEventListener('keydown', onSearchShortcut)
 	})
 	onBeforeUnmount(() => window.removeEventListener('keydown', onSearchShortcut))
@@ -205,7 +209,13 @@
 		color: var(--color-sub);
 	}
 
+	/* 両方の表記を同じ升に重ね、幅を長いほうに固定する。OS を知る前後で幅が変わらない */
 	.search-trigger-kbd {
 		flex: none;
+		display: grid;
+	}
+
+	.search-trigger-kbd > * {
+		grid-area: 1 / 1;
 	}
 </style>

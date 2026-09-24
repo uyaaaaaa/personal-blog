@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isSearchShortcut } from '~/utils/shortcut'
+import { isSearchShortcut, usesCommandKey } from '~/utils/shortcut'
 
 const keydown = (key: string, modifiers: Partial<KeyboardEventInit> = {}) =>
 	({
@@ -39,5 +39,18 @@ describe('isSearchShortcut', () => {
 	it('K 以外のキーは受けない', () => {
 		expect(isSearchShortcut(keydown('j', { metaKey: true }))).toBe(false)
 		expect(isSearchShortcut(keydown('Enter', { metaKey: true }))).toBe(false)
+	})
+})
+
+describe('usesCommandKey', () => {
+	it('macOS と iPadOS・iOS では ⌘ を使う', () => {
+		expect(usesCommandKey('MacIntel')).toBe(true)
+		expect(usesCommandKey('iPad')).toBe(true)
+		expect(usesCommandKey('iPhone')).toBe(true)
+	})
+
+	it('Windows と Linux では Ctrl を使う', () => {
+		expect(usesCommandKey('Win32')).toBe(false)
+		expect(usesCommandKey('Linux x86_64')).toBe(false)
 	})
 })
