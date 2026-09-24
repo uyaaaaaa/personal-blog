@@ -195,6 +195,10 @@
 	// レイアウトの高さごと縮めるブラウザもあるので、触って使う端末では開いた時点の高さとも比べる。回転で幅が変わればその高さは使えない
 	let opened: ReturnType<typeof visibleViewport>
 
+	const rememberViewportBeforeKeyboard = () => {
+		opened = visibleViewport()
+	}
+
 	const isTouchPrimary = () => window.matchMedia('(pointer: coarse)').matches
 
 	const isSoftKeyboardShown = () => {
@@ -230,8 +234,7 @@
 			if (!isOpen) return
 
 			clear()
-			// フォーカスでキーボードが出る前に測る
-			opened = visibleViewport()
+			rememberViewportBeforeKeyboard()
 			focusByGesture(inputRef.value, { asPointer: true })
 		},
 		{ flush: 'post' },

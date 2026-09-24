@@ -107,8 +107,12 @@ describe('SearchDialog', () => {
 		wrapper.unmount()
 	})
 
-	const stubViewport = (width: number, height: number) => {
+	const stubViewport = (width: number, height: number, { touch = false } = {}) => {
 		const viewport = { width, height, scale: 1 }
+		vi.stubGlobal('matchMedia', (media: string) => ({
+			media,
+			matches: touch && media === '(pointer: coarse)',
+		}))
 		vi.stubGlobal('visualViewport', viewport)
 		vi.stubGlobal('innerWidth', width)
 		vi.stubGlobal('innerHeight', height)
@@ -127,7 +131,7 @@ describe('SearchDialog', () => {
 	}
 
 	it('ソフトキーボードが出ている間の Enter は記事へ移らず、キーボードだけ閉じる', async () => {
-		const viewport = stubViewport(375, 800)
+		const viewport = stubViewport(375, 800, { touch: true })
 		const { wrapper } = await openAndType()
 
 		viewport.height = 450
@@ -143,10 +147,10 @@ describe('SearchDialog', () => {
 	})
 
 	it('開いたあとに横へ回して低くなっても、キーボードの無い Enter は記事へ移る', async () => {
-		stubViewport(375, 800)
+		stubViewport(375, 800, { touch: true })
 		const { main, wrapper } = await openAndType()
 
-		stubViewport(800, 375)
+		stubViewport(800, 375, { touch: true })
 		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
 
 		expect(navigate).toHaveBeenCalledTimes(1)
