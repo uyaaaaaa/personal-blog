@@ -1472,6 +1472,31 @@ const probes = [
 		},
 	},
 	{
+		name: 'ソフトキーボードで表示領域が縮んだ間の Enter',
+		input: true,
+		widths: [375],
+		run: async (p) => {
+			await p.open()
+			await p.typeQuery()
+			const from = await p.evaluate(`return $path()`)
+			sent('表示領域の高さを 900 から 500 に縮める')
+			await p.setWidth(375, 500)
+			await p.evaluate('await $frames(2)')
+			await p.pressKey('Enter')
+			await sleep(TRANSITION)
+			const state = await p.evaluate('return $state()')
+			const rows = await p.evaluate(`return document.querySelectorAll(LINK).length`)
+			return {
+				observed: `${show(state, ['overlay', 'path', 'active'])} 行=${rows}件`,
+				ok:
+					state.overlay === 'visible' &&
+					state.path === from &&
+					!state.active.startsWith('INPUT') &&
+					rows > 0,
+			}
+		},
+	},
+	{
 		name: 'shortcut-ダイアログを開いたまま md を跨いだ Cmd+K',
 		shortcut: true,
 		dialog: true,

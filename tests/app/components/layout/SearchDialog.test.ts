@@ -84,6 +84,28 @@ describe('SearchDialog', () => {
 		wrapper.unmount()
 	})
 
+	it('ソフトキーボードが出ている間の Enter は記事へ移らず、キーボードだけ閉じる', async () => {
+		const viewport = { height: 800, scale: 1 }
+		vi.stubGlobal('visualViewport', viewport)
+		const wrapper = await mountSuspended(SearchDialog, {
+			props: { isOpen: false },
+			attachTo: document.body,
+		})
+
+		await wrapper.setProps({ isOpen: true })
+		viewport.height = 450
+		await wrapper.get('input').setValue('vim')
+		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
+
+		expect(navigate).not.toHaveBeenCalled()
+		expect(wrapper.emitted('close')).toBeUndefined()
+		expect(document.activeElement).not.toBe(wrapper.get('input').element)
+		expect(wrapper.findAll('[role="option"]')).toHaveLength(1)
+
+		wrapper.unmount()
+		vi.unstubAllGlobals()
+	})
+
 	it('件数は常設の領域に出し、打つ前は何も言わない', async () => {
 		const wrapper = await mountSuspended(SearchDialog, { props: { isOpen: true } })
 		const status = () => wrapper.get('.sr-only[role="status"]')

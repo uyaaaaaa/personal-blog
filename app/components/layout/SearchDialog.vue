@@ -31,7 +31,7 @@
 						results.length > 0 ? `${LIST_ID}-${activeIndex}` : undefined
 					"
 					autocomplete="off"
-					@keydown="onInputKeydown"
+					@keydown="onFieldKeydown"
 					@compositionstart="startComposition"
 					@compositionend="endComposition"
 				/>
@@ -161,6 +161,28 @@
 		},
 	)
 
+	// ソフトキーボードの Enter はハードウェアのものと区別できる値を持たない。出ている間は表示領域が縮むので、開いた時点の高さと比べる
+	const SOFT_KEYBOARD_MIN_HEIGHT = 120
+
+	let openedViewportHeight = 0
+
+	const visibleViewportHeight = () =>
+		window.visualViewport ? window.visualViewport.height * window.visualViewport.scale : 0
+
+	const isSoftKeyboardShown = () =>
+		openedViewportHeight - visibleViewportHeight() >= SOFT_KEYBOARD_MIN_HEIGHT
+
+	// 検索キーは候補を選ばず、キーボードだけ閉じて結果を見渡せるようにする
+	const onFieldKeydown = (event: KeyboardEvent) => {
+		if (event.key === 'Enter' && !isComposingKey(event) && isSoftKeyboardShown()) {
+			event.preventDefault()
+			inputRef.value?.blur()
+			return
+		}
+
+		return onInputKeydown(event)
+	}
+
 	const { lockRef } = useTouchScrollLock()
 
 	useBackdropInert(toRef(props, 'isOpen'), trapRef)
@@ -171,6 +193,8 @@
 			if (!isOpen) return
 
 			clear()
+			// フォーカスでキーボードが出る前に測る
+			openedViewportHeight = visibleViewportHeight()
 			focusByGesture(inputRef.value, { asPointer: true })
 		},
 		{ flush: 'post' },
