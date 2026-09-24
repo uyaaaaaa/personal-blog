@@ -73,6 +73,20 @@ describe('Header', () => {
 		expect(wrapper.get('.search-trigger').attributes('aria-expanded')).toBe('true')
 	})
 
+	it('PC と SP の検索ボタンは、それぞれの search ランドマークから検索ダイアログを開く', async () => {
+		const wrapper = await mountHeader()
+		const landmarks = wrapper.findAll('[role="search"]')
+
+		expect(landmarks).toHaveLength(2)
+
+		for (const landmark of landmarks) {
+			await landmark.get('button').trigger('click')
+			expect(wrapper.get('.search-dialog').text()).toBe('true')
+
+			await pressSearchShortcut()
+		}
+	})
+
 	it('検索を開いていない遷移ではフォーカスを動かさない', async () => {
 		const wrapper = await mountHeader({ attachTo: document.body })
 		const trigger = wrapper.get('.search-trigger').element as HTMLElement

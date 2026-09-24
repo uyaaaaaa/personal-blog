@@ -13,7 +13,10 @@
 			aria-modal="true"
 			aria-label="Search articles"
 		>
-			<div class="search-field">
+			<div
+				role="search"
+				class="search-field"
+			>
 				<SearchIcon class="search-field-icon" />
 				<input
 					ref="inputRef"
