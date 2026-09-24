@@ -5,6 +5,8 @@ const VALID = ['title: 集めたもの', 'date: 2026-09-12']
 
 const md = (...lines: string[]) => `---\n${lines.join('\n')}\n---\n\n## 見出し\n`
 
+const MANIFEST = '{}'
+
 const storeOf = (items: Record<string, string>): RemoteStore => ({
 	list: async () => Object.keys(items),
 	get: async (key) => {
@@ -21,16 +23,51 @@ afterEach(() => {
 })
 
 describe('getKeys', () => {
-	it('取得できたキーをそのまま渡す', async () => {
+	it('マニフェストのある回の収集物だけを渡し、マニフェスト自体は渡さない', async () => {
 		const store = storeOf({
 			'digest/2026-09-12/first.md': md(...VALID),
-			'digest/2026-09-12/second.md': md(...VALID),
+			'digest/2026-09-12/_manifest.json': MANIFEST,
+			'digest/2026-09-13/half.md': md(...VALID),
 		})
 
-		await expect(source(store).getKeys!()).resolves.toEqual([
-			'digest/2026-09-12/first.md',
-			'digest/2026-09-12/second.md',
-		])
+		await expect(source(store).getKeys!()).resolves.toEqual(['digest/2026-09-12/first.md'])
+	})
+
+	it.each([
+		['JSON として読めない', '{'],
+		['オブジェクトでない', '[]'],
+	])('マニフェストが%s回は、他の回を残して落とす', async (_, manifest) => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+		const store = storeOf({
+			'digest/2026-09-12/first.md': md(...VALID),
+			'digest/2026-09-12/_manifest.json': MANIFEST,
+			'digest/2026-09-13/broken.md': md(...VALID),
+			'digest/2026-09-13/_manifest.json': manifest,
+		})
+
+		await expect(source(store).getKeys!()).resolves.toEqual(['digest/2026-09-12/first.md'])
+		expect(warn.mock.calls.flat().join('\n')).toContain('digest/2026-09-13/_manifest.json')
+	})
+
+	it('マニフェストを取得できない回は、他の回を残して落とす', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+		const items = storeOf({ 'digest/2026-09-12/first.md': md(...VALID) })
+		const store: RemoteStore = {
+			list: async () => [
+				'digest/2026-09-12/first.md',
+				'digest/2026-09-12/_manifest.json',
+				'digest/2026-09-13/lost.md',
+				'digest/2026-09-13/_manifest.json',
+			],
+			get: async (key) => {
+				if (key === 'digest/2026-09-12/_manifest.json') return MANIFEST
+				if (key === 'digest/2026-09-13/_manifest.json') throw new Error('R2 に届かない')
+				return items.get(key)
+			},
+		}
+
+		await expect(source(store).getKeys!()).resolves.toEqual(['digest/2026-09-12/first.md'])
+		expect(warn.mock.calls.flat().join('\n')).toContain('R2 に届かない')
 	})
 
 	it('取得が丸ごと失敗しても投げず、空の collection にする', async () => {
@@ -96,6 +133,7 @@ describe('getItem', () => {
 			'digest/2026-09-12/first.md': md(...VALID),
 			'digest/2026-09-12/broken.md': md('title: 集めたもの', 'category: blog'),
 			'digest/2026-09-12/second.md': md(...VALID),
+			'digest/2026-09-12/_manifest.json': MANIFEST,
 		})
 		const { getKeys, getItem } = source(store)
 
