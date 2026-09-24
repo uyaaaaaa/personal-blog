@@ -202,6 +202,10 @@ const PAGE_HELPERS = `
 		const active = document.querySelector(LINK + '.is-active')
 		return active ? getComputedStyle(active).borderLeftColor : ${JSON.stringify(NO_ACTIVE)}
 	}
+	const $fill = () => {
+		const active = document.querySelector(LINK + '.is-active')
+		return active ? getComputedStyle(active).backgroundColor : ${JSON.stringify(NO_ACTIVE)}
+	}
 	const $frames = (n) => new Promise((done) => {
 		const step = () => (n-- > 0 ? requestAnimationFrame(step) : done())
 		step()
@@ -1423,17 +1427,20 @@ const probes = [
 			await p.pressKey('ArrowDown')
 			await p.evaluate('await $frames(2)')
 			const line = await p.evaluate('return $line()')
+			await sleep(TRANSITION)
+			const fill = await p.evaluate('return $fill()')
 			await p.pressKey('Enter')
 			const moved = await p.waitFor(`$path() !== ${JSON.stringify(from)}`)
 			await sleep(TRANSITION)
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}"`,
+				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}" 背景="${fill}"`,
 				ok:
 					moved &&
 					state.overlay === 'hidden' &&
 					line !== TRANSPARENT &&
-					line !== NO_ACTIVE,
+					line !== NO_ACTIVE &&
+					fill !== TRANSPARENT,
 			}
 		},
 	},
@@ -1444,6 +1451,8 @@ const probes = [
 		run: async (p) => {
 			await p.open()
 			await p.typeQuery()
+			await sleep(TRANSITION)
+			const fill = await p.evaluate('return $fill()')
 			const from = await p.evaluate(`return $path()`)
 			await p.pressKey('ArrowDown')
 			await p.evaluate('await $frames(2)')
@@ -1453,8 +1462,12 @@ const probes = [
 			await sleep(TRANSITION)
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}"`,
-				ok: moved && state.overlay === 'hidden' && line === TRANSPARENT,
+				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}" 打った直後の背景="${fill}"`,
+				ok:
+					moved &&
+					state.overlay === 'hidden' &&
+					line === TRANSPARENT &&
+					fill === TRANSPARENT,
 			}
 		},
 	},

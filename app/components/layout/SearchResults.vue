@@ -20,7 +20,9 @@
 					:id="optionId(index)"
 					:href="href"
 					class="search-result border-l-2 border-l-transparent"
-					:class="{ 'is-active md:border-l-accent': index === activeIndex }"
+					:class="{
+						'is-active md:border-l-accent md:bg-surface-subtle': index === activeIndex,
+					}"
 					role="option"
 					:aria-selected="index === activeIndex"
 					@click="onSelect(article.path, $event)"
@@ -131,8 +133,8 @@
 		transition: background-color 0.15s;
 	}
 
-	.search-result:hover,
-	.search-result.is-active {
+	/* 触って使う幅で初めから選ばれて見えないよう、選択中の背景は md: のクラスが持つ */
+	.search-result:hover {
 		background-color: var(--color-surface-subtle);
 	}
 
