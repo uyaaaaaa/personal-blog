@@ -71,6 +71,7 @@ describe('SearchDialog', () => {
 	// 今のルートへの遷移は捨てられ、積んだ履歴は記事で置き換わらない
 	it.each([
 		['別の記事', 0, '/'],
+		['見出しを指す今の記事', 0, '/article/vim-abbreviation#usage'],
 		['今いる記事', 1, '/article/vim-abbreviation/'],
 	])('%sを選ぶと、開いたときに積んだ履歴を %i 回戻す', async (_, backs, location) => {
 		const back = vi.spyOn(history, 'back').mockImplementation(() => {})

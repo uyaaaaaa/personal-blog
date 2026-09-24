@@ -164,11 +164,11 @@
 
 	const { release } = useBackToClose(toRef(props, 'isOpen'), () => emit('close'))
 
-	const pathOf = (location: string) => location.split(/[?#]/)[0]!.replace(/\/$/, '')
+	const withoutTrailingSlash = (location: string) => location.replace(/\/$/, '')
 
-	// vue-router は今のルートへの遷移を重複として捨て、積んだ履歴を置き換えない
+	// vue-router は query と hash まで同じ遷移を重複として捨て、積んだ履歴を置き換えない
 	const selectResult = (path: string) => {
-		if (pathOf(path) !== pathOf(props.location)) release()
+		if (withoutTrailingSlash(path) !== withoutTrailingSlash(props.location)) release()
 		emit('close')
 	}
 
