@@ -134,7 +134,6 @@
 		transition: background-color 0.15s;
 	}
 
-	/* 触って使う幅で初めから選ばれて見えないよう、選択中の背景は md: のクラスが持つ */
 	.search-result:hover {
 		background-color: var(--color-surface-subtle);
 	}
