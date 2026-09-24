@@ -156,6 +156,20 @@ describe('SearchDialog', () => {
 		vi.unstubAllGlobals()
 	})
 
+	it('PC で開いたあとに窓を低くしても、Enter は記事へ移る', async () => {
+		stubViewport(1280, 800)
+		const { main, wrapper } = await openAndType()
+
+		stubViewport(1280, 450)
+		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
+
+		expect(navigate).toHaveBeenCalledTimes(1)
+		expect(document.activeElement).toBe(main)
+
+		wrapper.unmount()
+		vi.unstubAllGlobals()
+	})
+
 	it('Cancel を押すと閉じる要求を出す', async () => {
 		const wrapper = await mountSuspended(SearchDialog, {
 			props: { isOpen: true, location: '/' },

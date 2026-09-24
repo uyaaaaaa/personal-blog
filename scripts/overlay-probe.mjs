@@ -1476,6 +1476,7 @@ const probes = [
 		input: true,
 		widths: [375],
 		run: async (p) => {
+			await p.setTouch(true)
 			await p.open()
 			await p.typeQuery()
 			const from = await p.evaluate(`return $path()`)
