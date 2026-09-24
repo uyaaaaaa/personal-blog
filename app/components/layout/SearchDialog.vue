@@ -31,7 +31,7 @@
 						results.length > 0 ? `${LIST_ID}-${activeIndex}` : undefined
 					"
 					autocomplete="off"
-					@keydown="onInputKeydown"
+					@keydown="onFieldKeydown"
 					@compositionstart="startComposition"
 					@compositionend="endComposition"
 				/>
@@ -182,6 +182,48 @@
 		},
 	)
 
+	// ソフトキーボードの Enter はハードウェアのものと区別できる値を持たない。出ている間は表示領域だけが縮む
+	const SOFT_KEYBOARD_MIN_HEIGHT = 120
+
+	const visibleViewport = () => {
+		const viewport = window.visualViewport
+		if (!viewport) return undefined
+
+		return { width: viewport.width * viewport.scale, height: viewport.height * viewport.scale }
+	}
+
+	// レイアウトの高さごと縮めるブラウザもある
+	let opened: ReturnType<typeof visibleViewport>
+
+	const rememberViewportBeforeKeyboard = () => {
+		opened = visibleViewport()
+	}
+
+	const isTouchPrimary = () => window.matchMedia('(pointer: coarse)').matches
+
+	const isSoftKeyboardShown = () => {
+		const now = visibleViewport()
+		if (!now) return false
+
+		const openedHeight = isTouchPrimary() && opened?.width === now.width ? opened.height : 0
+		const fullHeight = Math.max(window.innerHeight, openedHeight)
+
+		return fullHeight - now.height >= SOFT_KEYBOARD_MIN_HEIGHT
+	}
+
+	const isSearchKeyOfSoftKeyboard = (event: KeyboardEvent) =>
+		event.key === 'Enter' && !isComposingKey(event) && isSoftKeyboardShown()
+
+	const onFieldKeydown = (event: KeyboardEvent) => {
+		if (isSearchKeyOfSoftKeyboard(event)) {
+			event.preventDefault()
+			inputRef.value?.blur()
+			return
+		}
+
+		return onInputKeydown(event)
+	}
+
 	const { lockRef } = useTouchScrollLock()
 
 	useBackdropInert(toRef(props, 'isOpen'), trapRef)
@@ -192,6 +234,7 @@
 			if (!isOpen) return
 
 			clear()
+			rememberViewportBeforeKeyboard()
 			focusByGesture(inputRef.value, { asPointer: true })
 		},
 		{ flush: 'post' },

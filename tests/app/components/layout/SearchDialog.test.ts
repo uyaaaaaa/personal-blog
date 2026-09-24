@@ -107,6 +107,87 @@ describe('SearchDialog', () => {
 		wrapper.unmount()
 	})
 
+	const stubViewport = (width: number, height: number, { touch = false } = {}) => {
+		const viewport = { width, height, scale: 1 }
+		vi.stubGlobal('matchMedia', (media: string) => ({
+			media,
+			matches: touch && media === '(pointer: coarse)',
+		}))
+		vi.stubGlobal('visualViewport', viewport)
+		vi.stubGlobal('innerWidth', width)
+		vi.stubGlobal('innerHeight', height)
+		return viewport
+	}
+
+	const openAndType = async () => {
+		const main = mountMain()
+		const wrapper = await mountSuspended(SearchDialog, {
+			props: { isOpen: false, location: '/', onClose: releaseBackdrop },
+			attachTo: document.body,
+		})
+		await wrapper.setProps({ isOpen: true })
+		await wrapper.get('input').setValue('vim')
+		return { main, wrapper }
+	}
+
+	it('ソフトキーボードが出ている間の Enter は記事へ移らず、キーボードだけ閉じる', async () => {
+		const viewport = stubViewport(375, 800, { touch: true })
+		const { wrapper } = await openAndType()
+
+		viewport.height = 450
+		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
+
+		expect(navigate).not.toHaveBeenCalled()
+		expect(wrapper.emitted('close')).toBeUndefined()
+		expect(document.activeElement).not.toBe(wrapper.get('input').element)
+		expect(wrapper.findAll('[role="option"]')).toHaveLength(1)
+
+		wrapper.unmount()
+		vi.unstubAllGlobals()
+	})
+
+	it('レイアウトの高さごと縮む端末でも、キーボードが出ている間の Enter は記事へ移らない', async () => {
+		stubViewport(375, 800, { touch: true })
+		const { wrapper } = await openAndType()
+
+		stubViewport(375, 450, { touch: true })
+		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
+
+		expect(navigate).not.toHaveBeenCalled()
+		expect(wrapper.emitted('close')).toBeUndefined()
+
+		wrapper.unmount()
+		vi.unstubAllGlobals()
+	})
+
+	it('開いたあとに横へ回して低くなっても、キーボードの無い Enter は記事へ移る', async () => {
+		stubViewport(375, 800, { touch: true })
+		const { main, wrapper } = await openAndType()
+
+		stubViewport(800, 375, { touch: true })
+		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
+
+		expect(navigate).toHaveBeenCalledTimes(1)
+		expect(document.activeElement).toBe(main)
+
+		wrapper.unmount()
+		vi.unstubAllGlobals()
+	})
+
+	it('PC で開いたあとに窓を低くしても、Enter は記事へ移る', async () => {
+		stubViewport(1280, 800)
+		const { main, wrapper } = await openAndType()
+
+		stubViewport(1280, 450)
+		await wrapper.get('input').trigger('keydown', { key: 'Enter' })
+
+		expect(navigate).toHaveBeenCalledTimes(1)
+		expect(document.activeElement).toBe(main)
+
+		wrapper.unmount()
+		vi.unstubAllGlobals()
+	})
+
 	it('Cancel を押すと閉じる要求を出す', async () => {
 		const wrapper = await mountSuspended(SearchDialog, {
 			props: { isOpen: true, location: '/' },

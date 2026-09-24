@@ -202,6 +202,10 @@ const PAGE_HELPERS = `
 		const active = document.querySelector(LINK + '.is-active')
 		return active ? getComputedStyle(active).borderLeftColor : ${JSON.stringify(NO_ACTIVE)}
 	}
+	const $fill = () => {
+		const active = document.querySelector(LINK + '.is-active')
+		return active ? getComputedStyle(active).backgroundColor : ${JSON.stringify(NO_ACTIVE)}
+	}
 	const $frames = (n) => new Promise((done) => {
 		const step = () => (n-- > 0 ? requestAnimationFrame(step) : done())
 		step()
@@ -1423,17 +1427,20 @@ const probes = [
 			await p.pressKey('ArrowDown')
 			await p.evaluate('await $frames(2)')
 			const line = await p.evaluate('return $line()')
+			await sleep(TRANSITION)
+			const fill = await p.evaluate('return $fill()')
 			await p.pressKey('Enter')
 			const moved = await p.waitFor(`$path() !== ${JSON.stringify(from)}`)
 			await sleep(TRANSITION)
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}"`,
+				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}" 背景="${fill}"`,
 				ok:
 					moved &&
 					state.overlay === 'hidden' &&
 					line !== TRANSPARENT &&
-					line !== NO_ACTIVE,
+					line !== NO_ACTIVE &&
+					fill !== TRANSPARENT,
 			}
 		},
 	},
@@ -1444,6 +1451,8 @@ const probes = [
 		run: async (p) => {
 			await p.open()
 			await p.typeQuery()
+			await sleep(TRANSITION)
+			const fill = await p.evaluate('return $fill()')
 			const from = await p.evaluate(`return $path()`)
 			await p.pressKey('ArrowDown')
 			await p.evaluate('await $frames(2)')
@@ -1453,8 +1462,38 @@ const probes = [
 			await sleep(TRANSITION)
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}"`,
-				ok: moved && state.overlay === 'hidden' && line === TRANSPARENT,
+				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}" 打った直後の背景="${fill}"`,
+				ok:
+					moved &&
+					state.overlay === 'hidden' &&
+					line === TRANSPARENT &&
+					fill === TRANSPARENT,
+			}
+		},
+	},
+	{
+		name: 'ソフトキーボードで表示領域が縮んだ間の Enter',
+		input: true,
+		widths: [375],
+		run: async (p) => {
+			await p.setTouch(true)
+			await p.open()
+			await p.typeQuery()
+			const from = await p.evaluate(`return $path()`)
+			sent('表示領域の高さを 900 から 500 に縮める')
+			await p.setWidth(375, 500)
+			await p.evaluate('await $frames(2)')
+			await p.pressKey('Enter')
+			await sleep(TRANSITION)
+			const state = await p.evaluate('return $state()')
+			const rows = await p.evaluate(`return document.querySelectorAll(LINK).length`)
+			return {
+				observed: `${show(state, ['overlay', 'path', 'active'])} 行=${rows}件`,
+				ok:
+					state.overlay === 'visible' &&
+					state.path === from &&
+					!state.active.startsWith('INPUT') &&
+					rows > 0,
 			}
 		},
 	},
