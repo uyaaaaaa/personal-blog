@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { complete, eventOf, judged, rules, source } from './review-rules.mjs'
 import { read } from './stdin.mjs'
@@ -6,7 +6,7 @@ import { read } from './stdin.mjs'
 const SKILL = '.claude/skills/review'
 
 const USAGE = [
-	'使い方: node scripts/review-args.mjs < findings.json',
+	'使い方: node scripts/review-args.mjs findings.json（省くと標準入力）',
 	'',
 	'渡す JSON:',
 	'  { "reason": "判定の理由1文",',
@@ -148,7 +148,8 @@ const fail = (found) => {
 const main = async () => {
 	let review
 	try {
-		review = JSON.parse((await read()) || 'null')
+		const file = process.argv[2]
+		review = JSON.parse((file ? readFileSync(file, 'utf8') : await read()) || 'null')
 	} catch (error) {
 		fail([`レビューの JSON として読めない（${error.message}）`])
 	}
