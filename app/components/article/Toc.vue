@@ -11,8 +11,8 @@
 				aria-controls="toc-list"
 				class="group relative -ml-2 flex h-8 w-8 flex-none items-center justify-center rounded text-sub transition-color hover:text-accent toc-collapsed:ml-0"
 				@click="toggle"
-				@pointerleave="tooltipDismissed = false"
-				@blur="tooltipDismissed = false"
+				@pointerenter="tooltipDismissed = false"
+				@focus="tooltipDismissed = false"
 			>
 				<PanelRightIcon />
 				<span

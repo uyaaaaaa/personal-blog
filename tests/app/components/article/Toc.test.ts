@@ -57,7 +57,7 @@ describe('Toc', () => {
 		expect(collapsed()).toBe(true)
 	})
 
-	it('Escape でツールチップを消し、離れたら戻す', async () => {
+	it('Escape でツールチップを消し、次に乗せたら戻す', async () => {
 		const wrapper = await mount()
 		const tooltip = () => wrapper.get('button > span[aria-hidden="true"]')
 
@@ -66,7 +66,7 @@ describe('Toc', () => {
 
 		expect(tooltip().classes()).toContain('invisible')
 
-		await wrapper.get('button').trigger('pointerleave')
+		await wrapper.get('button').trigger('pointerenter')
 
 		expect(tooltip().classes()).not.toContain('invisible')
 	})
