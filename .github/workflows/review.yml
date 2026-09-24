@@ -71,6 +71,18 @@ jobs:
 
             - if: steps.rounds.outputs.go
               run: |
+                  for _ in $(seq 60); do
+                      pending=$(gh pr checks "$PR" --repo "$REPO" --json name,bucket \
+                          --jq '[.[] | select(.name != "review" and .bucket == "pending")] | length' || true)
+                      [ "$pending" = 0 ] && exit 0
+                      sleep 10
+                  done
+                  echo "::notice::CI が10分で終わらないので、終わる前の状態でレビューする"
+              env:
+                  GH_TOKEN: ${{ github.token }}
+
+            - if: steps.rounds.outputs.go
+              run: |
                   npm install -g @anthropic-ai/claude-code
                   claude -p "PR #$PR をレビューする" \
                       --agent review \
