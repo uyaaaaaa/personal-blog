@@ -107,21 +107,17 @@
 	const isOpen = ref(true)
 	const tooltipDismissed = ref(false)
 
-	const setOpen = (open: boolean) => {
-		isOpen.value = open
-		document.documentElement.toggleAttribute(TOC_COLLAPSED_ATTRIBUTE, !open)
-	}
-
 	const toggle = () => {
-		setOpen(!isOpen.value)
+		isOpen.value = !isOpen.value
+		document.documentElement.toggleAttribute(TOC_COLLAPSED_ATTRIBUTE, !isOpen.value)
 		try {
 			if (isOpen.value) localStorage.removeItem(TOC_COLLAPSED_KEY)
 			else localStorage.setItem(TOC_COLLAPSED_KEY, 'true')
 		} catch {}
 	}
 
-	const followOtherTab = (event: StorageEvent) => {
-		if (event.key === TOC_COLLAPSED_KEY || event.key === null) setOpen(!event.newValue)
+	const readOpen = () => {
+		isOpen.value = !document.documentElement.hasAttribute(TOC_COLLAPSED_ATTRIBUTE)
 	}
 
 	const dismissTooltip = (event: KeyboardEvent) => {
@@ -129,13 +125,13 @@
 	}
 
 	onMounted(() => {
-		isOpen.value = !document.documentElement.hasAttribute(TOC_COLLAPSED_ATTRIBUTE)
-		window.addEventListener('storage', followOtherTab)
+		readOpen()
+		window.addEventListener('storage', readOpen)
 		window.addEventListener('keydown', dismissTooltip)
 	})
 
 	onUnmounted(() => {
-		window.removeEventListener('storage', followOtherTab)
+		window.removeEventListener('storage', readOpen)
 		window.removeEventListener('keydown', dismissTooltip)
 	})
 
