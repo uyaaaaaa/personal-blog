@@ -1,6 +1,10 @@
 {
 	"advisorModel": "fable",
 	"promptSuggestionEnabled": false,
+	"extraKnownMarketplaces": {
+		"personal-blog": { "source": { "source": "directory", "path": "./" } }
+	},
+	"enabledPlugins": { "issue-stance@personal-blog": true },
 	"deniedMcpServers": [
 		{ "serverName": "Gmail" },
 		{ "serverName": "Linear" },
