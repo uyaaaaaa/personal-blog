@@ -108,7 +108,6 @@
 		openSearchFrom(event.currentTarget instanceof HTMLElement ? event.currentTarget : null)
 	}
 
-	// 幅を跨いで閉じると、開いたトリガはもう displayed でなくフォーカスを受けない
 	const closeSearch = () => {
 		isSearchOpen.value = false
 		releaseBackdrop()

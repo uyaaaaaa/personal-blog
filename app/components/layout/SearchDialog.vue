@@ -74,10 +74,11 @@
 	import SearchResults from '~/components/layout/SearchResults.vue'
 	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
-	import { useArticleSearch } from '~/composables/useArticleSearch'
 	import { useBackdropInert } from '~/composables/useBackdropInert'
+	import { usePublishedArticles } from '~/composables/usePublishedArticles'
 	import { useSearchKeys } from '~/composables/useSearchKeys'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
+	import { resultCountMessage, searchArticles } from '~/utils/search'
 
 	const LIST_ID = 'search-dialog-results'
 
@@ -89,9 +90,48 @@
 		(e: 'close'): void
 	}>()
 
-	const search = useArticleSearch()
-	const { query, results, countMessage, activeIndex, startComposition, endComposition, clear } =
-		search
+	const { data: articles } = usePublishedArticles()
+
+	const query = ref('')
+	const activeIndex = ref(0)
+
+	const results = computed(() => searchArticles(articles.value, query.value))
+	const activeArticle = computed(() => results.value[activeIndex.value])
+	const countMessage = computed(() => resultCountMessage(results.value.length))
+
+	const moveActive = (delta: number) => {
+		const count = results.value.length
+		if (count === 0) return
+
+		activeIndex.value = (activeIndex.value + delta + count) % count
+	}
+
+	watch(query, () => {
+		activeIndex.value = 0
+	})
+
+	// Safari は compositionend を keydown より先に出すので、変換の終わり際は自前で覚える
+	let composing = false
+	let endFrame = 0
+
+	// 変換が切れてすぐ次が始まる IME もあり、待たせたフレームは始まりで取り消す
+	const startComposition = () => {
+		cancelAnimationFrame(endFrame)
+		composing = true
+	}
+
+	const endComposition = () => {
+		endFrame = requestAnimationFrame(() => {
+			composing = false
+		})
+	}
+
+	const isComposingKey = (event: KeyboardEvent) => event.isComposing || composing
+
+	const clear = () => {
+		composing = false
+		query.value = ''
+	}
 
 	const inputRef = ref<HTMLInputElement | null>(null)
 
@@ -112,11 +152,14 @@
 		if (pressedOnOverlay) emit('close')
 	}
 
-	const { onKeydown: onInputKeydown, trapRef } = useSearchKeys(search, {
-		canSelect: () => results.value.length > 0,
-		isTrapped: toRef(props, 'isOpen'),
-		close: () => emit('close'),
-	})
+	const { onKeydown: onInputKeydown, trapRef } = useSearchKeys(
+		{ activeArticle, moveActive, isComposingKey },
+		{
+			canSelect: () => results.value.length > 0,
+			isTrapped: toRef(props, 'isOpen'),
+			close: () => emit('close'),
+		},
+	)
 
 	const { lockRef } = useTouchScrollLock()
 
