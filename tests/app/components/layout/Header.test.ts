@@ -1,6 +1,6 @@
 // @vitest-environment nuxt
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import Header from '~/components/layout/Header.vue'
 
 const Navigation = defineComponent({
@@ -34,8 +34,15 @@ const pressSearchShortcut = async () => {
 	await nextTick()
 }
 
+const visibleKey = (wrapper: Awaited<ReturnType<typeof mountHeader>>) =>
+	wrapper
+		.findAll('.search-trigger-kbd > span')
+		.filter((key) => !key.classes('invisible'))
+		.map((key) => key.text())
+
 afterEach(() => {
 	document.body.classList.remove('scroll-locked')
+	vi.unstubAllGlobals()
 })
 
 describe('Header', () => {
@@ -94,5 +101,13 @@ describe('Header', () => {
 		expect(document.activeElement).toBe(trigger)
 
 		wrapper.unmount()
+	})
+
+	it('macOS では ⌘K、Windows では Ctrl K と見せる', async () => {
+		vi.stubGlobal('navigator', { ...navigator, platform: 'MacIntel' })
+		expect(visibleKey(await mountHeader())).toEqual(['⌘K'])
+
+		vi.stubGlobal('navigator', { ...navigator, platform: 'Win32' })
+		expect(visibleKey(await mountHeader())).toEqual(['Ctrl K'])
 	})
 })
