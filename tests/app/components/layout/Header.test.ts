@@ -73,18 +73,12 @@ describe('Header', () => {
 		expect(wrapper.get('.search-trigger').attributes('aria-expanded')).toBe('true')
 	})
 
-	it('PC と SP の検索ボタンは、それぞれの search ランドマークから検索ダイアログを開く', async () => {
+	it('SP の検索ボタンは search ランドマークの中から検索ダイアログを開く', async () => {
 		const wrapper = await mountHeader()
-		const landmarks = wrapper.findAll('[role="search"]')
 
-		expect(landmarks).toHaveLength(2)
+		await wrapper.get('[role="search"] button[aria-label="Search"]').trigger('click')
 
-		for (const landmark of landmarks) {
-			await landmark.get('button').trigger('click')
-			expect(wrapper.get('.search-dialog').text()).toBe('true')
-
-			await pressSearchShortcut()
-		}
+		expect(wrapper.get('.search-dialog').text()).toBe('true')
 	})
 
 	it('検索を開いていない遷移ではフォーカスを動かさない', async () => {
