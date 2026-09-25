@@ -13,7 +13,7 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約のうち�
 
 ## 1. 集める
 
-`.claude/rules/*.md` の太字の断定と、`docs/DESIGN_GUIDELINE.md` の「原則」「守る線」。1項目を1本として数える。
+`.claude/rules/*.md` の箇条書きと本文の断定、`docs/DESIGN_GUIDELINE.md` の「原則」「守る線」。1項目を1本として数える。
 
 **「機械が落とせない」と書いてある項目こそ読む。** その断言は書いた時点の道具で下したもので、道具が増えれば失効する。失効したまま残ると、目視で受け続けることになる。
 

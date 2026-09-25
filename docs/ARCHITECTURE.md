@@ -24,7 +24,7 @@
 | 線 | 意味 | 誰が守るか |
 | :--- | :--- | :--- |
 | `═▶` | 逆流させない。循環も作らない。題材を知る4領域は互いに依存せず、共有する部品は `ui/` に置く。`app/` から `theme/` を直接参照するのは `app.vue` だけ | dependency-cruiser |
-| `╌▶` | 名前で解決され、`import` 文に現れない唯一の経路 | 人（→ [rules/imports.md](../.claude/rules/imports.md)、[rules/structure.md](../.claude/rules/structure.md)） |
+| `╌▶` | 名前で解決され、`import` 文に現れない唯一の経路 | 人（→ [rules/imports.md](../.claude/rules/imports.md)） |
 
 ## 不変条件
 
@@ -44,7 +44,7 @@
   collection の全件 ──▶ プリレンダの起点 ──▶ 全ページを静的生成 ──▶ 出ていないパスは404
 ```
 
-各条件の細目と理由は [rules/structure.md](../.claude/rules/structure.md) が持ちます。
+各条件の細目は [rules/structure.md](../.claude/rules/structure.md) が持ちます。
 
 ## 検査の置き場
 

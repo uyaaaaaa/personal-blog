@@ -1,5 +1,7 @@
-import { usePagination } from '~/composables/usePagination'
 import { usePageSeo } from '~/composables/usePageSeo'
+import { parsePage, stripPagePath } from '~/utils/pagination'
+
+const ARTICLES_PER_PAGE = 9
 
 type IndexedArticle = {
 	path: string
@@ -26,10 +28,18 @@ type ArticleIndexInput = {
 }
 
 export const useArticleIndex = (input: ArticleIndexInput): ComputedRef<ArticleIndexView> => {
-	const { page, totalPages, pagedItems, startNumber, basePath } = usePagination(input.articles, {
-		pageParam: input.pageParam,
-		path: input.path,
-	})
+	const totalPages = computed(() =>
+		Math.max(1, Math.ceil(input.articles.value.length / ARTICLES_PER_PAGE)),
+	)
+
+	const pageParam = computed(() => toValue(input.pageParam))
+	const page = computed(() => parsePage(pageParam.value) ?? 1)
+
+	if (pageParam.value !== undefined && (page.value < 2 || page.value > totalPages.value)) {
+		throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+	}
+
+	const skipped = computed(() => (page.value - 1) * ARTICLES_PER_PAGE)
 
 	usePageSeo({
 		path: input.path,
@@ -40,10 +50,10 @@ export const useArticleIndex = (input: ArticleIndexInput): ComputedRef<ArticleIn
 
 	return computed(() => ({
 		total: input.articles.value.length,
-		articles: pagedItems.value,
-		startNumber: startNumber.value,
+		articles: input.articles.value.slice(skipped.value, page.value * ARTICLES_PER_PAGE),
+		startNumber: skipped.value + 1,
 		page: page.value,
 		totalPages: totalPages.value,
-		basePath: basePath.value,
+		basePath: stripPagePath(toValue(input.path)),
 	}))
 }
