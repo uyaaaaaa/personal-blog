@@ -15,13 +15,11 @@ const DIRECTIVE =
 const SHEBANG = '#!'
 const BLANK_LINE = /\n[^\S\n]*\n/
 
-const { read, entries } = inputs(process.argv[2])
-
-function* files(directory) {
+function* files(entries, directory) {
 	for (const entry of entries(directory)) {
 		if (SKIP.has(entry.name)) continue
 		const path = directory === '' ? entry.name : `${directory}/${entry.name}`
-		if (entry.isDirectory()) yield* files(path)
+		if (entry.isDirectory()) yield* files(entries, path)
 		else if (SOURCE.test(entry.name) || YAML.test(entry.name) || path.startsWith(HOOKS))
 			yield path
 	}
@@ -207,29 +205,34 @@ const spread = (code, comments) => {
 	return found.filter(({ start, end }) => end > start)
 }
 
-const errors = []
-for (const file of [...files('')]) {
-	const code = read(file)
-	let comments
-	try {
-		comments = SOURCE.test(file)
-			? sourceComments(code, file)
-			: YAML.test(file)
-				? yamlComments(code)
-				: shellComments(code)
-	} catch (error) {
-		errors.push(`${file}: ソースとして解析できない（${error.message}）`)
-		continue
+export const check = (root) => {
+	const { read, entries } = inputs(root)
+	const errors = []
+	for (const file of [...files(entries, '')]) {
+		const code = read(file)
+		let comments
+		try {
+			comments = SOURCE.test(file)
+				? sourceComments(code, file)
+				: YAML.test(file)
+					? yamlComments(code)
+					: shellComments(code)
+		} catch (error) {
+			errors.push(`${file}: ソースとして解析できない（${error.message}）`)
+			continue
+		}
+		for (const { start, end } of spread(code, comments))
+			errors.push(`${file}:${start}: ${end - start + 1}行にわたっている`)
 	}
-	for (const { start, end } of spread(code, comments))
-		errors.push(`${file}:${start}: ${end - start + 1}行にわたっている`)
+
+	if (errors.length > 0) {
+		fail(
+			'コメントは1行で書く。収まらないなら、名前や構造で表すか、コミットと PR に持たせる:',
+			...errors.map((error) => `  ${error}`),
+		)
+	}
+
+	console.log('✔ every comment fits on one line')
 }
 
-if (errors.length > 0) {
-	fail(
-		'コメントは1行で書く。収まらないなら、名前や構造で表すか、コミットと PR に持たせる:',
-		...errors.map((error) => `  ${error}`),
-	)
-}
-
-console.log('✔ every comment fits on one line')
+if (process.argv[1]?.endsWith('check-comments.mjs')) check(process.argv[2])
