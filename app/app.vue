@@ -15,6 +15,10 @@
 	const colorMode = useColorMode()
 
 	useHead({
+		// 吸着した帯の下に、ページ内ジャンプの着地とキーボードのフォーカスを送る
+		htmlAttrs: {
+			class: 'scroll-pt-landing-offset-sm md:scroll-pt-landing-offset lg:scroll-pt-landing-offset-lg',
+		},
 		meta: [
 			{
 				name: 'theme-color',

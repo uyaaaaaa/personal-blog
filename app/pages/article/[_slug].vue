@@ -178,28 +178,6 @@
 		text-decoration: none;
 	}
 
-	.prose {
-		--landing-offset: 116px;
-	}
-
-	@media (min-width: 768px) {
-		.prose {
-			--landing-offset: 124px;
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.prose {
-			--landing-offset: 92px;
-		}
-	}
-
-	.prose :where(h2, h3, h4, h5, h6),
-	.prose [data-footnote-ref],
-	.prose [data-footnotes] li {
-		scroll-margin-top: var(--landing-offset);
-	}
-
 	.prose [data-footnotes] li:target::marker {
 		color: var(--color-accent);
 		font-weight: 700;
