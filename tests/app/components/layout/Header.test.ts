@@ -73,6 +73,14 @@ describe('Header', () => {
 		expect(wrapper.get('.search-trigger').attributes('aria-expanded')).toBe('true')
 	})
 
+	it('SP の検索ボタンは search ランドマークの中から検索ダイアログを開く', async () => {
+		const wrapper = await mountHeader()
+
+		await wrapper.get('[role="search"] button[aria-label="Search"]').trigger('click')
+
+		expect(wrapper.get('.search-dialog').text()).toBe('true')
+	})
+
 	it('検索を開いていない遷移ではフォーカスを動かさない', async () => {
 		const wrapper = await mountHeader({ attachTo: document.body })
 		const trigger = wrapper.get('.search-trigger').element as HTMLElement

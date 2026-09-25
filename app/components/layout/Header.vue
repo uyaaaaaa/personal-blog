@@ -10,37 +10,47 @@
 				<span>Tech Blog</span>
 			</NuxtLink>
 
-			<button
-				ref="desktopSearchRef"
-				type="button"
-				class="search-trigger mx-8 hidden max-w-search-trigger flex-1 items-center gap-2 rounded-md border border-border-field bg-surface-subtle px-4 py-2 transition-color hover:border-accent md:flex"
-				aria-haspopup="dialog"
-				:aria-expanded="isSearchOpen"
-				@click="openSearch"
+			<div
+				role="search"
+				class="mx-8 hidden max-w-search-trigger flex-1 md:block"
 			>
-				<SearchIcon class="search-trigger-icon" />
-				<span class="search-trigger-label">Search...</span>
-				<span
-					class="search-trigger-kbd rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-meta text-sub"
-					aria-hidden="true"
-				>
-					<span :class="{ invisible: !isCommandKey }">⌘K</span>
-					<span :class="{ invisible: isCommandKey }">Ctrl K</span>
-				</span>
-			</button>
-
-			<div class="flex items-stretch gap-1 self-stretch md:gap-5">
 				<button
-					ref="mobileSearchRef"
+					ref="desktopSearchRef"
 					type="button"
-					class="flex h-8 w-8 items-center justify-center self-center rounded-md text-sub transition-color hover:text-accent md:hidden"
-					aria-label="Search"
+					class="search-trigger flex w-full items-center gap-2 rounded-md border border-border-field bg-surface-subtle px-4 py-2 transition-color hover:border-accent"
 					aria-haspopup="dialog"
 					:aria-expanded="isSearchOpen"
 					@click="openSearch"
 				>
-					<SearchIcon size="large" />
+					<SearchIcon class="search-trigger-icon" />
+					<span class="search-trigger-label">Search...</span>
+					<span
+						class="search-trigger-kbd rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-meta text-sub"
+						aria-hidden="true"
+					>
+						<span :class="{ invisible: !isCommandKey }">⌘K</span>
+						<span :class="{ invisible: isCommandKey }">Ctrl K</span>
+					</span>
 				</button>
+			</div>
+
+			<div class="flex items-stretch gap-1 self-stretch md:gap-5">
+				<div
+					role="search"
+					class="self-center md:hidden"
+				>
+					<button
+						ref="mobileSearchRef"
+						type="button"
+						class="flex h-8 w-8 items-center justify-center rounded-md text-sub transition-color hover:text-accent"
+						aria-label="Search"
+						aria-haspopup="dialog"
+						:aria-expanded="isSearchOpen"
+						@click="openSearch"
+					>
+						<SearchIcon size="large" />
+					</button>
+				</div>
 
 				<ThemeToggle class="self-center" />
 				<NuxtLink

@@ -3,15 +3,40 @@
 		aria-labelledby="toc-heading"
 		class="sticky top-toc-top flex max-h-sticky-column min-h-0 flex-col"
 	>
-		<h2
-			id="toc-heading"
-			class="flex-shrink-0 font-mono text-2xs tracking-marker text-sub"
-		>
-			CONTENTS
-		</h2>
+		<div class="flex flex-shrink-0 items-center gap-2 toc-collapsed:justify-center">
+			<button
+				type="button"
+				aria-label="Contents"
+				:aria-expanded="isOpen"
+				aria-controls="toc-list"
+				class="group relative -ml-2 flex h-8 w-8 flex-none items-center justify-center rounded text-sub transition-color hover:text-accent toc-collapsed:ml-0"
+				@click="toggle"
+				@pointerenter="tooltipDismissed = false"
+				@focus="tooltipDismissed = false"
+			>
+				<PanelRightIcon />
+				<span
+					aria-hidden="true"
+					class="pointer-events-none absolute left-0 top-full z-10 pt-1 opacity-0 transition-move group-hover:pointer-events-auto group-hover:opacity-100 group-focus-visible:opacity-100 toc-collapsed:left-auto toc-collapsed:right-0"
+					:class="tooltipDismissed && 'invisible'"
+				>
+					<span
+						class="block whitespace-nowrap rounded border border-border bg-surface px-2 py-1 font-mono text-2xs tracking-marker text-main shadow-sm"
+						>Contents</span
+					>
+				</span>
+			</button>
+			<h2
+				id="toc-heading"
+				class="font-mono text-2xs tracking-marker text-sub toc-collapsed:hidden"
+			>
+				CONTENTS
+			</h2>
+		</div>
 		<div
+			id="toc-list"
 			ref="navRef"
-			class="toc-scroll mt-4 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain"
+			class="toc-scroll mt-4 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain toc-collapsed:hidden"
 		>
 			<ul class="space-y-2 border-l border-border">
 				<li
@@ -59,10 +84,12 @@
 </template>
 
 <script setup lang="ts">
+	import PanelRightIcon from '~/components/ui/PanelRightIcon.vue'
 	import { useScrollTo } from '~/composables/useScrollTo'
 	import { useTocActive } from '~/composables/useTocActive'
 	import { useIsDesktop } from '~/composables/useIsDesktop'
 	import { deltaToCenterIfHidden } from '~/utils/scroll'
+	import { TOC_COLLAPSED_ATTRIBUTE, TOC_COLLAPSED_KEY } from '~/utils/tocCollapse'
 
 	const props = defineProps<{
 		links: any[]
@@ -76,6 +103,37 @@
 		computed(() => props.links),
 		isDesktop,
 	)
+
+	const isOpen = ref(true)
+	const tooltipDismissed = ref(false)
+
+	const toggle = () => {
+		isOpen.value = !isOpen.value
+		document.documentElement.toggleAttribute(TOC_COLLAPSED_ATTRIBUTE, !isOpen.value)
+		try {
+			if (isOpen.value) localStorage.removeItem(TOC_COLLAPSED_KEY)
+			else localStorage.setItem(TOC_COLLAPSED_KEY, 'true')
+		} catch {}
+	}
+
+	const readOpen = () => {
+		isOpen.value = !document.documentElement.hasAttribute(TOC_COLLAPSED_ATTRIBUTE)
+	}
+
+	const dismissTooltip = (event: KeyboardEvent) => {
+		if (event.key === 'Escape') tooltipDismissed.value = true
+	}
+
+	onMounted(() => {
+		readOpen()
+		window.addEventListener('storage', readOpen)
+		window.addEventListener('keydown', dismissTooltip)
+	})
+
+	onUnmounted(() => {
+		window.removeEventListener('storage', readOpen)
+		window.removeEventListener('keydown', dismissTooltip)
+	})
 
 	watch(activeId, async (id) => {
 		if (!id) return

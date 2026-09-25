@@ -3,6 +3,7 @@ import remarkObsidianCallout from './remark/obsidian-callout.mjs'
 import { articleRoutes, digestRoutes } from './scripts/content-routes.mjs'
 import { writeWorkerRoutes } from './scripts/worker-routes.mjs'
 import { CATEGORIES } from './app/utils/category'
+import { followStoredTocCollapseScript } from './app/utils/tocCollapse'
 
 export default defineNuxtConfig({
 	compatibilityDate: '2025-07-15',
@@ -17,6 +18,7 @@ export default defineNuxtConfig({
 				{ rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
 				{ rel: 'manifest', href: '/site.webmanifest' },
 			],
+			script: [{ innerHTML: followStoredTocCollapseScript }],
 		},
 	},
 	runtimeConfig: {

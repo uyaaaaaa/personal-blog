@@ -188,6 +188,14 @@ describe('SearchDialog', () => {
 		vi.unstubAllGlobals()
 	})
 
+	it('入力欄を search ランドマークの中に置く', async () => {
+		const wrapper = await mountSuspended(SearchDialog, {
+			props: { isOpen: true, location: '/' },
+		})
+
+		expect(wrapper.get('[role="search"]').find('input').exists()).toBe(true)
+	})
+
 	it('Cancel を押すと閉じる要求を出す', async () => {
 		const wrapper = await mountSuspended(SearchDialog, {
 			props: { isOpen: true, location: '/' },

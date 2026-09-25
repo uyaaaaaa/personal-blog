@@ -15,5 +15,6 @@ export const digestSchema = z
 	.object({
 		title: z.string(),
 		date: z.string().date(),
+		source: z.string().url(),
 	})
 	.strict()

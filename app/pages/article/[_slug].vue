@@ -1,7 +1,7 @@
 <template>
 	<div
 		v-if="page"
-		class="lg:grid lg:grid-cols-article lg:gap-14"
+		class="lg:relative lg:grid lg:grid-cols-article lg:gap-14 toc-collapsed:lg:grid-cols-1"
 	>
 		<div class="min-w-0 space-y-12">
 			<article class="space-y-8">
@@ -43,7 +43,9 @@
 			<ReadNext :current-path="articlePath" />
 		</div>
 
-		<aside class="hidden lg:block">
+		<aside
+			class="hidden lg:block toc-collapsed:lg:absolute toc-collapsed:lg:inset-y-0 toc-collapsed:lg:-right-10 toc-collapsed:lg:w-10"
+		>
 			<Toc :links="tocLinks" />
 		</aside>
 
