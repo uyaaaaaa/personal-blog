@@ -6,7 +6,7 @@ paths:
 
 # 置き場とデータの流れ
 
-- composable は reactive / lifecycle を使い、テストを除いて2箇所以上で使うものだけ。純粋関数は `app/utils/`、1箇所だけならそのコンポーネント内
+- composable は reactive / lifecycle を使い、2箇所以上で使うものだけ。純粋関数は `app/utils/`、1箇所だけならそのコンポーネント内
 - モジュールスコープの可変値は、SSR でリクエスト間に共有されて壊れないものだけ
 - route に依存する取得は、そのルートの `pages/` が呼ぶ。依存しない取得は、出すコンポーネントが自分で呼ぶ。`layouts/` から props で配らない
 - 自作モジュールの auto-import を戻さない
