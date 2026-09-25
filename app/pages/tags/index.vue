@@ -1,6 +1,9 @@
 <template>
 	<div class="space-y-8">
-		<div class="flex items-baseline gap-4">
+		<div
+			lang="en"
+			class="flex items-baseline gap-4"
+		>
 			<h1 class="text-heading font-bold text-main">Tags</h1>
 			<span class="font-mono text-total text-sub">{{ tags?.length ?? 0 }}</span>
 		</div>

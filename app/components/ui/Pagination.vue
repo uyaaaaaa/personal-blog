@@ -3,6 +3,7 @@
 		v-if="totalPages > 1"
 		class="flex items-center justify-center gap-2"
 		aria-label="Pagination"
+		lang="en"
 	>
 		<NuxtLink
 			v-if="page > 1"

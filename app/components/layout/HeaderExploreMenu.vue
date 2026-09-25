@@ -53,7 +53,11 @@
 							class="menu-article"
 							prefetch-on="interaction"
 						>
-							<span class="menu-article-title">{{ item.primary }}</span>
+							<span
+								lang="ja"
+								class="menu-article-title"
+								>{{ item.primary }}</span
+							>
 							<time
 								class="menu-article-date"
 								:datetime="item.datetime"

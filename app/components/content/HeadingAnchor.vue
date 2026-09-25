@@ -3,6 +3,7 @@
 		ref="anchor"
 		:href="`#${props.headingId}`"
 		aria-label="Copy link to this section"
+		lang="en"
 		class="heading-anchor ml-1 inline-flex min-h-6 min-w-6 items-center justify-center align-middle transition-move lg:absolute lg:right-full lg:top-0 lg:ml-0 lg:mr-1 lg:opacity-0 lg:focus-visible:opacity-100 lg:group-hover:opacity-100"
 		@click.exact.prevent="copyAndJump"
 	>

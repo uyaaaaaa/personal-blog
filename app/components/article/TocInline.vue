@@ -12,6 +12,7 @@
 		>
 			<button
 				type="button"
+				lang="en"
 				class="flex w-full items-center justify-between gap-3 py-3 font-mono text-2xs tracking-marker text-sub transition-color hover:text-accent"
 				:aria-expanded="isOpen"
 				aria-controls="toc-inline-list"

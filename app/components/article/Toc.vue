@@ -3,7 +3,10 @@
 		aria-labelledby="toc-heading"
 		class="sticky top-toc-top flex max-h-sticky-column min-h-0 flex-col"
 	>
-		<div class="flex flex-shrink-0 items-center gap-2 toc-collapsed:justify-center">
+		<div
+			lang="en"
+			class="flex flex-shrink-0 items-center gap-2 toc-collapsed:justify-center"
+		>
 			<button
 				type="button"
 				aria-label="Contents"

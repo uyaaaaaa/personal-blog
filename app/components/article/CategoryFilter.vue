@@ -1,5 +1,8 @@
 <template>
-	<nav aria-label="Categories">
+	<nav
+		lang="en"
+		aria-label="Categories"
+	>
 		<ul class="flex flex-wrap gap-3">
 			<li
 				v-for="item in items"

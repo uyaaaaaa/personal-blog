@@ -1,5 +1,8 @@
 <template>
-	<div class="max-w-column py-16">
+	<div
+		lang="en"
+		class="max-w-column py-16"
+	>
 		<p class="flex gap-2 font-mono text-ui tracking-marker text-sub">
 			<span aria-hidden="true">■</span>
 			<span class="text-accent">{{ code }}</span>
@@ -41,7 +44,7 @@
 							:datetime="article.date"
 							>{{ formatDate(article.date) }}</time
 						>
-						<span>{{ article.title }}</span>
+						<span lang="ja">{{ article.title }}</span>
 					</NuxtLink>
 				</li>
 			</ul>

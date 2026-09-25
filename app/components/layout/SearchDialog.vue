@@ -12,6 +12,7 @@
 			role="dialog"
 			aria-modal="true"
 			aria-label="Search articles"
+			lang="en"
 		>
 			<div
 				role="search"

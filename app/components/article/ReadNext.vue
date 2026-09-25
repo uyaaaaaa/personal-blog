@@ -1,6 +1,9 @@
 <template>
 	<section v-if="articles.length">
-		<div class="mb-3 flex items-baseline justify-between gap-4">
+		<div
+			lang="en"
+			class="mb-3 flex items-baseline justify-between gap-4"
+		>
 			<h2 class="font-mono text-ui uppercase tracking-marker text-main">Read Next</h2>
 			<NuxtLink
 				to="/article"
