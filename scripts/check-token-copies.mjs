@@ -1,7 +1,6 @@
 import ts from 'typescript'
 import { fail, inputs, loaded } from './inputs.mjs'
 
-const { read, json, load } = inputs(process.argv[2])
 const TOKENS = 'theme/tokens.ts'
 const MANIFEST = 'public/site.webmanifest'
 const CONFIG = 'nuxt.config.ts'
@@ -58,43 +57,48 @@ const foreground = async (name, chosen) => {
 	return value
 }
 
-const { colors, darkColors } = await load(TOKENS)
-const manifest = json(MANIFEST)
-const themes = highlightThemes(read(CONFIG))
+export const check = async (root) => {
+	const { read, json, load } = inputs(root)
+	const { colors, darkColors } = await load(TOKENS)
+	const manifest = json(MANIFEST)
+	const themes = highlightThemes(read(CONFIG))
 
-const bg = (name) => ({
-	where: `${MANIFEST} の ${name}`,
-	actual: manifest?.[name],
-	expected: colors?.bg,
-	source: `${TOKENS} の colors.bg`,
-})
+	const bg = (name) => ({
+		where: `${MANIFEST} の ${name}`,
+		actual: manifest?.[name],
+		expected: colors?.bg,
+		source: `${TOKENS} の colors.bg`,
+	})
 
-const codeText = async (name, palette, chosen) => ({
-	where: `${TOKENS} の ${name}['code-text']`,
-	actual: palette?.['code-text'],
-	expected: await foreground(themes[chosen], chosen),
-	source: `Shiki のテーマ ${themes[chosen]} の editor.foreground`,
-})
+	const codeText = async (name, palette, chosen) => ({
+		where: `${TOKENS} の ${name}['code-text']`,
+		actual: palette?.['code-text'],
+		expected: await foreground(themes[chosen], chosen),
+		source: `Shiki のテーマ ${themes[chosen]} の editor.foreground`,
+	})
 
-const copies = [
-	bg('theme_color'),
-	bg('background_color'),
-	await codeText('colors', colors, 'default'),
-	await codeText('darkColors', darkColors, 'dark'),
-]
+	const copies = [
+		bg('theme_color'),
+		bg('background_color'),
+		await codeText('colors', colors, 'default'),
+		await codeText('darkColors', darkColors, 'dark'),
+	]
 
-const compared = ({ where, actual, expected, source }) => {
-	if (typeof expected !== 'string') return `${where} の正本 ${source} に値が無い`
-	if (typeof actual !== 'string') return `${where} に値が無い（${source} は ${expected}）`
-	return actual.toLowerCase() === expected.toLowerCase()
-		? null
-		: `${where} は ${actual}、${source} は ${expected}`
+	const compared = ({ where, actual, expected, source }) => {
+		if (typeof expected !== 'string') return `${where} の正本 ${source} に値が無い`
+		if (typeof actual !== 'string') return `${where} に値が無い（${source} は ${expected}）`
+		return actual.toLowerCase() === expected.toLowerCase()
+			? null
+			: `${where} は ${actual}、${source} は ${expected}`
+	}
+
+	const errors = copies.map(compared).filter(Boolean)
+
+	if (errors.length > 0) {
+		fail('トークンの値の写しがずれている:', ...errors.map((error) => `  ${error}`))
+	}
+
+	console.log(`✔ copied token values match their source (${copies.length} copies)`)
 }
 
-const errors = copies.map(compared).filter(Boolean)
-
-if (errors.length > 0) {
-	fail('トークンの値の写しがずれている:', ...errors.map((error) => `  ${error}`))
-}
-
-console.log(`✔ copied token values match their source (${copies.length} copies)`)
+if (process.argv[1]?.endsWith('check-token-copies.mjs')) await check(process.argv[2])
