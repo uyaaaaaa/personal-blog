@@ -1,4 +1,3 @@
-// Obsidian の色相を元に、背景上のタイトルが両テーマで 4.5:1 を超える明度にした RGB
 export const CALLOUT_COLORS = {
 	note: { light: '7, 102, 206', dark: '28, 132, 247' },
 	abstract: { light: '0, 117, 115', dark: '0, 191, 188' },
@@ -17,5 +16,4 @@ export const CALLOUT_COLORS = {
 
 export type CalloutType = keyof typeof CALLOUT_COLORS
 
-// 面は題名の色を 0.1 の不透明度で敷く
 export const CALLOUT_SURFACE_ALPHA = 0.1
