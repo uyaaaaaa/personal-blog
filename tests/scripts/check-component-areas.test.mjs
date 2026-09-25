@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { check as run } from '~~/scripts/check-component-areas.mjs'
+import { inProcess } from './inProcess.test-helper.mjs'
 
 const SCRIPT = fileURLToPath(new URL('../../scripts/check-component-areas.mjs', import.meta.url))
 const AREAS = ['layout', 'article', 'content', 'error', 'ui']
@@ -42,7 +44,7 @@ const config = ({
 		].join('\n'),
 	)
 
-const check = () => spawnSync(process.execPath, [SCRIPT, root], { encoding: 'utf8' })
+const check = () => inProcess(run, root)
 
 beforeEach(() => {
 	root = mkdtempSync(join(tmpdir(), 'check-component-areas-'))
@@ -55,75 +57,81 @@ afterEach(() => {
 })
 
 describe('check-component-areas', () => {
-	it('挙げる行き先と当たる対象が揃っていれば通す', () => {
-		expect(check().status).toBe(0)
+	it('挙げる行き先と当たる対象が揃っていれば通す', async () => {
+		expect((await check()).status).toBe(0)
 	})
 
-	it('直下のファイルは行き先に数えない', () => {
+	it('直下のファイルは行き先に数えない', async () => {
 		writeFileSync(join(root, 'app/components/Header.vue'), '<template><div /></template>\n')
-		expect(check().status).toBe(0)
+		expect((await check()).status).toBe(0)
 	})
 
-	it('領域が増えて一覧が据え置きなら落とす', () => {
+	it('領域が増えて一覧が据え置きなら落とす', async () => {
 		components('search')
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/search: app\/components\/ にあるが/)
 	})
 
-	it('無い領域を挙げていれば落とす', () => {
+	it('無い領域を挙げていれば落とす', async () => {
 		config({ areas: [...AREAS, 'common'] })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/common: eslint\.config\.mjs が挙げている/)
 	})
 
-	it('挙げた領域が文面に出てこなければ落とす', () => {
+	it('挙げた領域が文面に出てこなければ落とす', async () => {
 		config({ message: 'components/ の直下にファイルを置かない。' })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/ui: 挙げている領域が文面に出てこない/)
 	})
 
-	it('当たる対象を拡張子で狭めれば落とす', () => {
+	it('当たる対象を拡張子で狭めれば落とす', async () => {
 		config({ files: ['app/components/*.vue', 'tests/app/components/*.vue'] })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/probe\.ts: 直下に置いても文面の error が1件出ない/)
 	})
 
-	it('当たる対象から tests 側が抜ければ落とす', () => {
+	it('当たる対象から tests 側が抜ければ落とす', async () => {
 		config({ files: ['app/components/*.{vue,ts}'] })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/tests\/app\/components\/Probe\.vue: 直下に置いても/)
 	})
 
-	it('当たる対象を領域の中まで広げれば落とす', () => {
+	it('当たる対象を領域の中まで広げれば落とす', async () => {
 		config({ files: ['app/components/**/*.{vue,ts}', 'tests/app/components/**/*.{vue,ts}'] })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/ui\/Probe\.vue: 領域の中なのに文面が出る/)
 	})
 
-	it('error から warn に下げれば落とす', () => {
+	it('error から warn に下げれば落とす', async () => {
 		config({ severity: 'warn' })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/Probe\.vue: 直下に置いても文面の error が1件出ない/)
 	})
 
-	it('当たらない selector に変えれば落とす', () => {
+	it('当たらない selector に変えれば落とす', async () => {
 		config({ selector: 'ClassDeclaration' })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/Probe\.vue: 直下に置いても文面の error が1件出ない/)
 	})
 
-	it('一覧を export していなければ落とす', () => {
+	it('一覧を export していなければ落とす', async () => {
 		writeFileSync(join(root, 'eslint.config.mjs'), 'export default []\n')
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/COMPONENT_AREAS を文字列の配列として export していない/)
+	})
+	it('CLI として引数のディレクトリを見て、落ちれば終了コード 1 を返す', () => {
+		components('search')
+		const { status, stderr } = spawnSync(process.execPath, [SCRIPT, root], { encoding: 'utf8' })
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/search: app\/components\/ にあるが/)
 	})
 })
