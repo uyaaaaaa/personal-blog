@@ -14,17 +14,17 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-    changes:
-        uses: ./.github/workflows/changes.yml
-
     test:
-        needs: changes
-        # !cancelled() が無いと success() が付き、changes が落ちた回に skipped で緑になる
-        if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7
-            - uses: ./.github/actions/setup
+              with:
+                  fetch-depth: 0
+            - uses: ./.github/actions/changes
+              id: changes
+            - if: steps.changes.outputs.code != 'false'
+              uses: ./.github/actions/setup
               with:
                   prepare: 'true'
-            - run: npm test
+            - if: steps.changes.outputs.code != 'false'
+              run: npm test

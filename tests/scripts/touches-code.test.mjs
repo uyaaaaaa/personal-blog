@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
+import { parse } from 'yaml'
 
 const SCRIPT = fileURLToPath(new URL('../../scripts/touches-code.mjs', import.meta.url))
 const WORKFLOWS = fileURLToPath(new URL('../../.github/workflows', import.meta.url))
@@ -11,7 +12,7 @@ const GITHOOKS = fileURLToPath(new URL('../../.githooks', import.meta.url))
 
 const ARTICLE = 'content'
 const CODE_WORKFLOWS = ['lint.yml', 'test.yml', 'typecheck.yml']
-const GATE = 'changes.yml'
+const GATE = './.github/actions/changes'
 
 let repo
 
@@ -139,14 +140,17 @@ describe('workflow の振り分け', () => {
 		}
 	})
 
-	it('コードのための workflow は、記事だけだと判定できた回にジョブを飛ばす', () => {
+	it('コードのための workflow は、記事だけだと判定できた回に判定より後ろのステップを飛ばす', () => {
 		for (const name of CODE_WORKFLOWS) {
-			expect(lines(name)).toContain(`uses: ./.github/workflows/${GATE}`)
-			// needs が無いと outputs.code が空になり、ゲートが開いたままになる
-			expect(lines(name)).toContain('needs: changes')
-			expect(lines(name)).toContain(
-				"if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}",
-			)
+			const steps = Object.values(
+				parse(readFileSync(join(WORKFLOWS, name), 'utf8')).jobs,
+			).flatMap((job) => job.steps)
+			const gate = steps.findIndex((step) => step.uses === GATE)
+			expect(gate).toBeGreaterThanOrEqual(0)
+			expect(steps[gate].id).toBe('changes')
+			for (const step of steps.slice(gate + 1)) {
+				expect(step.if).toBe("steps.changes.outputs.code != 'false'")
+			}
 		}
 	})
 })
