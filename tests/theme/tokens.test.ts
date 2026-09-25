@@ -1,5 +1,6 @@
 import resolveConfig from 'tailwindcss/resolveConfig'
 import { describe, expect, it } from 'vitest'
+import { CALLOUT_COLORS, CALLOUT_SURFACE_ALPHA } from '~/utils/callout'
 import { colors, darkColors, sizes } from '~~/theme/tokens'
 
 const base = resolveConfig({ content: [] }).theme as unknown as Record<
@@ -93,5 +94,19 @@ describe.each([
 				layers.map((token) => palette[token]),
 			),
 		).toBeGreaterThanOrEqual(min)
+	})
+})
+
+describe.each([
+	['light', colors, 'light'],
+	['dark', darkColors, 'dark'],
+] as const)('%s の Callout', (_, palette, theme) => {
+	it.each(Object.entries(CALLOUT_COLORS))('%s の題名は面に対し 4.5:1 以上', (_type, rgb) => {
+		expect(
+			contrast(`rgba(${rgb[theme]}, 1)`, [
+				palette.bg,
+				`rgba(${rgb[theme]}, ${CALLOUT_SURFACE_ALPHA})`,
+			]),
+		).toBeGreaterThanOrEqual(4.5)
 	})
 })

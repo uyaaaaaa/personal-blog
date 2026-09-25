@@ -7,7 +7,7 @@
 			<article class="space-y-8">
 				<header class="space-y-4 border-b border-border pb-8">
 					<div
-						class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-meta text-sub"
+						class="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-meta text-sub"
 					>
 						<time
 							v-if="page.date"
@@ -23,7 +23,7 @@
 							v-for="tag in page.tags"
 							:key="tag"
 							:to="`/tags/${tagToSlug(tag)}`"
-							class="transition-color hover:text-accent"
+							class="-my-1 py-1 transition-color hover:text-accent"
 							>#{{ tag }}</NuxtLink
 						>
 					</div>
