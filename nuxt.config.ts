@@ -110,6 +110,9 @@ export default defineNuxtConfig({
 	typescript: {
 		tsConfig: {
 			include: ['../tests/**/*'],
+			compilerOptions: {
+				allowImportingTsExtensions: true,
+			},
 		},
 	},
 	features: {
