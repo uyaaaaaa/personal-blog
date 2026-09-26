@@ -1,4 +1,5 @@
 import postcss from 'postcss'
+import typography from '@tailwindcss/typography'
 import resolveConfig from 'tailwindcss/resolveConfig.js'
 import {
 	durations,
@@ -35,6 +36,9 @@ export const COLOR_SCHEME_MESSAGE =
 export const THEME_CLASS_MESSAGE =
 	'dark: で色を分岐しない。テーマの差は theme/tokens.ts の darkColors が作る。dark: を書くのはテーマで DOM を出し分けるときだけ。'
 
+export const PROSE_COLOR_MESSAGE =
+	'記事本文の色を typography の色の修飾子（prose-slate・prose-invert 等）で差し替えない。本文の色は tailwind.config.ts が --tw-prose-* をトークンに結んで持ち、明暗はトークンが割り当て直す。'
+
 export const DISPLAY_NONE_MESSAGE =
 	'display: none を宣言に書かない。表示・非表示の切り替えは template のクラス（hidden / md:block）か v-show で行う。クラスを付けられない UA の擬似要素は、それを作らない要素に変えて出させない。'
 
@@ -60,6 +64,17 @@ const COLOR_PREFIX =
 const COLOR_NAME = Object.keys(toTailwindColors()).join('|')
 // dark: の後ろにも variant が続く。辺を指す指定（border-t）は1文字
 export const THEME_COLOR_CLASS = `(?:^|[\\s:])dark:(?:[a-z-]+:)*!?(?:${COLOR_PREFIX})(?:-[a-z])?-(?:${COLOR_NAME})(?![a-z-])`
+
+// typography の修飾子のうち --tw-prose-* を差し替えるもの（slate・invert 等）。段の名前（lg・wide）は含まない
+const PROSE_COLOR_NAME = Object.entries(
+	resolveConfig({ content: [], plugins: [typography] }).theme.typography,
+)
+	.filter(([, { css }]) =>
+		Object.keys([css].flat()[0] ?? {}).some((key) => key.startsWith('--tw-prose-')),
+	)
+	.map(([name]) => name)
+	.join('|')
+export const PROSE_COLOR_CLASS = `(?:^|[\\s:])(?:[a-z-]+:)*!?prose-(?:${PROSE_COLOR_NAME})(?![\\w-])`
 
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
@@ -412,6 +427,7 @@ const WIDTH_FEATURE = /\bwidth\b/i
 const THEME_SELECTOR = /\.(?:dark|light)(?![\w-])/
 const COLOR_SCHEME = /prefers-color-scheme/i
 const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
+const PROSE_CLASS = new RegExp(PROSE_COLOR_CLASS)
 const SCROLL_BEHAVIOR = new RegExp(SCROLL_BEHAVIOR_CLASS)
 const DISPLAY_PROPERTY = /^display$/i
 // display が消すのは none のときだけ。flex と grid は並べ方で、出し分けではない
@@ -642,6 +658,7 @@ const CHECKS = {
 			themeBranch: THEME_BRANCH_MESSAGE,
 			colorScheme: COLOR_SCHEME_MESSAGE,
 			themeClass: THEME_CLASS_MESSAGE,
+			proseColor: PROSE_COLOR_MESSAGE,
 		},
 		find(root) {
 			const found = []
@@ -664,6 +681,8 @@ const CHECKS = {
 			root.walkAtRules('apply', (rule) => {
 				if (THEME_CLASS.test(rule.params))
 					found.push({ node: rule, messageId: 'themeClass' })
+				if (PROSE_CLASS.test(rule.params))
+					found.push({ node: rule, messageId: 'proseColor' })
 			})
 			return found
 		},

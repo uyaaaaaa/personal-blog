@@ -8,6 +8,7 @@ const eslint = new ESLint({ cwd: ROOT })
 
 const WEB_FONT = /Web フォントを読み込まない/
 const THEME_BRANCH = /dark: で色を分岐しない|prefers-color-scheme で分岐しない/
+const PROSE_COLOR = /記事本文の色を typography の色の修飾子/
 const LANDING = /着地位置は CSS が持つ|scroll-behavior は宣言しない/
 const OUTLINE = /フォーカスの輪郭を消さない/
 const IMPORTANT = /!important は書かない/
@@ -33,6 +34,11 @@ const webFontsIn = async (relative, code) => {
 const themeBranchesIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => THEME_BRANCH.test(message.message)).length
+}
+
+const proseColorsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => PROSE_COLOR.test(message.message)).length
 }
 
 const landingsIn = async (relative, code) => {
@@ -237,12 +243,6 @@ describe('テーマごとの分岐', () => {
 		expect(await themeBranchesIn('app/pages/a.vue', sfc('<svg class="dark:hidden" />'))).toBe(0)
 		expect(
 			await themeBranchesIn('app/pages/a.vue', sfc('<svg class="hidden dark:block" />')),
-		).toBe(0)
-		expect(
-			await themeBranchesIn(
-				'app/pages/a.vue',
-				sfc('<div class="prose prose-slate dark:prose-invert" />'),
-			),
 		).toBe(0)
 	})
 
@@ -1060,5 +1060,34 @@ describe('テンプレートのアクセシビリティ', () => {
 			await accessibilityIn('app/components/ui/Logo.vue', sfc('<svg aria-hidden="true" />')),
 		).toBe(1)
 		expect(await accessibilityIn('app/components/ui/Logo.vue', sfc('<svg />'))).toBe(0)
+	})
+})
+
+describe('記事本文の色の修飾子', () => {
+	it.each([
+		'<div class="prose prose-slate" />',
+		'<div class="prose prose-invert" />',
+		'<div class="prose dark:prose-invert" />',
+		'<div class="prose lg:prose-rose" />',
+	])('%s を落とす', async (template) => {
+		expect(await proseColorsIn('app/pages/a.vue', sfc(template))).toBeGreaterThan(0)
+	})
+
+	it('バインドした class の修飾子も落とす', async () => {
+		expect(
+			await proseColorsIn(
+				'app/pages/a.vue',
+				sfc('<div :class="{ \'prose-slate\': on }" />', 'const on = true'),
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('段の修飾子と prose で始まる独自のクラスは通す', async () => {
+		expect(
+			await proseColorsIn(
+				'app/pages/a.vue',
+				sfc('<div class="prose max-w-none lg:prose-wide prose-lg prose-table-scroll" />'),
+			),
+		).toBe(0)
 	})
 })

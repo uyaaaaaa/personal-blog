@@ -14,7 +14,7 @@
 			<h1 class="text-title-sm font-bold text-main md:text-title">{{ page.title }}</h1>
 		</header>
 
-		<div class="prose prose-slate max-w-none dark:prose-invert lg:prose-wide">
+		<div class="prose max-w-none lg:prose-wide">
 			<ContentRenderer :value="page" />
 		</div>
 	</article>

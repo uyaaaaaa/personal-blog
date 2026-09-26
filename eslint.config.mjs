@@ -16,6 +16,8 @@ import styleTokens, {
 	MAX_WIDTH_VARIANTS,
 	OFF_TOKEN_FONT_CLASS,
 	OUTLINE_REMOVAL_CLASS,
+	PROSE_COLOR_CLASS,
+	PROSE_COLOR_MESSAGE,
 	SCROLL_BEHAVIOR_CLASS,
 	SCROLL_BEHAVIOR_MESSAGE,
 	scriptSpellingSelector,
@@ -351,6 +353,14 @@ const TEMPLATE_RESTRICTIONS = [
 	{
 		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${THEME_COLOR_CLASS}/], TemplateElement[value.cooked=/${THEME_COLOR_CLASS}/])`,
 		message: THEME_CLASS_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${PROSE_COLOR_CLASS}/]`,
+		message: PROSE_COLOR_MESSAGE,
+	},
+	{
+		selector: `VAttribute[directive=true][key.argument.name='class'] :matches(Literal[value=/${PROSE_COLOR_CLASS}/], TemplateElement[value.cooked=/${PROSE_COLOR_CLASS}/])`,
+		message: PROSE_COLOR_MESSAGE,
 	},
 	{
 		selector: `VAttribute[directive=false][key.name='class'] > VLiteral[value=/${MAX_WIDTH_CLASS}/]`,

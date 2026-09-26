@@ -2,6 +2,7 @@ import type { Config } from 'tailwindcss'
 import plugin from 'tailwindcss/plugin'
 import typography from '@tailwindcss/typography'
 import {
+	colors,
 	durations,
 	fontFamily,
 	fontSize,
@@ -46,6 +47,33 @@ const motion = plugin(({ addUtilities, theme }) => {
 	)
 })
 
+// 明暗はトークンが割り当て直すので、invert にも同じ名前を渡す
+const proseColors = Object.fromEntries(
+	Object.entries({
+		body: 'main',
+		headings: 'main',
+		lead: 'sub',
+		links: 'accent',
+		bold: 'main',
+		counters: 'sub',
+		bullets: 'sub',
+		hr: 'border',
+		quotes: 'main',
+		'quote-borders': 'border',
+		captions: 'sub',
+		kbd: 'main',
+		'kbd-shadows': 'border',
+		code: 'main',
+		'pre-code': 'code-text',
+		'pre-bg': 'surface-subtle',
+		'th-borders': 'border',
+		'td-borders': 'border',
+	} satisfies Record<string, keyof typeof colors>).flatMap(([part, token]) => [
+		[`--tw-prose-${part}`, `var(--color-${token})`],
+		[`--tw-prose-invert-${part}`, `var(--color-${token})`],
+	]),
+)
+
 const tocCollapsed = plugin(({ addVariant }) => {
 	addVariant('toc-collapsed', `html[${TOC_COLLAPSED_ATTRIBUTE}] &`)
 })
@@ -73,10 +101,15 @@ export default <Config>{
 			typography: {
 				DEFAULT: {
 					css: {
+						...proseColors,
 						fontSize: `${proseFontSize.base}rem`,
 						lineHeight: '1.85',
 						h2: { fontSize: '1.44em', lineHeight: '1.4' },
 						h3: { fontSize: '1.2em' },
+						kbd: {
+							boxShadow: 'none',
+							border: '1px solid var(--color-border)',
+						},
 						'code::before': { content: 'none' },
 						'code::after': { content: 'none' },
 						figure: {

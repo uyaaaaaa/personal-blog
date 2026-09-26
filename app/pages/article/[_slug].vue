@@ -31,7 +31,7 @@
 
 				<TocInline :links="tocLinks" />
 
-				<div class="prose prose-slate max-w-none dark:prose-invert lg:prose-wide">
+				<div class="prose max-w-none lg:prose-wide">
 					<ContentRenderer :value="page" />
 				</div>
 			</article>
