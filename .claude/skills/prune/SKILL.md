@@ -5,11 +5,11 @@ description: "テストを減らす。週次の Routine から呼ばれる。「
 
 # テストを減らす
 
-**判定は `.claude/rules/testing.md` の1問。**
+判定は `.claude/rules/testing.md` の1問。
 
-**検査を足すたびにテストが増える**（→ `.claude/rules/checks.md`）。ここが減らさないと、増える一方になる。散文を減らすのは `context-review`。
+検査を足すたびにテストが増える（→ `.claude/rules/checks.md`）。ここが減らさないと、増える一方になる。散文を減らすのは `context-review`。
 
-**ある util の唯一のテストは消さず、`needs-decision` の issue にして書き手に返す。**
+ある util の唯一のテストは消さず、`needs-decision` の issue にして書き手に返す。
 
 ## 範囲
 

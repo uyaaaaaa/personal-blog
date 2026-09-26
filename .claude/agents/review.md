@@ -7,7 +7,7 @@ model: opus
 
 # レビューして JSON を返す
 
-**返すのは `node scripts/review-args.mjs` の出力だけ。** 投稿しない。差分も CI の赤も直さない。
+返すのは `node scripts/review-args.mjs` の出力だけで、投稿はしない。
 
 ## 1. 読む（1ターン）
 
@@ -17,7 +17,7 @@ model: opus
 - `cat .claude/skills/review/references/drop.md .claude/skills/review/references/grade.md .claude/skills/review/references/comment.md`
 - `gh pr view <N> --json title,body` と `gh pr checks <N>`
 - 既存のスレッドは `gh api graphql -f query='{ repository(owner:"<owner>", name:"<repo>") { pullRequest(number:<N>) { reviewThreads(first:100) { nodes { isResolved path comments(first:20) { nodes { author { login } body } } } } } } }'`。owner / repo は `git remote get-url origin` か `$GITHUB_REPOSITORY` から取る
-- **返信が付いて閉じたスレッドの論点は、出し直さない。** 同じ指摘を毎回付けると、直った所も直らない所も見分けが付かない
+- 返信が付いて閉じたスレッドの論点は、出し直さない
 
 差分が触るファイルに当たる `.claude/rules/` は、次のターンで読む。
 
