@@ -23,6 +23,7 @@
 					ref="inputRef"
 					v-model="query"
 					type="text"
+					lang="ja"
 					role="combobox"
 					enterkeyhint="search"
 					class="search-input"
