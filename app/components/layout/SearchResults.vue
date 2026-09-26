@@ -158,4 +158,24 @@
 		color: var(--color-sub);
 		font-variant-numeric: tabular-nums;
 	}
+
+	/* 強制カラーでは面が塗られず、透明な左線も見えうるので、ホバーは下線、選択中はシステムの選択色で示す */
+	@media (forced-colors: active) {
+		.search-result:hover {
+			text-decoration: underline;
+		}
+	}
+
+	@media (forced-colors: active) and (min-width: 768px) {
+		.search-result.is-active {
+			forced-color-adjust: none;
+			background-color: SelectedItem;
+			color: SelectedItemText;
+			outline-color: CanvasText;
+		}
+
+		.search-result.is-active .search-result-date {
+			color: inherit;
+		}
+	}
 </style>

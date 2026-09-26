@@ -263,4 +263,19 @@
 		color: var(--color-sub);
 		font-variant-numeric: tabular-nums;
 	}
+
+	/* 強制カラーでは面が塗られないので、ホバーは下線、開いていることは線をシステムの文字色で示す */
+	@media (forced-colors: active) {
+		.menu-all:hover,
+		.menu-article:hover,
+		.menu-tag:hover,
+		.menu-category:hover {
+			text-decoration: underline;
+		}
+
+		.explore-trigger::after {
+			forced-color-adjust: none;
+			background-color: CanvasText;
+		}
+	}
 </style>
