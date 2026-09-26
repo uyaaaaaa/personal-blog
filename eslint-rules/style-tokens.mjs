@@ -241,7 +241,6 @@ const TARGET_LABEL = Object.entries(motionProperties)
 	.map(([purpose, properties]) => `${purpose} は ${properties.join(' / ')}`)
 	.join('、')
 
-// 緩急は --ease-* を var() で参照して書く。キーワードと関数はトークンの外にある
 const EASING_LITERAL =
 	/(?<![\w-])(?:(?:ease(?:-in-out|-in|-out)?|linear|step-start|step-end)(?![\w(-])|(?:cubic-bezier|steps|linear)\()/gi
 const EASING_TOKEN = new RegExp(
@@ -256,7 +255,6 @@ const DISCRETE = new Set(['visibility'])
 
 const EASING_VARIABLE = /var\(\s*--ease-[\w-]*\s*\)/gi
 
-// トークンに無い --ease-* も、名前の付いていない緩急と同じ
 const easingLiteralsIn = (segment) => [
 	...[...segment.matchAll(EASING_LITERAL)].map(([literal]) => literal),
 	...[...segment.matchAll(EASING_VARIABLE)]
@@ -308,7 +306,6 @@ function segmentsOf(value) {
 // カスタムプロパティは var() で長さとして参照されるので、モーションの宣言と同じ判定で見る
 const MOTION_PROPERTY = /^(?:(?:transition|animation)(?:-[\w-]+)?|--[\w-]+)$/i
 const TRANSITION_TARGET = /^transition(?:-property)?$/i
-// --ease-* はトークンの名前なので、上書きした値も緩急として見る
 const EASING_DECLARATION = /^(?:(?:transition|animation)(?:-timing-function)?|--ease-[\w-]*)$/i
 
 // 緩急を書かない transition / animation は ease になる
@@ -351,7 +348,6 @@ function motionFindings(property, value) {
 	if (EASING_DECLARATION.test(property))
 		for (const literal of easingLiteralsIn(value))
 			found.push({ messageId: 'offTokenEasing', data: { literal } })
-	// longhand の緩急は、トークン以外の変数を通すと値が見えない
 	if (/^(?:transition|animation)-timing-function$/i.test(property))
 		for (const segment of segmentsOf(value)) {
 			const variable = segment.trim()
@@ -375,7 +371,6 @@ function motionFindings(property, value) {
 				found.push({ messageId: 'offPurposeTarget', data: { property: target } })
 				continue
 			}
-			// 書かない緩急は ease になり、トークンの外に出る
 			if (/^transition$/i.test(property) && !DISCRETE.has(target) && omitsEasing(segment))
 				found.push({ messageId: 'noEasing', data: { property: target } })
 			for (const [literal, number, unit] of segment.matchAll(TIME)) {
