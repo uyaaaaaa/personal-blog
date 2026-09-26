@@ -323,6 +323,10 @@ function longhandFindings(rule) {
 		const duration = last(`${kind}-duration`)
 		if (duration === undefined || !hasLength(duration.value) || last(`${kind}-timing-function`))
 			return []
+		const shorthand = decls
+			.slice(0, decls.indexOf(duration))
+			.findLast((decl) => decl.prop.toLowerCase() === kind)
+		if (shorthand !== undefined && !omitsEasing(shorthand.value)) return []
 		const targets = segmentsOf(last(`${kind}-${target}`)?.value ?? kind).map((segment) =>
 			segment.trim().toLowerCase(),
 		)

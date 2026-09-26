@@ -214,6 +214,13 @@ describe('no-off-purpose-motion', () => {
 					filename: 'a.vue',
 					code: sfc('.a { transition-property: visibility; transition-duration: 0.2s; }'),
 				},
+				// 前の短縮形が決めた緩急は longhand の長さで戻らない
+				{
+					filename: 'a.vue',
+					code: sfc(
+						'.a { transition: opacity 0.2s var(--ease-enter); transition-duration: 0.2s; }',
+					),
+				},
 				// 短縮形の後ろの longhand が緩急を足す
 				{
 					filename: 'a.vue',
