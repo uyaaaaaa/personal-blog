@@ -233,16 +233,19 @@ describe('テーマごとの分岐', () => {
 		).toBeGreaterThan(0)
 	})
 
+	it('本文の色を差し替える dark:prose-invert を落とす', async () => {
+		expect(
+			await themeBranchesIn(
+				'app/pages/a.vue',
+				sfc('<div class="prose dark:prose-invert" />'),
+			),
+		).toBeGreaterThan(0)
+	})
+
 	it('DOM を出し分ける dark: は通す', async () => {
 		expect(await themeBranchesIn('app/pages/a.vue', sfc('<svg class="dark:hidden" />'))).toBe(0)
 		expect(
 			await themeBranchesIn('app/pages/a.vue', sfc('<svg class="hidden dark:block" />')),
-		).toBe(0)
-		expect(
-			await themeBranchesIn(
-				'app/pages/a.vue',
-				sfc('<div class="prose prose-slate dark:prose-invert" />'),
-			),
 		).toBe(0)
 	})
 

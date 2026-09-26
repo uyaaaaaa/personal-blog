@@ -33,6 +33,22 @@ describe('typography', () => {
 
 		expect(shadowed).toEqual([])
 	})
+
+	it('本文の色の変数がすべてトークンを指す', async () => {
+		const { css } = await postcss([
+			tailwind({
+				...config,
+				content: [{ raw: '<div class="prose"></div>', extension: 'html' }],
+			}),
+		]).process('@tailwind components', { from: undefined })
+		const outside: string[] = []
+		postcss.parse(css).walkDecls(/^--tw-prose-/, (decl) => {
+			if (!/^var\(--color-[a-z-]+\)$/.test(decl.value))
+				outside.push(`${decl.prop}: ${decl.value}`)
+		})
+
+		expect(outside).toEqual([])
+	})
 })
 
 const utilities = async (raw: string) => {

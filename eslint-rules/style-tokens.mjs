@@ -58,8 +58,8 @@ const OUTLINE_RESET_VALUE = `(?<!${WORD_EDGE})(?:unset|initial)(?!${WORD_EDGE})(
 const COLOR_PREFIX =
 	'text|bg|border|divide|outline|ring|ring-offset|shadow|accent|caret|decoration|fill|stroke|placeholder|from|via|to'
 const COLOR_NAME = Object.keys(toTailwindColors()).join('|')
-// dark: の後ろにも variant が続く。辺を指す指定（border-t）は1文字
-export const THEME_COLOR_CLASS = `(?:^|[\\s:])dark:(?:[a-z-]+:)*!?(?:${COLOR_PREFIX})(?:-[a-z])?-(?:${COLOR_NAME})(?![a-z-])`
+// dark: の後ろにも variant が続く。辺を指す指定（border-t）は1文字。prose-invert は本文の色を丸ごと差し替える
+export const THEME_COLOR_CLASS = `(?:^|[\\s:])dark:(?:[a-z-]+:)*!?(?:(?:${COLOR_PREFIX})(?:-[a-z])?-(?:${COLOR_NAME})|prose-invert)(?![a-z-])`
 
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
