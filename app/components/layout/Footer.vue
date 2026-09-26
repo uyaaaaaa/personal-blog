@@ -1,7 +1,11 @@
 <template>
-	<footer class="border-t border-border">
+	<footer
+		lang="en"
+		class="border-t border-border px-5 md:px-10"
+	>
 		<nav
-			class="mx-auto flex max-w-container flex-wrap gap-x-16 gap-y-8 px-4 py-10 md:py-12"
+			class="mx-auto flex flex-wrap gap-x-16 gap-y-8 py-10 md:py-12"
+			:class="measure"
 			aria-label="Footer"
 		>
 			<div
@@ -9,7 +13,7 @@
 				:key="group.label"
 			>
 				<span
-					class="mb-3.5 block font-mono text-xs font-medium uppercase tracking-marker text-sub"
+					class="mb-3.5 block font-mono text-meta font-medium uppercase tracking-marker text-sub"
 					>{{ group.label }}</span
 				>
 
@@ -20,7 +24,7 @@
 					>
 						<NuxtLink
 							:to="link.path"
-							class="font-mono text-sm"
+							class="font-mono text-ui"
 							prefetch-on="interaction"
 							>{{ link.label }}</NuxtLink
 						>
@@ -34,6 +38,8 @@
 <script setup lang="ts">
 	import { useArticleCategories } from '~/composables/useArticleCategories'
 
+	defineProps<{ measure: string }>()
+
 	const { data: categories } = useArticleCategories()
 
 	// Home はヘッダーのロゴが常に出しているので置かない
@@ -43,6 +49,7 @@
 			links: [
 				{ path: '/article', label: 'All Articles' },
 				{ path: '/tags', label: 'Tags' },
+				{ path: '/profile', label: 'Profile' },
 			],
 		},
 		{

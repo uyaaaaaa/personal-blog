@@ -1,17 +1,20 @@
 <template>
 	<section>
-		<div class="mb-3 flex items-baseline justify-between gap-4">
-			<h2 class="font-mono text-sm uppercase tracking-marker text-main">
+		<div
+			lang="en"
+			class="mb-3 flex items-baseline justify-between gap-4"
+		>
+			<h2 class="font-mono text-ui uppercase tracking-marker text-main">
 				<NuxtLink
 					:to="viewAllPath"
-					class="transition-colors hover:text-accent"
+					class="transition-color hover:text-accent"
 					>{{ title }}</NuxtLink
 				>
 			</h2>
 			<NuxtLink
 				v-if="hasMore"
 				:to="viewAllPath"
-				class="font-mono text-xs font-medium text-accent hover:underline"
+				class="font-mono text-meta font-medium text-accent hover:underline"
 				>View All →</NuxtLink
 			>
 		</div>

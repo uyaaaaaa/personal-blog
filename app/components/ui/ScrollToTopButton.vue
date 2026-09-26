@@ -3,28 +3,17 @@
 		v-if="opacity > 0"
 		type="button"
 		aria-label="Scroll to top"
-		:style="{ opacity }"
-		class="group fixed bottom-6 right-6 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface/90 text-sub shadow-sm backdrop-blur transition-colors hover:border-accent hover:text-accent lg:hidden"
+		lang="en"
+		:style="{ '--scroll-to-top-opacity': opacity }"
+		class="scroll-to-top group fixed bottom-6 right-6 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface/90 text-sub shadow-sm backdrop-blur transition-color hover:border-accent hover:text-accent lg:hidden"
 		@click="handleScrollToTop"
 	>
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="18"
-			height="18"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			class="transition-transform duration-200 group-hover:-translate-y-0.5"
-		>
-			<polyline points="18 15 12 9 6 15" />
-		</svg>
+		<ChevronUpIcon class="transition-move group-hover:-translate-y-0.5" />
 	</button>
 </template>
 
 <script setup lang="ts">
+	import ChevronUpIcon from '~/components/ui/ChevronUpIcon.vue'
 	import { useScrollTo } from '~/composables/useScrollTo'
 	import { useIsDesktop } from '~/composables/useIsDesktop'
 	import { useScrollFrame } from '~/composables/useScrollFrame'
@@ -51,3 +40,9 @@
 		clearHash()
 	}
 </script>
+
+<style scoped>
+	.scroll-to-top {
+		opacity: var(--scroll-to-top-opacity);
+	}
+</style>

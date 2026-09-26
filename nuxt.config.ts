@@ -1,8 +1,9 @@
 import { fileURLToPath } from 'node:url'
 import remarkObsidianCallout from './remark/obsidian-callout.mjs'
-import { articleRoutes } from './scripts/article-routes.mjs'
+import { articleRoutes, digestRoutes } from './scripts/content-routes.mjs'
 import { writeWorkerRoutes } from './scripts/worker-routes.mjs'
 import { CATEGORIES } from './app/utils/category'
+import { followStoredTocCollapseScript } from './app/utils/tocCollapse'
 
 export default defineNuxtConfig({
 	compatibilityDate: '2025-07-15',
@@ -10,12 +11,14 @@ export default defineNuxtConfig({
 	components: false,
 	app: {
 		head: {
+			htmlAttrs: { lang: 'ja' },
 			link: [
 				{ rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
 				{ rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml', sizes: 'any' },
 				{ rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
 				{ rel: 'manifest', href: '/site.webmanifest' },
 			],
+			script: [{ innerHTML: followStoredTocCollapseScript }],
 		},
 	},
 	runtimeConfig: {
@@ -28,8 +31,7 @@ export default defineNuxtConfig({
 		classSuffix: '',
 	},
 	content: {
-		// 既定では見出しのテキスト全体がアンカーになる。テキストを選びにくくなるので h2 / h3 では止め、
-		// 節へのリンクは ProseH2 / ProseH3 が置くアイコンだけが持つ
+		// 既定では見出しのテキスト全体がアンカーになる。テキストを選びにくくなるので h2 / h3 では止める
 		renderer: {
 			anchorLinks: { h2: false, h3: false, h4: true },
 		},
@@ -76,12 +78,17 @@ export default defineNuxtConfig({
 		preset: 'cloudflare-pages',
 		prerender: {
 			crawlLinks: true,
-			routes: ['/', '/404.html', ...CATEGORIES.map((category) => `/category/${category}`)],
+			routes: [
+				'/',
+				'/profile',
+				'/digest',
+				'/404.html',
+				...CATEGORIES.map((category) => `/category/${category}`),
+			],
 		},
 		cloudflare: {
 			pages: {
-				// 自動収集はワイルドカードに畳まず、上限を超えた分を黙って切り落とす。
-				// 畳んでから書く writeWorkerRoutes に _routes.json を持たせる
+				// 自動収集は上限を超えた分を黙って切り落とすので、_routes.json は writeWorkerRoutes が書く
 				defaultRoutes: false,
 			},
 		},
@@ -91,7 +98,8 @@ export default defineNuxtConfig({
 		'nitro:build:before'(nitro) {
 			if (nitro.options.dev) return
 
-			const pages = articleRoutes(nitro.options.runtimeConfig.content.localDatabase.filename)
+			const database = nitro.options.runtimeConfig.content.localDatabase.filename
+			const pages = [...articleRoutes(database), ...digestRoutes(database)]
 			nitro.options.prerender.routes.push(...pages)
 
 			nitro.hooks.hook('compiled', () => {
@@ -102,6 +110,9 @@ export default defineNuxtConfig({
 	typescript: {
 		tsConfig: {
 			include: ['../tests/**/*'],
+			compilerOptions: {
+				allowImportingTsExtensions: true,
+			},
 		},
 	},
 	features: {

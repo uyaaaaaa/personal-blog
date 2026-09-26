@@ -1,21 +1,24 @@
 <template>
-	<div class="mx-auto max-w-column py-16">
-		<p class="flex gap-2 font-mono text-sm tracking-marker text-sub">
+	<div
+		lang="en"
+		class="max-w-column py-16"
+	>
+		<p class="flex gap-2 font-mono text-ui tracking-marker text-sub">
 			<span aria-hidden="true">■</span>
 			<span class="text-accent">{{ code }}</span>
 		</p>
 		<h1 class="mt-4 text-heading font-bold text-main">{{ message }}</h1>
-		<p class="mt-3 text-sm text-sub">{{ description }}</p>
+		<p class="mt-3 text-ui text-sub">{{ description }}</p>
 
 		<nav class="mt-8 flex flex-col items-start gap-2">
 			<NuxtLink
 				to="/"
-				class="font-mono text-sm font-medium text-accent hover:underline"
+				class="font-mono text-ui font-medium text-accent hover:underline"
 				>Home →</NuxtLink
 			>
 			<NuxtLink
 				to="/article"
-				class="font-mono text-sm font-medium text-accent hover:underline"
+				class="font-mono text-ui font-medium text-accent hover:underline"
 				>All articles →</NuxtLink
 			>
 		</nav>
@@ -24,7 +27,7 @@
 			v-if="recentArticles?.length"
 			class="mt-12"
 		>
-			<h2 class="mb-3 font-mono text-xs tracking-marker text-sub">LATEST</h2>
+			<h2 class="mb-3 font-mono text-meta tracking-marker text-sub">LATEST</h2>
 			<ul class="flex flex-col border-t border-border">
 				<li
 					v-for="article in recentArticles"
@@ -33,15 +36,15 @@
 				>
 					<NuxtLink
 						:to="article.path"
-						class="flex flex-col gap-1 py-3 text-sm text-main transition-colors hover:text-accent md:flex-row md:items-baseline md:gap-4"
+						class="flex flex-col gap-1 py-3 text-ui text-main transition-color hover:text-accent md:flex-row md:items-baseline md:gap-4"
 						prefetch-on="interaction"
 					>
 						<time
-							class="flex-none font-mono text-xs text-sub"
+							class="flex-none font-mono text-meta text-sub"
 							:datetime="article.date"
 							>{{ formatDate(article.date) }}</time
 						>
-						<span>{{ article.title }}</span>
+						<span lang="ja">{{ article.title }}</span>
 					</NuxtLink>
 				</li>
 			</ul>

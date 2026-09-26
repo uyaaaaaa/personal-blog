@@ -1,36 +1,45 @@
 <template>
 	<a
+		ref="anchor"
 		:href="`#${props.headingId}`"
-		aria-label="Link to this section"
-		class="heading-anchor ml-2 hidden align-middle opacity-0 transition-opacity duration-200 focus-visible:opacity-100 group-hover:opacity-100 lg:inline-block"
-		@click.exact.prevent="scrollTo(props.headingId)"
+		aria-label="Copy link to this section"
+		lang="en"
+		class="heading-anchor ml-1 inline-flex min-h-6 min-w-6 items-center justify-center align-middle transition-move lg:absolute lg:right-full lg:top-0 lg:ml-0 lg:mr-1 lg:opacity-0 lg:focus-visible:opacity-100 lg:group-hover:opacity-100"
+		@click.exact.prevent="copyAndJump"
 	>
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="16"
-			height="16"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			aria-hidden="true"
-		>
-			<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-			<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-		</svg>
+		<LinkIcon />
 	</a>
 </template>
 
 <script setup lang="ts">
+	import LinkIcon from '~/components/ui/LinkIcon.vue'
 	import { useScrollTo } from '~/composables/useScrollTo'
+	import { useToast } from '~/composables/useToast'
 
 	const props = defineProps<{
 		headingId: string
 	}>()
 
+	const anchor = ref<HTMLAnchorElement | null>(null)
+
 	const { scrollTo } = useScrollTo()
+	const { show } = useToast()
+
+	const copyAndJump = async () => {
+		scrollTo(props.headingId)
+
+		const url = anchor.value?.href
+		if (!url) return
+
+		// navigator.clipboard は非セキュアコンテキストと権限の拒否で使えない
+		try {
+			await navigator.clipboard.writeText(url)
+		} catch {
+			return
+		}
+
+		show('Link copied')
+	}
 
 	defineOptions({
 		name: 'HeadingAnchor',
@@ -47,5 +56,11 @@
 	.heading-anchor:hover {
 		color: var(--color-accent);
 		text-decoration: none;
+	}
+
+	@media (min-width: 1024px) {
+		.heading-anchor {
+			height: 1lh;
+		}
 	}
 </style>

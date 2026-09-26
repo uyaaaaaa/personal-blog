@@ -1,6 +1,6 @@
 <template>
 	<div class="menu-column">
-		<span class="menu-column-head">{{ label }}</span>
+		<span class="menu-column-head tracking-marker">{{ label }}</span>
 
 		<slot />
 	</div>
@@ -37,7 +37,6 @@
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
 		font-weight: 500;
-		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-sub);
 	}

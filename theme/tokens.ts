@@ -7,6 +7,7 @@ export const colors = {
 	'accent-contrast': '#FFFFFF',
 	border: '#E6E4DF',
 	'border-strong': '#1A1A1A',
+	'border-field': '#8A8883',
 	surface: '#FFFFFF',
 	'surface-subtle': '#F3F2EE',
 	'surface-muted': '#ECEAE4',
@@ -31,6 +32,7 @@ export const darkColors: Record<keyof typeof colors, string> = {
 	'accent-contrast': '#141414',
 	border: '#2E2E2E',
 	'border-strong': '#8A8A86',
+	'border-field': '#6E6E6A',
 	surface: '#1A1A1A',
 	'surface-subtle': '#1E1E1E',
 	'surface-muted': '#262626',
@@ -43,6 +45,12 @@ export const darkColors: Record<keyof typeof colors, string> = {
 	'diff-remove-bg': 'rgba(248, 81, 73, 0.15)',
 	'diff-add-word-bg': 'rgba(46, 160, 67, 0.4)',
 	'diff-remove-word-bg': 'rgba(248, 81, 73, 0.4)',
+}
+
+// Tailwind の既定の md / lg と同じ値。既定を閉じるのが目的で、境界そのものは動かさない
+export const screens = {
+	md: '768px',
+	lg: '1024px',
 }
 
 export const fontFamily = {
@@ -59,51 +67,92 @@ export const fontFamily = {
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 }
 
+// Tailwind の既定の xs / sm / base / xl と同じ値。既定を閉じるためだけに持つ
+export const fontSize = {
+	'2xs': '0.75rem',
+	meta: ['0.75rem', '1rem'],
+	code: ['0.875rem', '1.7'],
+	ui: ['0.875rem', '1.25rem'],
+	'list-title': ['1rem', '1.4'],
+	total: ['1rem', '1.5rem'],
+	logo: '1.125rem',
+	'notice-title': ['1.25rem', '1.75rem'],
+	'title-sm': ['1.5rem', '1.35'],
+	heading: ['1.5rem', '1.3'],
+	'hero-sm': ['1.625rem', '1.3'],
+	title: ['2rem', '1.35'],
+	hero: ['2.375rem', '1.25'],
+} as Record<string, string | [string, string]>
+
+export const durations = {
+	color: '0.15s',
+	move: '0.2s',
+} as const
+
+// color は Tailwind の transition-colors と同じ並び
+export const motionProperties: Record<keyof typeof durations, string[]> = {
+	color: ['color', 'background-color', 'border-color', 'text-decoration-color', 'fill', 'stroke'],
+	move: ['transform', 'opacity', 'visibility'],
+}
+
+const HEADER_SM = '52px'
+const HEADER = '60px'
+
 const TOC_TOP = '100px'
+
+// 吸着した帯（ヘッダー + 見出しの行）の下に残る高さ。畳んだ帯の下端は md で 103px
+const TOC_PANEL_TOP = '140px'
+
+// 本文の文字サイズ（rem）。和文は1字が1em なので、字数を掛ければ行長になる
+export const proseFontSize = { base: 1, wide: 1.125 }
+const PROSE_CHARS = 40
+const COLUMN = `${PROSE_CHARS * proseFontSize.base}rem`
+const COLUMN_WIDE = `${PROSE_CHARS * proseFontSize.wide}rem`
+const TOC_GAP = 3.5
+const TOC_WIDTH = 14
 
 export const sizes = {
 	borderRadius: {
 		kbd: '3px',
 		card: '10px',
 	},
-	fontSize: {
-		'2xs': '11px',
-		code: ['13px', '1.7'],
-		'list-title': ['16px', '1.4'],
-		'title-sm': ['23px', '1.35'],
-		heading: ['24px', '1.3'],
-		'hero-sm': ['26px', '1.3'],
-		title: ['32px', '1.35'],
-		hero: ['38px', '1.25'],
-	} as Record<string, string | [string, string]>,
 	gridTemplateColumns: {
-		article: 'minmax(0, 680px) 224px',
-		list: '36px 1fr 110px',
-		'list-sm': '30px 1fr',
-		pickup: '96px 1fr',
+		article: `minmax(0, ${COLUMN_WIDE}) ${TOC_WIDTH}rem`,
+		list: '2.25rem 1fr 6.875rem',
+		'list-sm': '1.875rem 1fr',
+		pickup: '6rem 1fr',
 	},
 	height: {
-		'header-sm': '52px',
-		header: '60px',
+		'header-sm': HEADER_SM,
+		header: HEADER,
 	},
 	letterSpacing: {
 		marker: '0.12em',
 	},
 	maxHeight: {
 		'sticky-column': `calc(100vh - ${TOC_TOP})`,
+		'toc-panel': `calc(100dvh - ${TOC_PANEL_TOP})`,
 	},
 	maxWidth: {
 		'search-trigger': '200px',
-		column: '680px',
-		article: '960px',
+		'search-open': '640px',
+		column: COLUMN,
+		'column-wide': COLUMN_WIDE,
+		article: `${PROSE_CHARS * proseFontSize.wide + TOC_GAP + TOC_WIDTH}rem`,
 		container: '1200px',
 	},
 	spacing: {
+		'icon-small': '1rem',
+		icon: '1.125rem',
+		'icon-large': '1.25rem',
 		'logo-mark': '26px',
-		'landing-offset-sm': '76px',
-		'landing-offset': '84px',
+		'landing-offset-sm': '116px',
+		'landing-offset': '124px',
 		'landing-offset-lg': '92px',
+		'below-header-sm': HEADER_SM,
+		'below-header': HEADER,
 		'toc-top': TOC_TOP,
+		'toc-gap': `${TOC_GAP}rem`,
 		'menu-panel': '960px',
 	},
 }
@@ -138,10 +187,17 @@ export function toDarkCssVariables(): Record<string, string> {
 
 // Tailwindが不透明度修飾子(bg-accent/10 等)を解決できるのは<alpha-value>プレースホルダを含む定義のみ
 export function toTailwindColors(): Record<string, string> {
-	return Object.fromEntries(
-		Object.entries(colors).map(([name, value]) => [
-			name,
-			isHex(value) ? `rgb(var(--color-${name}-rgb) / <alpha-value>)` : `var(--color-${name})`,
-		]),
-	)
+	return {
+		// 既定のパレットごと置き換えるので、トークンの外にあるこの2つもここが配る
+		transparent: 'transparent',
+		current: 'currentColor',
+		...Object.fromEntries(
+			Object.entries(colors).map(([name, value]) => [
+				name,
+				isHex(value)
+					? `rgb(var(--color-${name}-rgb) / <alpha-value>)`
+					: `var(--color-${name})`,
+			]),
+		),
+	}
 }

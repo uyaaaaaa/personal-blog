@@ -12,6 +12,13 @@ const ts = new RuleTester({
 
 const run = (cases) => ts.run('published', articleQueries.rules.published, cases)
 
+const runLocation = (cases) => ts.run('location', articleQueries.rules.location, cases)
+
+const QUERY = "queryCollection('article').where('published', '=', true).all()"
+
+const at = (filename, code = QUERY) => ({ filename, code })
+const notAt = (filename, code = QUERY) => ({ filename, code, errors: [{ messageId: 'location' }] })
+
 describe('published', () => {
 	it('公開制御を継いだ鎖を通す', () => {
 		run({
@@ -60,6 +67,23 @@ describe('published', () => {
 					errors: [{ messageId: 'published' }],
 				},
 				{ code: 'queryCollection(name).all()', errors: [{ messageId: 'published' }] },
+			],
+		})
+	})
+
+	it('記事でない collection を名指した鎖は通し、名指していないものは落とす', () => {
+		run({
+			valid: [
+				"queryCollection('digest').order('date', 'DESC').all()",
+				"queryCollection('digest').path(path).first()",
+				"queryCollectionNavigation('digest')",
+			],
+			invalid: [
+				{ code: 'queryCollection(collection).all()', errors: [{ messageId: 'published' }] },
+				{
+					code: 'queryCollection(`article`).all()',
+					errors: [{ messageId: 'published' }],
+				},
 			],
 		})
 	})
@@ -129,6 +153,69 @@ describe('published', () => {
 					errors: [{ messageId: 'published' }],
 				},
 			],
+		})
+	})
+})
+
+describe('location', () => {
+	it('置き場に書いた取得を通す', () => {
+		runLocation({
+			valid: [
+				at('app/utils/articleQuery.ts'),
+				at('app/utils/articleQuery.ts', "queryCollectionNavigation('article')"),
+				at('app/utils/articleQuery.ts', "queryCollectionItemSurroundings('article', path)"),
+				at('app/utils/articleQuery.ts', "queryCollectionSearchSections('article')"),
+				at('app/utils/articleQuery.ts', 'queryCollection(name).all()'),
+				at('app/utils/article/query.ts'),
+			],
+			invalid: [],
+		})
+	})
+
+	it('置き場の外に書いた取得を落とす', () => {
+		runLocation({
+			valid: [],
+			invalid: [
+				notAt('app/composables/usePublishedArticles.ts'),
+				notAt('app/pages/index.vue'),
+				notAt('app/pages/article/-AllArticles.vue'),
+				notAt('app/components/article/ArticleShelf.vue'),
+				notAt('app/layouts/default.vue'),
+			],
+		})
+	})
+
+	it('置き場の外では、collection を引く別の綴りも落とす', () => {
+		runLocation({
+			valid: [],
+			invalid: [
+				notAt('app/pages/index.vue', "queryCollectionNavigation('article')"),
+				notAt('app/pages/index.vue', "queryCollectionItemSurroundings('article', path)"),
+				notAt('app/pages/index.vue', "queryCollectionSearchSections('article')"),
+				notAt('app/pages/index.vue', 'queryCollection(collection).all()'),
+				notAt('app/pages/index.vue', 'queryCollection(`article`).all()'),
+			],
+		})
+	})
+
+	it('置き場の名前を前方に含むだけのディレクトリは置き場に数えない', () => {
+		runLocation({
+			valid: [],
+			invalid: [notAt('app/utilsx/query.ts'), notAt('tests/app/utils/articleQuery.test.ts')],
+		})
+	})
+
+	it('記事でない collection を名指した取得は、どこでも通す', () => {
+		runLocation({
+			valid: [
+				at(
+					'app/pages/digest/index.vue',
+					"queryCollection('digest').order('date', 'DESC').all()",
+				),
+				at('app/pages/digest/index.vue', "queryCollectionNavigation('digest')"),
+				at('app/pages/index.vue', 'publishedArticleList().all()'),
+			],
+			invalid: [],
 		})
 	})
 })

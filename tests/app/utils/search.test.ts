@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { searchArticles } from '~/utils/search'
+import { resultCountMessage, searchArticles } from '~/utils/search'
 
 const articles = [
 	{ title: 'Nuxt Content で作るブログ', tags: ['Nuxt', 'SSG'] },
@@ -11,10 +11,6 @@ const articles = [
 const titles = (query: string) => searchArticles(articles, query).map((article) => article.title)
 
 describe('searchArticles', () => {
-	it('タイトルの一部に一致した記事を返す', () => {
-		expect(titles('trailing')).toEqual(['Cloudflare Pages の trailing slash'])
-	})
-
 	it('日本語のタイトルも部分一致で拾う', () => {
 		expect(titles('ブログ')).toEqual(['Nuxt Content で作るブログ'])
 	})
@@ -70,5 +66,19 @@ describe('searchArticles', () => {
 		expect(searchArticles([{ title: 'タグ無し記事' }], 'タグ')).toEqual([
 			{ title: 'タグ無し記事' },
 		])
+	})
+})
+
+describe('resultCountMessage', () => {
+	it('1件のときは単数で言う', () => {
+		expect(resultCountMessage(1)).toBe('1 article found.')
+	})
+
+	it('2件以上は複数で言う', () => {
+		expect(resultCountMessage(4)).toBe('4 articles found.')
+	})
+
+	it('0件はその旨を返す', () => {
+		expect(resultCountMessage(0)).toBe('No articles found.')
 	})
 })

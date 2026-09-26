@@ -3,8 +3,6 @@ import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
 import CategoryFilter from '~/components/article/CategoryFilter.vue'
 
-// queryCollection は Nuxt Content の SQLite を開く。ここで測りたいのは current に対する
-// 描画なので、カテゴリを持つ記事を返すだけのスタブに差し替えて取得先を切る
 mockNuxtImport('queryCollection', () => () => {
 	const builder = {
 		where: () => builder,

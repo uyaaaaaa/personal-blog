@@ -1,3 +1,13 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { ARTICLE } from '../content.collections.mjs'
+
+const INVARIANT_URL =
+	'https://github.com/uyaaaaaa/personal-blog/blob/main/docs/ARCHITECTURE.md#不変条件'
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const QUERY_DIRECTORY = path.join(ROOT, 'app', 'utils') + path.sep
+
 // collection を引く綴りは4つあり、queryCollection 以外の3つも where を継げる（@nuxt/content）
 const QUERY = /^queryCollection/
 const PUBLISHED = 'published'
@@ -19,6 +29,11 @@ const bare = (node) => {
 
 const methodName = (callee) =>
 	callee.type === 'MemberExpression' ? (callee.property.name ?? callee.property.value) : null
+
+const mayQueryArticles = (node) => {
+	const [collection] = node.arguments
+	return collection?.type !== 'Literal' || collection.value === ARTICLE
+}
 
 const isQuery = (node) =>
 	node?.type === 'CallExpression' &&
@@ -77,7 +92,7 @@ const published = {
 
 		return {
 			CallExpression(node) {
-				if (isQuery(node)) queries.add(node)
+				if (isQuery(node) && mayQueryArticles(node)) queries.add(node)
 				if (!filtersPublished(node)) return
 
 				const query = queryOf(node)
@@ -92,8 +107,29 @@ const published = {
 	},
 }
 
+const location = {
+	meta: {
+		type: 'problem',
+		schema: [],
+		messages: {
+			location: `記事の取得を組み立てるのは app/utils/ だけ。ここでは utils/ のクエリを import し、条件を継いで使う。 ${INVARIANT_URL}`,
+		},
+	},
+	create(context) {
+		if (path.resolve(context.filename).startsWith(QUERY_DIRECTORY)) return {}
+
+		return {
+			CallExpression(node) {
+				if (isQuery(node) && mayQueryArticles(node))
+					context.report({ node, messageId: 'location' })
+			},
+		}
+	},
+}
+
 export default {
 	rules: {
+		location,
 		published,
 	},
 }

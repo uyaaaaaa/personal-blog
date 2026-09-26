@@ -3,6 +3,7 @@
 		v-if="totalPages > 1"
 		class="flex items-center justify-center gap-2"
 		aria-label="Pagination"
+		lang="en"
 	>
 		<NuxtLink
 			v-if="page > 1"
@@ -10,34 +11,14 @@
 			class="page-item"
 			aria-label="Previous page"
 		>
-			<svg
-				class="chevron"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<path d="M15 18l-6-6 6-6" />
-			</svg>
+			<ChevronLeftIcon />
 		</NuxtLink>
 		<span
 			v-else
 			class="page-item page-item-disabled"
 			aria-hidden="true"
 		>
-			<svg
-				class="chevron"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<path d="M15 18l-6-6 6-6" />
-			</svg>
+			<ChevronLeftIcon />
 		</span>
 
 		<template
@@ -46,7 +27,7 @@
 		>
 			<span
 				v-if="item === 'gap'"
-				class="px-1 font-mono text-sm text-sub"
+				class="px-1 font-mono text-ui text-sub"
 				>…</span
 			>
 			<NuxtLink
@@ -70,39 +51,21 @@
 			class="page-item"
 			aria-label="Next page"
 		>
-			<svg
-				class="chevron"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<path d="M9 18l6-6-6-6" />
-			</svg>
+			<ChevronRightIcon />
 		</NuxtLink>
 		<span
 			v-else
 			class="page-item page-item-disabled"
 			aria-hidden="true"
 		>
-			<svg
-				class="chevron"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<path d="M9 18l6-6-6-6" />
-			</svg>
+			<ChevronRightIcon />
 		</span>
 	</nav>
 </template>
 
 <script setup lang="ts">
+	import ChevronLeftIcon from '~/components/ui/ChevronLeftIcon.vue'
+	import ChevronRightIcon from '~/components/ui/ChevronRightIcon.vue'
 	import { pageLink, paginationItems } from '~/utils/pagination'
 
 	const props = defineProps<{
@@ -144,10 +107,5 @@
 
 	.page-item-disabled {
 		color: var(--color-sub);
-	}
-
-	.chevron {
-		width: 1.125rem;
-		height: 1.125rem;
 	}
 </style>

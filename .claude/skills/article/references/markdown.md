@@ -9,7 +9,6 @@
 ```md
 ---
 title: "記事タイトル"
-emoji: "🐘"
 description: "メッセージの1文を縮めたもの"
 published: true
 date: 2026-09-01

@@ -24,8 +24,7 @@ export const useHoverPanel = () => {
 		else open()
 	}
 
-	// タッチ操作はタップのたびに互換マウスイベント（mouseenter → click）を発火させるため、
-	// ホバーでの開閉はマウスのポインタに限定してclickのトグルと衝突させない
+	// タッチはタップごとに互換マウスイベントを出すので、ホバーの開閉はマウスに限る
 	const openOnHover = (event: PointerEvent) => {
 		if (event.pointerType === 'mouse') open()
 	}

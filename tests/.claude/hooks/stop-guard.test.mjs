@@ -1,66 +1,62 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { devNull, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { opened, unfinished } from '~~/.claude/hooks/stop-guard.mjs'
+import { ahead, unfinished } from '~~/.claude/hooks/stop-guard.mjs'
 
 const HOOK = fileURLToPath(new URL('../../../.claude/hooks/stop-guard.mjs', import.meta.url))
 
-const shot = (name, mtime = 1, bytes = 100) => ({ name, mtime, bytes })
-
-describe('opened', () => {
-	it('証跡の PNG を開いたときだけ、その名前を返す', () => {
-		expect(
-			opened({ tool_name: 'Read', tool_input: { file_path: '/a/.verify/i-375.png' } }),
-		).toBe('i-375.png')
-		expect(
-			opened({ tool_name: 'Read', tool_input: { file_path: '.verify/lint.log' } }),
-		).toBeNull()
-		expect(opened({ tool_name: 'Read', tool_input: { file_path: '/a/shot.png' } })).toBeNull()
-		expect(
-			opened({ tool_name: 'Bash', tool_input: { command: 'cat .verify/i.png' } }),
-		).toBeNull()
-		expect(opened()).toBeNull()
-	})
-})
-
 describe('unfinished', () => {
-	it('開いていない PNG があれば止める', () => {
-		expect(
-			unfinished({ shots: [shot('a.png'), shot('b.png')], seen: ['a.png@1'] }),
-		).toMatchObject({ kind: 'png', reason: expect.stringContaining('b.png') })
-		expect(unfinished({ shots: [shot('a.png')], seen: ['a.png@1'] })).toBeNull()
-	})
-
-	it('撮れていない PNG は、開くのではなく撮り直させる', () => {
-		expect(unfinished({ shots: [shot('a.png', 1, 0)] })).toMatchObject({ kind: 'empty' })
-		expect(unfinished({ shots: [shot('a.png', 1, 0)], blocked: ['empty'] })).toBeNull()
-	})
-
-	it('撮り直した PNG は開いた扱いにしない', () => {
-		expect(unfinished({ shots: [shot('a.png', 2)], seen: ['a.png@1'] })).toMatchObject({
-			kind: 'png',
-		})
-	})
-
 	it('コミットと push を別々に止める', () => {
 		expect(unfinished({ dirty: true }).kind).toBe('commit')
 		expect(unfinished({ dirty: false, ahead: 2, blocked: ['commit'] }).reason).toMatch('2 件')
 		expect(unfinished({})).toBeNull()
 	})
 
-	it('PNG・コミット・push の順に、1回ずつ出す', () => {
-		const shots = [shot('a.png')]
-		expect(unfinished({ shots, dirty: true, ahead: 1 }).kind).toBe('png')
-		expect(unfinished({ shots, dirty: true, ahead: 1, blocked: ['png'] }).kind).toBe('commit')
-		expect(unfinished({ shots, dirty: true, ahead: 1, blocked: ['png', 'commit'] }).kind).toBe(
-			'push',
-		)
-		expect(
-			unfinished({ shots, dirty: true, ahead: 1, blocked: ['png', 'commit', 'push'] }),
-		).toBeNull()
+	it('コミット・push の順に、1回ずつ出す', () => {
+		expect(unfinished({ dirty: true, ahead: 1 }).kind).toBe('commit')
+		expect(unfinished({ dirty: true, ahead: 1, blocked: ['commit'] }).kind).toBe('push')
+		expect(unfinished({ dirty: true, ahead: 1, blocked: ['commit', 'push'] })).toBeNull()
+	})
+})
+
+describe('ahead', () => {
+	// 手元の global 設定（署名の要求など）をテストに持ち込まない
+	const env = {
+		...process.env,
+		GIT_CONFIG_GLOBAL: devNull,
+		GIT_CONFIG_NOSYSTEM: '1',
+		GIT_AUTHOR_NAME: 't',
+		GIT_AUTHOR_EMAIL: 't@example.com',
+		GIT_COMMITTER_NAME: 't',
+		GIT_COMMITTER_EMAIL: 't@example.com',
+	}
+	const sh = (cwd, ...args) => execFileSync('git', args, { cwd, env, encoding: 'utf8' }).trim()
+	const commit = (cwd, name) => {
+		writeFileSync(join(cwd, name), name)
+		sh(cwd, 'add', name)
+		sh(cwd, 'commit', '-q', '-m', name)
+	}
+
+	it('どのリモートにも無いコミットだけを数え、upstream の無いブランチや古い origin/main に釣られない', () => {
+		const base = mkdtempSync(join(tmpdir(), 'stop-guard-git-'))
+		const remote = join(base, 'remote.git')
+		const work = join(base, 'work')
+		sh(base, 'init', '-q', '--bare', remote)
+		sh(base, 'init', '-q', '-b', 'main', work)
+		sh(work, 'remote', 'add', 'origin', remote)
+		commit(work, 'a')
+		sh(work, 'push', '-q', 'origin', 'main')
+		sh(work, 'checkout', '-q', '-b', 'claude/x')
+		commit(work, 'b')
+		commit(work, 'c')
+		sh(work, 'push', '-q', 'origin', 'HEAD:refs/heads/claude/x')
+		expect(ahead(work)).toBe(0)
+
+		commit(work, 'd')
+		expect(ahead(work)).toBe(1)
 	})
 })
 
@@ -72,23 +68,16 @@ describe('フックとして打つ', () => {
 			env: { ...process.env, CLAUDE_PROJECT_DIR: root, CLAUDE_HOOK_STATE_DIR: store },
 		})
 
-	it('開いた PNG を覚えていて、次の Stop で止めない', () => {
+	it('同じ理由では2度止めない', () => {
 		const base = mkdtempSync(join(tmpdir(), 'stop-guard-'))
 		const root = join(base, 'project')
 		const store = join(base, 'state')
-		mkdirSync(join(root, '.verify'), { recursive: true })
-		writeFileSync(join(root, '.verify', 'index-375-dark.png'), 'x')
+		mkdirSync(root)
+		execFileSync('git', ['init', '-q', root])
+		writeFileSync(join(root, 'x'), 'x')
 
-		const read = {
-			session_id: 'one',
-			hook_event_name: 'PostToolUse',
-			tool_name: 'Read',
-			tool_input: { file_path: '.verify/index-375-dark.png' },
-		}
-		expect(fire(read, root, store)).toBe('')
-		expect(fire({ session_id: 'one', hook_event_name: 'Stop' }, root, store)).toBe('')
-		expect(fire({ session_id: 'two', hook_event_name: 'Stop' }, root, store)).toMatch(
-			'index-375-dark.png',
-		)
+		const stop = { session_id: 'one', hook_event_name: 'Stop' }
+		expect(fire(stop, root, store)).toMatch('コミットしていない')
+		expect(fire(stop, root, store)).toBe('')
 	})
 })

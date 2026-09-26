@@ -44,7 +44,6 @@ const post = (input, { tool = SLACK, event = 'PreToolUse', ...rest } = {}) => ({
 })
 
 const ISSUE = args('issue', ['295'], 'abc123')
-const REVIEW = args('review', ['300'])
 const TASK = args('task', ['weekly-prune', 'prune スキルに従う。'], 'zz99qq')
 
 describe('rules', () => {
@@ -56,13 +55,11 @@ describe('rules', () => {
 
 describe('create_session', () => {
 	it('session-args の出力をそのまま渡せば通す', () => {
-		for (const want of [ISSUE, REVIEW, TASK]) expect(decide(start(want), ask())).toBeNull()
+		for (const want of [ISSUE, TASK]) expect(decide(start(want), ask())).toBeNull()
 	})
 
 	it('出力を書き換えたら、違う項目を挙げて止める', () => {
-		expect(decide(start({ ...ISSUE, model: 'claude-haiku-4-5-20251001' }), ask())).toMatch(
-			'model',
-		)
+		expect(decide(start({ ...ISSUE, model: 'haiku' }), ask())).toMatch('model')
 		expect(decide(start({ ...ISSUE, source_url: undefined }), ask())).toMatch('source_url')
 		expect(
 			decide(start({ ...ISSUE, prompt: `${ISSUE.prompt}\n方針は utils に出す。` }), ask()),

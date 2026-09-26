@@ -1,20 +1,68 @@
 <template>
 	<div class="layout-container">
+		<a
+			href="#main-content"
+			lang="en"
+			class="skip-link"
+			>Skip to content</a
+		>
 		<Header :location="route.fullPath" />
-		<main class="flex-1 px-5 pb-16 pt-7 md:px-10 md:pb-24 md:pt-14">
-			<slot />
+		<main
+			id="main-content"
+			tabindex="-1"
+			class="main-content flex-1 scroll-mt-below-header-sm px-5 pb-16 pt-7 md:scroll-mt-below-header md:px-10 md:pb-24 md:pt-14"
+		>
+			<div
+				class="mx-auto w-full"
+				:class="measure"
+			>
+				<slot />
+			</div>
 		</main>
-		<Footer />
+		<Footer :measure="measure" />
+		<Toast />
 	</div>
 </template>
 
 <script setup lang="ts">
 	import Header from '~/components/layout/Header.vue'
 	import Footer from '~/components/layout/Footer.vue'
+	import Toast from '~/components/ui/Toast.vue'
+	import { focusMainContent } from '~/composables/gestureFocus'
 
 	const route = useRoute()
+	const router = useRouter()
 
-	/* eslint-disable style/no-outline-removal -- 目印が付くのはポインタで移したフォーカスだけ */
+	const measure = computed(() => {
+		if (route.meta.sideColumn) return 'max-w-column lg:max-w-article'
+		if (route.meta.prose) return 'max-w-column lg:max-w-column-wide'
+		return 'max-w-column'
+	})
+
+	// 戻る・進むはブラウザが位置を戻すので触らない
+	let traversedTo: string | undefined
+	let stopListening: (() => void) | undefined
+	let stopAfterEach: (() => void) | undefined
+
+	onMounted(() => {
+		stopListening = router.options.history.listen((to) => {
+			traversedTo = router.resolve(to).fullPath
+		})
+		stopAfterEach = router.afterEach((to, from, failure) => {
+			const byHistory = to.fullPath === traversedTo
+			if (byHistory) traversedTo = undefined
+			if (failure || byHistory || to.path === from.path) return
+
+			nextTick(focusMainContent)
+		})
+	})
+
+	onUnmounted(() => {
+		stopListening?.()
+		stopAfterEach?.()
+	})
+
+	/* eslint-disable style/no-outline-removal -- 目印が付くのはポインタで移したフォーカスと、開いた直後に自動で寄せたフォーカスだけ */
 </script>
 
 <style>
@@ -57,5 +105,26 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
+	}
+
+	.main-content:focus-visible {
+		outline-offset: -2px;
+	}
+
+	.skip-link {
+		position: fixed;
+		top: 0.75rem;
+		left: 0.75rem;
+		z-index: 130;
+		padding: 0.5rem 1rem;
+		background-color: var(--color-surface);
+		color: var(--color-main);
+		border: 1px solid var(--color-border);
+		border-radius: 0.25rem;
+		transform: translateY(-150%);
+	}
+
+	.skip-link:focus {
+		transform: translateY(0);
 	}
 </style>

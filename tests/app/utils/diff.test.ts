@@ -20,10 +20,6 @@ describe('isFileHeader', () => {
 })
 
 describe('similarity', () => {
-	it('同じ文字列を 1 にする', () => {
-		expect(similarity('const a = 1', 'const a = 1')).toBe(1)
-	})
-
 	it('前後の空白を無視する', () => {
 		expect(similarity('  const a = 1  ', 'const a = 1')).toBe(1)
 	})

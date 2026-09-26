@@ -12,12 +12,6 @@ const tester = new RuleTester({
 
 const sfc = (css) => `<template><div class="a" /></template>\n<style scoped>${css}</style>`
 
-const attribute = (spelling) => `<template><div ${spelling} /></template>`
-
-const script = (body) => `<template><div /></template>\n<script setup>${body}</script>`
-
-const handler = (body) => `<template><div @click="${body}" /></template>`
-
 describe('no-untokenized-size', () => {
 	it('語彙にある長さだけを通す', () => {
 		tester.run('no-untokenized-size', styleTokens.rules['no-untokenized-size'], {
@@ -28,7 +22,8 @@ describe('no-untokenized-size', () => {
 				},
 				{ filename: 'a.vue', code: sfc('.a { width: 960px; max-width: 1200px; }') },
 				{ filename: 'a.vue', code: sfc('.a { transform: translateY(-4px); }') },
-				{ filename: 'a.vue', code: sfc('.a { letter-spacing: 0.08em; height: 60vh; }') },
+				{ filename: 'a.vue', code: sfc('.a { letter-spacing: 0.12em; height: 60vh; }') },
+				{ filename: 'a.vue', code: sfc('.a { letter-spacing: -0.025em; }') },
 				{ filename: 'a.vue', code: sfc(".a { content: '17px'; }") },
 				{
 					filename: 'a.vue',
@@ -39,6 +34,22 @@ describe('no-untokenized-size', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('@media (min-width: 1024px) { .a { width: 1rem; } }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@media (width >= 64em) { .a { top: 0; } }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply tracking-[0.12em]; }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('@keyframes drift-2em { from { opacity: 0; } }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation-name: drift-2em; max-width: var(--panel-2em); }'),
 				},
 			],
 			invalid: [
@@ -54,46 +65,32 @@ describe('no-untokenized-size', () => {
 				},
 				{
 					filename: 'a.vue',
+					code: sfc('.a { letter-spacing: 0.08em; }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
 					code: sfc('@media (min-width: 900px) { .a { width: 1rem; } }'),
 					errors: [{ messageId: 'untokenized' }],
 				},
 				{
 					filename: 'a.vue',
+					code: sfc('@media (width >= 56.25em) { .a { top: 0; } }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply tracking-[0.08em]; }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { width: 64em; }'),
+					errors: [{ messageId: 'untokenized' }],
+				},
+				{
+					filename: 'a.vue',
 					code: sfc('.a { max-width: var(--fallback, 17px); }'),
-					errors: [{ messageId: 'untokenized' }],
-				},
-			],
-		})
-	})
-
-	it('script が要素のスタイルに書く長さも宣言と同じ判定で落とす', () => {
-		tester.run('no-untokenized-size', styleTokens.rules['no-untokenized-size'], {
-			valid: [{ filename: 'a.vue', code: script("el.style.width = '1rem'") }],
-			invalid: [
-				{
-					filename: 'a.vue',
-					code: script("el.style.width = '17px'"),
-					errors: [{ messageId: 'untokenized' }],
-				},
-			],
-		})
-	})
-
-	it('style 属性の長さも宣言と同じ判定で落とす', () => {
-		tester.run('no-untokenized-size', styleTokens.rules['no-untokenized-size'], {
-			valid: [
-				{ filename: 'a.vue', code: attribute('style="padding: 0.75rem"') },
-				{ filename: 'a.vue', code: attribute(':style="{ maxWidth: \'1200px\' }"') },
-			],
-			invalid: [
-				{
-					filename: 'a.vue',
-					code: attribute('style="padding: 137px"'),
-					errors: [{ messageId: 'untokenized' }],
-				},
-				{
-					filename: 'a.vue',
-					code: attribute(':style="{ maxWidth: \'137px\' }"'),
 					errors: [{ messageId: 'untokenized' }],
 				},
 			],
@@ -119,19 +116,155 @@ describe('no-important', () => {
 	})
 })
 
-describe('no-reduced-motion', () => {
-	it('prefers-reduced-motion を参照する @media を落とす', () => {
-		tester.run('no-reduced-motion', styleTokens.rules['no-reduced-motion'], {
+describe('no-motion-important', () => {
+	it('モーションに重ねた !important だけを落とす', () => {
+		tester.run('no-motion-important', styleTokens.rules['no-motion-important'], {
 			valid: [
-				{ filename: 'a.vue', code: sfc('@media (min-width: 1024px) { .a { top: 0; } }') },
+				{ filename: 'a.vue', code: sfc('.a { transition: color 0.15s; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-color md:transition-move; }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { margin: 0 !important; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply !mt-0; }') },
+				{ filename: 'a.vue', code: sfc('.a { transition: none !important; }') },
+				{ filename: 'a.vue', code: sfc('.a { animation-duration: 0s !important; }') },
 			],
 			invalid: [
 				{
 					filename: 'a.vue',
+					code: sfc('.a { transition: transform 0.2s !important; }'),
+					errors: [{ messageId: 'important' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation-duration: var(--panel) !important; }'),
+					errors: [{ messageId: 'important' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply md:!transition-move; }'),
+					errors: [{ messageId: 'important' }],
+				},
+				// 末尾の !important は並べたクラス全部に掛かる
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-color !important; }'),
+					errors: [{ messageId: 'important' }],
+				},
+			],
+		})
+	})
+})
+
+describe('no-off-purpose-motion', () => {
+	it('用途に決めた長さだけを通す', () => {
+		tester.run('no-off-purpose-motion', styleTokens.rules['no-off-purpose-motion'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { transition: color 0.15s ease; }') },
+				// 同じ長さの別の綴り
+				{ filename: 'a.vue', code: sfc('.a { transition: background-color 150ms; }') },
+				{ filename: 'a.vue', code: sfc('.a { transition: border-top-color 0.15s; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: color 0.15s, transform 0.2s; }'),
+				},
+				// 動かさない 0 は、どの用途でも通す
+				{
+					filename: 'a.vue',
 					code: sfc(
-						'@media (prefers-reduced-motion: reduce) { .a { transition: none; } }',
+						'.a { transition: opacity 0.2s ease-out, visibility 0s linear 0.2s; }',
 					),
-					errors: [{ messageId: 'reducedMotion' }],
+				},
+				// 緩急の関数が持つカンマと数は、区切りでも長さでもない
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { transition: none; }') },
+				// 関数の中の語は対象の名前ではない
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: transform 0.2s steps(4, end); }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { --panel: 0.2s; transition: opacity var(--panel); }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { animation: spin 0.2s linear; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition-property: opacity; transition-duration: 0.2s; }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-color md:transition-move; }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { border-radius: 0.2s; }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: color 0.2s; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: opacity 0.16s ease-out; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: border-top-color 0.2s; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: grid-template-rows 0.25s ease-in-out; }'),
+					errors: [{ messageId: 'offPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: all 0.3s ease-in-out; }'),
+					errors: [{ messageId: 'mixed' }],
+				},
+				// 対象を書かない短縮形は all と同じ
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: 0.2s ease; }'),
+					errors: [{ messageId: 'mixed' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: 0.2s steps(4, end); }'),
+					errors: [{ messageId: 'mixed' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation: spin 0.42s; }'),
+					errors: [{ messageId: 'anyPurpose' }],
+				},
+				// var() で長さを渡す経路も塞ぐ
+				{
+					filename: 'a.vue',
+					code: sfc('.a { --panel: 0.42s; transition: opacity var(--panel); }'),
+					errors: [{ messageId: 'anyPurpose' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition-duration: 0.42s; }'),
+					errors: [{ messageId: 'anyPurpose' }],
+				},
+				// 任意値は theme を通らずに出るので、@apply の綴りで見る
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply duration-[200ms]; }'),
+					errors: [{ messageId: 'motionClass' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-[color]; }'),
+					errors: [{ messageId: 'motionClass' }],
 				},
 			],
 		})
@@ -274,143 +407,6 @@ describe('no-color-literal', () => {
 			],
 		})
 	})
-
-	it('script が要素のスタイルに書く色も宣言と同じ判定で落とす', () => {
-		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
-			valid: [
-				{ filename: 'a.vue', code: script("el.style.color = 'var(--color-main)'") },
-				{ filename: 'a.vue', code: script("el.style.overflow = 'hidden'") },
-				{ filename: 'a.vue', code: script("el.style.setProperty('overflow', 'hidden')") },
-				{ filename: 'a.vue', code: script('const kind = el.style.color') },
-				{ filename: 'a.vue', code: script("el.setAttribute('title', 'tomato')") },
-				{
-					filename: 'a.vue',
-					code: script("Object.assign(el.dataset, { tone: 'tomato' })"),
-				},
-				{ filename: 'a.vue', code: script("el.dataset.style = 'color: tomato'") },
-				{ filename: 'a.vue', code: script("el.dataset['style'] = 'color: tomato'") },
-			],
-			invalid: [
-				{
-					filename: 'a.vue',
-					code: script("el.style.color = '#ff0000'"),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el.style['background-color'] = 'tomato'"),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el.style[name] = '#ff0000'"),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el.style.setProperty('color', 'tomato')"),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el.style.cssText = 'color: #ff0000'"),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el.setAttribute('style', 'color: tomato')"),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("Object.assign(el.style, { color: 'tomato' })"),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el.style.color = open ? '#ff0000' : '#00ff00'"),
-					errors: [{ messageId: 'literal' }, { messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el['style'].color = '#ff0000'"),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el.style['setProperty']('color', 'tomato')"),
-					errors: [{ messageId: 'literal' }],
-				},
-				// 行内ハンドラは <script> の外なので、template 側の visitor が要る
-				{
-					filename: 'a.vue',
-					code: handler("el.style.color = '#ff0000'"),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: handler("el.style.setProperty('color', 'tomato')"),
-					errors: [{ messageId: 'literal' }],
-				},
-			],
-		})
-	})
-
-	it('style 属性の色も宣言と同じ判定で落とす', () => {
-		tester.run('no-color-literal', styleTokens.rules['no-color-literal'], {
-			valid: [
-				{ filename: 'a.vue', code: attribute('style="color: var(--color-main)"') },
-				{ filename: 'a.vue', code: attribute(':style="{ color: \'var(--color-main)\' }"') },
-				{ filename: 'a.vue', code: attribute(':style="{ opacity }"') },
-				{
-					filename: 'a.vue',
-					code: attribute(':style="{ \'--callout-rgb-light\': config.rgb }"'),
-				},
-				{ filename: 'a.vue', code: attribute('style="color: rgba(0, 0, 0, 0.5)"') },
-				{
-					filename: 'a.vue',
-					code: attribute(':style="{ backgroundImage: asset(\'red-panda.png\') }"'),
-				},
-				{ filename: 'a.vue', code: attribute(':style="{ color: palette[\'tomato\'] }"') },
-				{
-					filename: 'a.vue',
-					code: attribute(':style="{ color: kind === \'red\' ? main : sub }"'),
-				},
-			],
-			invalid: [
-				{
-					filename: 'a.vue',
-					code: attribute('style="color: #ff0000"'),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: attribute(':style="{ backgroundColor: \'tomato\' }"'),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: attribute(":style=\"{ color: open ? '#ff0000' : '#00ff00' }\""),
-					errors: [{ messageId: 'literal' }, { messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: attribute(':style="{ color: open && \'red\' }"'),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: attribute(':style="{ ...{ color: \'#ff0000\' } }"'),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: attribute(':style="{ [name]: \'#ff0000\' }"'),
-					errors: [{ messageId: 'literal' }],
-				},
-			],
-		})
-	})
 })
 
 describe('no-font-literal', () => {
@@ -456,75 +452,32 @@ describe('no-font-literal', () => {
 			],
 		})
 	})
+})
 
-	it('script が要素のスタイルに書く書体も宣言と同じ判定で落とす', () => {
-		tester.run('no-font-literal', styleTokens.rules['no-font-literal'], {
+describe('no-px-font-size', () => {
+	it('文字サイズの px を落とす', () => {
+		tester.run('no-px-font-size', styleTokens.rules['no-px-font-size'], {
 			valid: [
-				{ filename: 'a.vue', code: script("el.style.fontFamily = 'var(--font-mono)'") },
-				{ filename: 'a.vue', code: script("el.style.fontWeight = '600'") },
-				{ filename: 'a.vue', code: script("el.style.overflow = 'hidden'") },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { font: 0.875rem/20px var(--font-sans); width: 24px; }'),
+				},
 			],
 			invalid: [
 				{
 					filename: 'a.vue',
-					code: script("el.style.fontFamily = 'Comic Sans MS'"),
-					errors: [{ messageId: 'literal' }],
+					code: sfc('.a { font-size: 14px; }'),
+					errors: [{ messageId: 'px' }],
 				},
 				{
 					filename: 'a.vue',
-					code: script("el.style.font = 'bold 1rem Georgia'"),
-					errors: [{ messageId: 'literal' }],
+					code: sfc('.a { @apply md:text-[26px]; }'),
+					errors: [{ messageId: 'px' }],
 				},
 				{
 					filename: 'a.vue',
-					code: script("el.style.setProperty('font-family', 'Georgia')"),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el.style.cssText = 'font-family: Verdana'"),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("Object.assign(el.style, { fontFamily: 'Georgia' })"),
-					errors: [{ messageId: 'literal' }],
-				},
-			],
-		})
-	})
-
-	it('style 属性の書体も宣言と同じ判定で落とす', () => {
-		tester.run('no-font-literal', styleTokens.rules['no-font-literal'], {
-			valid: [
-				{ filename: 'a.vue', code: attribute('style="font-family: var(--font-mono)"') },
-				{
-					filename: 'a.vue',
-					code: attribute(':style="{ fontFamily: \'var(--font-mono)\' }"'),
-				},
-				{ filename: 'a.vue', code: attribute(':style="{ opacity }"') },
-				{ filename: 'a.vue', code: attribute('style="font-weight: 600"') },
-			],
-			invalid: [
-				{
-					filename: 'a.vue',
-					code: attribute('style="font-family: \'Comic Sans MS\'"'),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: attribute(':style="{ fontFamily: \'Comic Sans MS\' }"'),
-					errors: [{ messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: attribute(":style=\"{ 'font-family': open ? 'Georgia' : 'Verdana' }\""),
-					errors: [{ messageId: 'literal' }, { messageId: 'literal' }],
-				},
-				{
-					filename: 'a.vue',
-					code: attribute(':style="`font-family: ${name}; font-family: Georgia`"'),
-					errors: [{ messageId: 'literal' }],
+					code: sfc('.a { @apply text-[length:14px]; }'),
+					errors: [{ messageId: 'px' }],
 				},
 			],
 		})
@@ -800,10 +753,6 @@ describe('no-display-none', () => {
 				{ filename: 'a.vue', code: sfc('.a { @apply md:block; }') },
 				// 綴りの重なる overflow-hidden / truncate は display を持たない
 				{ filename: 'a.vue', code: sfc('.a { @apply md:overflow-hidden truncate; }') },
-				// 出し分けを持つのは template のクラス
-				{ filename: 'a.vue', code: attribute('class="hidden md:block"') },
-				{ filename: 'a.vue', code: attribute('style="display: flex"') },
-				{ filename: 'a.vue', code: script("el.style.overflow = 'hidden'") },
 			],
 			invalid: [
 				{
@@ -839,36 +788,6 @@ describe('no-display-none', () => {
 				{
 					filename: 'a.vue',
 					code: sfc('.a { @apply md:hidden; }'),
-					errors: [{ messageId: 'displayNone' }],
-				},
-				{
-					filename: 'a.vue',
-					code: attribute('style="display: none"'),
-					errors: [{ messageId: 'displayNone' }],
-				},
-				{
-					filename: 'a.vue',
-					code: attribute(`:style="{ display: open ? 'block' : 'none' }"`),
-					errors: [{ messageId: 'displayNone' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el.style.display = 'none'"),
-					errors: [{ messageId: 'displayNone' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el.style.setProperty('display', 'none')"),
-					errors: [{ messageId: 'displayNone' }],
-				},
-				{
-					filename: 'a.vue',
-					code: script("el.style.cssText = 'display: none'"),
-					errors: [{ messageId: 'displayNone' }],
-				},
-				{
-					filename: 'a.vue',
-					code: handler("el.style.display = 'none'"),
 					errors: [{ messageId: 'displayNone' }],
 				},
 			],

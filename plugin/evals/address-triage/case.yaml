@@ -1,0 +1,5 @@
+schema_version: '1.1'
+name: address-triage
+description: 同じ原因の指摘・規約に反する指摘・再現しない指摘・手段だけの指摘を、裏を取って振り分けるか
+context:
+    scaffold_script: fixture.sh

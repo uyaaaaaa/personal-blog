@@ -9,6 +9,7 @@ interface TocLink {
 	children?: TocLink[]
 }
 
+// html に当たっている scroll-padding-top。判定はこれを読む
 const OFFSET = 100
 const VIEWPORT = 800
 const PAGE = 5000
@@ -19,8 +20,7 @@ const mounted: Array<() => void> = []
 const frames = new Map<number, FrameRequestCallback>()
 let lastFrameId = 0
 
-// happy-dom はレイアウトを持たず top が常に 0 になるので、見出しごとに直接与える。
-// スクロールで動く値なので、要素ではなくこの表を正本にして読ませる
+// happy-dom はレイアウトを持たず top が常に 0 なので、見出しごとに与える
 const tops: Record<string, number> = {}
 
 const placeHeadings = (initial: Record<string, number>) => {
@@ -52,7 +52,7 @@ const scroll = (moved: Record<string, number>, y = 0) => {
 }
 
 const mountToc = (links: TocLink[]) => {
-	const { result, unmount } = withSetup(() => useTocActive(ref(links), OFFSET, ref(true)))
+	const { result, unmount } = withSetup(() => useTocActive(ref(links), ref(true)))
 	mounted.push(unmount)
 	return result
 }
@@ -67,6 +67,8 @@ beforeEach(() => {
 	vi.stubGlobal('cancelAnimationFrame', (id: number) => {
 		frames.delete(id)
 	})
+	// happy-dom はカスケードを持たず、html に当たっている scroll-padding-top を返せない
+	vi.stubGlobal('getComputedStyle', () => ({ scrollPaddingTop: `${OFFSET}px` }))
 
 	Object.defineProperty(window, 'innerHeight', { value: VIEWPORT, configurable: true })
 	Object.defineProperty(document.documentElement, 'scrollHeight', {
@@ -83,7 +85,7 @@ afterEach(() => {
 })
 
 describe('useTocActive', () => {
-	it('上端が offset を超えた見出しのうち、いちばん後ろを選ぶ', () => {
+	it('上端が着地位置を超えた見出しのうち、いちばん後ろを選ぶ', () => {
 		placeHeadings({ a: -300, b: 50, c: 300 })
 
 		const { activeId } = mountToc([
@@ -99,7 +101,7 @@ describe('useTocActive', () => {
 		expect(activeId.value).toBe('c')
 	})
 
-	it('offset ちょうどに乗った見出しも、超えたものとして選ぶ', () => {
+	it('着地位置ちょうどに乗った見出しも、超えたものとして選ぶ', () => {
 		// 目次のリンクを踏んで着地した直後がこの位置になる
 		placeHeadings({ a: -300, b: OFFSET, c: 300 })
 
@@ -112,7 +114,19 @@ describe('useTocActive', () => {
 		expect(activeId.value).toBe('b')
 	})
 
-	it('選んだ後に見出しが offset より下へ戻ったら、選択を外す', () => {
+	it('丸めで着地位置を少し超えて止まっても、その見出しを選ぶ', () => {
+		placeHeadings({ a: -300, b: OFFSET + 0.5, c: 300 })
+
+		const { activeId } = mountToc([
+			{ id: 'a', text: 'A' },
+			{ id: 'b', text: 'B' },
+			{ id: 'c', text: 'C' },
+		])
+
+		expect(activeId.value).toBe('b')
+	})
+
+	it('選んだ後に見出しが着地位置より下へ戻ったら、選択を外す', () => {
 		placeHeadings({ a: -300, b: 500 })
 
 		const { activeId } = mountToc([

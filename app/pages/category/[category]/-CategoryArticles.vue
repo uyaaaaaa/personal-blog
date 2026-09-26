@@ -1,31 +1,19 @@
 <template>
-	<div class="mx-auto w-full max-w-column space-y-8">
-		<div class="flex items-baseline gap-4">
-			<h1 class="text-heading font-bold text-main">{{ label }}</h1>
-			<span class="font-mono text-base text-sub">{{ articles?.length ?? 0 }}</span>
-		</div>
-
-		<CategoryFilter :current="category" />
-
-		<ArticleList
-			:articles="pagedItems"
-			:start-number="startNumber"
-		/>
-
-		<Pagination
-			:page="page"
-			:total-pages="totalPages"
-			:base-path="basePath"
-		/>
-	</div>
+	<ArticleIndex :list="list">
+		<template #heading>
+			<span lang="en">{{ label }}</span>
+		</template>
+		<template #filter>
+			<CategoryFilter :current="category" />
+		</template>
+	</ArticleIndex>
 </template>
 
 <script setup lang="ts">
-	import ArticleList from '~/components/article/ArticleList.vue'
+	import ArticleIndex from '~/components/article/ArticleIndex.vue'
 	import CategoryFilter from '~/components/article/CategoryFilter.vue'
-	import Pagination from '~/components/ui/Pagination.vue'
-	import { usePagination } from '~/composables/usePagination'
-	import { usePageSeo } from '~/composables/usePageSeo'
+	import { useArticleIndex } from '~/composables/useArticleIndex'
+	import { publishedArticleList } from '~/utils/articleQuery'
 	import { isCategory, CATEGORY_LABELS } from '~/utils/category'
 
 	const route = useRoute()
@@ -38,26 +26,18 @@
 	const label = CATEGORY_LABELS[category]
 
 	const { data: articles } = await useAsyncData(`category-articles-${category}`, () =>
-		queryCollection('article')
-			.where('published', '=', true)
-			.where('category', '=', category)
-			.order('date', 'DESC')
-			.select('path', 'title', 'date', 'tags')
-			.all(),
+		publishedArticleList().where('category', '=', category).all(),
 	)
 
 	if ((articles.value ?? []).length === 0) {
 		throw createError({ statusCode: 404, statusMessage: 'Category not found', fatal: true })
 	}
 
-	const { page, totalPages, pagedItems, startNumber, basePath } = usePagination(
-		computed(() => articles.value ?? []),
-		{ pageParam: () => route.params.page, path: () => route.path },
-	)
-
-	usePageSeo({
+	const list = useArticleIndex({
+		articles: computed(() => articles.value ?? []),
+		pageParam: () => route.params.page,
 		path: () => route.path,
-		title: () => (page.value > 1 ? `${label} (${page.value}/${totalPages.value})` : label),
+		title: label,
 		description: `${label} カテゴリの記事一覧。`,
 	})
 </script>

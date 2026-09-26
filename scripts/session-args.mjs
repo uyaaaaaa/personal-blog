@@ -1,6 +1,5 @@
 import { randomBytes } from 'node:crypto'
 
-const MODEL = 'claude-opus-5'
 const SOURCE_URL = 'https://github.com/uyaaaaaa/personal-blog'
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789'
@@ -12,7 +11,6 @@ export const SUFFIX = new RegExp(`^[${ALPHABET}]{${LENGTH}}$`)
 const USAGE = [
 	'使い方:',
 	'  node scripts/session-args.mjs issue <番号>',
-	'  node scripts/session-args.mjs review <PR番号>',
 	'  node scripts/session-args.mjs task <スラッグ> <プロンプト>',
 	'',
 	'出力の JSON をそのまま create_session に渡す。',
@@ -29,18 +27,7 @@ const issue = (rest, tail) => {
 	return {
 		title: `issue #${number}`,
 		branch: `claude/issue-${number}-${tail}`,
-		body: `assign スキルに従って #${number} を進める。`,
-	}
-}
-
-const review = (rest) => {
-	const [number, ...extra] = rest
-	if (!/^[1-9][0-9]*$/.test(number ?? '') || extra.length > 0) {
-		return { error: ['review に渡すのは PR の番号1つだけ。'] }
-	}
-	return {
-		title: `Review PR #${number}`,
-		body: `review スキルの「見届けを頼まれたとき」に従って ${SOURCE_URL}/pull/${number} を見る。`,
+		body: `#${number} に対応して PR を出す。`,
 	}
 }
 
@@ -62,7 +49,7 @@ const task = (rest, tail) => {
 	}
 }
 
-const builders = { issue, review, task }
+const builders = { issue, task }
 
 export const KINDS = Object.keys(builders)
 
@@ -74,7 +61,6 @@ export const args = (kind, rest, tail = suffix()) => {
 
 	const { title, branch, body } = built
 	return {
-		model: MODEL,
 		source_url: SOURCE_URL,
 		title,
 		prompt: [body, ...(branch ? [`作業ブランチは ${branch} にする。`] : []), ALONE].join('\n'),

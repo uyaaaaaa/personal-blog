@@ -2,10 +2,8 @@ name: Lint
 
 on:
     pull_request:
-        paths-ignore: ['content/**']
     push:
         branches: [main]
-        paths-ignore: ['content/**']
     workflow_dispatch:
 
 permissions:
@@ -20,9 +18,11 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7
-            - uses: actions/setup-node@v7
               with:
-                  node-version: 22
-                  cache: npm
-            - run: npm ci --ignore-scripts
-            - run: npm run lint:code
+                  fetch-depth: 0
+            - uses: ./.github/actions/changes
+              id: changes
+            - if: steps.changes.outputs.code != 'false'
+              uses: ./.github/actions/setup
+            - if: steps.changes.outputs.code != 'false'
+              run: npm run lint:code

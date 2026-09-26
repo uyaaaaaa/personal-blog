@@ -1,130 +1,67 @@
 <template>
-	<header class="global-header h-header-sm md:h-header">
+	<header
+		lang="en"
+		class="global-header h-header-sm md:h-header"
+	>
 		<div class="header-inner mx-auto max-w-container px-4">
 			<NuxtLink
 				to="/"
-				class="logo"
+				class="logo text-logo"
 				@click="closeMenu"
 			>
-				<svg
-					class="logo-mark h-6 w-6 md:h-logo-mark md:w-logo-mark"
-					viewBox="0 0 32 32"
-					aria-hidden="true"
-					focusable="false"
-				>
-					<rect
-						width="32"
-						height="32"
-						rx="7"
-						fill="#1A1A1A"
-					/>
-					<path
-						d="M8.5 10.5 v6.2 a4.6 4.6 0 0 0 9.2 0 v-6.2"
-						fill="none"
-						stroke="#FFFFFF"
-						stroke-width="3.2"
-						stroke-linecap="round"
-					/>
-					<path
-						d="M17.7 10.5 v11"
-						fill="none"
-						stroke="#FFFFFF"
-						stroke-width="3.2"
-						stroke-linecap="round"
-					/>
-					<line
-						x1="26"
-						y1="9.5"
-						x2="22.4"
-						y2="22.5"
-						stroke="#8B5CF6"
-						stroke-width="3"
-						stroke-linecap="round"
-					/>
-				</svg>
+				<LogoMarkIcon />
 				<span>Tech Blog</span>
 			</NuxtLink>
 
-			<div class="mx-8 hidden max-w-search-trigger flex-1 md:flex">
+			<div
+				role="search"
+				class="mx-8 hidden max-w-search-trigger flex-1 md:block"
+			>
 				<button
 					ref="desktopSearchRef"
 					type="button"
-					class="group flex w-full items-center justify-between rounded-md border border-border bg-surface-subtle px-4 py-2 text-sub transition-colors hover:border-accent"
+					class="search-trigger flex w-full items-center gap-2 rounded-md border border-border-field bg-surface-subtle px-4 py-2 transition-color hover:border-accent"
 					aria-haspopup="dialog"
 					:aria-expanded="isSearchOpen"
 					@click="openSearch"
 				>
-					<span class="flex items-center gap-2">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="h-4 w-4 group-hover:text-accent"
-						>
-							<circle
-								cx="11"
-								cy="11"
-								r="8"
-							></circle>
-							<line
-								x1="21"
-								y1="21"
-								x2="16.65"
-								y2="16.65"
-							></line>
-						</svg>
-						<span class="text-sm">Search...</span>
-					</span>
+					<SearchIcon class="search-trigger-icon" />
+					<span class="search-trigger-label">Search...</span>
 					<span
-						class="rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-xs text-sub"
-						>⌘K</span
+						class="search-trigger-kbd rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-meta text-sub"
+						aria-hidden="true"
 					>
+						<span :class="{ invisible: !isCommandKey }">⌘K</span>
+						<span :class="{ invisible: isCommandKey }">Ctrl K</span>
+					</span>
 				</button>
 			</div>
 
 			<div class="flex items-stretch gap-1 self-stretch md:gap-5">
-				<button
-					ref="mobileSearchRef"
-					type="button"
-					class="flex h-8 w-8 items-center justify-center self-center rounded-md text-sub transition-colors hover:text-accent md:hidden"
-					aria-label="Search"
-					aria-haspopup="dialog"
-					:aria-expanded="isSearchOpen"
-					@click="openSearch"
+				<div
+					role="search"
+					class="self-center md:hidden"
 				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="20"
-						height="20"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						aria-hidden="true"
+					<button
+						ref="mobileSearchRef"
+						type="button"
+						class="flex h-8 w-8 items-center justify-center rounded-md text-sub transition-color hover:text-accent"
+						aria-label="Search"
+						aria-haspopup="dialog"
+						:aria-expanded="isSearchOpen"
+						@click="openSearch"
 					>
-						<circle
-							cx="11"
-							cy="11"
-							r="8"
-						></circle>
-						<line
-							x1="21"
-							y1="21"
-							x2="16.65"
-							y2="16.65"
-						></line>
-					</svg>
-				</button>
+						<SearchIcon size="large" />
+					</button>
+				</div>
 
 				<ThemeToggle class="self-center" />
+				<NuxtLink
+					to="/profile"
+					class="profile-link hidden items-center font-mono text-ui font-medium text-main transition-color hover:text-accent md:flex"
+					prefetch-on="interaction"
+					>Profile</NuxtLink
+				>
 				<Navigation
 					:is-open="isMenuOpen"
 					:location="location"
@@ -137,16 +74,20 @@
 
 	<SearchDialog
 		:is-open="isSearchOpen"
+		:location="location"
 		@close="closeSearch"
 	/>
 </template>
 
 <script setup lang="ts">
+	import LogoMarkIcon from '~/components/layout/LogoMarkIcon.vue'
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
+	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
-	import { isSearchShortcut } from '~/utils/shortcut'
+	import { releaseBackdrop } from '~/composables/useBackdropInert'
+	import { isSearchShortcut, usesCommandKey } from '~/utils/shortcut'
 
 	const props = defineProps<{
 		location: string
@@ -154,10 +95,10 @@
 
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)
+	const isCommandKey = ref(true)
 	const desktopSearchRef = ref<HTMLElement | null>(null)
 	const mobileSearchRef = ref<HTMLElement | null>(null)
 
-	// 戻し先はデスクトップとSPで別のボタンになるので、押されたものを覚える
 	let searchOpener: HTMLElement | null = null
 
 	const toggleMenu = () => {
@@ -166,11 +107,16 @@
 
 	const closeMenu = () => {
 		isMenuOpen.value = false
+		releaseBackdrop()
 	}
+
+	const isShown = (element: HTMLElement | null) => (element?.getClientRects().length ?? 0) > 0
+
+	const visibleTrigger = () =>
+		[desktopSearchRef.value, mobileSearchRef.value].find(isShown) ?? null
 
 	const openSearchFrom = (opener: HTMLElement | null) => {
 		searchOpener = opener
-		// Safari と Firefox は click で button にフォーカスを移さないので、開く前に寄せる
 		focusByGesture(opener)
 		isSearchOpen.value = true
 	}
@@ -180,39 +126,39 @@
 	}
 
 	const closeSearch = () => {
+		if (!isSearchOpen.value) return
+
 		isSearchOpen.value = false
-		focusByGesture(searchOpener)
+		releaseBackdrop()
+		focusByGesture(isShown(searchOpener) ? searchOpener : visibleTrigger())
 		searchOpener = null
 	}
 
-	// 隠れている側に戻すと、閉じた後のフォーカスが見えない要素に乗る
-	const visibleSearchButton = () =>
-		[desktopSearchRef.value, mobileSearchRef.value].find(
-			(button) => button && button.getClientRects().length > 0,
-		) ?? null
-
 	const onSearchShortcut = (event: KeyboardEvent) => {
 		if (!isSearchShortcut(event)) return
-		// 変換中の Ctrl+K は mac の IME がカタカナ変換に使う。横取りしない
 		if (event.isComposing) return
 
 		event.preventDefault()
-		// 開き直すと入力済みが消えるので、開いている間はブラウザの検索を止めるだけ
-		if (isSearchOpen.value) return
 
-		// ドロワーは検索より下の層に残り、開いたままだと戻し先のボタンを覆う
+		if (isSearchOpen.value) {
+			closeSearch()
+			return
+		}
+
 		closeMenu()
-		openSearchFrom(visibleSearchButton())
+		openSearchFrom(visibleTrigger())
 	}
 
-	onMounted(() => window.addEventListener('keydown', onSearchShortcut))
+	onMounted(() => {
+		isCommandKey.value = usesCommandKey(navigator.platform)
+		window.addEventListener('keydown', onSearchShortcut)
+	})
 	onBeforeUnmount(() => window.removeEventListener('keydown', onSearchShortcut))
 
-	watch([isMenuOpen, isSearchOpen], ([menuOpen, searchOpen]) => {
-		document.body.style.overflow = menuOpen || searchOpen ? 'hidden' : ''
+	watch([isMenuOpen, isSearchOpen], (open) => {
+		document.body.classList.toggle('scroll-locked', open.some(Boolean))
 	})
 
-	// リンクを踏まない移動（ブラウザバック）でも、被せたものは残さない
 	watch(
 		() => props.location,
 		() => {
@@ -221,6 +167,18 @@
 		},
 	)
 </script>
+
+<style>
+	body.scroll-locked {
+		overflow: hidden;
+	}
+</style>
+
+<style scoped>
+	.profile-link.router-link-active {
+		color: var(--color-accent);
+	}
+</style>
 
 <style scoped>
 	.global-header {
@@ -247,13 +205,29 @@
 		align-items: center;
 		gap: 0.5rem;
 		font-weight: 700;
-		font-size: 1.125rem;
 		font-family: var(--font-mono);
 		letter-spacing: -0.025em;
 	}
 
-	.logo-mark {
+	.search-trigger-icon {
 		flex: none;
-		display: block;
+		color: var(--color-sub);
+	}
+
+	.search-trigger-label {
+		flex: 1;
+		min-width: 0;
+		text-align: left;
+		font-size: 0.875rem;
+		color: var(--color-sub);
+	}
+
+	.search-trigger-kbd {
+		flex: none;
+		display: grid;
+	}
+
+	.search-trigger-kbd > * {
+		grid-area: 1 / 1;
 	}
 </style>

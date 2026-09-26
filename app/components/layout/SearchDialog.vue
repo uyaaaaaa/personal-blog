@@ -1,91 +1,87 @@
 <template>
 	<div
 		ref="lockRef"
-		class="search-overlay"
+		class="search-overlay md:px-4 md:pb-4 md:pt-16"
 		:class="{ 'is-open': isOpen }"
 		@pointerdown="onOverlayPointerDown"
 		@click="onOverlayClick"
 	>
 		<div
 			ref="trapRef"
-			class="search-dialog rounded-card border border-border bg-surface shadow-lg"
+			class="search-dialog h-full bg-surface md:h-auto md:max-w-search-open md:rounded-card md:border md:border-border md:shadow-lg"
 			role="dialog"
+			aria-modal="true"
 			aria-label="Search articles"
+			lang="en"
 		>
-			<div class="search-field">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					class="search-field-icon"
-					aria-hidden="true"
-				>
-					<circle
-						cx="11"
-						cy="11"
-						r="8"
-					/>
-					<line
-						x1="21"
-						y1="21"
-						x2="16.65"
-						y2="16.65"
-					/>
-				</svg>
-				<!-- WebKit は type="search" にクリアボタンを足す。クラスを付けられない擬似要素なので、type では出させず、役割は role、仮想キーボードの検索キーは enterkeyhint で補う -->
+			<div
+				role="search"
+				class="search-field"
+			>
+				<SearchIcon class="search-field-icon" />
 				<input
 					ref="inputRef"
 					v-model="query"
 					type="text"
-					role="searchbox"
+					lang="ja"
+					role="combobox"
 					enterkeyhint="search"
 					class="search-input"
 					placeholder="Search articles by title or tag"
 					aria-label="Search articles by title or tag"
+					aria-autocomplete="list"
+					:aria-expanded="results.length > 0"
+					:aria-controls="results.length > 0 ? LIST_ID : undefined"
+					:aria-activedescendant="
+						results.length > 0 ? `${LIST_ID}-${activeIndex}` : undefined
+					"
 					autocomplete="off"
-					@keydown="onInputKeydown"
+					@keydown="onFieldKeydown"
 					@compositionstart="startComposition"
 					@compositionend="endComposition"
 				/>
+				<button
+					v-if="query !== ''"
+					type="button"
+					class="search-clear"
+					aria-label="Clear search"
+					@mousedown.prevent
+					@click="clearTyped"
+				>
+					<CloseIcon size="small" />
+				</button>
+				<button
+					type="button"
+					class="search-cancel -my-3 flex-none py-3 text-ui text-accent md:hidden"
+					@click="emit('close')"
+				>
+					Cancel
+				</button>
 			</div>
+
+			<p
+				class="sr-only"
+				role="status"
+			>
+				{{ statusMessage }}
+			</p>
 
 			<p
 				v-if="results.length === 0"
 				class="search-note"
-				role="status"
+				aria-hidden="true"
 			>
 				{{ emptyMessage }}
 			</p>
-			<ul
+			<SearchResults
 				v-else
-				ref="resultsRef"
-				class="search-results"
-			>
-				<li
-					v-for="(article, index) in results"
-					:key="article.path"
-				>
-					<NuxtLink
-						:to="article.path"
-						class="search-result border-l-2 border-l-transparent"
-						:class="{ 'is-active md:border-l-accent': index === activeIndex }"
-						prefetch-on="interaction"
-						@click="emit('close')"
-						@pointermove="activeIndex = index"
-					>
-						<span class="search-result-title">{{ article.title }}</span>
-						<time
-							class="search-result-date"
-							:datetime="article.date"
-							>{{ formatDate(article.date) }}</time
-						>
-					</NuxtLink>
-				</li>
-			</ul>
+				:id="LIST_ID"
+				:results="results"
+				:active-index="activeIndex"
+				@select="selectResult"
+				@close="emit('close')"
+				@activate="activeIndex = $event"
+			/>
 
 			<p
 				v-if="results.length > 0"
@@ -98,16 +94,22 @@
 </template>
 
 <script setup lang="ts">
+	import SearchResults from '~/components/layout/SearchResults.vue'
+	import CloseIcon from '~/components/ui/CloseIcon.vue'
+	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
-	import { useFocusTrap } from '~/composables/useFocusTrap'
-	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
+	import { useBackToClose } from '~/composables/useBackToClose'
+	import { useBackdropInert } from '~/composables/useBackdropInert'
 	import { usePublishedArticles } from '~/composables/usePublishedArticles'
-	import { formatDate } from '~/utils/date'
-	import { searchArticles } from '~/utils/search'
-	import { deltaToReveal } from '~/utils/scroll'
+	import { useSearchKeys } from '~/composables/useSearchKeys'
+	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
+	import { resultCountMessage, searchArticles } from '~/utils/search'
+
+	const LIST_ID = 'search-dialog-results'
 
 	const props = defineProps<{
 		isOpen: boolean
+		location: string
 	}>()
 
 	const emit = defineEmits<{
@@ -118,16 +120,10 @@
 
 	const query = ref('')
 	const activeIndex = ref(0)
-	const inputRef = ref<HTMLInputElement | null>(null)
-	const resultsRef = ref<HTMLElement | null>(null)
 
 	const results = computed(() => searchArticles(articles.value, query.value))
-
-	const emptyMessage = computed(() =>
-		query.value.trim() === ''
-			? 'Type to search articles by title or tag.'
-			: 'No articles found.',
-	)
+	const activeArticle = computed(() => results.value[activeIndex.value])
+	const countMessage = computed(() => resultCountMessage(results.value.length))
 
 	const moveActive = (delta: number) => {
 		const count = results.value.length
@@ -136,47 +132,11 @@
 		activeIndex.value = (activeIndex.value + delta + count) % count
 	}
 
-	const openActive = () => {
-		const article = results.value[activeIndex.value]
-		if (!article) return
-
-		emit('close')
-		navigateTo(article.path)
-	}
-
 	watch(query, () => {
 		activeIndex.value = 0
-		if (resultsRef.value) resultsRef.value.scrollTop = 0
 	})
 
-	watch(activeIndex, async () => {
-		await nextTick()
-
-		const container = resultsRef.value
-		const active = container?.querySelector<HTMLElement>('.is-active')
-		if (!container || !active) return
-
-		container.scrollTop += deltaToReveal(
-			container.getBoundingClientRect(),
-			active.getBoundingClientRect(),
-		)
-	})
-
-	// 押した位置が外側のときだけ閉じる。入力欄からドラッグして外で離すと click は
-	// オーバーレイに来るため、click だけで判定すると選択のたびに閉じてしまう
-	let pressedOnOverlay = false
-
-	const onOverlayPointerDown = (event: PointerEvent) => {
-		pressedOnOverlay = event.target === event.currentTarget
-	}
-
-	const onOverlayClick = () => {
-		if (pressedOnOverlay) emit('close')
-	}
-
-	// 変換中のキーは IME のもの。横取りすると変換の確定も取り消しも奪う。
-	// Safari は compositionend を keydown より先に出すため確定と取り消しは
-	// isComposing が false で届き、変換の終わり際は自前で覚えておくしかない
+	// Safari は compositionend を keydown より先に出すので、変換の終わり際は自前で覚える
 	let composing = false
 	let endFrame = 0
 
@@ -194,49 +154,111 @@
 
 	const isComposingKey = (event: KeyboardEvent) => event.isComposing || composing
 
-	// Tailwind の md。ヘッダーが検索の入口を PC 用と SP 用に出し分けるのと同じ幅で、
-	// テンプレートが選択中の縦線とキーの案内を出すのもここから。ずれると見えない選択に
-	// キーが効き、効かないキーを名乗る
-	const KEYBOARD_SELECT_QUERY = '(min-width: 768px)'
-
-	const canSelectByKey = () => window.matchMedia(KEYBOARD_SELECT_QUERY).matches
-
-	const onInputKeydown = (event: KeyboardEvent) => {
-		if (isComposingKey(event)) return
-		if (!canSelectByKey()) return
-
-		if (event.key === 'ArrowDown') {
-			event.preventDefault()
-			moveActive(1)
-		} else if (event.key === 'ArrowUp') {
-			event.preventDefault()
-			moveActive(-1)
-		} else if (event.key === 'Enter') {
-			event.preventDefault()
-			openActive()
-		}
+	const clear = () => {
+		composing = false
+		query.value = ''
 	}
 
-	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), (event) => {
-		if (!isComposingKey(event)) emit('close')
-	})
+	const inputRef = ref<HTMLInputElement | null>(null)
+
+	const clearTyped = () => {
+		clear()
+		focusByGesture(inputRef.value)
+	}
+
+	const isTyped = computed(() => query.value.trim() !== '')
+
+	const emptyMessage = computed(() =>
+		isTyped.value ? countMessage.value : 'Type to search articles by title or tag.',
+	)
+	const statusMessage = computed(() => (isTyped.value ? countMessage.value : ''))
+
+	let pressedOnOverlay = false
+
+	const onOverlayPointerDown = (event: PointerEvent) => {
+		pressedOnOverlay = event.target === event.currentTarget
+	}
+
+	const onOverlayClick = () => {
+		if (pressedOnOverlay) emit('close')
+	}
+
+	const { leave } = useBackToClose(toRef(props, 'isOpen'), () => emit('close'))
+
+	const selectResult = (path: string) => {
+		leave(path, props.location)
+		emit('close')
+	}
+
+	const { onKeydown: onInputKeydown, trapRef } = useSearchKeys(
+		{ activeArticle, moveActive, isComposingKey },
+		{
+			canSelect: () => results.value.length > 0,
+			isTrapped: toRef(props, 'isOpen'),
+			close: () => emit('close'),
+			select: selectResult,
+		},
+	)
+
+	// ソフトキーボードの Enter はハードウェアのものと区別できる値を持たない。出ている間は表示領域だけが縮む
+	const SOFT_KEYBOARD_MIN_HEIGHT = 120
+
+	const visibleViewport = () => {
+		const viewport = window.visualViewport
+		if (!viewport) return undefined
+
+		return { width: viewport.width * viewport.scale, height: viewport.height * viewport.scale }
+	}
+
+	// レイアウトの高さごと縮めるブラウザもある
+	let opened: ReturnType<typeof visibleViewport>
+
+	const rememberViewportBeforeKeyboard = () => {
+		opened = visibleViewport()
+	}
+
+	const isTouchPrimary = () => window.matchMedia('(pointer: coarse)').matches
+
+	const isSoftKeyboardShown = () => {
+		const now = visibleViewport()
+		if (!now) return false
+
+		const openedHeight = isTouchPrimary() && opened?.width === now.width ? opened.height : 0
+		const fullHeight = Math.max(window.innerHeight, openedHeight)
+
+		return fullHeight - now.height >= SOFT_KEYBOARD_MIN_HEIGHT
+	}
+
+	const isSearchKeyOfSoftKeyboard = (event: KeyboardEvent) =>
+		event.key === 'Enter' && !isComposingKey(event) && isSoftKeyboardShown()
+
+	const onFieldKeydown = (event: KeyboardEvent) => {
+		if (isSearchKeyOfSoftKeyboard(event)) {
+			event.preventDefault()
+			inputRef.value?.blur()
+			return
+		}
+
+		return onInputKeydown(event)
+	}
 
 	const { lockRef } = useTouchScrollLock()
 
-	// 閉じるアニメーションの間も結果を出したままにするため、消すのは開くとき。
-	// フォーカスは押したときと同じ tick で寄せる。フレームを待つと、多くのモバイル
-	// ブラウザが仮想キーボードを自動表示する判定から外れる（表示の確定は CSS 側が持つ）
+	useBackdropInert(toRef(props, 'isOpen'), trapRef)
+
 	watch(
 		() => props.isOpen,
 		(isOpen) => {
 			if (!isOpen) return
 
-			composing = false
-			query.value = ''
-			focusByGesture(inputRef.value)
+			clear()
+			rememberViewportBeforeKeyboard()
+			focusByGesture(inputRef.value, { asPointer: true })
 		},
 		{ flush: 'post' },
 	)
+
+	/* eslint-disable style/no-outline-removal -- 目印は枠のアクセント線が持つ。開き方によらず出る */
 </script>
 
 <style scoped>
@@ -250,15 +272,13 @@
 		width: 100%;
 		height: 100vh;
 		height: 100dvh;
-		padding: 4rem 1rem 1rem;
 		background-color: var(--color-overlay);
 		z-index: 120;
 		opacity: 0;
 		visibility: hidden;
 		overflow: hidden;
 		overscroll-behavior: contain;
-		/* 閉じる側だけ遅らせる。開く側も遅らせると、算出値が hidden のままの
-		   1フレームが空き、そこに focus() を出しても黙って効かない */
+		/* 開く側も遅らせると visibility: hidden の1フレームが空き、そこで focus() が効かない */
 		transition:
 			opacity 0.2s ease-in-out,
 			visibility 0s linear 0.2s;
@@ -276,7 +296,6 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
-		max-width: 36rem;
 		max-height: 100%;
 		overflow: hidden;
 		transform: translateY(-4px);
@@ -292,17 +311,19 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.75rem 1rem;
-		border-bottom: 1px solid var(--color-border);
+		border-bottom: 1px solid var(--color-border-field);
 	}
 
 	.search-field:focus-within {
 		border-bottom-color: var(--color-accent);
 	}
 
+	.search-input:focus-visible {
+		outline: none;
+	}
+
 	.search-field-icon {
 		flex: none;
-		width: 1rem;
-		height: 1rem;
 		color: var(--color-sub);
 	}
 
@@ -316,6 +337,21 @@
 		color: var(--color-main);
 	}
 
+	.search-clear {
+		flex: none;
+		display: flex;
+		margin: -0.5rem;
+		padding: 0.5rem;
+		border: none;
+		background: none;
+		color: var(--color-sub);
+		cursor: pointer;
+	}
+
+	.search-clear:hover {
+		color: var(--color-accent);
+	}
+
 	.search-input::placeholder {
 		color: var(--color-sub);
 	}
@@ -327,42 +363,6 @@
 		color: var(--color-sub);
 	}
 
-	.search-results {
-		list-style: none;
-		min-height: 0;
-		margin: 0;
-		padding: 0.5rem;
-		overflow-y: auto;
-		overscroll-behavior: contain;
-	}
-
-	.search-result {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 1rem;
-		padding: 0.5rem 0.75rem;
-		/* 縦線は幅で出し分けるので border-left は Tailwind 側だけに置く。ここに書くと
-		   scoped の詳細度が md: のクラスに勝ち、色が黙って出なくなる */
-		border-radius: 0.375rem;
-		color: var(--color-main);
-		transition: background-color 0.15s;
-	}
-
-	.search-result:hover,
-	.search-result.is-active {
-		background-color: var(--color-surface-subtle);
-	}
-
-	.search-result-title {
-		flex: 1;
-		min-width: 0;
-		font-size: 0.875rem;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
 	/* 出し分けはTailwindの md: に統一しているため、displayはここで指定しない */
 	.search-keys {
 		flex: none;
@@ -372,13 +372,5 @@
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
 		color: var(--color-sub);
-	}
-
-	.search-result-date {
-		flex: none;
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		color: var(--color-sub);
-		font-variant-numeric: tabular-nums;
 	}
 </style>

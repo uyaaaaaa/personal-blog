@@ -26,3 +26,9 @@ logs
 .env
 .env.*
 !.env.example
+
+# plugin evals の実行結果
+plugin/evals/results
+
+# review エージェントが review-args に渡す下書き
+.review.json

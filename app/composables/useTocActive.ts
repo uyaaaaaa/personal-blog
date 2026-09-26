@@ -6,7 +6,10 @@ interface TocLink {
 	children?: TocLink[]
 }
 
-export const useTocActive = (links: Ref<TocLink[]>, offset: number, enabled: Ref<boolean>) => {
+// 着地はスクロール位置の丸めで scroll-padding-top を 1px 未満またぐ
+const SUBPIXEL_SLACK = 1
+
+export const useTocActive = (links: Ref<TocLink[]>, enabled: Ref<boolean>) => {
 	const activeId = ref('')
 
 	const ids = computed(() => {
@@ -20,11 +23,18 @@ export const useTocActive = (links: Ref<TocLink[]>, offset: number, enabled: Ref
 		return result
 	})
 
+	const landingOffset = () =>
+		(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0) +
+		SUBPIXEL_SLACK
+
 	const update = () => {
 		let current = ''
+		const offset = landingOffset()
+
 		for (const id of ids.value) {
 			const el = document.getElementById(id)
 			if (!el) continue
+
 			if (el.getBoundingClientRect().top <= offset) {
 				current = id
 			} else {

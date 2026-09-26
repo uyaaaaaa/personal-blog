@@ -2,20 +2,52 @@ import type { Config } from 'tailwindcss'
 import plugin from 'tailwindcss/plugin'
 import typography from '@tailwindcss/typography'
 import {
+	durations,
 	fontFamily,
+	fontSize,
+	motionProperties,
+	proseFontSize,
+	screens,
 	sizes,
 	toCssVariables,
 	toDarkCssVariables,
 	toTailwindColors,
 } from './theme/tokens'
+import { TOC_COLLAPSED_ATTRIBUTE } from './app/utils/tocCollapse'
 
 const baseStyles = plugin(({ addBase }) => {
 	addBase({
-		':root': toCssVariables(),
-		'.dark': toDarkCssVariables(),
-		// ダブルタップズームとタップ遅延を無効にする。ピンチズームは残る
+		':root': { ...toCssVariables(), colorScheme: 'light' },
+		'.dark': { ...toDarkCssVariables(), colorScheme: 'dark' },
 		body: { touchAction: 'manipulation' },
+		'@media (prefers-reduced-motion: reduce)': {
+			'*, *::before, *::after': {
+				transitionDuration: '0s !important',
+				transitionDelay: '0s !important',
+				animationDuration: '0s !important',
+				animationDelay: '0s !important',
+			},
+		},
 	})
+})
+
+const motion = plugin(({ addUtilities, theme }) => {
+	addUtilities(
+		Object.fromEntries(
+			Object.entries(motionProperties).map(([purpose, properties]) => [
+				`.transition-${purpose}`,
+				{
+					transitionProperty: properties.join(', '),
+					transitionTimingFunction: theme('transitionTimingFunction.DEFAULT'),
+					transitionDuration: durations[purpose as keyof typeof durations],
+				},
+			]),
+		),
+	)
+})
+
+const tocCollapsed = plugin(({ addVariant }) => {
+	addVariant('toc-collapsed', `html[${TOC_COLLAPSED_ATTRIBUTE}] &`)
 })
 
 export default <Config>{
@@ -27,16 +59,21 @@ export default <Config>{
 		'./app/app.vue',
 		'./app/error.vue',
 	],
-	// remark-gfmが脚注セクションの見出しに付ける。ソースに現れないためパージされる
 	safelist: ['sr-only'],
 	darkMode: 'class',
 	theme: {
+		colors: toTailwindColors(),
+		screens,
+		fontSize,
+		transitionProperty: {},
+		transitionDuration: {},
+		transitionDelay: {},
+		animation: {},
 		extend: {
-			colors: toTailwindColors(),
 			typography: {
 				DEFAULT: {
 					css: {
-						fontSize: '15.5px',
+						fontSize: `${proseFontSize.base}rem`,
 						lineHeight: '1.85',
 						h2: { fontSize: '1.44em', lineHeight: '1.4' },
 						h3: { fontSize: '1.2em' },
@@ -47,7 +84,7 @@ export default <Config>{
 							marginBottom: '1.5em',
 						},
 						code: {
-							fontSize: '13.5px',
+							fontSize: '0.875rem',
 							backgroundColor: 'var(--color-surface-subtle)',
 							border: '1px solid var(--color-border)',
 							color: 'inherit',
@@ -62,9 +99,9 @@ export default <Config>{
 				},
 				wide: {
 					css: {
-						fontSize: '17px',
+						fontSize: `${proseFontSize.wide}rem`,
 						lineHeight: '1.9',
-						code: { fontSize: '15px' },
+						code: { fontSize: '1rem' },
 					},
 				},
 			},
@@ -72,5 +109,5 @@ export default <Config>{
 			...sizes,
 		},
 	},
-	plugins: [typography, baseStyles],
+	plugins: [typography, baseStyles, motion, tocCollapsed],
 }
