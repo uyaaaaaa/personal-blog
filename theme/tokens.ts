@@ -108,7 +108,6 @@ export const proseFontSize = { base: 1, wide: 1.125 }
 const PROSE_CHARS = 40
 const COLUMN = `${PROSE_CHARS * proseFontSize.base}rem`
 const COLUMN_WIDE = `${PROSE_CHARS * proseFontSize.wide}rem`
-// 記事の本文と目次の間は lg:gap-14
 const TOC_GAP = 3.5
 const TOC_WIDTH = 14
 
@@ -153,6 +152,7 @@ export const sizes = {
 		'below-header-sm': HEADER_SM,
 		'below-header': HEADER,
 		'toc-top': TOC_TOP,
+		'toc-gap': `${TOC_GAP}rem`,
 		'menu-panel': '960px',
 	},
 }
