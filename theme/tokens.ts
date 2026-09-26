@@ -103,13 +103,22 @@ const TOC_TOP = '100px'
 // 吸着した帯（ヘッダー + 見出しの行）の下に残る高さ。畳んだ帯の下端は md で 103px
 const TOC_PANEL_TOP = '140px'
 
+// 本文の文字サイズ（rem）。和文は1字が1em なので、字数を掛ければ行長になる
+export const proseFontSize = { base: 1, wide: 1.125 }
+const PROSE_CHARS = 40
+const COLUMN = `${PROSE_CHARS * proseFontSize.base}rem`
+const COLUMN_WIDE = `${PROSE_CHARS * proseFontSize.wide}rem`
+// 記事の本文と目次の間は lg:gap-14
+const TOC_GAP = 3.5
+const TOC_WIDTH = 14
+
 export const sizes = {
 	borderRadius: {
 		kbd: '3px',
 		card: '10px',
 	},
 	gridTemplateColumns: {
-		article: 'minmax(0, 680px) 224px',
+		article: `minmax(0, ${COLUMN_WIDE}) ${TOC_WIDTH}rem`,
 		list: '2.25rem 1fr 6.875rem',
 		'list-sm': '1.875rem 1fr',
 		pickup: '6rem 1fr',
@@ -128,8 +137,9 @@ export const sizes = {
 	maxWidth: {
 		'search-trigger': '200px',
 		'search-open': '640px',
-		column: '680px',
-		article: '960px',
+		column: COLUMN,
+		'column-wide': COLUMN_WIDE,
+		article: `${PROSE_CHARS * proseFontSize.wide + TOC_GAP + TOC_WIDTH}rem`,
 		container: '1200px',
 	},
 	spacing: {
