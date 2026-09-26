@@ -216,6 +216,12 @@ describe('no-off-purpose-motion', () => {
 				},
 				{
 					filename: 'a.vue',
+					code: sfc(
+						'.a { animation-name: spin; animation-duration: 0.2s; animation-timing-function: var(--ease-change); }',
+					),
+				},
+				{
+					filename: 'a.vue',
 					code: sfc('.a { @apply transition-color md:transition-move; }'),
 				},
 				{ filename: 'a.vue', code: sfc('.a { border-radius: 0.2s; }') },
@@ -298,8 +304,23 @@ describe('no-off-purpose-motion', () => {
 				// 書かない緩急は ease になる
 				{
 					filename: 'a.vue',
+					code: sfc('.a { animation: spin 0.2s; }'),
+					errors: [{ messageId: 'noEasing' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation-name: spin; animation-duration: 0.2s; }'),
+					errors: [{ messageId: 'noEasing' }],
+				},
+				{
+					filename: 'a.vue',
 					code: sfc('.a { transition-property: opacity; transition-duration: 0.2s; }'),
 					errors: [{ messageId: 'noEasing' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { --curve: ease-in; transition-timing-function: var(--curve); }'),
+					errors: [{ messageId: 'offTokenEasing' }],
 				},
 				// トークンの名前を上書きしても、名前の無い緩急になる
 				{

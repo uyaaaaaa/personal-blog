@@ -311,18 +311,27 @@ const TRANSITION_TARGET = /^transition(?:-property)?$/i
 // --ease-* はトークンの名前なので、上書きした値も緩急として見る
 const EASING_DECLARATION = /^(?:(?:transition|animation)(?:-timing-function)?|--ease-[\w-]*)$/i
 
+// 緩急を書かない transition / animation は ease になる
+const omitsEasing = (segment) =>
+	hasLength(segment) && !EASING_TOKEN.test(segment) && easingLiteralsIn(segment).length === 0
+
 // longhand で長さだけを書いた規則も、緩急は ease になる
 function longhandFindings(rule) {
 	const decls = rule.nodes.filter((node) => node.type === 'decl')
 	const last = (name) => decls.findLast((decl) => decl.prop.toLowerCase() === name)
-	const duration = last('transition-duration')
-	if (duration === undefined || !hasLength(duration.value) || last('transition-timing-function'))
-		return []
-	const targets = segmentsOf(last('transition-property')?.value ?? ALL).map((segment) =>
-		segment.trim().toLowerCase(),
-	)
-	if (targets.every((target) => DISCRETE.has(target))) return []
-	return [{ node: duration, messageId: 'noEasing', data: { property: targets.join(', ') } }]
+	return [
+		['transition', 'property'],
+		['animation', 'name'],
+	].flatMap(([kind, target]) => {
+		const duration = last(`${kind}-duration`)
+		if (duration === undefined || !hasLength(duration.value) || last(`${kind}-timing-function`))
+			return []
+		const targets = segmentsOf(last(`${kind}-${target}`)?.value ?? kind).map((segment) =>
+			segment.trim().toLowerCase(),
+		)
+		if (kind === 'transition' && targets.every((name) => DISCRETE.has(name))) return []
+		return [{ node: duration, messageId: 'noEasing', data: { property: targets.join(', ') } }]
+	})
 }
 
 // 宣言1つ分の指摘。置き場所は呼ぶ側が足す
@@ -331,6 +340,17 @@ function motionFindings(property, value) {
 	if (EASING_DECLARATION.test(property))
 		for (const literal of easingLiteralsIn(value))
 			found.push({ messageId: 'offTokenEasing', data: { literal } })
+	// longhand の緩急は、トークン以外の変数を通すと値が見えない
+	if (/^(?:transition|animation)-timing-function$/i.test(property))
+		for (const segment of segmentsOf(value)) {
+			const variable = segment.trim()
+			if (/^var\((?!\s*--ease-)/i.test(variable))
+				found.push({ messageId: 'offTokenEasing', data: { literal: variable } })
+		}
+	if (/^animation$/i.test(property))
+		for (const segment of segmentsOf(value))
+			if (omitsEasing(segment))
+				found.push({ messageId: 'noEasing', data: { property: 'animation' } })
 	if (TRANSITION_TARGET.test(property)) {
 		for (const segment of segmentsOf(value)) {
 			const target = propertyOf(segment)
@@ -345,13 +365,7 @@ function motionFindings(property, value) {
 				continue
 			}
 			// 書かない緩急は ease になり、トークンの外に出る
-			if (
-				/^transition$/i.test(property) &&
-				!DISCRETE.has(target) &&
-				hasLength(segment) &&
-				!EASING_TOKEN.test(segment) &&
-				easingLiteralsIn(segment).length === 0
-			)
+			if (/^transition$/i.test(property) && !DISCRETE.has(target) && omitsEasing(segment))
 				found.push({ messageId: 'noEasing', data: { property: target } })
 			for (const [literal, number, unit] of segment.matchAll(TIME)) {
 				// 0 は動かさない指定なので、どの用途でも通す
