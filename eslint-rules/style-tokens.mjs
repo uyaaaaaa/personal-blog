@@ -1,4 +1,5 @@
 import postcss from 'postcss'
+import typography from '@tailwindcss/typography'
 import resolveConfig from 'tailwindcss/resolveConfig.js'
 import {
 	durations,
@@ -35,6 +36,9 @@ export const COLOR_SCHEME_MESSAGE =
 export const THEME_CLASS_MESSAGE =
 	'dark: で色を分岐しない。テーマの差は theme/tokens.ts の darkColors が作る。dark: を書くのはテーマで DOM を出し分けるときだけ。'
 
+export const PROSE_COLOR_MESSAGE =
+	'記事本文の色を typography の色の修飾子（prose-slate・prose-invert 等）で差し替えない。本文の色は tailwind.config.ts が --tw-prose-* をトークンに結んで持ち、明暗はトークンが割り当て直す。'
+
 export const DISPLAY_NONE_MESSAGE =
 	'display: none を宣言に書かない。表示・非表示の切り替えは template のクラス（hidden / md:block）か v-show で行う。クラスを付けられない UA の擬似要素は、それを作らない要素に変えて出させない。'
 
@@ -58,8 +62,19 @@ const OUTLINE_RESET_VALUE = `(?<!${WORD_EDGE})(?:unset|initial)(?!${WORD_EDGE})(
 const COLOR_PREFIX =
 	'text|bg|border|divide|outline|ring|ring-offset|shadow|accent|caret|decoration|fill|stroke|placeholder|from|via|to'
 const COLOR_NAME = Object.keys(toTailwindColors()).join('|')
-// dark: の後ろにも variant が続く。辺を指す指定（border-t）は1文字。prose-invert は本文の色を丸ごと差し替える
-export const THEME_COLOR_CLASS = `(?:^|[\\s:])dark:(?:[a-z-]+:)*!?(?:(?:${COLOR_PREFIX})(?:-[a-z])?-(?:${COLOR_NAME})|prose-invert)(?![a-z-])`
+// dark: の後ろにも variant が続く。辺を指す指定（border-t）は1文字
+export const THEME_COLOR_CLASS = `(?:^|[\\s:])dark:(?:[a-z-]+:)*!?(?:${COLOR_PREFIX})(?:-[a-z])?-(?:${COLOR_NAME})(?![a-z-])`
+
+// typography の修飾子のうち --tw-prose-* を差し替えるもの（slate・invert 等）。段の名前（lg・wide）は含まない
+const PROSE_COLOR_NAME = Object.entries(
+	resolveConfig({ content: [], plugins: [typography] }).theme.typography,
+)
+	.filter(([, { css }]) =>
+		Object.keys([css].flat()[0] ?? {}).some((key) => key.startsWith('--tw-prose-')),
+	)
+	.map(([name]) => name)
+	.join('|')
+export const PROSE_COLOR_CLASS = `(?:^|[\\s:])(?:[a-z-]+:)*!?prose-(?:${PROSE_COLOR_NAME})(?![\\w-])`
 
 // 長さの語彙を持つ theme のセクション。ここに無いもの（blur・boxShadow 等）は語彙に数えない
 const LENGTH_SECTIONS = [
