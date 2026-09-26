@@ -14,11 +14,7 @@
 							:datetime="page.date"
 							>{{ formatDate(page.date) }}</time
 						>
-						<span
-							v-if="categoryLabel"
-							class="text-accent"
-							>{{ categoryLabel }}</span
-						>
+						<span v-if="categoryLabel">{{ categoryLabel }}</span>
 						<NuxtLink
 							v-for="tag in page.tags"
 							:key="tag"
