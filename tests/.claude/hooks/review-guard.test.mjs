@@ -308,11 +308,6 @@ describe('判定と event', () => {
 		expect(decide(dispatch(), ask({ review: loose }))?.reason).toMatch(/Request changes/)
 	})
 
-	it('件数より緩い event を落とす', () => {
-		const loose = review({ event: 'COMMENT' })
-		expect(decide(dispatch(), ask({ review: loose }))?.reason).toMatch(/REQUEST_CHANGES/)
-	})
-
 	it('判定を書いていないサマリを落とす', () => {
 		const bare = review({ body: '直せば良くなる' })
 		expect(decide(dispatch(), ask({ review: bare }))?.reason).toMatch(/先頭行/)

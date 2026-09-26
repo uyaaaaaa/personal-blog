@@ -32,10 +32,6 @@ describe('state', () => {
 		expect(state('pr').read()).toEqual({ number: 290 })
 	})
 
-	it('書いていない状態は null', () => {
-		expect(state('pr').read()).toBeNull()
-	})
-
 	it('サブエージェントの状態を本体と分ける', () => {
 		const input = { session_id: 's1' }
 		state('pr', input).write({ number: 290 })

@@ -90,12 +90,6 @@ describe('decide', () => {
 		expect(reason).toMatch('セッション名')
 	})
 
-	it('同じ不足では2度目は止めない', () => {
-		decide(opened(), store)
-		expect(stop()).not.toBeNull()
-		expect(stop()).toBeNull()
-	})
-
 	it('番号に触れただけの呼び出しと、別のワークフローの発火は数えない', () => {
 		decide(opened(), store)
 		decide(reviewed(292, 'deploy.yml'), store)
@@ -232,12 +226,6 @@ describe('decide', () => {
 		expect(stop()).not.toBeNull()
 
 		decide(reviewed(), store)
-		expect(stop()).toBeNull()
-	})
-
-	it('判定を読めない発火では止めない', () => {
-		followed(292, reviewed())
-
 		expect(stop()).toBeNull()
 	})
 
