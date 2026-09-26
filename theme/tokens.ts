@@ -69,15 +69,15 @@ export const fontFamily = {
 
 // Tailwind の既定の xs / sm / base / xl と同じ値。既定を閉じるためだけに持つ
 export const fontSize = {
-	'2xs': '0.6875rem',
+	'2xs': '0.75rem',
 	meta: ['0.75rem', '1rem'],
-	code: ['0.8125rem', '1.7'],
+	code: ['0.875rem', '1.7'],
 	ui: ['0.875rem', '1.25rem'],
 	'list-title': ['1rem', '1.4'],
 	total: ['1rem', '1.5rem'],
 	logo: '1.125rem',
 	'notice-title': ['1.25rem', '1.75rem'],
-	'title-sm': ['1.4375rem', '1.35'],
+	'title-sm': ['1.5rem', '1.35'],
 	heading: ['1.5rem', '1.3'],
 	'hero-sm': ['1.625rem', '1.3'],
 	title: ['2rem', '1.35'],

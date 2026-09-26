@@ -11,17 +11,19 @@ const base = resolveConfig({ content: [], plugins: [typography] }).theme as unkn
 }
 
 describe('typography', () => {
-	it('本文の体裁が上書きする文字サイズを px で書かない', () => {
-		const px: string[] = []
+	it('本文の体裁が上書きする文字サイズを、倍率の em か 0.125rem 刻みの rem で書く', () => {
+		const onScale = (size: string) =>
+			size.endsWith('rem') ? Number.isInteger(parseFloat(size) * 8) : size.endsWith('em')
+		const offScale: string[] = []
 		const walk = (css: unknown) => {
 			for (const [key, value] of Object.entries(css as Record<string, unknown>)) {
 				if (typeof value === 'object' && value !== null) walk(value)
-				else if (key === 'fontSize' && String(value).endsWith('px')) px.push(String(value))
+				else if (key === 'fontSize' && !onScale(String(value))) offScale.push(String(value))
 			}
 		}
 		walk(config.theme?.extend?.typography)
 
-		expect(px).toEqual([])
+		expect(offScale).toEqual([])
 	})
 
 	it('プラグインが既定で持つ段の名前を上書きしない', () => {

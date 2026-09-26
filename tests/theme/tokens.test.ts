@@ -25,12 +25,14 @@ describe('sizes', () => {
 })
 
 describe('fontSize', () => {
-	it('利用者の文字サイズの設定に追従する単位で書く', () => {
-		const px = Object.entries(fontSize).filter(([, value]) =>
-			(Array.isArray(value) ? value[0] : value).endsWith('px'),
-		)
+	it('利用者の文字サイズの設定に追従する rem で、0.125rem 刻みに書く', () => {
+		const offScale = Object.entries(fontSize)
+			.map(([name, value]) => [name, Array.isArray(value) ? value[0] : value])
+			.filter(
+				([, size]) => !size!.endsWith('rem') || !Number.isInteger(parseFloat(size!) * 8),
+			)
 
-		expect(px).toEqual([])
+		expect(offScale).toEqual([])
 	})
 })
 
