@@ -329,6 +329,11 @@ describe('no-off-purpose-motion', () => {
 					code: sfc('.a { @apply transition-[color]; }'),
 					errors: [{ messageId: 'motionClass' }],
 				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply ease-[cubic-bezier(0,0,1,1)]; }'),
+					errors: [{ messageId: 'motionClass' }],
+				},
 			],
 		})
 	})

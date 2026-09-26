@@ -378,10 +378,10 @@ const IMPORTANT_APPLY = new RegExp(`(?:^|[\\s:])${MOTION_CLASS}[\\s\\S]*!importa
 
 const MOTION_PURPOSES = Object.keys(durations).join('|')
 const MOTION_CLASSES = Object.keys(durations).map((purpose) => `transition-${purpose}`)
-// 長さを別に書くクラスの接頭辞
-const LENGTH_CLASSES = ['duration', 'delay', 'animate']
+// 長さと緩急を別に書くクラスの接頭辞
+const LENGTH_CLASSES = ['duration', 'delay', 'animate', 'ease']
 
-const MOTION_CLASS_MESSAGE = `モーションのクラスは用途の名前で書く（${MOTION_CLASSES.join(' / ')}）。長さは用途のクラスが持つので、長さを別に書くクラス（${LENGTH_CLASSES.map((name) => `${name}-`).join(' / ')}）は無い。`
+const MOTION_CLASS_MESSAGE = `モーションのクラスは用途の名前で書く（${MOTION_CLASSES.join(' / ')}）。長さと緩急は用途のクラスが持つので、別に書くクラス（${LENGTH_CLASSES.map((name) => `${name}-`).join(' / ')}）は無い。`
 
 const OFF_PURPOSE_MOTION = new RegExp(
 	`(?:^|[\\s:])(?:[a-z-]+:)*!?(?:transition(?!-(?:${MOTION_PURPOSES})(?![\\w-]))|(?:${LENGTH_CLASSES.join('|')})-)`,
