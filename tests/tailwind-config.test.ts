@@ -4,7 +4,7 @@ import tailwind from 'tailwindcss'
 import resolveConfig from 'tailwindcss/resolveConfig'
 import { describe, expect, it } from 'vitest'
 import config from '~~/tailwind.config'
-import { durations, sizes } from '~~/theme/tokens'
+import { durations, easings, sizes } from '~~/theme/tokens'
 
 const base = resolveConfig({ content: [], plugins: [typography] }).theme as unknown as {
 	typography: Record<string, unknown>
@@ -81,10 +81,10 @@ const baseStyles = async (raw = '') => {
 	return css
 }
 
-const durationOf = (css: string, selector: string) => {
+const declarationOf = (css: string, selector: string, property: string) => {
 	let found: string | undefined
 	postcss.parse(css).walkRules(selector, (rule) =>
-		rule.walkDecls('transition-duration', (decl) => {
+		rule.walkDecls(property, (decl) => {
 			found = decl.value
 		}),
 	)
@@ -95,8 +95,26 @@ describe('モーションのクラス', () => {
 	it('用途のクラスがその用途の長さを持つ', async () => {
 		const css = await utilities('<p class="transition-color md:transition-move"></p>')
 
-		expect(durationOf(css, '.transition-color')).toBe(durations.color)
-		expect(durationOf(css, '.md\\:transition-move')).toBe(durations.move)
+		expect(declarationOf(css, '.transition-color', 'transition-duration')).toBe(durations.color)
+		expect(declarationOf(css, '.md\\:transition-move', 'transition-duration')).toBe(
+			durations.move,
+		)
+	})
+
+	it('用途のクラスがその場で変わるものの緩急を持つ', async () => {
+		const css = await utilities('<p class="transition-color md:transition-move"></p>')
+		const root = await baseStyles()
+
+		expect(declarationOf(css, '.transition-color', 'transition-timing-function')).toBe(
+			'var(--ease-change)',
+		)
+		expect(declarationOf(root, ':root', '--ease-change')).toBe(easings.change)
+	})
+
+	it('緩急を別に書くクラスを出さない', async () => {
+		const css = await utilities('<p class="ease-in ease-out ease-in-out ease-linear"></p>')
+
+		expect(css).not.toMatch(/ease-(in|out|linear)/)
 	})
 
 	it('長さを別に書くクラスを出さない', async () => {

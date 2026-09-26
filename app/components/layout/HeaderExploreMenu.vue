@@ -148,7 +148,7 @@
 		font-weight: 500;
 		color: var(--color-main);
 		cursor: pointer;
-		transition: color 0.15s;
+		transition: color 0.15s var(--ease-change);
 	}
 
 	.explore-trigger:hover,
@@ -165,7 +165,7 @@
 		height: 2px;
 		background-color: var(--color-accent);
 		opacity: 0;
-		transition: opacity 0.2s;
+		transition: opacity 0.2s var(--ease-change);
 	}
 
 	.explore-trigger[aria-expanded='true']::after {
@@ -187,7 +187,7 @@
 		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--color-accent);
-		transition: background-color 0.15s;
+		transition: background-color 0.15s var(--ease-change);
 	}
 
 	.menu-all:hover {
@@ -211,7 +211,7 @@
 		padding: 0.375rem 0.5rem;
 		border-radius: 0.375rem;
 		color: var(--color-main);
-		transition: background-color 0.15s;
+		transition: background-color 0.15s var(--ease-change);
 	}
 
 	.menu-article:hover,

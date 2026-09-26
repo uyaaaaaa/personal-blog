@@ -274,7 +274,7 @@
 		color: var(--color-sub);
 		cursor: pointer;
 		padding: 0;
-		transition: color 0.15s;
+		transition: color 0.15s var(--ease-change);
 	}
 
 	.mobile-menu-btn:hover {
@@ -294,13 +294,16 @@
 		visibility: hidden;
 		overflow: hidden;
 		transition:
-			opacity 0.2s ease-in-out,
-			visibility 0.2s ease-in-out;
+			opacity 0.2s var(--ease-exit),
+			visibility 0.2s;
 	}
 
 	.mobile-menu-overlay.is-open {
 		opacity: 1;
 		visibility: visible;
+		transition:
+			opacity 0.2s var(--ease-enter),
+			visibility 0.2s;
 	}
 
 	.mobile-drawer {
@@ -316,11 +319,12 @@
 		overflow-y: auto;
 		overscroll-behavior: contain;
 		transform: translateX(100%);
-		transition: transform 0.2s ease-in-out;
+		transition: transform 0.2s var(--ease-exit);
 	}
 
 	.mobile-menu-overlay.is-open .mobile-drawer {
 		transform: translateX(0);
+		transition: transform 0.2s var(--ease-enter);
 	}
 
 	.drawer-header {
@@ -376,8 +380,8 @@
 		text-decoration: none;
 		cursor: pointer;
 		transition:
-			background-color 0.15s,
-			color 0.15s;
+			background-color 0.15s var(--ease-change),
+			color 0.15s var(--ease-change);
 	}
 
 	.drawer-row:hover {
@@ -403,7 +407,7 @@
 		flex: none;
 		color: var(--color-sub);
 		transform: rotate(-90deg);
-		transition: transform 0.2s ease-in-out;
+		transition: transform 0.2s var(--ease-change);
 	}
 
 	.drawer-chevron.is-open {
@@ -421,11 +425,12 @@
 	.drawer-collapse {
 		display: grid;
 		grid-template-rows: 0fr;
-		transition: grid-template-rows 0.2s ease-in-out;
+		transition: grid-template-rows 0.2s var(--ease-exit);
 	}
 
 	.drawer-collapse.is-open {
 		grid-template-rows: 1fr;
+		transition: grid-template-rows 0.2s var(--ease-enter);
 	}
 
 	.drawer-sublist {
@@ -436,7 +441,7 @@
 		overflow: hidden;
 		border-left: 1px solid var(--color-border);
 		visibility: hidden;
-		transition: visibility 0.2s ease-in-out;
+		transition: visibility 0.2s;
 	}
 
 	.drawer-collapse.is-open .drawer-sublist {
@@ -451,8 +456,8 @@
 		color: var(--color-main);
 		text-decoration: none;
 		transition:
-			background-color 0.15s,
-			color 0.15s;
+			background-color 0.15s var(--ease-change),
+			color 0.15s var(--ease-change);
 	}
 
 	.drawer-subrow:hover {

@@ -92,8 +92,15 @@ export const durations = {
 // color は Tailwind の transition-colors と同じ並び
 export const motionProperties: Record<keyof typeof durations, string[]> = {
 	color: ['color', 'background-color', 'border-color', 'text-decoration-color', 'fill', 'stroke'],
-	move: ['transform', 'opacity', 'visibility'],
+	move: ['transform', 'opacity', 'visibility', 'grid-template-rows'],
 }
+
+// 現れるものは減速し、消えるものは加速する。CSS は行き先の状態の transition を使うので、開いた側に enter、閉じた側に exit を書く
+export const easings = {
+	enter: 'cubic-bezier(0, 0, 0.2, 1)',
+	exit: 'cubic-bezier(0.4, 0, 1, 1)',
+	change: 'cubic-bezier(0.4, 0, 0.2, 1)',
+} as const
 
 const HEADER_SM = '52px'
 const HEADER = '60px'
@@ -177,6 +184,9 @@ export function toCssVariables(): Record<string, string> {
 		...toColorVariables(colors),
 		...Object.fromEntries(
 			Object.entries(fontFamily).map(([name, stack]) => [`--font-${name}`, stack.join(', ')]),
+		),
+		...Object.fromEntries(
+			Object.entries(easings).map(([name, value]) => [`--ease-${name}`, value]),
 		),
 	}
 }

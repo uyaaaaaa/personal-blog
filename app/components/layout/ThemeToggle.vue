@@ -124,7 +124,7 @@
 		background: none;
 		color: var(--color-sub);
 		cursor: pointer;
-		transition: color 0.15s;
+		transition: color 0.15s var(--ease-change);
 	}
 
 	.theme-trigger:hover,
@@ -145,12 +145,16 @@
 		visibility: hidden;
 		transform: translateY(-4px);
 		transition:
-			opacity 0.2s ease-out,
-			transform 0.2s ease-out,
+			opacity 0.2s var(--ease-exit),
+			transform 0.2s var(--ease-exit),
 			visibility 0.2s;
 	}
 
 	.theme-panel.is-open {
+		transition:
+			opacity 0.2s var(--ease-enter),
+			transform 0.2s var(--ease-enter),
+			visibility 0.2s;
 		opacity: 1;
 		visibility: visible;
 		transform: translateY(0);
@@ -170,7 +174,7 @@
 		text-align: left;
 		color: var(--color-main);
 		cursor: pointer;
-		transition: background-color 0.15s;
+		transition: background-color 0.15s var(--ease-change);
 	}
 
 	.theme-option:hover {

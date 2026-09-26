@@ -92,7 +92,7 @@
 		color: var(--color-main);
 		font-family: var(--font-mono);
 		font-size: 0.875rem;
-		transition: color 0.15s ease;
+		transition: color 0.15s var(--ease-change);
 	}
 
 	a.page-item:hover {
