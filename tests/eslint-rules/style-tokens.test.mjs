@@ -206,7 +206,13 @@ describe('no-off-purpose-motion', () => {
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition-property: opacity; transition-duration: 0.2s; }'),
+					code: sfc(
+						'.a { transition-property: opacity; transition-duration: 0.2s; transition-timing-function: var(--ease-enter); }',
+					),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition-property: visibility; transition-duration: 0.2s; }'),
 				},
 				{
 					filename: 'a.vue',
@@ -292,6 +298,17 @@ describe('no-off-purpose-motion', () => {
 				// 書かない緩急は ease になる
 				{
 					filename: 'a.vue',
+					code: sfc('.a { transition-property: opacity; transition-duration: 0.2s; }'),
+					errors: [{ messageId: 'noEasing' }],
+				},
+				// トークンの名前を上書きしても、名前の無い緩急になる
+				{
+					filename: 'a.vue',
+					code: sfc('.a { --ease-change: ease-in; }'),
+					errors: [{ messageId: 'offTokenEasing' }],
+				},
+				{
+					filename: 'a.vue',
 					code: sfc('.a { transition: color 0.15s; }'),
 					errors: [{ messageId: 'noEasing' }],
 				},
@@ -315,7 +332,9 @@ describe('no-off-purpose-motion', () => {
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition-duration: 0.42s; }'),
+					code: sfc(
+						'.a { transition-duration: 0.42s; transition-timing-function: var(--ease-change); }',
+					),
 					errors: [{ messageId: 'anyPurpose' }],
 				},
 				// 任意値は theme を通らずに出るので、@apply の綴りで見る

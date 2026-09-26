@@ -308,7 +308,22 @@ function segmentsOf(value) {
 // カスタムプロパティは var() で長さとして参照されるので、モーションの宣言と同じ判定で見る
 const MOTION_PROPERTY = /^(?:(?:transition|animation)(?:-[\w-]+)?|--[\w-]+)$/i
 const TRANSITION_TARGET = /^transition(?:-property)?$/i
-const EASING_DECLARATION = /^(?:transition|animation)(?:-timing-function)?$/i
+// --ease-* はトークンの名前なので、上書きした値も緩急として見る
+const EASING_DECLARATION = /^(?:(?:transition|animation)(?:-timing-function)?|--ease-[\w-]*)$/i
+
+// longhand で長さだけを書いた規則も、緩急は ease になる
+function longhandFindings(rule) {
+	const decls = rule.nodes.filter((node) => node.type === 'decl')
+	const last = (name) => decls.findLast((decl) => decl.prop.toLowerCase() === name)
+	const duration = last('transition-duration')
+	if (duration === undefined || !hasLength(duration.value) || last('transition-timing-function'))
+		return []
+	const targets = segmentsOf(last('transition-property')?.value ?? ALL).map((segment) =>
+		segment.trim().toLowerCase(),
+	)
+	if (targets.every((target) => DISCRETE.has(target))) return []
+	return [{ node: duration, messageId: 'noEasing', data: { property: targets.join(', ') } }]
+}
 
 // 宣言1つ分の指摘。置き場所は呼ぶ側が足す
 function motionFindings(property, value) {
@@ -613,6 +628,7 @@ const CHECKS = {
 				for (const one of motionFindings(decl.prop, decl.value))
 					found.push({ node: decl, ...one })
 			})
+			root.walkRules((rule) => found.push(...longhandFindings(rule)))
 			root.walkAtRules('apply', (rule) => {
 				if (OFF_PURPOSE_MOTION.test(rule.params))
 					found.push({ node: rule, messageId: 'motionClass' })
