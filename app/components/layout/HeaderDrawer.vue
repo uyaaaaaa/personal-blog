@@ -128,7 +128,11 @@
 									prefetch-on="interaction"
 									@click="closeDrawer"
 								>
-									<span class="drawer-subrow-title">{{ item.primary }}</span>
+									<span
+										lang="ja"
+										class="drawer-subrow-title"
+										>{{ item.primary }}</span
+									>
 									<time
 										class="drawer-subrow-meta"
 										:datetime="item.datetime"

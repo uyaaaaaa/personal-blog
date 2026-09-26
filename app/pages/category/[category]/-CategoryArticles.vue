@@ -1,6 +1,8 @@
 <template>
 	<ArticleIndex :list="list">
-		<template #heading>{{ label }}</template>
+		<template #heading>
+			<span lang="en">{{ label }}</span>
+		</template>
 		<template #filter>
 			<CategoryFilter :current="category" />
 		</template>

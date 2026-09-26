@@ -2,6 +2,7 @@
 	<div class="layout-container">
 		<a
 			href="#main-content"
+			lang="en"
 			class="skip-link"
 			>Skip to content</a
 		>

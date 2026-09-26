@@ -1,5 +1,8 @@
 <template>
-	<header class="global-header h-header-sm md:h-header">
+	<header
+		lang="en"
+		class="global-header h-header-sm md:h-header"
+	>
 		<div class="header-inner mx-auto max-w-container px-4">
 			<NuxtLink
 				to="/"

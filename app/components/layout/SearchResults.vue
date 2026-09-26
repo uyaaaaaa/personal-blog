@@ -30,7 +30,11 @@
 					@pointerenter="preloadRouteComponents(article.path)"
 					@pointermove="emit('activate', index)"
 				>
-					<span class="search-result-title">{{ article.title }}</span>
+					<span
+						lang="ja"
+						class="search-result-title"
+						>{{ article.title }}</span
+					>
 					<time
 						class="search-result-date"
 						:datetime="article.date"

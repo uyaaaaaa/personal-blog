@@ -3,6 +3,7 @@
 		v-if="opacity > 0"
 		type="button"
 		aria-label="Scroll to top"
+		lang="en"
 		:style="{ '--scroll-to-top-opacity': opacity }"
 		class="scroll-to-top group fixed bottom-6 right-6 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface/90 text-sub shadow-sm backdrop-blur transition-color hover:border-accent hover:text-accent lg:hidden"
 		@click="handleScrollToTop"
