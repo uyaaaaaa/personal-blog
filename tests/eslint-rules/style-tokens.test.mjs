@@ -585,6 +585,7 @@ describe('no-theme-branch', () => {
 				// DOM の出し分けは template 側と同じく通す
 				{ filename: 'a.vue', code: sfc('.a { @apply dark:hidden; }') },
 				{ filename: 'a.vue', code: sfc('.a { @apply dark:box-border; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply prose lg:prose-wide; }') },
 			],
 			invalid: [
 				{
@@ -596,6 +597,11 @@ describe('no-theme-branch', () => {
 					filename: 'a.vue',
 					code: sfc('.a { @apply md:dark:bg-surface-subtle; }'),
 					errors: [{ messageId: 'themeClass' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply prose-slate dark:prose-invert; }'),
+					errors: [{ messageId: 'proseColor' }],
 				},
 			],
 		})

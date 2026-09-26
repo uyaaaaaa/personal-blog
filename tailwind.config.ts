@@ -106,7 +106,6 @@ export default <Config>{
 						lineHeight: '1.85',
 						h2: { fontSize: '1.44em', lineHeight: '1.4' },
 						h3: { fontSize: '1.2em' },
-						// 常時の影を線に替える
 						kbd: {
 							boxShadow: 'none',
 							border: '1px solid var(--color-border)',

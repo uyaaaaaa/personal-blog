@@ -427,6 +427,7 @@ const WIDTH_FEATURE = /\bwidth\b/i
 const THEME_SELECTOR = /\.(?:dark|light)(?![\w-])/
 const COLOR_SCHEME = /prefers-color-scheme/i
 const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
+const PROSE_CLASS = new RegExp(PROSE_COLOR_CLASS)
 const SCROLL_BEHAVIOR = new RegExp(SCROLL_BEHAVIOR_CLASS)
 const DISPLAY_PROPERTY = /^display$/i
 // display が消すのは none のときだけ。flex と grid は並べ方で、出し分けではない
@@ -657,6 +658,7 @@ const CHECKS = {
 			themeBranch: THEME_BRANCH_MESSAGE,
 			colorScheme: COLOR_SCHEME_MESSAGE,
 			themeClass: THEME_CLASS_MESSAGE,
+			proseColor: PROSE_COLOR_MESSAGE,
 		},
 		find(root) {
 			const found = []
@@ -679,6 +681,8 @@ const CHECKS = {
 			root.walkAtRules('apply', (rule) => {
 				if (THEME_CLASS.test(rule.params))
 					found.push({ node: rule, messageId: 'themeClass' })
+				if (PROSE_CLASS.test(rule.params))
+					found.push({ node: rule, messageId: 'proseColor' })
 			})
 			return found
 		},
