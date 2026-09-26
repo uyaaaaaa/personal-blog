@@ -192,7 +192,7 @@
 		min-width: 0;
 	}
 
-	/* 強制カラーでは面が塗られないので、ホバーは下線、選択中はシステムの選択色で示す */
+	/* 強制カラーでは面が塗られない */
 	@media (forced-colors: active) {
 		.theme-option:hover {
 			text-decoration: underline;

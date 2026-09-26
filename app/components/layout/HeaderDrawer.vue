@@ -499,7 +499,7 @@
 		color: var(--color-accent);
 	}
 
-	/* 強制カラーでは面が塗られないので、ホバーは下線か内側の枠、今いるページはシステムの選択色で示す */
+	/* 強制カラーでは面が塗られない */
 	@media (forced-colors: active) {
 		.drawer-row:hover,
 		.drawer-subrow:hover {

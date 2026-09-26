@@ -159,7 +159,7 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	/* 強制カラーでは面が塗られず、透明な左線も見えうるので、ホバーは下線、選択中はシステムの選択色で示す */
+	/* 強制カラーでは面が塗られず、透明な左線も見えうる */
 	@media (forced-colors: active) {
 		.search-result:hover {
 			text-decoration: underline;
