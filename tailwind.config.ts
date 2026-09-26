@@ -16,13 +16,15 @@ import { TOC_COLLAPSED_ATTRIBUTE } from './app/utils/tocCollapse'
 
 const baseStyles = plugin(({ addBase }) => {
 	addBase({
-		':root': toCssVariables(),
-		'.dark': toDarkCssVariables(),
+		':root': { ...toCssVariables(), colorScheme: 'light' },
+		'.dark': { ...toDarkCssVariables(), colorScheme: 'dark' },
 		body: { touchAction: 'manipulation' },
 		'@media (prefers-reduced-motion: reduce)': {
 			'*, *::before, *::after': {
 				transitionDuration: '0s !important',
+				transitionDelay: '0s !important',
 				animationDuration: '0s !important',
+				animationDelay: '0s !important',
 			},
 		},
 	})

@@ -27,9 +27,9 @@ const utilities = async (raw: string) => {
 	return css
 }
 
-const baseStyles = async () => {
+const baseStyles = async (raw = '') => {
 	const { css } = await postcss([
-		tailwind({ ...config, content: [{ raw: '', extension: 'html' }] }),
+		tailwind({ ...config, content: [{ raw, extension: 'html' }] }),
 	]).process('@tailwind base', { from: undefined })
 	return css
 }
@@ -90,9 +90,31 @@ describe('動きを減らす設定', () => {
 				selector: '*, *::before, *::after',
 				declarations: [
 					'transition-duration: 0s !important',
+					'transition-delay: 0s !important',
 					'animation-duration: 0s !important',
+					'animation-delay: 0s !important',
 				],
 			},
 		])
+	})
+})
+
+const colorSchemeOf = (css: string, selector: string) => {
+	let found: string | undefined
+	postcss.parse(css).walkRules(selector, (rule) =>
+		rule.walkDecls('color-scheme', (decl) => {
+			found = decl.value
+		}),
+	)
+	return found
+}
+
+describe('明暗の宣言', () => {
+	it('フォーム部品とスクロールバーの配色が明暗の切り替えに付いてくる', async () => {
+		// .dark の規則は、その class が content に無いと Tailwind が出さない
+		const css = await baseStyles('<html class="dark"></html>')
+
+		expect(colorSchemeOf(css, ':root')).toBe('light')
+		expect(colorSchemeOf(css, '.dark')).toBe('dark')
 	})
 })
