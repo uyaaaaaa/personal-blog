@@ -499,7 +499,9 @@ const CHECKS = {
 			const found = []
 			root.walkDecls((decl) => {
 				if (!FONT_SIZE_PROPERTY.test(decl.prop)) return
-				for (const [literal, , , unit] of stripNonValues(decl.value).matchAll(LENGTH)) {
+				// 略記の / の後ろは行の高さ
+				const [size] = decl.value.split('/')
+				for (const [literal, , , unit] of stripNonValues(size).matchAll(LENGTH)) {
 					if (unit.toLowerCase() === 'px')
 						found.push({ node: decl, messageId: 'px', data: { literal } })
 				}
