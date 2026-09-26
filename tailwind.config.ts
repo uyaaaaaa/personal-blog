@@ -72,7 +72,7 @@ export default <Config>{
 			typography: {
 				DEFAULT: {
 					css: {
-						fontSize: '15.5px',
+						fontSize: '1rem',
 						lineHeight: '1.85',
 						h2: { fontSize: '1.44em', lineHeight: '1.4' },
 						h3: { fontSize: '1.2em' },
@@ -83,7 +83,7 @@ export default <Config>{
 							marginBottom: '1.5em',
 						},
 						code: {
-							fontSize: '13.5px',
+							fontSize: '0.875rem',
 							backgroundColor: 'var(--color-surface-subtle)',
 							border: '1px solid var(--color-border)',
 							color: 'inherit',
@@ -98,9 +98,9 @@ export default <Config>{
 				},
 				wide: {
 					css: {
-						fontSize: '17px',
+						fontSize: '1.125rem',
 						lineHeight: '1.9',
-						code: { fontSize: '15px' },
+						code: { fontSize: '1rem' },
 					},
 				},
 			},

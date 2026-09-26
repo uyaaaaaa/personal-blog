@@ -104,6 +104,8 @@ const FONT_KEYWORDS = new Set(
 )
 
 const FONT_PROPERTY = /^font(?:-family)?$/i
+const FONT_SIZE_PROPERTY = /^font(?:-size)?$/i
+const PX_TEXT_CLASS = /(?<![\w-])text-\[(?:length:)?-?\d*\.?\d+px\]/gi
 // 引用符で囲った名前と、区切りから始まる語。数に続く単位（1.5rem の rem）は語ではない
 const FONT_WORD = /'[^']*'|"[^"]*"|(?<![\w-])-?[a-zA-Z][\w-]*/g
 
@@ -484,6 +486,29 @@ const CHECKS = {
 			root.walkAtRules('apply', (rule) => {
 				if (OFF_TOKEN_FONT.test(rule.params))
 					found.push({ node: rule, messageId: 'fontClass' })
+			})
+			return found
+		},
+	},
+
+	'no-px-font-size': {
+		messages: {
+			px: `文字サイズ（{{literal}}）を px で書かない。利用者が変えた文字サイズに追従するよう rem か em で書く。 ${TOKEN_URL}`,
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				if (!FONT_SIZE_PROPERTY.test(decl.prop)) return
+				// 略記の / の後ろは行の高さ
+				const [size] = decl.value.split('/')
+				for (const [literal, , , unit] of stripNonValues(size).matchAll(LENGTH)) {
+					if (unit.toLowerCase() === 'px')
+						found.push({ node: decl, messageId: 'px', data: { literal } })
+				}
+			})
+			root.walkAtRules('apply', (rule) => {
+				for (const [literal] of rule.params.matchAll(PX_TEXT_CLASS))
+					found.push({ node: rule, messageId: 'px', data: { literal } })
 			})
 			return found
 		},

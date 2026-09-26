@@ -1,7 +1,7 @@
 import resolveConfig from 'tailwindcss/resolveConfig'
 import { describe, expect, it } from 'vitest'
 import { CALLOUT_COLORS, CALLOUT_SURFACE_ALPHA } from '~/utils/callout'
-import { colors, darkColors, sizes } from '~~/theme/tokens'
+import { colors, darkColors, fontSize, sizes } from '~~/theme/tokens'
 
 const base = resolveConfig({ content: [] }).theme as unknown as Record<
 	string,
@@ -21,6 +21,18 @@ describe('sizes', () => {
 
 	it('検索を開いたとき、候補を横に走査できる幅を持つ', () => {
 		expect(sizes.maxWidth['search-open']).toBe('640px')
+	})
+})
+
+describe('fontSize', () => {
+	it('利用者の文字サイズの設定に追従する rem で、0.125rem 刻みに書く', () => {
+		const offScale = Object.entries(fontSize)
+			.map(([name, value]) => [name, Array.isArray(value) ? value[0] : value])
+			.filter(
+				([, size]) => !size!.endsWith('rem') || !Number.isInteger(parseFloat(size!) * 8),
+			)
+
+		expect(offScale).toEqual([])
 	})
 })
 

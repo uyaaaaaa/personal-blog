@@ -11,6 +11,21 @@ const base = resolveConfig({ content: [], plugins: [typography] }).theme as unkn
 }
 
 describe('typography', () => {
+	it('本文の体裁が上書きする文字サイズを、倍率の em か 0.125rem 刻みの rem で書く', () => {
+		const onScale = (size: string) =>
+			size.endsWith('rem') ? Number.isInteger(parseFloat(size) * 8) : size.endsWith('em')
+		const offScale: string[] = []
+		const walk = (css: unknown) => {
+			for (const [key, value] of Object.entries(css as Record<string, unknown>)) {
+				if (typeof value === 'object' && value !== null) walk(value)
+				else if (key === 'fontSize' && !onScale(String(value))) offScale.push(String(value))
+			}
+		}
+		walk(config.theme?.extend?.typography)
+
+		expect(offScale).toEqual([])
+	})
+
 	it('プラグインが既定で持つ段の名前を上書きしない', () => {
 		const shadowed = Object.keys(config.theme?.extend?.typography ?? {}).filter(
 			(modifier) => modifier !== 'DEFAULT' && modifier in base.typography,
@@ -82,6 +97,19 @@ const reducedMotionRules = (css: string) => {
 	})
 	return found
 }
+
+describe('ルートの文字サイズ', () => {
+	it('利用者の既定の文字サイズを上書きしない', async () => {
+		const declared: string[] = []
+		postcss.parse(await baseStyles()).walkRules(/^(?::root|html)$/, (rule) =>
+			rule.walkDecls('font-size', (decl) => {
+				declared.push(decl.value)
+			}),
+		)
+
+		expect(declared).toEqual([])
+	})
+})
 
 describe('動きを減らす設定', () => {
 	it('どこが宣言したモーションも長さを失う', async () => {
