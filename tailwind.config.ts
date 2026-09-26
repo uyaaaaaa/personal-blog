@@ -7,6 +7,7 @@ import {
 	fontFamily,
 	fontSize,
 	motionProperties,
+	proseFontSize,
 	screens,
 	sizes,
 	toCssVariables,
@@ -101,7 +102,7 @@ export default <Config>{
 				DEFAULT: {
 					css: {
 						...proseColors,
-						fontSize: '1rem',
+						fontSize: `${proseFontSize.base}rem`,
 						lineHeight: '1.85',
 						h2: { fontSize: '1.44em', lineHeight: '1.4' },
 						h3: { fontSize: '1.2em' },
@@ -132,7 +133,7 @@ export default <Config>{
 				},
 				wide: {
 					css: {
-						fontSize: '1.125rem',
+						fontSize: `${proseFontSize.wide}rem`,
 						lineHeight: '1.9',
 						code: { fontSize: '1rem' },
 					},

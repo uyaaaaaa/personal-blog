@@ -33,9 +33,11 @@
 	const route = useRoute()
 	const router = useRouter()
 
-	const measure = computed(() =>
-		route.meta.sideColumn ? 'max-w-column lg:max-w-article' : 'max-w-column',
-	)
+	const measure = computed(() => {
+		if (route.meta.sideColumn) return 'max-w-column lg:max-w-article'
+		if (route.meta.prose) return 'max-w-column lg:max-w-column-wide'
+		return 'max-w-column'
+	})
 
 	// 戻る・進むはブラウザが位置を戻すので触らない
 	let traversedTo: string | undefined
