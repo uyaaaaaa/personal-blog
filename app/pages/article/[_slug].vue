@@ -1,7 +1,7 @@
 <template>
 	<div
 		v-if="page"
-		class="lg:relative lg:grid lg:grid-cols-article lg:gap-14 toc-collapsed:lg:grid-cols-1"
+		class="lg:relative lg:grid lg:grid-cols-article lg:gap-toc-gap toc-collapsed:lg:grid-cols-1"
 	>
 		<div class="min-w-0 space-y-12">
 			<article class="space-y-8">

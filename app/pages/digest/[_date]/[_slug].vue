@@ -26,6 +26,8 @@
 	import { formatDate } from '~/utils/date'
 	import { digests } from '~/utils/digestQuery'
 
+	definePageMeta({ prose: true })
+
 	const route = useRoute()
 
 	const path = computed(() => contentPath(route.path))

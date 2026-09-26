@@ -4,7 +4,7 @@ import tailwind from 'tailwindcss'
 import resolveConfig from 'tailwindcss/resolveConfig'
 import { describe, expect, it } from 'vitest'
 import config from '~~/tailwind.config'
-import { durations } from '~~/theme/tokens'
+import { durations, sizes } from '~~/theme/tokens'
 
 const base = resolveConfig({ content: [], plugins: [typography] }).theme as unknown as {
 	typography: Record<string, unknown>
@@ -24,6 +24,22 @@ describe('typography', () => {
 		walk(config.theme?.extend?.typography)
 
 		expect(offScale).toEqual([])
+	})
+
+	it('本文を収める列の幅が、その段の本文の文字サイズで和文 40 字になる', () => {
+		const prose = config.theme?.extend?.typography as Record<
+			string,
+			{ css: { fontSize: string } }
+		>
+		const chars = (width: string, modifier: string) =>
+			parseFloat(width) / parseFloat(prose[modifier]!.css.fontSize)
+		const bodyColumn = sizes.gridTemplateColumns.article.match(/minmax\(0, ([\d.]+rem)\)/)![1]!
+
+		expect([
+			chars(sizes.maxWidth.column, 'DEFAULT'),
+			chars(sizes.maxWidth['column-wide'], 'wide'),
+			chars(bodyColumn, 'wide'),
+		]).toEqual([40, 40, 40])
 	})
 
 	it('プラグインが既定で持つ段の名前を上書きしない', () => {
