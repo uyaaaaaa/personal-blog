@@ -22,8 +22,6 @@ export const STYLE_EXCEPTION =
 export const WEB_FONT_MESSAGE =
 	'Web フォントを読み込まない。表示速度が先。文字は theme/tokens.ts の fontFamily が並べるシステムフォントで組む。'
 
-// フォントの実体と、フォントを配る先。`font-mono` 等のクラス名と混ざらないよう、
-// 綴りの後ろが区切りか終端のものだけを見る（`typeface-roboto` があるので `-` はその2語だけ）
 const FONT_FILE = '\\.(?:woff2?|otf|ttf|eot)\\b'
 const FONT_HOST = '\\b(?:(?:fontsource|fonts?)(?:[./]|$)|(?:typeface|typekit)[./-])'
 export const WEB_FONT_RESOURCE = `(?:${FONT_FILE}|${FONT_HOST})`
@@ -53,11 +51,8 @@ export const OUTLINE_REMOVAL_CLASS =
 	'(?:^|[\\s:])(?:[a-z-]+:)*!?outline-(?:none|0|transparent)(?![\\w-])'
 // 値の語の区切り。`0.5rem` の 0 と `#0ff` の 0 は語の一部で、値ではない
 const WORD_EDGE = '[\\w.%#-]'
-// 輪郭が消える値。線を持たない語か透明な色が1つでも入る。
-// 関数の中（`rgb(0 0 0)`）は色の一部なので数えない
 const OUTLINE_REMOVAL_VALUE = `(?<!${WORD_EDGE})(?:none|0[a-z%]*|transparent)(?!${WORD_EDGE})(?![^()]*\\))`
-// 初期値に戻す語。初期値が none なのは outline-style なので、輪郭が消えるのは
-// 一括指定と outline-style と all のときだけ（outline-color は色、outline-width は medium に戻る）
+// 初期値が none なのは outline-style だけなので、消えるのは一括指定と outline-style と all
 const OUTLINE_RESET_VALUE = `(?<!${WORD_EDGE})(?:unset|initial)(?!${WORD_EDGE})(?![^()]*\\))`
 // 色を取る接頭辞。末尾の名前だけで見ると box-border や align-sub まで当たる
 const COLOR_PREFIX =
@@ -102,8 +97,6 @@ const NAMED_COLORS = new Set(
 	),
 )
 
-// 書体の名前でない語。font の一括指定が family の前に並べる語と、値を持たない CSS 全体のキーワード。
-// システムフォントの語（menu 等）は、トークンを通らない書体の指定なので入れない
 const FONT_KEYWORDS = new Set(
 	'inherit initial unset revert revert-layer var normal italic oblique small-caps bold bolder lighter ultra-condensed extra-condensed condensed semi-condensed semi-expanded expanded extra-expanded ultra-expanded xx-small x-small small medium large x-large xx-large xxx-large larger smaller'.split(
 		' ',
@@ -111,6 +104,8 @@ const FONT_KEYWORDS = new Set(
 )
 
 const FONT_PROPERTY = /^font(?:-family)?$/i
+const FONT_SIZE_PROPERTY = /^font(?:-size)?$/i
+const PX_TEXT_CLASS = /(?<![\w-])text-\[(?:length:)?-?\d*\.?\d+px\]/gi
 // 引用符で囲った名前と、区切りから始まる語。数に続く単位（1.5rem の rem）は語ではない
 const FONT_WORD = /'[^']*'|"[^"]*"|(?<![\w-])-?[a-zA-Z][\w-]*/g
 
@@ -219,8 +214,6 @@ const DURATION_LABEL = Object.entries(durations)
 	.map(([purpose, value]) => `${purpose} は ${value}`)
 	.join('、')
 
-// 用途は2つ。色だけが変わるものと、それ以外の動き。
-// 辺ごとの色（border-top-color）も色なので、綴りの末尾でも読む
 const COLOR_PROPERTY = new RegExp(`^(?:${motionProperties.color.join('|')})$|-color$`, 'i')
 
 const purposeOf = (property) => (COLOR_PROPERTY.test(property) ? 'color' : 'move')
@@ -298,6 +291,23 @@ function motionFindings(property, value) {
 	return found
 }
 
+const MOTION_DECLARATION = /^(?:transition|animation)(?:-[\w-]+)?$/i
+const MOTION_CLASS = '(?:transition|duration|delay|animate)(?![\\w])'
+const IMPORTANT_MOTION_CLASS = new RegExp(`(?:^|[\\s:])(?:[a-z-]+:)*!${MOTION_CLASS}`)
+const IMPORTANT_MOTION_TEXT = /(?:transition|animation)[\w-]*\s*:([^;]*)!\s*important/gi
+
+const MOTION_KEY = /^(?:transition|animation)(?:-?[\w-]+)?$/i
+
+const keepsMotion = (value) =>
+	/var\(/i.test(value) ||
+	[...value.matchAll(TIME)].some(([, number, unit]) => toMilliseconds(number, unit) !== 0)
+
+const importantMotionIn = (text) =>
+	IMPORTANT_MOTION_CLASS.test(text) ||
+	[...text.matchAll(IMPORTANT_MOTION_TEXT)].some(([, value]) => keepsMotion(value))
+// @apply の末尾の !important は、並べたクラス全部に掛かる
+const IMPORTANT_APPLY = new RegExp(`(?:^|[\\s:])${MOTION_CLASS}[\\s\\S]*!important\\s*$`)
+
 const MOTION_PURPOSES = Object.keys(durations).join('|')
 const MOTION_CLASSES = Object.keys(durations).map((purpose) => `transition-${purpose}`)
 // 長さを別に書くクラスの接頭辞
@@ -343,8 +353,7 @@ function isWhiteOrBlack(literal) {
 	)
 }
 
-// メディアクエリの em は初期フォントサイズが基準で、宣言の em（その要素の文字サイズ）と
-// 別物。PIXELS_PER と同じく rem として引く
+// メディアクエリの em は初期フォントサイズが基準なので rem として引く
 function untokenizedLengths(value, inMedia) {
 	const found = []
 	for (const [literal, , number, unit] of stripNonValues(value).matchAll(LENGTH)) {
@@ -399,8 +408,7 @@ function eachStyleBlock(context, visit) {
 
 const MEDIA_CONDITION = /\(([^()]*)\)/g
 const WIDTH_FEATURE = /\bwidth\b/i
-// colorMode の classSuffix が空なので、テーマは html の dark / light で表れる。
-// `html.dark` `.dark .callout` `:is(.light)` のいずれも綴りで拾い、`.darkroom` は後ろで外す
+// colorMode の classSuffix が空なので、テーマは html の .dark / .light に出る
 const THEME_SELECTOR = /\.(?:dark|light)(?![\w-])/
 const COLOR_SCHEME = /prefers-color-scheme/i
 const THEME_CLASS = new RegExp(THEME_COLOR_CLASS)
@@ -457,8 +465,7 @@ const CHECKS = {
 					found.push({ node, messageId: 'literal', data: { literal } })
 			}
 			root.walkDecls((decl) => check(decl.value, decl))
-			// walkDecls は at-rule を見ないので、@apply の任意値は別に歩く。
-			// 他の at-rule まで見ると、@keyframes の名前が色の名前に当たる
+			// postcss の walkDecls は at-rule を見ないので、@apply だけ別に歩く
 			root.walkAtRules('apply', (rule) => check(rule.params, rule))
 			return found
 		},
@@ -479,6 +486,29 @@ const CHECKS = {
 			root.walkAtRules('apply', (rule) => {
 				if (OFF_TOKEN_FONT.test(rule.params))
 					found.push({ node: rule, messageId: 'fontClass' })
+			})
+			return found
+		},
+	},
+
+	'no-px-font-size': {
+		messages: {
+			px: `文字サイズ（{{literal}}）を px で書かない。利用者が変えた文字サイズに追従するよう rem か em で書く。 ${TOKEN_URL}`,
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				if (!FONT_SIZE_PROPERTY.test(decl.prop)) return
+				// 略記の / の後ろは行の高さ
+				const [size] = decl.value.split('/')
+				for (const [literal, , , unit] of stripNonValues(size).matchAll(LENGTH)) {
+					if (unit.toLowerCase() === 'px')
+						found.push({ node: decl, messageId: 'px', data: { literal } })
+				}
+			})
+			root.walkAtRules('apply', (rule) => {
+				for (const [literal] of rule.params.matchAll(PX_TEXT_CLASS))
+					found.push({ node: rule, messageId: 'px', data: { literal } })
 			})
 			return found
 		},
@@ -517,6 +547,59 @@ const CHECKS = {
 			})
 			return found
 		},
+	},
+
+	'no-motion-important': {
+		messages: {
+			important:
+				'モーションの宣言に !important を付けない。動きを減らす設定より強くなり、設定しても止まらなくなる。抑制でも通さない。',
+		},
+		find(root) {
+			const found = []
+			root.walkDecls((decl) => {
+				if (decl.important && MOTION_DECLARATION.test(decl.prop) && keepsMotion(decl.value))
+					found.push({ node: decl, messageId: 'important' })
+			})
+			root.walkAtRules('apply', (rule) => {
+				if (IMPORTANT_MOTION_CLASS.test(rule.params) || IMPORTANT_APPLY.test(rule.params))
+					found.push({ node: rule, messageId: 'important' })
+			})
+			return found
+		},
+		script: (context) => ({
+			'Literal, TemplateElement'(node) {
+				const value = node.type === 'Literal' ? node.value : node.value.cooked
+				if (typeof value === 'string' && importantMotionIn(value))
+					context.report({ node, messageId: 'important' })
+			},
+			"ExportDefaultDeclaration > ObjectExpression > Property[key.name='important'][value.value=true], ExportDefaultDeclaration > * > ObjectExpression > Property[key.name='important'][value.value=true]"(
+				node,
+			) {
+				context.report({ node, messageId: 'important' })
+			},
+			Property(node) {
+				const key = node.key.name ?? node.key.value
+				const { value } = node.value
+				if (
+					typeof key === 'string' &&
+					MOTION_KEY.test(key) &&
+					typeof value === 'string' &&
+					/!\s*important/i.test(value) &&
+					keepsMotion(value)
+				)
+					context.report({ node, messageId: 'important' })
+			},
+			// el.style の !important はインラインなので、全称セレクタの !important より強い
+			"CallExpression[callee.property.name='setProperty']"(node) {
+				const [property, value, priority] = node.arguments
+				if (
+					MOTION_DECLARATION.test(property?.value ?? '') &&
+					priority?.value === 'important' &&
+					(typeof value?.value !== 'string' || keepsMotion(value.value))
+				)
+					context.report({ node, messageId: 'important' })
+			},
+		}),
 	},
 
 	'no-custom-breakpoint': {
@@ -661,6 +744,7 @@ export function findings(root) {
 const ruleOf = (check) => ({
 	meta: { type: 'problem', schema: [], messages: check.messages },
 	create: (context) => ({
+		...check.script?.(context),
 		Program() {
 			eachStyleBlock(context, (root, locate) => {
 				for (const { node, messageId, data } of check.find(root)) {

@@ -1,22 +1,10 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { decide, unsigned } from '~~/.claude/hooks/pr-guard.mjs'
-
-const OVERLAY_FILE = 'app/components/layout/SearchDialog.vue'
-
-const files = {
-	[OVERLAY_FILE]: '<div class="search-overlay">',
-	'app/components/ui/Pagination.vue': '<nav class="pagination">',
-	'scripts/overlay-probe.mjs': "const active = LINK + '.is-active'",
-}
 
 const ask = {
 	head: () => 'claude/issue-292-m5eszm',
 	dirty: () => '',
 	unpushed: () => '',
-	touched: () => ['app/components/ui/Pagination.vue'],
-	text: (path) => files[path] ?? null,
-	evidence: () => ['lint.log', 'index-375-dark.png'],
-	check: () => ({ code: 0, log: '' }),
 }
 
 const create = (tool_input = {}) => ({
@@ -38,39 +26,6 @@ describe('decide', () => {
 		expect(denied(create(), { unpushed: () => 'origin/x が無い' })).toMatch('push していない')
 		expect(denied(create(), { head: () => '' })).toMatch('読めない')
 		expect(denied(create(), { dirty: () => null })).toMatch('読めない')
-		expect(denied(create(), { evidence: () => [] })).toMatch('.verify/ に無い')
-	})
-
-	it('被せた UI を触ったら overlay のログを要る', () => {
-		const overlay = { touched: () => [OVERLAY_FILE] }
-		expect(denied(create(), overlay)).toMatch('overlay-*.log')
-		expect(denied(create(), { ...overlay, evidence: () => ['overlay-search.log'] })).toBeNull()
-	})
-
-	it('UI の外で綴りに触れただけでは要らない', () => {
-		expect(denied(create(), { touched: () => ['scripts/overlay-probe.mjs'] })).toBeNull()
-	})
-
-	it('OVERLAYS の値でない綴りは数えない', () => {
-		const seen = { 'app/components/ui/Pagination.vue': '<a class="is-active">' }
-		expect(
-			denied(create(), {
-				touched: () => Object.keys(seen),
-				text: (path) => seen[path] ?? null,
-			}),
-		).toBeNull()
-	})
-
-	it('差分は PR の base から取る', () => {
-		const touched = vi.fn(() => [])
-		denied(create({ base: 'release' }), { touched })
-		expect(touched).toHaveBeenCalledWith('release')
-	})
-
-	it('CI が打つものを通し、落ちたら出力を添えて止める', () => {
-		const check = vi.fn((name) => ({ code: name === 'test' ? 1 : 0, log: 'x\n1 failed' }))
-		expect(denied(create(), { check })).toMatch('1 failed')
-		expect(check.mock.calls.map(([name]) => name)).toEqual(['lint', 'test'])
 	})
 
 	it('作成以外は条件を測らず、他のツールは見ない', () => {

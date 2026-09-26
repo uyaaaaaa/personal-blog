@@ -8,6 +8,7 @@
 		<HeaderDrawer
 			:is-open="isOpen"
 			:groups="menuGroups"
+			:location="location"
 			@toggle="emit('toggle')"
 			@close="emit('close')"
 		/>

@@ -1,6 +1,5 @@
 import { randomBytes } from 'node:crypto'
 
-const MODEL = 'claude-opus-5'
 const SOURCE_URL = 'https://github.com/uyaaaaaa/personal-blog'
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789'
@@ -28,7 +27,7 @@ const issue = (rest, tail) => {
 	return {
 		title: `issue #${number}`,
 		branch: `claude/issue-${number}-${tail}`,
-		body: `assign スキルに従って #${number} を進める。`,
+		body: `#${number} に対応して PR を出す。`,
 	}
 }
 
@@ -62,7 +61,6 @@ export const args = (kind, rest, tail = suffix()) => {
 
 	const { title, branch, body } = built
 	return {
-		model: MODEL,
 		source_url: SOURCE_URL,
 		title,
 		prompt: [body, ...(branch ? [`作業ブランチは ${branch} にする。`] : []), ALONE].join('\n'),

@@ -3,6 +3,7 @@ import remarkObsidianCallout from './remark/obsidian-callout.mjs'
 import { articleRoutes, digestRoutes } from './scripts/content-routes.mjs'
 import { writeWorkerRoutes } from './scripts/worker-routes.mjs'
 import { CATEGORIES } from './app/utils/category'
+import { followStoredTocCollapseScript } from './app/utils/tocCollapse'
 
 export default defineNuxtConfig({
 	compatibilityDate: '2025-07-15',
@@ -17,6 +18,7 @@ export default defineNuxtConfig({
 				{ rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
 				{ rel: 'manifest', href: '/site.webmanifest' },
 			],
+			script: [{ innerHTML: followStoredTocCollapseScript }],
 		},
 	},
 	runtimeConfig: {
@@ -86,8 +88,7 @@ export default defineNuxtConfig({
 		},
 		cloudflare: {
 			pages: {
-				// 自動収集はワイルドカードに畳まず、上限を超えた分を黙って切り落とす。
-				// 畳んでから書く writeWorkerRoutes に _routes.json を持たせる
+				// 自動収集は上限を超えた分を黙って切り落とすので、_routes.json は writeWorkerRoutes が書く
 				defaultRoutes: false,
 			},
 		},
@@ -109,6 +110,9 @@ export default defineNuxtConfig({
 	typescript: {
 		tsConfig: {
 			include: ['../tests/**/*'],
+			compilerOptions: {
+				allowImportingTsExtensions: true,
+			},
 		},
 	},
 	features: {

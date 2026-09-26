@@ -3,6 +3,7 @@
 		class="border-b border-t-2 border-border-strong py-8 md:grid md:grid-cols-pickup md:gap-x-6"
 	>
 		<div
+			lang="en"
 			class="flex items-baseline gap-3 font-mono text-meta tracking-marker md:flex-col md:gap-1.5"
 		>
 			<p class="flex gap-2 text-sub">
@@ -47,6 +48,7 @@
 
 			<NuxtLink
 				:to="article.path"
+				lang="en"
 				class="mt-5 inline-block font-mono text-ui font-medium text-accent hover:underline"
 				prefetch-on="interaction"
 				>Read →</NuxtLink

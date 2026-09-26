@@ -15,6 +15,9 @@
 	const colorMode = useColorMode()
 
 	useHead({
+		htmlAttrs: {
+			class: 'scroll-pt-landing-offset-sm md:scroll-pt-landing-offset lg:scroll-pt-landing-offset-lg',
+		},
 		meta: [
 			{
 				name: 'theme-color',

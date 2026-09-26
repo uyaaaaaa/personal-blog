@@ -2,9 +2,12 @@
 	<div class="flex items-center md:hidden">
 		<button
 			ref="menuButtonRef"
+			type="button"
 			class="mobile-menu-btn"
 			@click="emit('toggle')"
-			aria-label="Open menu"
+			aria-label="Menu"
+			aria-haspopup="dialog"
+			:aria-expanded="isOpen"
 		>
 			<MenuIcon />
 		</button>
@@ -15,9 +18,12 @@
 			:class="{ 'is-open': isOpen }"
 			@click="emit('close')"
 		>
-			<aside
+			<div
 				ref="trapRef"
 				class="mobile-drawer"
+				role="dialog"
+				aria-modal="true"
+				aria-label="Menu"
 				@click.stop
 			>
 				<div class="drawer-header h-header-sm">
@@ -35,7 +41,7 @@
 					<NuxtLink
 						to="/"
 						class="drawer-row"
-						@click="closeDrawer"
+						@click="closeToGo('/')"
 					>
 						<HomeIcon class="drawer-icon" />
 						<span class="drawer-row-label">Home</span>
@@ -45,7 +51,7 @@
 						to="/profile"
 						class="drawer-row"
 						prefetch-on="interaction"
-						@click="closeDrawer"
+						@click="closeToGo('/profile')"
 					>
 						<UserIcon class="drawer-icon" />
 						<span class="drawer-row-label">Profile</span>
@@ -82,7 +88,7 @@
 									:to="item.href"
 									class="drawer-subrow drawer-subrow-split"
 									prefetch-on="interaction"
-									@click="closeDrawer"
+									@click="closeToGo(item.href)"
 								>
 									<span class="drawer-subrow-name">{{ item.primary }}</span>
 									<span class="drawer-subrow-count">{{ item.secondary }}</span>
@@ -120,9 +126,13 @@
 									:to="item.href"
 									class="drawer-subrow"
 									prefetch-on="interaction"
-									@click="closeDrawer"
+									@click="closeToGo(item.href)"
 								>
-									<span class="drawer-subrow-title">{{ item.primary }}</span>
+									<span
+										lang="ja"
+										class="drawer-subrow-title"
+										>{{ item.primary }}</span
+									>
 									<time
 										class="drawer-subrow-meta"
 										:datetime="item.datetime"
@@ -135,7 +145,7 @@
 									:to="groups.latest.viewAllHref"
 									class="drawer-subrow drawer-subrow-all"
 									prefetch-on="interaction"
-									@click="closeDrawer"
+									@click="closeToGo(groups.latest.viewAllHref)"
 								>
 									View All
 								</NuxtLink>
@@ -172,7 +182,7 @@
 									:to="item.href"
 									class="drawer-subrow drawer-subrow-split"
 									prefetch-on="interaction"
-									@click="closeDrawer"
+									@click="closeToGo(item.href)"
 								>
 									<span class="drawer-subrow-name">{{ item.primary }}</span>
 									<span class="drawer-subrow-count">{{ item.secondary }}</span>
@@ -183,7 +193,7 @@
 									:to="groups.tags.viewAllHref"
 									class="drawer-subrow drawer-subrow-all"
 									prefetch-on="interaction"
-									@click="closeDrawer"
+									@click="closeToGo(groups.tags.viewAllHref)"
 								>
 									View All
 								</NuxtLink>
@@ -191,7 +201,7 @@
 						</ul>
 					</div>
 				</nav>
-			</aside>
+			</div>
 		</div>
 	</div>
 </template>
@@ -206,6 +216,9 @@
 	import TagIcon from '~/components/ui/TagIcon.vue'
 	import UserIcon from '~/components/ui/UserIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
+	import { useBackToClose } from '~/composables/useBackToClose'
+	import { releaseBackdrop, useBackdropInert } from '~/composables/useBackdropInert'
+	import { useCloseWhenHidden } from '~/composables/useCloseWhenHidden'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
 	import { useTouchScrollLock } from '~/composables/useTouchScrollLock'
 	import type { MenuGroups } from '~/utils/menuGroup'
@@ -213,6 +226,7 @@
 	const props = defineProps<{
 		isOpen: boolean
 		groups: MenuGroups
+		location: string
 	}>()
 
 	const emit = defineEmits<{
@@ -222,13 +236,23 @@
 
 	const menuButtonRef = ref<HTMLButtonElement | null>(null)
 
-	// ドロワーは閉じると focus を受けられなくなるので、戻し先をハンバーガーに移してから閉じる
 	const closeDrawer = () => {
+		releaseBackdrop()
 		focusByGesture(menuButtonRef.value)
 		emit('close')
 	}
 
+	const { leave } = useBackToClose(toRef(props, 'isOpen'), closeDrawer)
+
+	const closeToGo = (to: string) => {
+		leave(to, props.location)
+		closeDrawer()
+	}
+
 	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), closeDrawer)
+
+	useBackdropInert(toRef(props, 'isOpen'), trapRef)
+	useCloseWhenHidden(toRef(props, 'isOpen'), trapRef, closeDrawer)
 
 	const { lockRef } = useTouchScrollLock()
 
@@ -482,5 +506,33 @@
 		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--color-accent);
+	}
+
+	/* 強制カラーでは面が塗られない */
+	@media (forced-colors: active) {
+		.drawer-row:hover,
+		.drawer-subrow:hover {
+			text-decoration: underline;
+		}
+
+		/* フォーカスの輪郭と重ねると、どちらかが消える */
+		.drawer-close:hover:not(:focus-visible) {
+			outline: 1px solid;
+			outline-offset: -1px;
+		}
+
+		.drawer-row.router-link-exact-active,
+		.drawer-subrow.router-link-exact-active {
+			forced-color-adjust: none;
+			background-color: SelectedItem;
+			color: SelectedItemText;
+			outline-color: CanvasText;
+		}
+
+		.router-link-exact-active .drawer-icon,
+		.router-link-exact-active .drawer-subrow-meta,
+		.router-link-exact-active .drawer-subrow-count {
+			color: inherit;
+		}
 	}
 </style>

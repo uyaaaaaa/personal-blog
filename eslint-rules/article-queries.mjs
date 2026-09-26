@@ -5,8 +5,6 @@ import { ARTICLE } from '../content.collections.mjs'
 const INVARIANT_URL =
 	'https://github.com/uyaaaaaa/personal-blog/blob/main/docs/ARCHITECTURE.md#不変条件'
 
-// 起点は eslint を打つ場所に依らせない。cwd から見ると、リポジトリ直下以外から打ったとき
-// 置き場そのものが置き場の外に見え、クエリの本体が落ちる
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const QUERY_DIRECTORY = path.join(ROOT, 'app', 'utils') + path.sep
 

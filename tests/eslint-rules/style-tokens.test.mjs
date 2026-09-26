@@ -116,6 +116,47 @@ describe('no-important', () => {
 	})
 })
 
+describe('no-motion-important', () => {
+	it('モーションに重ねた !important だけを落とす', () => {
+		tester.run('no-motion-important', styleTokens.rules['no-motion-important'], {
+			valid: [
+				{ filename: 'a.vue', code: sfc('.a { transition: color 0.15s; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-color md:transition-move; }'),
+				},
+				{ filename: 'a.vue', code: sfc('.a { margin: 0 !important; }') },
+				{ filename: 'a.vue', code: sfc('.a { @apply !mt-0; }') },
+				{ filename: 'a.vue', code: sfc('.a { transition: none !important; }') },
+				{ filename: 'a.vue', code: sfc('.a { animation-duration: 0s !important; }') },
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: transform 0.2s !important; }'),
+					errors: [{ messageId: 'important' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation-duration: var(--panel) !important; }'),
+					errors: [{ messageId: 'important' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply md:!transition-move; }'),
+					errors: [{ messageId: 'important' }],
+				},
+				// 末尾の !important は並べたクラス全部に掛かる
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply transition-color !important; }'),
+					errors: [{ messageId: 'important' }],
+				},
+			],
+		})
+	})
+})
+
 describe('no-off-purpose-motion', () => {
 	it('用途に決めた長さだけを通す', () => {
 		tester.run('no-off-purpose-motion', styleTokens.rules['no-off-purpose-motion'], {
@@ -407,6 +448,36 @@ describe('no-font-literal', () => {
 					filename: 'a.vue',
 					code: sfc('.a { @apply font-serif; }'),
 					errors: [{ messageId: 'fontClass' }],
+				},
+			],
+		})
+	})
+})
+
+describe('no-px-font-size', () => {
+	it('文字サイズの px を落とす', () => {
+		tester.run('no-px-font-size', styleTokens.rules['no-px-font-size'], {
+			valid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { font: 0.875rem/20px var(--font-sans); width: 24px; }'),
+				},
+			],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { font-size: 14px; }'),
+					errors: [{ messageId: 'px' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply md:text-[26px]; }'),
+					errors: [{ messageId: 'px' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply text-[length:14px]; }'),
+					errors: [{ messageId: 'px' }],
 				},
 			],
 		})

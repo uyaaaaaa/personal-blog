@@ -1,5 +1,8 @@
 <template>
-	<footer class="border-t border-border px-5 md:px-10">
+	<footer
+		lang="en"
+		class="border-t border-border px-5 md:px-10"
+	>
 		<nav
 			class="mx-auto flex flex-wrap gap-x-16 gap-y-8 py-10 md:py-12"
 			:class="measure"

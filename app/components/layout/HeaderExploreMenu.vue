@@ -53,7 +53,11 @@
 							class="menu-article"
 							prefetch-on="interaction"
 						>
-							<span class="menu-article-title">{{ item.primary }}</span>
+							<span
+								lang="ja"
+								class="menu-article-title"
+								>{{ item.primary }}</span
+							>
 							<time
 								class="menu-article-date"
 								:datetime="item.datetime"
@@ -258,5 +262,20 @@
 		font-size: 0.75rem;
 		color: var(--color-sub);
 		font-variant-numeric: tabular-nums;
+	}
+
+	/* 強制カラーでは面が塗られない */
+	@media (forced-colors: active) {
+		.menu-all:hover,
+		.menu-article:hover,
+		.menu-tag:hover,
+		.menu-category:hover {
+			text-decoration: underline;
+		}
+
+		.explore-trigger::after {
+			forced-color-adjust: none;
+			background-color: CanvasText;
+		}
 	}
 </style>

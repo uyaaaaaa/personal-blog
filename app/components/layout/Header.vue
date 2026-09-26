@@ -1,32 +1,59 @@
 <template>
-	<header class="global-header h-header-sm md:h-header">
+	<header
+		lang="en"
+		class="global-header h-header-sm md:h-header"
+	>
 		<div class="header-inner mx-auto max-w-container px-4">
 			<NuxtLink
 				to="/"
 				class="logo text-logo"
 				@click="closeMenu"
 			>
-				<LogoMark />
+				<LogoMarkIcon />
 				<span>Tech Blog</span>
 			</NuxtLink>
 
-			<HeaderSearch
-				ref="inlineSearchRef"
-				@update:open="isInlineSearchOpen = $event"
-			/>
-
-			<div class="flex items-stretch gap-1 self-stretch md:gap-5">
+			<div
+				role="search"
+				class="mx-8 hidden max-w-search-trigger flex-1 md:block"
+			>
 				<button
-					ref="mobileSearchRef"
+					ref="desktopSearchRef"
 					type="button"
-					class="flex h-8 w-8 items-center justify-center self-center rounded-md text-sub transition-color hover:text-accent md:hidden"
-					aria-label="Search"
+					class="search-trigger flex w-full items-center gap-2 rounded-md border border-border-field bg-surface-subtle px-4 py-2 transition-color hover:border-accent"
 					aria-haspopup="dialog"
 					:aria-expanded="isSearchOpen"
 					@click="openSearch"
 				>
-					<SearchIcon size="large" />
+					<SearchIcon class="search-trigger-icon" />
+					<span class="search-trigger-label">Search...</span>
+					<span
+						class="search-trigger-kbd rounded-kbd border border-border bg-surface px-1.5 py-0.5 text-meta text-sub"
+						aria-hidden="true"
+					>
+						<span :class="{ invisible: !isCommandKey }">⌘K</span>
+						<span :class="{ invisible: isCommandKey }">Ctrl K</span>
+					</span>
 				</button>
+			</div>
+
+			<div class="flex items-stretch gap-1 self-stretch md:gap-5">
+				<div
+					role="search"
+					class="self-center md:hidden"
+				>
+					<button
+						ref="mobileSearchRef"
+						type="button"
+						class="flex h-8 w-8 items-center justify-center rounded-md text-sub transition-color hover:text-accent"
+						aria-label="Search"
+						aria-haspopup="dialog"
+						:aria-expanded="isSearchOpen"
+						@click="openSearch"
+					>
+						<SearchIcon size="large" />
+					</button>
+				</div>
 
 				<ThemeToggle class="self-center" />
 				<NuxtLink
@@ -45,26 +72,22 @@
 		</div>
 	</header>
 
-	<div
-		class="search-scrim"
-		:class="{ 'is-open': isInlineSearchOpen }"
-	/>
-
 	<SearchDialog
 		:is-open="isSearchOpen"
+		:location="location"
 		@close="closeSearch"
 	/>
 </template>
 
 <script setup lang="ts">
-	import HeaderSearch from '~/components/layout/HeaderSearch.vue'
-	import LogoMark from '~/components/layout/LogoMark.vue'
+	import LogoMarkIcon from '~/components/layout/LogoMarkIcon.vue'
 	import Navigation from '~/components/layout/HeaderNavigation.vue'
 	import SearchDialog from '~/components/layout/SearchDialog.vue'
 	import ThemeToggle from '~/components/layout/ThemeToggle.vue'
 	import SearchIcon from '~/components/ui/SearchIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
-	import { isSearchShortcut } from '~/utils/shortcut'
+	import { releaseBackdrop } from '~/composables/useBackdropInert'
+	import { isSearchShortcut, usesCommandKey } from '~/utils/shortcut'
 
 	const props = defineProps<{
 		location: string
@@ -72,11 +95,10 @@
 
 	const isMenuOpen = ref(false)
 	const isSearchOpen = ref(false)
-	const isInlineSearchOpen = ref(false)
-	const inlineSearchRef = ref<InstanceType<typeof HeaderSearch> | null>(null)
+	const isCommandKey = ref(true)
+	const desktopSearchRef = ref<HTMLElement | null>(null)
 	const mobileSearchRef = ref<HTMLElement | null>(null)
 
-	// 戻し先はデスクトップとSPで別のボタンになるので、押されたものを覚える
 	let searchOpener: HTMLElement | null = null
 
 	const toggleMenu = () => {
@@ -85,11 +107,16 @@
 
 	const closeMenu = () => {
 		isMenuOpen.value = false
+		releaseBackdrop()
 	}
+
+	const isShown = (element: HTMLElement | null) => (element?.getClientRects().length ?? 0) > 0
+
+	const visibleTrigger = () =>
+		[desktopSearchRef.value, mobileSearchRef.value].find(isShown) ?? null
 
 	const openSearchFrom = (opener: HTMLElement | null) => {
 		searchOpener = opener
-		// Safari と Firefox は click で button にフォーカスを移さないので、開く前に寄せる
 		focusByGesture(opener)
 		isSearchOpen.value = true
 	}
@@ -99,47 +126,44 @@
 	}
 
 	const closeSearch = () => {
+		if (!isSearchOpen.value) return
+
 		isSearchOpen.value = false
-		focusByGesture(searchOpener)
+		releaseBackdrop()
+		focusByGesture(isShown(searchOpener) ? searchOpener : visibleTrigger())
 		searchOpener = null
 	}
 
 	const onSearchShortcut = (event: KeyboardEvent) => {
 		if (!isSearchShortcut(event)) return
-		// 変換中の Ctrl+K は mac の IME がカタカナ変換に使う。横取りしない
 		if (event.isComposing) return
 
 		event.preventDefault()
 
-		// 開き直すと入力済みが消えるので、開いている間はブラウザの検索を止めるだけ
-		if (isSearchOpen.value) return
-
-		// ドロワーは幅を跨いでも開いたまま残る。閉じずに寄せると、背後を止めたまま
-		// 閉じるものが画面から消える。戻し先のボタンを覆うのも同じ
-		closeMenu()
-
-		if (inlineSearchRef.value?.isVisible()) {
-			inlineSearchRef.value.focus()
+		if (isSearchOpen.value) {
+			closeSearch()
 			return
 		}
 
-		openSearchFrom(mobileSearchRef.value)
+		closeMenu()
+		openSearchFrom(visibleTrigger())
 	}
 
-	onMounted(() => window.addEventListener('keydown', onSearchShortcut))
+	onMounted(() => {
+		isCommandKey.value = usesCommandKey(navigator.platform)
+		window.addEventListener('keydown', onSearchShortcut)
+	})
 	onBeforeUnmount(() => window.removeEventListener('keydown', onSearchShortcut))
 
-	watch([isMenuOpen, isSearchOpen, isInlineSearchOpen], (open) => {
+	watch([isMenuOpen, isSearchOpen], (open) => {
 		document.body.classList.toggle('scroll-locked', open.some(Boolean))
 	})
 
-	// リンクを踏まない移動（ブラウザバック）でも、被せたものは残さない
 	watch(
 		() => props.location,
 		() => {
 			closeMenu()
 			closeSearch()
-			inlineSearchRef.value?.close()
 		},
 	)
 </script>
@@ -185,27 +209,25 @@
 		letter-spacing: -0.025em;
 	}
 
-	.search-scrim {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100vh;
-		height: 100dvh;
-		background-color: var(--color-overlay-subtle);
-		z-index: 90;
-		opacity: 0;
-		visibility: hidden;
-		transition:
-			opacity 0.2s ease-in-out,
-			visibility 0s linear 0.2s;
+	.search-trigger-icon {
+		flex: none;
+		color: var(--color-sub);
 	}
 
-	.search-scrim.is-open {
-		opacity: 1;
-		visibility: visible;
-		transition:
-			opacity 0.2s ease-in-out,
-			visibility 0s;
+	.search-trigger-label {
+		flex: 1;
+		min-width: 0;
+		text-align: left;
+		font-size: 0.875rem;
+		color: var(--color-sub);
+	}
+
+	.search-trigger-kbd {
+		flex: none;
+		display: grid;
+	}
+
+	.search-trigger-kbd > * {
+		grid-area: 1 / 1;
 	}
 </style>

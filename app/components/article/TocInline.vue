@@ -12,6 +12,7 @@
 		>
 			<button
 				type="button"
+				lang="en"
 				class="flex w-full items-center justify-between gap-3 py-3 font-mono text-2xs tracking-marker text-sub transition-color hover:text-accent"
 				:aria-expanded="isOpen"
 				aria-controls="toc-inline-list"
@@ -43,7 +44,7 @@
 						class="flex gap-3 text-ui transition-color hover:text-accent"
 						:class="activeId === link.id ? 'font-medium text-main' : 'text-sub'"
 					>
-						<span class="flex-none font-mono text-meta leading-5 text-accent">{{
+						<span class="flex-none font-mono text-meta leading-5 text-sub">{{
 							ordinal(index)
 						}}</span>
 						<span class="min-w-0 break-words">{{ link.text }}</span>

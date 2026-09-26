@@ -1,0 +1,5 @@
+{
+	"name": "personal-blog",
+	"owner": { "name": "uyaaaaaa" },
+	"plugins": [{ "name": "issue-stance", "source": "./plugin" }]
+}

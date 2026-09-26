@@ -9,7 +9,7 @@ interface TocLink {
 	children?: TocLink[]
 }
 
-// 本文の見出しに当たっている scroll-margin-top。判定はこれを読む
+// html に当たっている scroll-padding-top。判定はこれを読む
 const OFFSET = 100
 const VIEWPORT = 800
 const PAGE = 5000
@@ -20,8 +20,7 @@ const mounted: Array<() => void> = []
 const frames = new Map<number, FrameRequestCallback>()
 let lastFrameId = 0
 
-// happy-dom はレイアウトを持たず top が常に 0 になるので、見出しごとに直接与える。
-// スクロールで動く値なので、要素ではなくこの表を正本にして読ませる
+// happy-dom はレイアウトを持たず top が常に 0 なので、見出しごとに与える
 const tops: Record<string, number> = {}
 
 const placeHeadings = (initial: Record<string, number>) => {
@@ -68,8 +67,8 @@ beforeEach(() => {
 	vi.stubGlobal('cancelAnimationFrame', (id: number) => {
 		frames.delete(id)
 	})
-	// happy-dom はカスケードを持たず、本文に当たっている scroll-margin-top を返せない
-	vi.stubGlobal('getComputedStyle', () => ({ scrollMarginTop: `${OFFSET}px` }))
+	// happy-dom はカスケードを持たず、html に当たっている scroll-padding-top を返せない
+	vi.stubGlobal('getComputedStyle', () => ({ scrollPaddingTop: `${OFFSET}px` }))
 
 	Object.defineProperty(window, 'innerHeight', { value: VIEWPORT, configurable: true })
 	Object.defineProperty(document.documentElement, 'scrollHeight', {

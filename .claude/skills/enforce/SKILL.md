@@ -5,7 +5,7 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約のうち�
 
 # 規約を検査に移す
 
-**ここでは実装しない。** 探して issue にするところまで。実装は `assign` が持つ。
+**ここでは実装しない。** 探して issue にするところまで。
 
 **検査を足すことと、移った規約の行を消すことで1つの変換。** 片方だけだと二重管理が残る（→ `docs/ARCHITECTURE.md`）。
 
@@ -13,7 +13,7 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約のうち�
 
 ## 1. 集める
 
-`.claude/rules/*.md` の太字の断定と、`docs/DESIGN_GUIDELINE.md` の「原則」「守る線」。1項目を1本として数える。
+`.claude/rules/*.md` の箇条書きと本文の断定、`docs/DESIGN_GUIDELINE.md` の「原則」「守る線」。1項目を1本として数える。
 
 **「機械が落とせない」と書いてある項目こそ読む。** その断言は書いた時点の道具で下したもので、道具が増えれば失効する。失効したまま残ると、目視で受け続けることになる。
 
@@ -30,9 +30,9 @@ description: "`.claude/rules` と `docs/DESIGN_GUIDELINE.md` の規約のうち�
 
 ## 3. 既に落ちるか試す
 
-**その規約を破る最小の例を書いて、lint・test と `scripts/` の probe にかける**（打ち方は `verify`）。どのツールが何を見ているかを設定から読み解かない。読み解くと、既に効いている検査をもう一度足す issue が出る。
+**その規約を破る最小の例を書いて、lint・test と `scripts/` の probe にかける**。どのツールが何を見ているかを設定から読み解かない。読み解くと、既に効いている検査をもう一度足す issue が出る。
 
-**probe は lint に乗っていない。** そこだけで守られている規約を「未強制」と読み違えやすい（→ `verify`）。試した細工はコミットに含めない（→ `.claude/rules/commit.md`）。
+**probe は lint に乗っていない。** そこだけで守られている規約を「未強制」と読み違えやすい。試した細工はコミットに含めない（→ `.claude/rules/commit.md`）。
 
 | 結果 | どうする |
 | :--- | :--- |
@@ -74,7 +74,7 @@ node scripts/harness-journal.mjs ledger
 
 ## 6. 出す
 
-**1回に最大2本。** 今0件のものを先に。書き方は `create-issues` の型に従う。
+**1回に最大2本。** 今0件のものを先に。書き方は issue テンプレートの型に従う。
 
 **1で集めた候補は、畳んで空いた枠にだけ入れる。** 検査を1本減らして閉じた issue を1つ引き当て、`#NNN` の形で「現状」に書く。引ける枠が無ければ、足す issue は出さない。上限が無いと、毎週かかるのは足す力だけになる。
 

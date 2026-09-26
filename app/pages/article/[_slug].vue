@@ -1,29 +1,25 @@
 <template>
 	<div
 		v-if="page"
-		class="lg:grid lg:grid-cols-article lg:gap-14"
+		class="lg:relative lg:grid lg:grid-cols-article lg:gap-14 toc-collapsed:lg:grid-cols-1"
 	>
 		<div class="min-w-0 space-y-12">
 			<article class="space-y-8">
 				<header class="space-y-4 border-b border-border pb-8">
 					<div
-						class="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-meta text-sub"
+						class="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-meta text-sub"
 					>
 						<time
 							v-if="page.date"
 							:datetime="page.date"
 							>{{ formatDate(page.date) }}</time
 						>
-						<span
-							v-if="categoryLabel"
-							class="text-accent"
-							>{{ categoryLabel }}</span
-						>
+						<span v-if="categoryLabel">{{ categoryLabel }}</span>
 						<NuxtLink
 							v-for="tag in page.tags"
 							:key="tag"
 							:to="`/tags/${tagToSlug(tag)}`"
-							class="transition-color hover:text-accent"
+							class="-my-1 py-1 transition-color hover:text-accent"
 							>#{{ tag }}</NuxtLink
 						>
 					</div>
@@ -43,7 +39,9 @@
 			<ReadNext :current-path="articlePath" />
 		</div>
 
-		<aside class="hidden lg:block">
+		<aside
+			class="hidden lg:block toc-collapsed:lg:absolute toc-collapsed:lg:inset-y-0 toc-collapsed:lg:-right-10 toc-collapsed:lg:w-10"
+		>
 			<Toc :links="tocLinks" />
 		</aside>
 
@@ -94,8 +92,7 @@
 
 	const isNotFound = computed(() => status.value === 'success' && !page.value)
 
-	// CloudflareのSSRでは@nuxt/contentのクエリが失敗しうる。この失敗はクライアントの
-	// 再取得で復帰するため、復帰するまではカードを出さない（出すと一瞬エラーが見えてしまう）
+	// Cloudflare の SSR では @nuxt/content のクエリが失敗し、クライアントの再取得で戻る
 	const recovering = ref(Boolean(error.value))
 	onMounted(async () => {
 		if (!recovering.value) return
@@ -175,28 +172,6 @@
 	.prose h4 a:hover {
 		color: var(--color-accent);
 		text-decoration: none;
-	}
-
-	.prose {
-		--landing-offset: 116px;
-	}
-
-	@media (min-width: 768px) {
-		.prose {
-			--landing-offset: 124px;
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.prose {
-			--landing-offset: 92px;
-		}
-	}
-
-	.prose :where(h2, h3, h4, h5, h6),
-	.prose [data-footnote-ref],
-	.prose [data-footnotes] li {
-		scroll-margin-top: var(--landing-offset);
 	}
 
 	.prose [data-footnotes] li:target::marker {

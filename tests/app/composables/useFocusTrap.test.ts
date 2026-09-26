@@ -95,8 +95,7 @@ describe('useFocusTrap', () => {
 		expect(pressTab().defaultPrevented).toBe(false)
 	})
 
-	// happy-dom はレイアウトを持たず display: none でも箱が取れるので、
-	// 幅が md を跨いでドロワーごと消えた状態は自分で作る
+	// happy-dom は display: none でも箱が取れるので、md を跨いだ状態は自分で作る
 	it('行き先が1つも無ければ Tab を横取りしない', async () => {
 		const { trap, outside } = await mountOpenTrap()
 		for (const button of trap.querySelectorAll('button')) {

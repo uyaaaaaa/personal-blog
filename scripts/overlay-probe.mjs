@@ -12,7 +12,6 @@ const CHROMIUM_CANDIDATES = [
 ]
 
 const DEBUG_PORT = 9333
-// 色を持たない border-left-color の算出値
 const TRANSPARENT = 'rgba(0, 0, 0, 0)'
 const NO_ACTIVE = 'なし'
 const NO_RING = 'なし'
@@ -23,49 +22,29 @@ export const OVERLAYS = {
 	search: {
 		trigger: 'header button[aria-haspopup="dialog"]',
 		shortcut: 'K',
-		// 下の層に残って戻し先を覆いうる被せ物
 		covering: 'drawer',
 		overlay: '.search-overlay',
 		trap: '.search-dialog',
-		// 入力欄も結果もヘッダーの検索と同じクラスで出るので、被せた側に限って引く
 		input: '.search-dialog .search-input',
 		field: '.search-dialog .search-field',
 		link: '.search-dialog .search-result',
 		scroller: '.search-dialog .search-results',
 		dialog: true,
 		restoresOnOutsideClick: true,
-		widths: [375],
-	},
-	'search-inline': {
-		trigger: '.header-search .search-input',
-		shortcutFocus: 'K',
-		opensByInput: true,
-		overlay: '.search-panel',
-		scrim: '.search-scrim',
-		trap: '.header-search',
-		input: '.header-search .search-input',
-		field: '.header-search .search-field',
-		link: '.header-search .search-result',
-		scroller: '.header-search .search-results',
-		dialog: false,
-		widths: [1280],
+		widths: [375, 1280],
 	},
 	drawer: {
 		trigger: '.mobile-menu-btn',
 		overlay: '.mobile-menu-overlay',
 		trap: '.mobile-drawer',
 		input: null,
-		// 折りたたみの中のリンクしか他のページに行かないので、開いてから押す
 		expand: 'button[aria-controls="drawer-group-latest"]',
 		link: '#drawer-group-latest a',
 		scroller: '.mobile-drawer',
 		dialog: true,
-		// 指のドラッグが cancelable で届くのは中央の帯だけ（emulation の癖）。ドロワーは
-		// 右端に寄り、375 では中央まで覆う。max-width で覆わなくなる幅に広げてから送る
 		dragWidth: 700,
 		widths: [375],
 	},
-	// フォーカスを閉じ込めず背後も固定しないので、ダイアログ向けの操作は送らない
 	menu: {
 		trigger: '.explore-trigger',
 		overlay: '.menu-panel',
@@ -87,7 +66,6 @@ const KEYS = {
 	K: { key: 'k', code: 'KeyK', keyCode: 75 },
 }
 
-// Input.dispatchKeyEvent の modifiers のビット
 const ALT = 1
 const CTRL = 2
 const META = 4
@@ -188,7 +166,6 @@ const PAGE_HELPERS = `
 	const TRIGGER = ${JSON.stringify(config.trigger)}
 	const OVERLAY = ${JSON.stringify(config.overlay)}
 	const TRAP = ${JSON.stringify(config.trap)}
-	const SCRIM = ${JSON.stringify(config.scrim ?? null)}
 	const INPUT = ${JSON.stringify(config.input)}
 	const FIELD = ${JSON.stringify(config.field ?? null)}
 	const LINK = ${JSON.stringify(config.link)}
@@ -217,22 +194,22 @@ const PAGE_HELPERS = `
 		underline: FIELD ? getComputedStyle(document.querySelector(FIELD)).borderBottomColor : null,
 		path: $path(),
 		query: INPUT ? (document.querySelector(INPUT)?.value ?? null) : null,
-		scrim: SCRIM ? getComputedStyle(document.querySelector(SCRIM)).visibility : null,
 		width: Math.round(document.querySelector(TRAP).getBoundingClientRect().width),
 	})
 	const $router = () => document.querySelector('#__nuxt')?.__vue_app__?.config?.globalProperties?.$router
-	// URL は popstate で先に変わる。閉じる側が見ているのはルータが移り終えた後の route
 	const $path = () => $router()?.currentRoute?.value?.path ?? location.pathname
-	// 選択中を示す縦線。border-left-color で出しているので、無い幅では透明が返る
 	const $line = () => {
 		const active = document.querySelector(LINK + '.is-active')
 		return active ? getComputedStyle(active).borderLeftColor : ${JSON.stringify(NO_ACTIVE)}
+	}
+	const $fill = () => {
+		const active = document.querySelector(LINK + '.is-active')
+		return active ? getComputedStyle(active).backgroundColor : ${JSON.stringify(NO_ACTIVE)}
 	}
 	const $frames = (n) => new Promise((done) => {
 		const step = () => (n-- > 0 ? requestAnimationFrame(step) : done())
 		step()
 	})
-	// 滑り込みの途中で座標を取ると、押した先が別の要素になる
 	const $settled = async (sel) => {
 		let last = ''
 		for (let i = 0; i < 60; i++) {
@@ -271,7 +248,6 @@ const start = async () => {
 			mobile: false,
 		})
 
-	// 指の操作は mouse と別の経路で届く
 	const setTouch = (enabled) =>
 		cdp.send('Emulation.setTouchEmulationEnabled', { enabled, maxTouchPoints: 5 })
 
@@ -284,7 +260,6 @@ const start = async () => {
 		await evaluate('await $frames(3)')
 	}
 
-	// 1回で運ぶとタップ扱いになるので、刻んで送る
 	const touchDrag = async (point, dy, label) => {
 		sent(label)
 		const at = (offset) => [{ x: Math.round(point.x), y: Math.round(point.y - offset) }]
@@ -300,7 +275,6 @@ const start = async () => {
 		await evaluate('await $frames(3)')
 	}
 
-	// 被せた側の handler が動いたあとに読みたいので、document まで上がってから記録する
 	const watchTouchMoves = () =>
 		evaluate(`
 			window.__touchMoves = []
@@ -365,8 +339,6 @@ const start = async () => {
 		await evaluate('await $frames(2)')
 	}
 
-	// ブラウザ既定（アドレスバーへの移動）を止めているかは defaultPrevented で見る。
-	// listener の中で読むと登録の順で結果が変わるので、全部走り終えてから読む
 	const pressShortcut = async (modifiers) => {
 		await evaluate(`
 			window.__shortcutEvent = null
@@ -377,7 +349,7 @@ const start = async () => {
 				})
 			}
 		`)
-		await pressKey(config.shortcut ?? config.shortcutFocus, modifiers)
+		await pressKey(config.shortcut, modifiers)
 		await evaluate('await $frames(2)')
 		return evaluate(`
 			const event = window.__shortcutEvent
@@ -403,7 +375,6 @@ const start = async () => {
 			return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
 		`)
 
-	// 開き際は座標だけ先に決まって、そこに見えているのは別の要素という状態がある
 	const click = async (selector, label) => {
 		sent(`${label}を実クリック`)
 		let blocked = null
@@ -424,7 +395,6 @@ const start = async () => {
 		throw new Error(`押した位置にあるのは ${selector} ではなく ${blocked}`)
 	}
 
-	// ハイドレーションの前に送っても何も起きないので、開くまで送り直す
 	const openByShortcut = async (modifiers) => {
 		let key = null
 		for (let attempt = 0; attempt < 8; attempt++) {
@@ -456,25 +426,7 @@ const start = async () => {
 		throw new Error('下の層が開かない')
 	}
 
-	// synthetic は click でフォーカスを動かさないブラウザ（Safari / Firefox）と同じ状況を作る。
 	const open = async ({ synthetic = false, touch = false } = {}) => {
-		// 押して開くものではないので、寄せて打つところまでが「開く」
-		if (config.opensByInput) {
-			for (let attempt = 0; attempt < 8; attempt++) {
-				await click(config.input, '入力欄')
-				await typeQuery()
-				const opened = await waitFor(
-					`getComputedStyle(document.querySelector(OVERLAY)).visibility === 'visible'`,
-					1000,
-				)
-				if (opened) {
-					await evaluate('return $settled(OVERLAY)')
-					return
-				}
-			}
-			throw new Error('打っても候補が出ない')
-		}
-
 		for (let attempt = 0; attempt < 8; attempt++) {
 			if (synthetic) {
 				sent('トリガに合成 click（フォーカスを動かさない）')
@@ -493,8 +445,6 @@ const start = async () => {
 			)
 			if (opened) {
 				await evaluate('return $settled(TRAP)')
-				// 閉じる側の visibility は遷移の間 visible のまま残る。ホバーで開いた直後の
-				// click は閉じる側に倒すので、遷移が終わってから確かめ直して押し直す
 				const stayed = await evaluate(
 					`return getComputedStyle(document.querySelector(OVERLAY)).visibility === 'visible'`,
 				)
@@ -516,7 +466,6 @@ const start = async () => {
 	const waitClosed = () =>
 		waitFor(`getComputedStyle(document.querySelector(OVERLAY)).visibility === 'hidden'`, 2500)
 
-	// dev はそのルートに初めて入るときコンパイルする。その待ちを操作の結果として測らない
 	const warm = async () => {
 		await reload()
 		const article = await evaluate(
@@ -554,14 +503,12 @@ const start = async () => {
 	}
 
 	const reveal = async () => {
-		if (config.input && !config.opensByInput) await typeQuery()
+		if (config.input) await typeQuery()
 		if (config.expand) {
 			await click(config.expand, '折りたたみ')
 			if (!(await waitFor(`getComputedStyle($vis(LINK)).visibility === 'visible'`))) {
 				throw new Error('折りたたみが開かない')
 			}
-			// 開く途中の高さで測ると、あふれていないように見える。$settled はフレームで
-			// 見ているので、刻みが粗いと途中の1枚を止まったものと読む
 			await sleep(TRANSITION)
 			await evaluate('return $settled(LINK)')
 		}
@@ -719,13 +666,20 @@ const probes = [
 		shortcut: true,
 		run: async (p) => {
 			await p.open()
-			const query = await p.typeQuery()
-			await p.pressShortcut(META)
+			await p.typeQuery()
+			const key = await p.pressShortcut(META)
+			await p.waitClosed()
 			await sleep(TRANSITION)
-			const state = await p.evaluate('return $state()')
+			const state = await p.evaluate(`
+				return { ...$state(), onTrigger: document.activeElement === $vis(TRIGGER) }
+			`)
 			return {
-				observed: show(state, ['overlay', 'query']),
-				ok: state.overlay === 'visible' && state.query === query,
+				observed: `${show(state, ['overlay', 'active', 'activeShown'])} トリガに戻った=${state.onTrigger} prevented=${key?.prevented}`,
+				ok:
+					state.overlay === 'hidden' &&
+					state.activeShown &&
+					state.onTrigger &&
+					key?.prevented === true,
 			}
 		},
 	},
@@ -742,7 +696,6 @@ const probes = [
 			const state = await p.evaluate('return $state()')
 			return {
 				observed: `${show(state, ['overlay', 'query'])} prevented=${key?.prevented}`,
-				// mac の変換中の Ctrl+K はカタカナ変換。横取りしていないことを見る
 				ok:
 					state.overlay === 'visible' &&
 					state.query === composing.query &&
@@ -784,7 +737,6 @@ const probes = [
 		},
 	},
 	{
-		// 跨いだ先ではドロワーが display で消え、開いたままだと背後を止めるものが見えなくなる
 		name: 'shortcut-ドロワーを開いたまま md を跨いだ Cmd+K',
 		covering: true,
 		shortcut: true,
@@ -800,17 +752,16 @@ const probes = [
 				return {
 					...$state(),
 					cover: getComputedStyle(document.querySelector(COVER)).visibility,
-					inHeaderInput:
-						document.activeElement === document.querySelector('.header-search .search-input'),
+					inInput: document.activeElement === document.querySelector(INPUT),
 				}
 			`)
 			await p.setWidth(375)
 			return {
-				observed: `${show(state, ['overflow', 'active'])} ドロワー="${state.cover}" prevented=${key?.prevented}`,
+				observed: `${show(state, ['overlay', 'active'])} ドロワー="${state.cover}" prevented=${key?.prevented}`,
 				ok:
 					state.cover === 'hidden' &&
-					state.overflow !== 'hidden' &&
-					state.inHeaderInput &&
+					state.overlay === 'visible' &&
+					state.inInput &&
 					key?.prevented === true,
 			}
 		},
@@ -889,33 +840,6 @@ const probes = [
 		},
 	},
 	{
-		name: 'focus-ring/ショートカットで入力欄に寄る',
-		shortcutFocus: true,
-		run: async (p) => {
-			const before = await p.evaluate('return $state()')
-			sent('activeElement を blur')
-			await p.evaluate('document.activeElement?.blur()')
-
-			let inInput = false
-			for (let attempt = 0; attempt < 8 && !inInput; attempt++) {
-				await p.pressShortcut(META)
-				inInput = await p.evaluate(
-					'return document.activeElement === document.querySelector(INPUT)',
-				)
-			}
-
-			const state = await p.evaluate('return $state()')
-			return {
-				observed: show(state, ['active', 'activeShown', 'ring', 'underline']),
-				ok:
-					inInput &&
-					state.activeShown &&
-					state.ring === NO_RING &&
-					state.underline !== before.underline,
-			}
-		},
-	},
-	{
 		name: 'focus-ring/実クリックで開いてから Tab',
 		dialog: true,
 		run: async (p) => {
@@ -977,7 +901,6 @@ const probes = [
 			const state = await p.evaluate('return $state()')
 			return {
 				observed: show(state, ['active', 'activeShown', 'ring', 'underline']),
-				// Tab の先は、入力欄に留まる側では枠の線、候補に出る側では輪郭が目印になる
 				ok:
 					state.activeShown &&
 					(state.ring !== NO_RING || state.underline !== before.underline),
@@ -1070,6 +993,40 @@ const probes = [
 		},
 	},
 	{
+		name: 'aria-被せている間の背面と名前',
+		dialog: true,
+		run: async (p) => {
+			await p.open()
+			const observed = await p.evaluate(`
+				const trap = document.querySelector(TRAP)
+				const reachable = [...document.querySelectorAll(FOCUSABLE)].filter(
+					(el) =>
+						$shown(el) &&
+						getComputedStyle(el).visibility !== 'hidden' &&
+						!trap.contains(el) &&
+						!el.closest('[inert], [aria-hidden="true"]'),
+				)
+				return {
+					name: trap.getAttribute('aria-label'),
+					modal: trap.getAttribute('aria-modal'),
+					role: trap.getAttribute('role'),
+					expanded: $vis(TRIGGER)?.getAttribute('aria-expanded') ?? null,
+					reachable: reachable.map($name),
+				}
+			`)
+			const left = observed.reachable
+			return {
+				observed: `名前="${observed.name}" role="${observed.role}" aria-modal="${observed.modal}" トリガの aria-expanded="${observed.expanded}" 背面に残った行き先=${left.length}件${left.length > 0 ? `（${left.slice(0, 5).join(' / ')}${left.length > 5 ? ' …' : ''}）` : ''}`,
+				ok:
+					left.length === 0 &&
+					!!observed.name &&
+					observed.role === 'dialog' &&
+					observed.modal === 'true' &&
+					observed.expanded === 'true',
+			}
+		},
+	},
+	{
 		name: 'tab-cycle',
 		dialog: true,
 		run: async (p) => {
@@ -1114,7 +1071,6 @@ const probes = [
 			sent('幅を 1280 に広げる')
 			await p.setWidth(1280)
 			await p.evaluate('await $frames(3)')
-			// 跨いだ先で被せた側が消える（ドロワー）なら、行き先は背後のページしか無い
 			const trapShown = await p.evaluate(`return $shown(document.querySelector(TRAP))`)
 			const landings = []
 			for (let i = 0; i < 7; i++) {
@@ -1190,7 +1146,6 @@ const probes = [
 							`f${s.frame}=${s.open ? '開' : '閉'}/行き先${s.destinations}件/prevent=${s.prevented}`,
 					)
 					.join(' '),
-				// 開いていなければ何も送れていない。行き先0件のまま握りつぶすと Tab はどこにも進まない
 				ok:
 					samples.some((sample) => sample.open) &&
 					!samples.some((sample) => sample.destinations === 0 && sample.prevented),
@@ -1220,8 +1175,6 @@ const probes = [
 				return p.evaluate('return { ...$state(), same: !!window.__overlayProbe }')
 			}
 
-			// dev は1往復目でその経路を組み立てる。組み立ての遅れを閉じない証拠にしないため、
-			// 1往復は捨てて測り直す。フルロードで戻った回も、状態ごと復元されるので測れていない
 			for (let attempt = 0; attempt < 3; attempt++) {
 				await cycle()
 				await p.reload()
@@ -1357,21 +1310,16 @@ const probes = [
 		},
 	},
 	{
-		// 背後が動かないことは、body の overflow だけでは足りないブラウザがある。
-		// touchmove が止まったかどうかまで見ないと、止め方が効いているか分からない
 		name: 'touch-被せた側の素の部分をドラッグ',
 		dialog: true,
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
 			const width = config.dragWidth ?? 375
-			// 指の当たり判定は読み込みの時点で決まる。開いた後に入れても cancelable にならない
 			await p.setWidth(width)
 			await p.setTouch(true)
 			await p.reload()
 			await p.setWidth(width)
-			// 指は上に運ぶので、要るのは下に残っている余地。下がった量では測れない。
-			// 決め打ちで下げると、ページの丈が数十px縮むだけで余地が尽きる
 			const offset = await p.evaluate(`
 				return Math.floor((document.documentElement.scrollHeight - window.innerHeight) / 2)
 			`)
@@ -1408,7 +1356,6 @@ const probes = [
 		scroller: true,
 		widths: [375],
 		run: async (p) => {
-			// 高さを詰めないと、中身の量によってはあふれず、送っても動く余地が無い
 			await p.setWidth(375, 420)
 			await p.setTouch(true)
 			await p.reload()
@@ -1480,44 +1427,77 @@ const probes = [
 			await p.pressKey('ArrowDown')
 			await p.evaluate('await $frames(2)')
 			const line = await p.evaluate('return $line()')
+			await sleep(TRANSITION)
+			const fill = await p.evaluate('return $fill()')
 			await p.pressKey('Enter')
 			const moved = await p.waitFor(`$path() !== ${JSON.stringify(from)}`)
 			await sleep(TRANSITION)
 			const state = await p.evaluate('return $state()')
 			return {
-				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}"`,
+				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}" 背景="${fill}"`,
 				ok:
 					moved &&
 					state.overlay === 'hidden' &&
 					line !== TRANSPARENT &&
-					line !== NO_ACTIVE,
+					line !== NO_ACTIVE &&
+					fill !== TRANSPARENT,
 			}
 		},
 	},
 	{
-		// SP に ↑↓ は無く、押せるのは確定 / 検索キーだけ。縦線を出さない幅で効くと、
-		// 見えていない選択のまま記事へ飛ぶ
-		name: '↑↓ の無い幅の ↓ と確定キー',
+		name: '↑↓ の案内の無い幅の ↓ と Enter',
 		input: true,
 		widths: [375],
 		run: async (p) => {
 			await p.open()
 			await p.typeQuery()
+			await sleep(TRANSITION)
+			const fill = await p.evaluate('return $fill()')
 			const from = await p.evaluate(`return $path()`)
 			await p.pressKey('ArrowDown')
 			await p.evaluate('await $frames(2)')
+			const line = await p.evaluate('return $line()')
 			await p.pressKey('Enter')
+			const moved = await p.waitFor(`$path() !== ${JSON.stringify(from)}`)
 			await sleep(TRANSITION)
 			const state = await p.evaluate('return $state()')
-			const line = await p.evaluate('return $line()')
 			return {
-				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}"`,
-				ok: state.overlay === 'visible' && state.path === from && line === TRANSPARENT,
+				observed: `${show(state, ['overlay', 'path'])} 縦線="${line}" 打った直後の背景="${fill}"`,
+				ok:
+					moved &&
+					state.overlay === 'hidden' &&
+					line === TRANSPARENT &&
+					fill === TRANSPARENT,
 			}
 		},
 	},
 	{
-		// SP で開いたまま幅が広がると、ヘッダーの入力欄が裏に現れる
+		name: 'ソフトキーボードで表示領域が縮んだ間の Enter',
+		input: true,
+		widths: [375],
+		run: async (p) => {
+			await p.setTouch(true)
+			await p.open()
+			await p.typeQuery()
+			const from = await p.evaluate(`return $path()`)
+			sent('表示領域の高さを 900 から 500 に縮める')
+			await p.setWidth(375, 500)
+			await p.evaluate('await $frames(2)')
+			await p.pressKey('Enter')
+			await sleep(TRANSITION)
+			const state = await p.evaluate('return $state()')
+			const rows = await p.evaluate(`return document.querySelectorAll(LINK).length`)
+			return {
+				observed: `${show(state, ['overlay', 'path', 'active'])} 行=${rows}件`,
+				ok:
+					state.overlay === 'visible' &&
+					state.path === from &&
+					!state.active.startsWith('INPUT') &&
+					rows > 0,
+			}
+		},
+	},
+	{
 		name: 'shortcut-ダイアログを開いたまま md を跨いだ Cmd+K',
 		shortcut: true,
 		dialog: true,
@@ -1531,263 +1511,25 @@ const probes = [
 			const key = await p.pressShortcut(META)
 			await sleep(TRANSITION)
 			const state = await p.evaluate(`
-				const active = document.activeElement
-				return {
-					...$state(),
-					inDialog: !!document.querySelector(TRAP)?.contains(active),
-					scrims: [...document.querySelectorAll('.search-scrim')].filter(
-						(el) => getComputedStyle(el).visibility === 'visible',
-					).length,
-				}
+				return { ...$state(), onTrigger: document.activeElement === $vis(TRIGGER) }
 			`)
 			await p.setWidth(375)
 			return {
-				observed: `${show(state, ['overlay', 'active', 'query'])} ダイアログの中=${state.inDialog} 見えているスクリム=${state.scrims}件 prevented=${key?.prevented}`,
-				ok:
-					state.overlay === 'visible' &&
-					state.inDialog &&
-					state.scrims === 0 &&
-					key?.prevented === true,
-			}
-		},
-	},
-	{
-		name: 'inline-候補に移ってから Escape で入力欄に戻る',
-		opensByInput: true,
-		run: async (p) => {
-			const before = await p.evaluate('return $state()')
-			await p.open()
-			await p.pressKey('Tab')
-			await p.evaluate('await $frames(2)')
-			const onLink = await p.evaluate('return $state()')
-			await p.pressKey('Escape')
-			await p.waitClosed()
-			const state = await p.evaluate(`
-				return {
-					...$state(),
-					inInput: document.activeElement === document.querySelector(INPUT),
-				}
-			`)
-			return {
-				observed: `Tab の先=${onLink.active} / Escape 後: ${show(state, ['overlay', 'active', 'ring', 'underline'])}`,
+				observed: `${show(state, ['overlay', 'active', 'activeShown'])} トリガに戻った=${state.onTrigger} prevented=${key?.prevented}`,
 				ok:
 					state.overlay === 'hidden' &&
-					state.inInput &&
-					state.ring === NO_RING &&
-					state.underline !== before.underline,
-			}
-		},
-	},
-	{
-		name: 'inline-空の入力では何も出さず、幅だけ伸びる',
-		opensByInput: true,
-		run: async (p) => {
-			const closed = await p.evaluate('return $state()')
-			await p.click(config.input, '入力欄')
-			await sleep(TRANSITION)
-			const state = await p.evaluate('return $state()')
-			return {
-				observed: `${show(state, ['overlay', 'scrim', 'overflow'])} 幅=${closed.width}→${state.width}`,
-				ok:
-					state.overlay === 'hidden' &&
-					state.scrim === 'hidden' &&
-					state.overflow !== 'hidden' &&
-					state.width > closed.width,
-			}
-		},
-	},
-	{
-		name: 'inline-箱の端（⌘K の上）を押しても入力欄に入る',
-		opensByInput: true,
-		run: async (p) => {
-			await p.click('.header-search .search-kbd', '⌘K の表示')
-			await p.evaluate('await $frames(2)')
-			const state = await p.evaluate(`
-				return {
-					...$state(),
-					inInput: document.activeElement === document.querySelector(INPUT),
-				}
-			`)
-			return {
-				observed: show(state, ['active', 'activeShown', 'ring']),
-				ok: state.inInput && state.ring === NO_RING,
-			}
-		},
-	},
-	{
-		// フォーカスが外れると、候補を出したまま入力欄だけ閉じた幅に戻る
-		name: 'inline-パネルの素の部分を押しても幅とフォーカスが動かない',
-		opensByInput: true,
-		run: async (p) => {
-			await p.open()
-			const open = await p.evaluate('return $state()')
-			const point = await p.evaluate(`
-				const box = document.querySelector(OVERLAY).getBoundingClientRect()
-				return { x: Math.round(box.left + 8), y: Math.round(box.bottom - 6) }
-			`)
-			sent('パネルの素の部分を実クリック')
-			await p.mouse('mousePressed', point, 1)
-			await p.mouse('mouseReleased', point, 0)
-			await sleep(TRANSITION)
-			const state = await p.evaluate(`
-				return {
-					...$state(),
-					inInput: document.activeElement === document.querySelector(INPUT),
-				}
-			`)
-			return {
-				observed: `${show(state, ['overlay', 'active', 'query'])} 幅=${open.width}→${state.width}`,
-				ok: state.overlay === 'visible' && state.inInput && state.width === open.width,
-			}
-		},
-	},
-	{
-		// 0件のとき閉じ込めると、行き先が入力欄だけになって Tab が進めない
-		name: 'inline-候補0件でも Tab で先へ進み、候補とスクリムが残らない',
-		opensByInput: true,
-		run: async (p) => {
-			await p.click(config.input, '入力欄')
-			sent('候補の出ない語を打つ')
-			await p.evaluate(`
-				const input = document.querySelector(INPUT)
-				input.focus()
-				input.value = 'zzzzzz'
-				input.dispatchEvent(new Event('input', { bubbles: true }))
-				await $frames(2)
-			`)
-			const open = await p.evaluate('return $state()')
-			await p.pressKey('Tab')
-			await sleep(TRANSITION)
-			const state = await p.evaluate(`
-				const active = document.activeElement
-				return {
-					...$state(),
-					inSearch: !!document.querySelector(TRAP)?.contains(active),
-				}
-			`)
-			return {
-				observed: `打った直後: overlay="${open.overlay}" / Tab 後: ${show(state, ['overlay', 'scrim', 'overflow', 'active'])} 検索の中=${state.inSearch}`,
-				ok:
-					open.overlay === 'visible' &&
-					!state.inSearch &&
 					state.activeShown &&
-					state.overlay === 'hidden' &&
-					state.scrim === 'hidden' &&
-					state.overflow !== 'hidden',
-			}
-		},
-	},
-	{
-		name: 'inline-打つと候補とスクリムが出て背後が止まる',
-		opensByInput: true,
-		run: async (p) => {
-			await p.open()
-			const open = await p.evaluate('return $state()')
-			await p.pressKey('Escape')
-			await p.waitClosed()
-			const closed = await p.evaluate('return $state()')
-			return {
-				observed: `開: ${show(open, ['overlay', 'scrim', 'overflow'])} / Escape後: ${show(closed, ['overlay', 'scrim', 'overflow', 'query'])}`,
-				ok:
-					open.overlay === 'visible' &&
-					open.scrim === 'visible' &&
-					open.overflow === 'hidden' &&
-					closed.overlay === 'hidden' &&
-					closed.scrim === 'hidden' &&
-					closed.overflow !== 'hidden' &&
-					closed.query === open.query,
-			}
-		},
-	},
-	{
-		name: 'inline-2度目の Escape で語が消えて幅が戻る',
-		opensByInput: true,
-		run: async (p) => {
-			const before = await p.evaluate('return $state()')
-			await p.open()
-			await p.pressKey('Escape')
-			await p.waitClosed()
-			await p.pressKey('Escape')
-			await sleep(TRANSITION)
-			const state = await p.evaluate('return $state()')
-			return {
-				observed: `${show(state, ['overlay', 'query', 'active'])} 幅=${before.width}→${state.width}`,
-				ok:
-					state.overlay === 'hidden' &&
-					state.query === '' &&
-					state.width === before.width,
-			}
-		},
-	},
-	{
-		name: 'inline-ヘッダーの外を押すと閉じ、語は残る',
-		opensByInput: true,
-		run: async (p) => {
-			await p.open()
-			const open = await p.evaluate('return $state()')
-			const point = await p.evaluate(`
-				const box = document.querySelector(SCRIM).getBoundingClientRect()
-				return { x: box.left + box.width / 2, y: box.bottom - 8 }
-			`)
-			sent('スクリムの下の方を実クリック')
-			await p.mouse('mousePressed', point, 1)
-			await p.mouse('mouseReleased', point, 0)
-			await p.waitClosed()
-			const state = await p.evaluate('return $state()')
-			return {
-				observed: show(state, ['overlay', 'scrim', 'overflow', 'query']),
-				ok:
-					state.overlay === 'hidden' &&
-					state.scrim === 'hidden' &&
-					state.overflow !== 'hidden' &&
-					state.query === open.query,
-			}
-		},
-	},
-	{
-		name: 'shortcut-Cmd+K で入力欄に寄り、打った語を選び直す',
-		shortcutFocus: true,
-		run: async (p) => {
-			await p.open()
-			const open = await p.evaluate('return $state()')
-			sent('activeElement を blur')
-			await p.evaluate(`document.activeElement?.blur()`)
-
-			let key = null
-			for (let attempt = 0; attempt < 8; attempt++) {
-				key = await p.pressShortcut(META)
-				const inInput = await p.evaluate(
-					`return document.activeElement === document.querySelector(INPUT)`,
-				)
-				if (inInput) break
-			}
-
-			const state = await p.evaluate(`
-				const input = document.querySelector(INPUT)
-				return {
-					...$state(),
-					inInput: document.activeElement === input,
-					selected: input.selectionStart === 0 && input.selectionEnd === input.value.length,
-				}
-			`)
-			return {
-				observed: `${show(state, ['active', 'query'])} 全選択=${state.selected} prevented=${key?.prevented}`,
-				ok:
-					state.inInput &&
-					state.selected &&
-					state.query === open.query &&
+					state.onTrigger &&
 					key?.prevented === true,
 			}
 		},
 	},
 	{
-		// 選択だけ動いて器が追わないと、見えていない行を選んだまま確定して飛ぶ
 		name: 'キー-↓↑ でスクローラが選択を追う',
 		input: true,
 		scroller: true,
 		widths: [1280],
 		run: async (p) => {
-			// 高さを詰めないと、結果の件数によってはあふれず、送っても動く余地が無い
 			await p.setWidth(1280, 420)
 			await p.reload()
 			await p.setWidth(1280, 420)
@@ -1821,7 +1563,6 @@ const probes = [
 			await p.evaluate('await $frames(2)')
 			const first = await p.evaluate(seen)
 
-			// 先頭に戻した scrollTop は0にならない。器の上の余白は行より上にあり、送る先ではない
 			return {
 				observed: `行=${rows}件 末尾で scrollTop=${last.scrollTop}/見えている=${last.shown} 先頭で scrollTop=${first.scrollTop}/見えている=${first.shown}`,
 				ok: last.shown && first.shown && last.scrollTop > first.scrollTop,
@@ -1844,18 +1585,14 @@ const main = async () => {
 				if (item.covering && !covering) continue
 				if (item.scroller && !config.scroller) continue
 				if (item.dialog && !config.dialog) continue
-				if (item.opensByInput && !config.opensByInput) continue
-				if (item.shortcutFocus && !config.shortcutFocus) continue
 				if (item.restoresOnOutsideClick && !config.restoresOnOutsideClick) continue
 				if (item.widths && !item.widths.includes(width)) continue
 
-				// CDP の指の設定は reload でも消えない。前の probe の条件を持ち越さない
 				await probe.setTouch(false)
 				await probe.reload()
 				await probe.setWidth(width)
 				sentSteps.length = 0
 				try {
-					// 幅を自分で変える probe がある。行の幅は送った側に合わせる
 					const { observed, ok, width: sent = width } = await item.run(probe)
 					record(sent, item.name, observed, ok)
 					if (ok === false) failed++
@@ -1871,9 +1608,7 @@ const main = async () => {
 		await sleep(200)
 		try {
 			rmSync(probe.profile, { recursive: true, force: true })
-		} catch {
-			// 終わり際のブラウザが書いている。残っても次回は別の一時ディレクトリを使う
-		}
+		} catch {}
 	}
 
 	mkdirSync('.verify', { recursive: true })

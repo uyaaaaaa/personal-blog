@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// 大きいファイルの丸読みを止め、下位モデルのサブエージェント（read）に読ませる。
-// 小さいファイルと範囲を絞った読みは通す。委譲の往復のほうが高くつく。
 import { statSync } from 'node:fs'
 import { read } from '../../scripts/stdin.mjs'
 

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-// remark-mdc だけ依存に宣言しない。宣言すると版が別に解決され、記事を変換するのとは
-// 違う実体を測ることになるため
+// remark-mdc を依存に宣言すると別の版が解決され、記事の変換と違う実体を測る
 import remarkMdc from 'remark-mdc'
 import remarkParse from 'remark-parse'
 import { unified } from 'unified'

@@ -1,0 +1,5 @@
+schema_version: '1.1'
+name: create-issues-shape
+description: 解決策込みで持ち込まれた課題を、型に沿って外から判定できる完了条件で書けるか
+context:
+    scaffold_script: fixture.sh

@@ -1,0 +1,37 @@
+name: Setup
+description: Node と、lockfile ごとに保存した node_modules を用意する
+
+inputs:
+    prepare:
+        description: 保存した node_modules を戻したときに .nuxt を作り直すか
+        default: 'false'
+
+runs:
+    using: composite
+    steps:
+        - uses: actions/setup-node@v7
+          id: node
+          with:
+              node-version: 22
+
+        - uses: actions/cache/restore@v6
+          id: modules
+          with:
+              path: node_modules
+              key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+
+        # --ignore-scripts で入れると better-sqlite3 のバイナリが欠けたまま保存されるので、どのジョブも同じ入れ方にする
+        - if: steps.modules.outputs.cache-hit != 'true'
+          run: npm ci
+          shell: bash
+
+        # ジョブの終わりまで待つと、テストやビルドが node_modules に書いたものまで保存される
+        - if: steps.modules.outputs.cache-hit != 'true'
+          uses: actions/cache/save@v6
+          with:
+              path: node_modules
+              key: ${{ steps.modules.outputs.cache-primary-key }}
+
+        - if: steps.modules.outputs.cache-hit == 'true' && inputs.prepare == 'true'
+          run: npm run postinstall
+          shell: bash

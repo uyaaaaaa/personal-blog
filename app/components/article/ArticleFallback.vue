@@ -1,5 +1,8 @@
 <template>
-	<div class="max-w-column py-8">
+	<div
+		lang="en"
+		class="max-w-column py-8"
+	>
 		<div
 			class="flex flex-col items-center gap-3 rounded-card border border-dashed border-border bg-surface px-6 py-10 text-center"
 			:role="variant === 'error' ? 'status' : undefined"
@@ -45,7 +48,7 @@
 						<span class="flex-none font-mono text-meta text-sub">{{
 							formatDate(article.date)
 						}}</span>
-						<span>{{ article.title }}</span>
+						<span lang="ja">{{ article.title }}</span>
 					</NuxtLink>
 				</li>
 			</ul>

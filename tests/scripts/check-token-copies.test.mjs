@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { check as run } from '~~/scripts/check-token-copies.mjs'
+import { inProcess } from './inProcess.test-helper.mjs'
 
 const SCRIPT = fileURLToPath(new URL('../../scripts/check-token-copies.mjs', import.meta.url))
 
@@ -56,57 +58,57 @@ const all = (overrides = {}) => {
 	config(overrides.theme)
 }
 
-const check = () => spawnSync(process.execPath, [SCRIPT, root], { encoding: 'utf8' })
+const check = () => inProcess(run, root)
 
 describe('check-token-copies', () => {
-	it('写しが揃っていれば通す', () => {
+	it('写しが揃っていれば通す', async () => {
 		all()
-		expect(check().status).toBe(0)
+		expect((await check()).status).toBe(0)
 	})
 
-	it('綴りの大文字小文字は違いとして見ない', () => {
+	it('綴りの大文字小文字は違いとして見ない', async () => {
 		all({ tokens: { light: '#24292e', dark: '#e1e4e8' }, manifest: { theme: '#fafaf8' } })
-		expect(check().status).toBe(0)
+		expect((await check()).status).toBe(0)
 	})
 
-	it('webmanifest の theme_color が地の色と違えば落とす', () => {
+	it('webmanifest の theme_color が地の色と違えば落とす', async () => {
 		all({ manifest: { theme: '#FFFFFF' } })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/theme_color は #FFFFFF/)
 		expect(stderr).toMatch(/colors\.bg は #FAFAF8/)
 	})
 
-	it('code-text がテーマの前景色と違えば落とす', () => {
+	it('code-text がテーマの前景色と違えば落とす', async () => {
 		all({ tokens: { light: '#C9D1D9' } })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/colors\['code-text'\] は #C9D1D9/)
 		expect(stderr).toMatch(/github-light の editor\.foreground は #24292e/)
 	})
 
-	it('darkColors の code-text がテーマの前景色と違えば落とす', () => {
+	it('darkColors の code-text がテーマの前景色と違えば落とす', async () => {
 		all({ tokens: { dark: '#E6EDF3' } })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/darkColors\['code-text'\] は #E6EDF3/)
 		expect(stderr).toMatch(/github-dark の editor\.foreground は #e1e4e8/)
 	})
 
-	it('突き合わせる前景色は nuxt.config が選んだテーマから取る', () => {
+	it('突き合わせる前景色は nuxt.config が選んだテーマから取る', async () => {
 		all({ theme: "{ default: 'github-dark', dark: 'github-dark' }" })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/colors\['code-text'\] は #24292E/)
 		expect(stderr).toMatch(/github-dark の editor\.foreground は #e1e4e8/)
 	})
 
-	it('テーマを1つの綴りで選んでいれば明暗の両方に使う', () => {
+	it('テーマを1つの綴りで選んでいれば明暗の両方に使う', async () => {
 		all({ tokens: { light: DARK_FOREGROUND }, theme: "'github-dark'" })
-		expect(check().status).toBe(0)
+		expect((await check()).status).toBe(0)
 	})
 
-	it('highlight の外の theme を正本にしない', () => {
+	it('highlight の外の theme を正本にしない', async () => {
 		all({ tokens: { light: DARK_FOREGROUND }, theme: null })
 		writeFileSync(
 			join(root, 'nuxt.config.ts'),
@@ -115,12 +117,12 @@ describe('check-token-copies', () => {
 				`\tappConfig: { theme: 'github-dark' },\n` +
 				`})\n`,
 		)
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/highlight\.theme が無い/)
 	})
 
-	it('コメントの中の theme を正本にしない', () => {
+	it('コメントの中の theme を正本にしない', async () => {
 		all({ tokens: { dark: LIGHT_FOREGROUND } })
 		writeFileSync(
 			join(root, 'nuxt.config.ts'),
@@ -130,12 +132,12 @@ describe('check-token-copies', () => {
 				`\t\ttheme: ${THEMES}, langs: [] } } } },\n` +
 				`})\n`,
 		)
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/github-dark の editor\.foreground は #e1e4e8/)
 	})
 
-	it('綴りの中の theme を正本にしない', () => {
+	it('綴りの中の theme を正本にしない', async () => {
 		all({ tokens: { dark: LIGHT_FOREGROUND } })
 		writeFileSync(
 			join(root, 'nuxt.config.ts'),
@@ -145,12 +147,12 @@ describe('check-token-copies', () => {
 				`\t\ttheme: ${THEMES}, langs: [] } } } },\n` +
 				`})\n`,
 		)
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/github-dark の editor\.foreground は #e1e4e8/)
 	})
 
-	it('コメントアウトされた明暗の項目を拾わない', () => {
+	it('コメントアウトされた明暗の項目を拾わない', async () => {
 		all({ tokens: { dark: LIGHT_FOREGROUND } })
 		writeFileSync(
 			join(root, 'nuxt.config.ts'),
@@ -162,35 +164,35 @@ describe('check-token-copies', () => {
 				`\t} , langs: [] } } } },\n` +
 				`})\n`,
 		)
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/github-dark の editor\.foreground は #e1e4e8/)
 	})
 
-	it('設定が既定のエクスポートを持たなければ理由を出す', () => {
+	it('設定が既定のエクスポートを持たなければ理由を出す', async () => {
 		all()
 		writeFileSync(join(root, 'nuxt.config.ts'), `export const config = {}\n`)
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/既定のエクスポートが無い/)
 	})
 
-	it('無いキーをそのものの名前で言う', () => {
+	it('無いキーをそのものの名前で言う', async () => {
 		all()
 		writeFileSync(
 			join(root, 'nuxt.config.ts'),
 			`export default defineNuxtConfig({ app: {} })\n`,
 		)
-		expect(check().stderr).toMatch(/^\s+content が無い$/m)
+		expect((await check()).stderr).toMatch(/^\s+content が無い$/m)
 
 		writeFileSync(
 			join(root, 'nuxt.config.ts'),
 			`export default defineNuxtConfig({ content: { build: { markdown: {} } } })\n`,
 		)
-		expect(check().stderr).toMatch(/^\s+content\.build\.markdown\.highlight が無い$/m)
+		expect((await check()).stderr).toMatch(/^\s+content\.build\.markdown\.highlight が無い$/m)
 	})
 
-	it('dark を持たないテーマの指定を、綴り1本と同じに扱う', () => {
+	it('dark を持たないテーマの指定を、綴り1本と同じに扱う', async () => {
 		all({ tokens: { dark: LIGHT_FOREGROUND } })
 		writeFileSync(
 			join(root, 'nuxt.config.ts'),
@@ -198,48 +200,55 @@ describe('check-token-copies', () => {
 				`\tcontent: { build: { markdown: { highlight: { theme: { default: 'github-light' } } } } },\n` +
 				`})\n`,
 		)
-		expect(check().status).toBe(0)
+		expect((await check()).status).toBe(0)
 	})
 
-	it('正本に値が無ければ、どの写しのものか分かる理由を出す', () => {
+	it('正本に値が無ければ、どの写しのものか分かる理由を出す', async () => {
 		all()
 		writeFileSync(join(root, 'theme/tokens.ts'), `export const colors = {} as const\n`)
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/theme_color の正本 theme\/tokens\.ts の colors\.bg に値が無い/)
 		expect(stderr).toMatch(/background_color の正本/)
 		expect(stderr).not.toMatch(/TypeError/)
 	})
 
-	it('写しの側に値が無ければ理由を出す', () => {
+	it('写しの側に値が無ければ理由を出す', async () => {
 		all()
 		writeFileSync(join(root, 'public/site.webmanifest'), '{}')
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/theme_color に値が無い/)
 		expect(stderr).not.toMatch(/TypeError/)
 	})
 
-	it('入っていないテーマを選んでいれば理由を出す', () => {
+	it('入っていないテーマを選んでいれば理由を出す', async () => {
 		all({ theme: "{ default: 'nonexistent-theme', dark: 'github-dark' }" })
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/テーマ nonexistent-theme を読み取れない/)
 	})
 
-	it('webmanifest が JSON として読めなければ理由を出す', () => {
+	it('webmanifest が JSON として読めなければ理由を出す', async () => {
 		all()
 		writeFileSync(join(root, 'public/site.webmanifest'), '{')
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/JSON として読めない/)
 	})
 
-	it('tokens.ts が無ければ理由を出す', () => {
+	it('tokens.ts が無ければ理由を出す', async () => {
 		all()
 		rmSync(join(root, 'theme/tokens.ts'))
-		const { status, stderr } = check()
+		const { status, stderr } = await check()
 		expect(status).toBe(1)
 		expect(stderr).toMatch(/theme\/tokens\.ts を読み取れない/)
+	})
+
+	it('CLI として引数のディレクトリを見て、落ちれば終了コード 1 を返す', () => {
+		all({ manifest: { theme: '#FFFFFF' } })
+		const { status, stderr } = spawnSync(process.execPath, [SCRIPT, root], { encoding: 'utf8' })
+		expect(status).toBe(1)
+		expect(stderr).toMatch(/theme_color は #FFFFFF/)
 	})
 })

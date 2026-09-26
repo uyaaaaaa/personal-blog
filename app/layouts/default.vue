@@ -2,6 +2,7 @@
 	<div class="layout-container">
 		<a
 			href="#main-content"
+			lang="en"
 			class="skip-link"
 			>Skip to content</a
 		>
@@ -9,7 +10,7 @@
 		<main
 			id="main-content"
 			tabindex="-1"
-			class="flex-1 scroll-mt-below-header-sm px-5 pb-16 pt-7 md:scroll-mt-below-header md:px-10 md:pb-24 md:pt-14"
+			class="main-content flex-1 scroll-mt-below-header-sm px-5 pb-16 pt-7 md:scroll-mt-below-header md:px-10 md:pb-24 md:pt-14"
 		>
 			<div
 				class="mx-auto w-full"
@@ -27,12 +28,37 @@
 	import Header from '~/components/layout/Header.vue'
 	import Footer from '~/components/layout/Footer.vue'
 	import Toast from '~/components/ui/Toast.vue'
+	import { focusMainContent } from '~/composables/gestureFocus'
 
 	const route = useRoute()
+	const router = useRouter()
 
 	const measure = computed(() =>
 		route.meta.sideColumn ? 'max-w-column lg:max-w-article' : 'max-w-column',
 	)
+
+	// 戻る・進むはブラウザが位置を戻すので触らない
+	let traversedTo: string | undefined
+	let stopListening: (() => void) | undefined
+	let stopAfterEach: (() => void) | undefined
+
+	onMounted(() => {
+		stopListening = router.options.history.listen((to) => {
+			traversedTo = router.resolve(to).fullPath
+		})
+		stopAfterEach = router.afterEach((to, from, failure) => {
+			const byHistory = to.fullPath === traversedTo
+			if (byHistory) traversedTo = undefined
+			if (failure || byHistory || to.path === from.path) return
+
+			nextTick(focusMainContent)
+		})
+	})
+
+	onUnmounted(() => {
+		stopListening?.()
+		stopAfterEach?.()
+	})
 
 	/* eslint-disable style/no-outline-removal -- 目印が付くのはポインタで移したフォーカスと、開いた直後に自動で寄せたフォーカスだけ */
 </script>
@@ -77,6 +103,10 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
+	}
+
+	.main-content:focus-visible {
+		outline-offset: -2px;
 	}
 
 	.skip-link {

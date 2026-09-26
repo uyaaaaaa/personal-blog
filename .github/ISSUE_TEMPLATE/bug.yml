@@ -1,0 +1,36 @@
+name: 不具合
+description: 期待と違う振る舞いを直す
+labels: [bug]
+body:
+    - type: markdown
+      attributes:
+          value: |
+              - タイトルは1行の言い切り。分類の接頭辞は付けない
+              - 本文40行以内、1節3項目以内、1項目1行
+    - type: textarea
+      id: goal
+      attributes:
+          label: ゴール
+          description: 何がどうなってほしいか
+      validations:
+          required: true
+    - type: textarea
+      id: current
+      attributes:
+          label: 現状
+          description: 再現手順・出力・該当箇所
+      validations:
+          required: true
+    - type: textarea
+      id: done
+      attributes:
+          label: 完了条件
+          description: 満たしたかを外から判定できる状態
+          value: '- [ ] '
+      validations:
+          required: true
+    - type: textarea
+      id: hints
+      attributes:
+          label: 手がかり
+          description: 読む場所と観測した事実

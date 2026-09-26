@@ -4,7 +4,12 @@
 		class="group"
 		:class="{ relative: !isHidden }"
 	>
-		<span @click.exact="jump"><slot /></span>
+		<span
+			:class="{ 'lg:cursor-pointer': props.id && !isHidden }"
+			@click.exact="jump"
+		>
+			<slot />
+		</span>
 		<HeadingAnchor
 			v-if="props.id && !isHidden"
 			:heading-id="props.id"

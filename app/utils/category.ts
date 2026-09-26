@@ -1,11 +1,11 @@
-export const CATEGORY_LABELS = {
+export const CATEGORIES = ['blog', 'book'] as const
+
+export type Category = (typeof CATEGORIES)[number]
+
+export const CATEGORY_LABELS: Record<Category, string> = {
 	blog: 'Blog',
 	book: 'Books',
-} as const
-
-export type Category = keyof typeof CATEGORY_LABELS
-
-export const CATEGORIES = Object.keys(CATEGORY_LABELS) as Category[]
+}
 
 export const isCategory = (value: string): value is Category =>
 	Object.hasOwn(CATEGORY_LABELS, value)

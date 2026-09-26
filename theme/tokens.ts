@@ -7,12 +7,12 @@ export const colors = {
 	'accent-contrast': '#FFFFFF',
 	border: '#E6E4DF',
 	'border-strong': '#1A1A1A',
+	'border-field': '#8A8883',
 	surface: '#FFFFFF',
 	'surface-subtle': '#F3F2EE',
 	'surface-muted': '#ECEAE4',
 	'header-bg': 'rgba(250, 250, 248, 0.9)',
 	overlay: 'rgba(0, 0, 0, 0.5)',
-	'overlay-subtle': 'rgba(0, 0, 0, 0.25)',
 	scrollbar: '#D1D0CC',
 	'code-text': '#24292E',
 	// github-lightがdiffのトークンに持つ背景色
@@ -32,12 +32,12 @@ export const darkColors: Record<keyof typeof colors, string> = {
 	'accent-contrast': '#141414',
 	border: '#2E2E2E',
 	'border-strong': '#8A8A86',
+	'border-field': '#6E6E6A',
 	surface: '#1A1A1A',
 	'surface-subtle': '#1E1E1E',
 	'surface-muted': '#262626',
 	'header-bg': 'rgba(20, 20, 20, 0.85)',
 	overlay: 'rgba(0, 0, 0, 0.5)',
-	'overlay-subtle': 'rgba(0, 0, 0, 0.35)',
 	scrollbar: '#3A3A3A',
 	'code-text': '#E1E4E8',
 	// GitHubのdiff表示の行背景（github-darkのトークン背景は帯が強すぎる）
@@ -67,22 +67,21 @@ export const fontFamily = {
 	mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 }
 
-// meta / ui / total / notice-title は Tailwind の既定の xs / sm / base / xl と同じ値。
-// 既定を閉じるのが目的で、大きさそのものは動かさない
+// Tailwind の既定の xs / sm / base / xl と同じ値。既定を閉じるためだけに持つ
 export const fontSize = {
-	'2xs': '11px',
+	'2xs': '0.75rem',
 	meta: ['0.75rem', '1rem'],
-	code: ['13px', '1.7'],
+	code: ['0.875rem', '1.7'],
 	ui: ['0.875rem', '1.25rem'],
-	'list-title': ['16px', '1.4'],
+	'list-title': ['1rem', '1.4'],
 	total: ['1rem', '1.5rem'],
 	logo: '1.125rem',
 	'notice-title': ['1.25rem', '1.75rem'],
-	'title-sm': ['23px', '1.35'],
-	heading: ['24px', '1.3'],
-	'hero-sm': ['26px', '1.3'],
-	title: ['32px', '1.35'],
-	hero: ['38px', '1.25'],
+	'title-sm': ['1.5rem', '1.35'],
+	heading: ['1.5rem', '1.3'],
+	'hero-sm': ['1.625rem', '1.3'],
+	title: ['2rem', '1.35'],
+	hero: ['2.375rem', '1.25'],
 } as Record<string, string | [string, string]>
 
 export const durations = {
@@ -90,7 +89,6 @@ export const durations = {
 	move: '0.2s',
 } as const
 
-// 用途のクラス（transition-color / transition-move）が動かすプロパティ。
 // color は Tailwind の transition-colors と同じ並び
 export const motionProperties: Record<keyof typeof durations, string[]> = {
 	color: ['color', 'background-color', 'border-color', 'text-decoration-color', 'fill', 'stroke'],
@@ -112,9 +110,9 @@ export const sizes = {
 	},
 	gridTemplateColumns: {
 		article: 'minmax(0, 680px) 224px',
-		list: '36px 1fr 110px',
-		'list-sm': '30px 1fr',
-		pickup: '96px 1fr',
+		list: '2.25rem 1fr 6.875rem',
+		'list-sm': '1.875rem 1fr',
+		pickup: '6rem 1fr',
 	},
 	height: {
 		'header-sm': HEADER_SM,
@@ -126,11 +124,10 @@ export const sizes = {
 	maxHeight: {
 		'sticky-column': `calc(100vh - ${TOC_TOP})`,
 		'toc-panel': `calc(100dvh - ${TOC_PANEL_TOP})`,
-		'search-panel': `calc(100dvh - ${HEADER} - 1rem)`,
 	},
 	maxWidth: {
 		'search-trigger': '200px',
-		'search-open': '420px',
+		'search-open': '640px',
 		column: '680px',
 		article: '960px',
 		container: '1200px',

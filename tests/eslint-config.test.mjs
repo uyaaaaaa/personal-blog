@@ -16,13 +16,15 @@ const STYLESHEET = /スタイルシートを組み立てない/
 const SINGLE_SOURCE = /色の直値|書体の名前|fontFamily が持つ名前のクラス/
 const RENDER_ONLY = /ルートファイルは実体コンポーネント/
 const STDIN = /標準入力は scripts\/stdin\.mjs だけが読む/
+const CHECK_INPUT = /検査が入力を読む口は/
 const PUBLISHED = /記事のクエリには公開制御/
 const QUERY_LOCATION = /記事の取得を組み立てるのは/
 const DOM_ASSEMBLY = /DOM を組み立てない/
 const DISPLAY = /display: none を宣言に書かない/
 const MOTION = /決めた長さではない|モーションのクラスは用途の名前|transition の対象に all/
+const REDUCED_MOTION =
+	/滑らかな送りは useScrollTo の外で指定しない|モーションの宣言に !important を付けない/
 
-// 落ちる理由が他のルールに移っても気づけるよう、Web フォントの指摘だけを数える
 const webFontsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => WEB_FONT.test(message.message)).length
@@ -68,6 +70,11 @@ const motionsIn = async (relative, code) => {
 	return result.messages.filter((message) => MOTION.test(message.message)).length
 }
 
+const reducedMotionsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => REDUCED_MOTION.test(message.message)).length
+}
+
 const displaysIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => DISPLAY.test(message.message)).length
@@ -81,6 +88,11 @@ const renderOnlyIn = async (relative, code) => {
 const stdinReadsIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => STDIN.test(message.message)).length
+}
+
+const checkInputsIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => CHECK_INPUT.test(message.message)).length
 }
 
 const queryLocationsIn = async (relative, code) => {
@@ -98,7 +110,11 @@ const assembliesIn = async (relative, code) => {
 	return result.messages.filter((message) => DOM_ASSEMBLY.test(message.message)).length
 }
 
-// 並びの指摘は綴りが eslint-plugin-vue のものなので、ルール名で数える
+const accessibilityIn = async (relative, code) => {
+	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
+	return result.messages.filter((message) => message.ruleId?.startsWith('a11y/')).length
+}
+
 const blockOrdersIn = async (relative, code) => {
 	const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, relative) })
 	return result.messages.filter((message) => message.ruleId === 'vue/block-order').length
@@ -557,7 +573,6 @@ describe('表示・非表示の出し分け', () => {
 		expect(await displaysIn('app/pages/a.vue', sfc('<p class="hidden md:block" />'))).toBe(0)
 	})
 
-	// v-show は許す側に決めた経路。判定が template まで広がるとここが落ちる
 	it('実行時に display を書く v-show は通す', async () => {
 		const code = sfc('<p v-show="open" />', 'const open = false')
 		expect(await displaysIn('app/pages/a.vue', code)).toBe(0)
@@ -579,6 +594,152 @@ describe('モーションの長さ', () => {
 		expect(await motionsIn('app/pages/a.vue', style('.a { @apply duration-[200ms]; }'))).toBe(1)
 		expect(
 			await motionsIn('app/pages/a.vue', style('.a { transition: transform 0.2s; }')),
+		).toBe(0)
+	})
+})
+
+describe('動きを減らす設定', () => {
+	const style = (css) => `${sfc('<p class="a" />')}\n<style scoped>${css}</style>`
+
+	it('設定を読まずに滑らかに送る指定を落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/components/layout/a.vue',
+				sfc(
+					'<div />',
+					"const panel = ref<HTMLElement | null>(null)\npanel.value?.scrollTo({ top: 0, behavior: 'smooth' })",
+				),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"const behavior: ScrollBehavior = 'smooth'\nexport const useA = (el: HTMLElement) => el.scrollBy({ top: 8, behavior })",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/pages/a.vue',
+				sfc('<button @click="$el.scrollTo({ behavior: \'smooth\' })" />'),
+			),
+		).toBe(1)
+	})
+
+	it('送り方でない smooth は通す', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/utils/a.ts',
+				"export const texture = 'smooth'\nexport const pick = (a: string) => ({ finish: a || 'smooth' })",
+			),
+		).toBe(0)
+	})
+
+	it('設定を読む useScrollTo は通す', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useScrollTo.ts',
+				"export const useScrollTo = () => window.scrollTo({ top: 0, behavior: 'smooth' })",
+			),
+		).toBe(0)
+	})
+
+	it('設定より強いモーションの宣言を落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/pages/a.vue',
+				style('.a { transition: transform 0.2s !important; }'),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', style('.a { @apply !transition-move; }')),
+		).toBe(1)
+	})
+
+	it('script で組んだ ! 付きのモーションのクラスを落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/components/ui/a.vue',
+				sfc('<p :class="cls" />', "const cls = 'md:!transition-move'"),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/utils/a.ts',
+				"export const cls = (open: boolean) => `${open ? '!transition-color' : ''}`",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/components/ui/a.vue',
+				sfc('<p :class="cls" />', "const cls = 'transition-move !mt-0'"),
+			),
+		).toBe(0)
+	})
+
+	it('Tailwind の設定から出す !important のモーションを落とす', async () => {
+		const tailwind = (body) =>
+			`import plugin from 'tailwindcss/plugin'\nexport default { ${body} }`
+		expect(await reducedMotionsIn('tailwind.config.ts', tailwind('important: true'))).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/utils/a.ts',
+				"export const badge = { label: 'new', important: true }",
+			),
+		).toBe(0)
+		expect(
+			await reducedMotionsIn(
+				'tailwind.config.ts',
+				tailwind(
+					"plugins: [plugin(({ addUtilities }) => addUtilities({ '.a': { transitionDuration: '1s !important' } }))]",
+				),
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'tailwind.config.ts',
+				tailwind(
+					"plugins: [plugin(({ addBase }) => addBase({ '*': { transitionDuration: '0s !important' } }))]",
+				),
+			),
+		).toBe(0)
+	})
+
+	it('el.style に書くモーションの !important を落とす', async () => {
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('transition-duration', '1s', 'important')",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => (el.style.cssText = 'transition: opacity 1s !important')",
+			),
+		).toBe(1)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('--panel', '1s', 'important')",
+			),
+		).toBe(0)
+		expect(
+			await reducedMotionsIn(
+				'app/composables/useA.ts',
+				"export const useA = (el: HTMLElement) => el.style.setProperty('transition', 'none', 'important')",
+			),
+		).toBe(0)
+	})
+
+	it('用途のクラスと直に書いた長さは通す', async () => {
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', sfc('<p class="transition-color" />')),
+		).toBe(0)
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', style('.a { @apply md:transition-move; }')),
+		).toBe(0)
+		expect(
+			await reducedMotionsIn('app/pages/a.vue', style('.a { transition: color 0.15s; }')),
 		).toBe(0)
 	})
 })
@@ -822,5 +983,82 @@ describe('composable の DOM の組み立て', () => {
 		expect(
 			await assembliesIn('tests/app/utils/shelf.test.ts', body("host.appendChild(h('p'))")),
 		).toBe(0)
+	})
+})
+
+describe('検査の入力の読み取り', () => {
+	const CHECK = 'scripts/check-areas.mjs'
+
+	it('綴りを変えた読み取りも落とす', async () => {
+		expect(
+			await checkInputsIn(CHECK, "import { readFileSync } from 'node:fs'"),
+		).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, "import fs from 'fs/promises'")).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, "await import('./a.mjs')")).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, 'const data = JSON.parse(source)')).toBeGreaterThan(0)
+		expect(
+			await checkInputsIn(CHECK, 'const data = globalThis.JSON.parse(source)'),
+		).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, 'const { parse } = JSON')).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, 'const parse = JSON.parse')).toBeGreaterThan(0)
+		expect(await checkInputsIn(CHECK, "const fs = require('node:fs')")).toBeGreaterThan(0)
+		expect(
+			await checkInputsIn(CHECK, 'const need = createRequire(import.meta.url)'),
+		).toBeGreaterThan(0)
+		expect(
+			await checkInputsIn(CHECK, "const fs = process.getBuiltinModule('node:fs')"),
+		).toBeGreaterThan(0)
+		expect(
+			await checkInputsIn(
+				'scripts/article-files.mjs',
+				"import { readdirSync } from 'node:fs'",
+			),
+		).toBeGreaterThan(0)
+	})
+
+	it('集約先そのものと、通して読む側は通す', async () => {
+		expect(
+			await checkInputsIn('scripts/inputs.mjs', "import { readFileSync } from 'node:fs'"),
+		).toBe(0)
+		expect(
+			await checkInputsIn(CHECK, "import { inputs } from './inputs.mjs'\ninputs().read('a')"),
+		).toBe(0)
+		expect(
+			await checkInputsIn(
+				'tests/scripts/check-areas.test.mjs',
+				"import { writeFileSync } from 'node:fs'",
+			),
+		).toBe(0)
+		expect(
+			await checkInputsIn(
+				'scripts/overlay-probe.mjs',
+				"import { readFileSync } from 'node:fs'",
+			),
+		).toBe(0)
+		expect(await checkInputsIn(CHECK, 'postcss.parse(source)')).toBe(0)
+	})
+})
+
+describe('テンプレートのアクセシビリティ', () => {
+	it('app/ のテンプレートに掛かる', async () => {
+		for (const relative of [
+			'app/components/ui/Button.vue',
+			'app/pages/index.vue',
+			'app/app.vue',
+		])
+			expect(
+				await accessibilityIn(
+					relative,
+					sfc('<button type="button"><CloseIcon /></button>'),
+				),
+			).toBe(1)
+	})
+
+	it('ルートの隠し方とファイル名の食い違いを見る', async () => {
+		expect(await accessibilityIn('app/components/ui/CloseIcon.vue', sfc('<svg />'))).toBe(1)
+		expect(
+			await accessibilityIn('app/components/ui/Logo.vue', sfc('<svg aria-hidden="true" />')),
+		).toBe(1)
+		expect(await accessibilityIn('app/components/ui/Logo.vue', sfc('<svg />'))).toBe(0)
 	})
 })

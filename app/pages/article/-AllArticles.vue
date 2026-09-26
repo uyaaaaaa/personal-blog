@@ -1,6 +1,8 @@
 <template>
 	<ArticleIndex :list="list">
-		<template #heading>Articles</template>
+		<template #heading>
+			<span lang="en">Articles</span>
+		</template>
 		<template #filter>
 			<CategoryFilter :current="null" />
 		</template>

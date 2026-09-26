@@ -1,4 +1,5 @@
 import { z } from '@nuxt/content'
+import { CATEGORIES } from './app/utils/category.ts'
 
 export const articleSchema = z
 	.object({
@@ -7,7 +8,7 @@ export const articleSchema = z
 		published: z.boolean(),
 		date: z.string().date(),
 		tags: z.array(z.string()).optional(),
-		category: z.enum(['blog', 'book']),
+		category: z.enum(CATEGORIES),
 	})
 	.strict()
 
@@ -15,5 +16,6 @@ export const digestSchema = z
 	.object({
 		title: z.string(),
 		date: z.string().date(),
+		source: z.string().url(),
 	})
 	.strict()

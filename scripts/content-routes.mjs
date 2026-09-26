@@ -4,8 +4,7 @@ import { ARTICLE, DIGEST } from '../content.collections.mjs'
 const ARTICLE_TABLE = `_content_${ARTICLE}`
 const DIGEST_TABLE = `_content_${DIGEST}`
 
-// パスは @nuxt/content が slugify して決める。ファイル名から組み直すと綴りが割れるので、
-// ビルド時に組み上がった collection の DB をそのまま読む
+// パスは @nuxt/content が slugify で決めるので、組み上がった DB をそのまま読む
 const paths = (databaseFile, table, what, condition) => {
 	const where = condition === undefined ? '' : ` WHERE ${condition}`
 	let db

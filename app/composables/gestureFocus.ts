@@ -27,15 +27,19 @@ const unmark = (event: FocusEvent) => {
 
 export const focusByGesture = (
 	element: HTMLElement | null | undefined,
-	options?: { asPointer?: boolean },
+	options?: { asPointer?: boolean; preventScroll?: boolean },
 ) => {
 	if (!element) return
 
 	element.removeAttribute(POINTER_ATTRIBUTE)
-	element.focus()
+	element.focus({ preventScroll: options?.preventScroll })
 
 	if ((options?.asPointer || byPointer) && document.activeElement === element) {
 		element.setAttribute(POINTER_ATTRIBUTE, '')
 		element.addEventListener('blur', unmark, { once: true })
 	}
+}
+
+export const focusMainContent = () => {
+	focusByGesture(document.getElementById('main-content'), { preventScroll: true })
 }
