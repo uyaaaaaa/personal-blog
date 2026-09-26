@@ -214,6 +214,13 @@ describe('no-off-purpose-motion', () => {
 					filename: 'a.vue',
 					code: sfc('.a { transition-property: visibility; transition-duration: 0.2s; }'),
 				},
+				// 短縮形の後ろの longhand が緩急を足す
+				{
+					filename: 'a.vue',
+					code: sfc(
+						'.a { transition: opacity 0.2s, transform 0.2s; transition-timing-function: var(--ease-enter); }',
+					),
+				},
 				{
 					filename: 'a.vue',
 					code: sfc(
@@ -302,6 +309,13 @@ describe('no-off-purpose-motion', () => {
 					errors: [{ messageId: 'offTokenEasing' }],
 				},
 				// 書かない緩急は ease になる
+				{
+					filename: 'a.vue',
+					code: sfc(
+						'.a { transition-timing-function: var(--ease-enter); transition: opacity 0.2s; }',
+					),
+					errors: [{ messageId: 'noEasing' }],
+				},
 				{
 					filename: 'a.vue',
 					code: sfc('.a { animation: spin 0.2s; }'),

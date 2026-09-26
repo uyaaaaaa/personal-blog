@@ -334,6 +334,17 @@ function longhandFindings(rule) {
 	})
 }
 
+// 短縮形の後ろに同じ規則の *-timing-function があれば、緩急はそちらが決める
+function easedLater(decl) {
+	const timing = `${decl.prop.toLowerCase()}-timing-function`
+	let next = decl.next()
+	while (next !== undefined) {
+		if (next.type === 'decl' && next.prop.toLowerCase() === timing) return true
+		next = next.next()
+	}
+	return false
+}
+
 // 宣言1つ分の指摘。置き場所は呼ぶ側が足す
 function motionFindings(property, value) {
 	const found = []
@@ -640,7 +651,8 @@ const CHECKS = {
 			const found = []
 			root.walkDecls((decl) => {
 				for (const one of motionFindings(decl.prop, decl.value))
-					found.push({ node: decl, ...one })
+					if (one.messageId !== 'noEasing' || !easedLater(decl))
+						found.push({ node: decl, ...one })
 			})
 			root.walkRules((rule) => found.push(...longhandFindings(rule)))
 			root.walkAtRules('apply', (rule) => {
