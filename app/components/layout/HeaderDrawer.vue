@@ -41,7 +41,7 @@
 					<NuxtLink
 						to="/"
 						class="drawer-row"
-						@click="closeDrawer"
+						@click="closeToGo('/')"
 					>
 						<HomeIcon class="drawer-icon" />
 						<span class="drawer-row-label">Home</span>
@@ -51,7 +51,7 @@
 						to="/profile"
 						class="drawer-row"
 						prefetch-on="interaction"
-						@click="closeDrawer"
+						@click="closeToGo('/profile')"
 					>
 						<UserIcon class="drawer-icon" />
 						<span class="drawer-row-label">Profile</span>
@@ -88,7 +88,7 @@
 									:to="item.href"
 									class="drawer-subrow drawer-subrow-split"
 									prefetch-on="interaction"
-									@click="closeDrawer"
+									@click="closeToGo(item.href)"
 								>
 									<span class="drawer-subrow-name">{{ item.primary }}</span>
 									<span class="drawer-subrow-count">{{ item.secondary }}</span>
@@ -126,7 +126,7 @@
 									:to="item.href"
 									class="drawer-subrow"
 									prefetch-on="interaction"
-									@click="closeDrawer"
+									@click="closeToGo(item.href)"
 								>
 									<span
 										lang="ja"
@@ -145,7 +145,7 @@
 									:to="groups.latest.viewAllHref"
 									class="drawer-subrow drawer-subrow-all"
 									prefetch-on="interaction"
-									@click="closeDrawer"
+									@click="closeToGo(groups.latest.viewAllHref)"
 								>
 									View All
 								</NuxtLink>
@@ -182,7 +182,7 @@
 									:to="item.href"
 									class="drawer-subrow drawer-subrow-split"
 									prefetch-on="interaction"
-									@click="closeDrawer"
+									@click="closeToGo(item.href)"
 								>
 									<span class="drawer-subrow-name">{{ item.primary }}</span>
 									<span class="drawer-subrow-count">{{ item.secondary }}</span>
@@ -193,7 +193,7 @@
 									:to="groups.tags.viewAllHref"
 									class="drawer-subrow drawer-subrow-all"
 									prefetch-on="interaction"
-									@click="closeDrawer"
+									@click="closeToGo(groups.tags.viewAllHref)"
 								>
 									View All
 								</NuxtLink>
@@ -216,6 +216,7 @@
 	import TagIcon from '~/components/ui/TagIcon.vue'
 	import UserIcon from '~/components/ui/UserIcon.vue'
 	import { focusByGesture } from '~/composables/gestureFocus'
+	import { useBackToClose } from '~/composables/useBackToClose'
 	import { releaseBackdrop, useBackdropInert } from '~/composables/useBackdropInert'
 	import { useCloseWhenHidden } from '~/composables/useCloseWhenHidden'
 	import { useFocusTrap } from '~/composables/useFocusTrap'
@@ -225,6 +226,7 @@
 	const props = defineProps<{
 		isOpen: boolean
 		groups: MenuGroups
+		location: string
 	}>()
 
 	const emit = defineEmits<{
@@ -238,6 +240,13 @@
 		releaseBackdrop()
 		focusByGesture(menuButtonRef.value)
 		emit('close')
+	}
+
+	const { leave } = useBackToClose(toRef(props, 'isOpen'), closeDrawer)
+
+	const closeToGo = (to: string) => {
+		leave(to, props.location)
+		closeDrawer()
 	}
 
 	const { trapRef } = useFocusTrap(toRef(props, 'isOpen'), closeDrawer)

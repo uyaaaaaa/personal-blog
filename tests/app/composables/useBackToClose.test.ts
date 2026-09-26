@@ -13,7 +13,7 @@ const mountBack = () => {
 	const { result, unmount } = withSetup(() => useBackToClose(isOpen, close))
 	mounted.push(unmount)
 
-	return { isOpen, close, release: result.release }
+	return { isOpen, close, leave: result.leave }
 }
 
 // happy-dom の back() は popstate を出さないので、戻った先の state を置いて自前で出す
@@ -78,17 +78,20 @@ describe('useBackToClose', () => {
 		expect(back).toHaveBeenCalledOnce()
 	})
 
-	it('release してから閉じると履歴を戻さない', async () => {
+	it.each([
+		['別のページ', 0, '/tags/', '/'],
+		['今のページ', 1, '/tags/', '/tags'],
+	])('%sへ移ると言ってから閉じると、積んだ履歴を %i 回戻す', async (_, backs, to, from) => {
 		const back = vi.spyOn(history, 'back').mockImplementation(() => {})
-		const { isOpen, release } = mountBack()
+		const { isOpen, leave } = mountBack()
 
 		isOpen.value = true
 		await nextTick()
-		release()
+		leave(to, from)
 		isOpen.value = false
 		await nextTick()
 
-		expect(back).not.toHaveBeenCalled()
+		expect(back).toHaveBeenCalledTimes(backs)
 	})
 
 	it('閉じている間の popstate では何もしない', () => {
