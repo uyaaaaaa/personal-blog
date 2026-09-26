@@ -11,10 +11,8 @@
 | `imo` | 自分ならこうする、という別案。採らなくてよい | `![imo-badge](https://img.shields.io/badge/review-imo-0075ca)` |
 | `nits` | 命名・表記の細かい点。直さなくても動く | `![nits-badge](https://img.shields.io/badge/review-nits-cfd3d7)` |
 
-**グレードはこの4本の saved reply でだけ表す。** GitHub の Settings → Saved replies に、グレード名をタイトル・右列を本文として登録しておき、コメントの先頭はそこから挿入する。手で書くのは見出しから下だけ。
+グレードはこの4本の saved reply でだけ表す。
 
-- **`must` は「壊れる」ときだけ。** 好みや改善提案には付けない
-- **`nits` に整形・import 順・型を入れない**（→ [drop.md](./drop.md)）
 - グレードが2つ付くなら指摘が2つ入っている。2コメントに割る
 - 本文は右列のまま。色・文言・URL を変えず、ここに無いグレードを足さない
 - **URL は `badge/review-<グレード>-<色>` の3区切り。** 2区切りだと色名がそのままラベルとして描かれる
