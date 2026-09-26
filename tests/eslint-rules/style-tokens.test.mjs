@@ -454,6 +454,21 @@ describe('no-font-literal', () => {
 	})
 })
 
+describe('no-px-font-size', () => {
+	it('文字サイズの px を落とす', () => {
+		tester.run('no-px-font-size', styleTokens.rules['no-px-font-size'], {
+			valid: [{ filename: 'a.vue', code: sfc('.a { font-size: 0.875rem; width: 24px; }') }],
+			invalid: [
+				{
+					filename: 'a.vue',
+					code: sfc('.a { font-size: 14px; }'),
+					errors: [{ messageId: 'px' }],
+				},
+			],
+		})
+	})
+})
+
 describe('no-web-font', () => {
 	it('@font-face と @import を落とす', () => {
 		tester.run('no-web-font', styleTokens.rules['no-web-font'], {
