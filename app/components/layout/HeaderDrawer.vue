@@ -498,4 +498,32 @@
 		font-weight: 600;
 		color: var(--color-accent);
 	}
+
+	/* 強制カラーでは面が塗られない */
+	@media (forced-colors: active) {
+		.drawer-row:hover,
+		.drawer-subrow:hover {
+			text-decoration: underline;
+		}
+
+		/* フォーカスの輪郭と重ねると、どちらかが消える */
+		.drawer-close:hover:not(:focus-visible) {
+			outline: 1px solid;
+			outline-offset: -1px;
+		}
+
+		.drawer-row.router-link-exact-active,
+		.drawer-subrow.router-link-exact-active {
+			forced-color-adjust: none;
+			background-color: SelectedItem;
+			color: SelectedItemText;
+			outline-color: CanvasText;
+		}
+
+		.router-link-exact-active .drawer-icon,
+		.router-link-exact-active .drawer-subrow-meta,
+		.router-link-exact-active .drawer-subrow-count {
+			color: inherit;
+		}
+	}
 </style>

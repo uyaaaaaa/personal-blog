@@ -191,4 +191,22 @@
 		flex: 1;
 		min-width: 0;
 	}
+
+	/* 強制カラーでは面が塗られない */
+	@media (forced-colors: active) {
+		.theme-option:hover {
+			text-decoration: underline;
+		}
+
+		.theme-option.is-selected {
+			forced-color-adjust: none;
+			background-color: SelectedItem;
+			color: SelectedItemText;
+			outline-color: CanvasText;
+		}
+
+		.theme-option.is-selected .theme-option-icon {
+			color: inherit;
+		}
+	}
 </style>
