@@ -183,13 +183,10 @@
 		if (pressedOnOverlay) emit('close')
 	}
 
-	const { release } = useBackToClose(toRef(props, 'isOpen'), () => emit('close'))
+	const { leave } = useBackToClose(toRef(props, 'isOpen'), () => emit('close'))
 
-	const withoutTrailingSlash = (location: string) => location.replace(/\/$/, '')
-
-	// vue-router は query と hash まで同じ遷移を重複として捨て、積んだ履歴を置き換えない
 	const selectResult = (path: string) => {
-		if (withoutTrailingSlash(path) !== withoutTrailingSlash(props.location)) release()
+		leave(path, props.location)
 		emit('close')
 	}
 
