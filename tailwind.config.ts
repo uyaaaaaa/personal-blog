@@ -32,14 +32,14 @@ const baseStyles = plugin(({ addBase }) => {
 	})
 })
 
-const motion = plugin(({ addUtilities, theme }) => {
+const motion = plugin(({ addUtilities }) => {
 	addUtilities(
 		Object.fromEntries(
 			Object.entries(motionProperties).map(([purpose, properties]) => [
 				`.transition-${purpose}`,
 				{
 					transitionProperty: properties.join(', '),
-					transitionTimingFunction: theme('transitionTimingFunction.DEFAULT'),
+					transitionTimingFunction: 'var(--ease-change)',
 					transitionDuration: durations[purpose as keyof typeof durations],
 				},
 			]),
@@ -96,6 +96,7 @@ export default <Config>{
 		transitionProperty: {},
 		transitionDuration: {},
 		transitionDelay: {},
+		transitionTimingFunction: {},
 		animation: {},
 		extend: {
 			typography: {

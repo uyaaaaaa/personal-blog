@@ -135,7 +135,7 @@
 		/* border-left をここに書くと、scoped の詳細度が md: のクラスに勝つ */
 		border-radius: 0.375rem;
 		color: var(--color-main);
-		transition: background-color 0.15s;
+		transition: background-color 0.15s var(--ease-change);
 	}
 
 	.search-result:hover {

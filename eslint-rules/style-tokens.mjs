@@ -3,6 +3,7 @@ import typography from '@tailwindcss/typography'
 import resolveConfig from 'tailwindcss/resolveConfig.js'
 import {
 	durations,
+	easings,
 	fontFamily,
 	fontSize,
 	motionProperties,
@@ -231,7 +232,39 @@ const DURATION_LABEL = Object.entries(durations)
 
 const COLOR_PROPERTY = new RegExp(`^(?:${motionProperties.color.join('|')})$|-color$`, 'i')
 
-const purposeOf = (property) => (COLOR_PROPERTY.test(property) ? 'color' : 'move')
+const MOVE_PROPERTY = new RegExp(`^(?:${motionProperties.move.join('|')})$`, 'i')
+
+const purposeOf = (property) =>
+	COLOR_PROPERTY.test(property) ? 'color' : MOVE_PROPERTY.test(property) ? 'move' : undefined
+
+const TARGET_LABEL = Object.entries(motionProperties)
+	.map(([purpose, properties]) => `${purpose} は ${properties.join(' / ')}`)
+	.join('、')
+
+const EASING_LITERAL =
+	/(?<![\w-])(?:(?:ease(?:-in-out|-in|-out)?|linear|step-start|step-end)(?![\w(-])|(?:cubic-bezier|steps|linear)\()/gi
+const EASING_TOKEN = new RegExp(
+	`var\\(\\s*--ease-(?:${Object.keys(easings).join('|')})\\s*\\)`,
+	'i',
+)
+const EASING_LABEL = Object.keys(easings)
+	.map((name) => `var(--ease-${name})`)
+	.join(' / ')
+// 離散的に切り替わるので緩急が効かない
+const DISCRETE = new Set(['visibility'])
+
+const EASING_VARIABLE = /var\(\s*--ease-[\w-]*\s*\)/gi
+
+const easingLiteralsIn = (segment) => [
+	...[...segment.matchAll(EASING_LITERAL)].map(([literal]) => literal),
+	...[...segment.matchAll(EASING_VARIABLE)]
+		.map(([variable]) => variable)
+		.filter((variable) => !EASING_TOKEN.test(variable)),
+]
+
+const hasLength = (segment) =>
+	/var\((?!\s*--ease-)/i.test(segment) ||
+	[...segment.matchAll(TIME)].some(([, number, unit]) => toMilliseconds(number, unit) !== 0)
 
 // 短縮形は対象・長さ・遅延・緩急を順不同で持つ。緩急の語と関数を外した最初の語が対象になる
 const TIMING_WORDS = new Set(
@@ -273,10 +306,62 @@ function segmentsOf(value) {
 // カスタムプロパティは var() で長さとして参照されるので、モーションの宣言と同じ判定で見る
 const MOTION_PROPERTY = /^(?:(?:transition|animation)(?:-[\w-]+)?|--[\w-]+)$/i
 const TRANSITION_TARGET = /^transition(?:-property)?$/i
+const EASING_DECLARATION = /^(?:(?:transition|animation)(?:-timing-function)?|--ease-[\w-]*)$/i
+
+// 緩急を書かない transition / animation は ease になる
+const omitsEasing = (segment) =>
+	hasLength(segment) && !EASING_TOKEN.test(segment) && easingLiteralsIn(segment).length === 0
+
+// longhand で長さだけを書いた規則も、緩急は ease になる
+function longhandFindings(rule) {
+	const decls = rule.nodes.filter((node) => node.type === 'decl')
+	const last = (name) => decls.findLast((decl) => decl.prop.toLowerCase() === name)
+	return [
+		['transition', 'property'],
+		['animation', 'name'],
+	].flatMap(([kind, target]) => {
+		const duration = last(`${kind}-duration`)
+		if (duration === undefined || !hasLength(duration.value) || last(`${kind}-timing-function`))
+			return []
+		const shorthand = decls
+			.slice(0, decls.indexOf(duration))
+			.findLast((decl) => decl.prop.toLowerCase() === kind)
+		if (shorthand !== undefined && !omitsEasing(shorthand.value)) return []
+		const targets = segmentsOf(last(`${kind}-${target}`)?.value ?? kind).map((segment) =>
+			segment.trim().toLowerCase(),
+		)
+		if (kind === 'transition' && targets.every((name) => DISCRETE.has(name))) return []
+		return [{ node: duration, messageId: 'noEasing', data: { property: targets.join(', ') } }]
+	})
+}
+
+// 短縮形の後ろに同じ規則の *-timing-function があれば、緩急はそちらが決める
+function easedLater(decl) {
+	const timing = `${decl.prop.toLowerCase()}-timing-function`
+	let next = decl.next()
+	while (next !== undefined) {
+		if (next.type === 'decl' && next.prop.toLowerCase() === timing) return true
+		next = next.next()
+	}
+	return false
+}
 
 // 宣言1つ分の指摘。置き場所は呼ぶ側が足す
 function motionFindings(property, value) {
 	const found = []
+	if (EASING_DECLARATION.test(property))
+		for (const literal of easingLiteralsIn(value))
+			found.push({ messageId: 'offTokenEasing', data: { literal } })
+	if (/^(?:transition|animation)-timing-function$/i.test(property))
+		for (const segment of segmentsOf(value)) {
+			const variable = segment.trim()
+			if (/^var\((?!\s*--ease-)/i.test(variable))
+				found.push({ messageId: 'offTokenEasing', data: { literal: variable } })
+		}
+	if (/^animation$/i.test(property))
+		for (const segment of segmentsOf(value))
+			if (omitsEasing(segment))
+				found.push({ messageId: 'noEasing', data: { property: 'animation' } })
 	if (TRANSITION_TARGET.test(property)) {
 		for (const segment of segmentsOf(value)) {
 			const target = propertyOf(segment)
@@ -284,7 +369,14 @@ function motionFindings(property, value) {
 				found.push({ messageId: 'mixed' })
 				continue
 			}
+			if (target === 'none') continue
 			const purpose = purposeOf(target)
+			if (purpose === undefined) {
+				found.push({ messageId: 'offPurposeTarget', data: { property: target } })
+				continue
+			}
+			if (/^transition$/i.test(property) && !DISCRETE.has(target) && omitsEasing(segment))
+				found.push({ messageId: 'noEasing', data: { property: target } })
 			for (const [literal, number, unit] of segment.matchAll(TIME)) {
 				// 0 は動かさない指定なので、どの用途でも通す
 				const milliseconds = toMilliseconds(number, unit)
@@ -325,10 +417,10 @@ const IMPORTANT_APPLY = new RegExp(`(?:^|[\\s:])${MOTION_CLASS}[\\s\\S]*!importa
 
 const MOTION_PURPOSES = Object.keys(durations).join('|')
 const MOTION_CLASSES = Object.keys(durations).map((purpose) => `transition-${purpose}`)
-// 長さを別に書くクラスの接頭辞
-const LENGTH_CLASSES = ['duration', 'delay', 'animate']
+// 長さと緩急を別に書くクラスの接頭辞
+const LENGTH_CLASSES = ['duration', 'delay', 'animate', 'ease']
 
-const MOTION_CLASS_MESSAGE = `モーションのクラスは用途の名前で書く（${MOTION_CLASSES.join(' / ')}）。長さは用途のクラスが持つので、長さを別に書くクラス（${LENGTH_CLASSES.map((name) => `${name}-`).join(' / ')}）は無い。`
+const MOTION_CLASS_MESSAGE = `モーションのクラスは用途の名前で書く（${MOTION_CLASSES.join(' / ')}）。長さと緩急は用途のクラスが持つので、別に書くクラス（${LENGTH_CLASSES.map((name) => `${name}-`).join(' / ')}）は無い。`
 
 const OFF_PURPOSE_MOTION = new RegExp(
 	`(?:^|[\\s:])(?:[a-z-]+:)*!?(?:transition(?!-(?:${MOTION_PURPOSES})(?![\\w-]))|(?:${LENGTH_CLASSES.join('|')})-)`,
@@ -550,13 +642,18 @@ const CHECKS = {
 			mixed: 'transition の対象に all を書かない。用途ごとに長さが変わるので、動かすプロパティを挙げる。',
 			anyPurpose: `{{literal}} は決めた長さではない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ（${DURATION_LABEL}）。`,
 			motionClass: MOTION_CLASS_MESSAGE,
+			offPurposeTarget: `{{property}} はどの用途の動きにも無い。動かせるのは theme/tokens.ts の motionProperties が挙げるプロパティ（${TARGET_LABEL}）。`,
+			offTokenEasing: `{{literal}} は決めた緩急ではない。緩急は theme/tokens.ts の easings が用途ごとに1つ持つ（${EASING_LABEL}）。`,
+			noEasing: `{{property}} の緩急を書く。書かないと ease になる。緩急は theme/tokens.ts の easings から選ぶ（${EASING_LABEL}）。`,
 		},
 		find(root) {
 			const found = []
 			root.walkDecls((decl) => {
 				for (const one of motionFindings(decl.prop, decl.value))
-					found.push({ node: decl, ...one })
+					if (one.messageId !== 'noEasing' || !easedLater(decl))
+						found.push({ node: decl, ...one })
 			})
+			root.walkRules((rule) => found.push(...longhandFindings(rule)))
 			root.walkAtRules('apply', (rule) => {
 				if (OFF_PURPOSE_MOTION.test(rule.params))
 					found.push({ node: rule, messageId: 'motionClass' })

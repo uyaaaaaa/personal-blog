@@ -52,12 +52,16 @@
 		visibility: hidden;
 		transform: translateY(-4px);
 		transition:
-			opacity 0.2s ease-out,
-			transform 0.2s ease-out,
+			opacity 0.2s var(--ease-exit),
+			transform 0.2s var(--ease-exit),
 			visibility 0.2s;
 	}
 
 	.is-open .menu-panel {
+		transition:
+			opacity 0.2s var(--ease-enter),
+			transform 0.2s var(--ease-enter),
+			visibility 0.2s;
 		opacity: 1;
 		visibility: visible;
 		transform: translateY(0);

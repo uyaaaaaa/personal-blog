@@ -280,15 +280,15 @@
 		overscroll-behavior: contain;
 		/* 開く側も遅らせると visibility: hidden の1フレームが空き、そこで focus() が効かない */
 		transition:
-			opacity 0.2s ease-in-out,
-			visibility 0s linear 0.2s;
+			opacity 0.2s var(--ease-exit),
+			visibility 0s 0.2s;
 	}
 
 	.search-overlay.is-open {
 		opacity: 1;
 		visibility: visible;
 		transition:
-			opacity 0.2s ease-in-out,
+			opacity 0.2s var(--ease-enter),
 			visibility 0s;
 	}
 
@@ -299,11 +299,12 @@
 		max-height: 100%;
 		overflow: hidden;
 		transform: translateY(-4px);
-		transition: transform 0.2s ease-in-out;
+		transition: transform 0.2s var(--ease-exit);
 	}
 
 	.search-overlay.is-open .search-dialog {
 		transform: translateY(0);
+		transition: transform 0.2s var(--ease-enter);
 	}
 
 	.search-field {

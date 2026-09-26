@@ -92,7 +92,7 @@
 	a {
 		text-decoration: none;
 		color: inherit;
-		transition: color 0.15s ease;
+		transition: color 0.15s var(--ease-change);
 	}
 
 	a:hover {
