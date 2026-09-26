@@ -3,6 +3,7 @@ import typography from '@tailwindcss/typography'
 import resolveConfig from 'tailwindcss/resolveConfig.js'
 import {
 	durations,
+	easings,
 	fontFamily,
 	fontSize,
 	motionProperties,
@@ -231,7 +232,41 @@ const DURATION_LABEL = Object.entries(durations)
 
 const COLOR_PROPERTY = new RegExp(`^(?:${motionProperties.color.join('|')})$|-color$`, 'i')
 
-const purposeOf = (property) => (COLOR_PROPERTY.test(property) ? 'color' : 'move')
+const MOVE_PROPERTY = new RegExp(`^(?:${motionProperties.move.join('|')})$`, 'i')
+
+const purposeOf = (property) =>
+	COLOR_PROPERTY.test(property) ? 'color' : MOVE_PROPERTY.test(property) ? 'move' : undefined
+
+const TARGET_LABEL = Object.entries(motionProperties)
+	.map(([purpose, properties]) => `${purpose} は ${properties.join(' / ')}`)
+	.join('、')
+
+// 緩急は --ease-* を var() で参照して書く。キーワードと関数はトークンの外にある
+const EASING_LITERAL =
+	/(?<![\w-])(?:(?:ease(?:-in-out|-in|-out)?|linear|step-start|step-end)(?![\w(-])|(?:cubic-bezier|steps|linear)\()/gi
+const EASING_TOKEN = new RegExp(
+	`var\\(\\s*--ease-(?:${Object.keys(easings).join('|')})\\s*\\)`,
+	'i',
+)
+const EASING_LABEL = Object.keys(easings)
+	.map((name) => `var(--ease-${name})`)
+	.join(' / ')
+// 離散的に切り替わるので緩急が効かない
+const DISCRETE = new Set(['visibility'])
+
+const EASING_VARIABLE = /var\(\s*--ease-[\w-]*\s*\)/gi
+
+// トークンに無い --ease-* も、名前の付いていない緩急と同じ
+const easingLiteralsIn = (segment) => [
+	...[...segment.matchAll(EASING_LITERAL)].map(([literal]) => literal),
+	...[...segment.matchAll(EASING_VARIABLE)]
+		.map(([variable]) => variable)
+		.filter((variable) => !EASING_TOKEN.test(variable)),
+]
+
+const hasLength = (segment) =>
+	/var\((?!\s*--ease-)/i.test(segment) ||
+	[...segment.matchAll(TIME)].some(([, number, unit]) => toMilliseconds(number, unit) !== 0)
 
 // 短縮形は対象・長さ・遅延・緩急を順不同で持つ。緩急の語と関数を外した最初の語が対象になる
 const TIMING_WORDS = new Set(
@@ -273,10 +308,14 @@ function segmentsOf(value) {
 // カスタムプロパティは var() で長さとして参照されるので、モーションの宣言と同じ判定で見る
 const MOTION_PROPERTY = /^(?:(?:transition|animation)(?:-[\w-]+)?|--[\w-]+)$/i
 const TRANSITION_TARGET = /^transition(?:-property)?$/i
+const EASING_DECLARATION = /^(?:transition|animation)(?:-timing-function)?$/i
 
 // 宣言1つ分の指摘。置き場所は呼ぶ側が足す
 function motionFindings(property, value) {
 	const found = []
+	if (EASING_DECLARATION.test(property))
+		for (const literal of easingLiteralsIn(value))
+			found.push({ messageId: 'offTokenEasing', data: { literal } })
 	if (TRANSITION_TARGET.test(property)) {
 		for (const segment of segmentsOf(value)) {
 			const target = propertyOf(segment)
@@ -284,7 +323,21 @@ function motionFindings(property, value) {
 				found.push({ messageId: 'mixed' })
 				continue
 			}
+			if (target === 'none') continue
 			const purpose = purposeOf(target)
+			if (purpose === undefined) {
+				found.push({ messageId: 'offPurposeTarget', data: { property: target } })
+				continue
+			}
+			// 書かない緩急は ease になり、トークンの外に出る
+			if (
+				/^transition$/i.test(property) &&
+				!DISCRETE.has(target) &&
+				hasLength(segment) &&
+				!EASING_TOKEN.test(segment) &&
+				easingLiteralsIn(segment).length === 0
+			)
+				found.push({ messageId: 'noEasing', data: { property: target } })
 			for (const [literal, number, unit] of segment.matchAll(TIME)) {
 				// 0 は動かさない指定なので、どの用途でも通す
 				const milliseconds = toMilliseconds(number, unit)
@@ -550,6 +603,9 @@ const CHECKS = {
 			mixed: 'transition の対象に all を書かない。用途ごとに長さが変わるので、動かすプロパティを挙げる。',
 			anyPurpose: `{{literal}} は決めた長さではない。モーションの長さは theme/tokens.ts の durations が用途ごとに1つ持つ（${DURATION_LABEL}）。`,
 			motionClass: MOTION_CLASS_MESSAGE,
+			offPurposeTarget: `{{property}} はどの用途の動きにも無い。動かせるのは theme/tokens.ts の motionProperties が挙げるプロパティ（${TARGET_LABEL}）。`,
+			offTokenEasing: `{{literal}} は決めた緩急ではない。緩急は theme/tokens.ts の easings が用途ごとに1つ持つ（${EASING_LABEL}）。`,
+			noEasing: `{{property}} の緩急を書く。書かないと ease になる。緩急は theme/tokens.ts の easings から選ぶ（${EASING_LABEL}）。`,
 		},
 		find(root) {
 			const found = []

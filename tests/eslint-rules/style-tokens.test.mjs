@@ -158,40 +158,52 @@ describe('no-motion-important', () => {
 })
 
 describe('no-off-purpose-motion', () => {
-	it('用途に決めた長さだけを通す', () => {
+	it('用途に決めた長さと緩急だけを通す', () => {
 		tester.run('no-off-purpose-motion', styleTokens.rules['no-off-purpose-motion'], {
 			valid: [
-				{ filename: 'a.vue', code: sfc('.a { transition: color 0.15s ease; }') },
-				// 同じ長さの別の綴り
-				{ filename: 'a.vue', code: sfc('.a { transition: background-color 150ms; }') },
-				{ filename: 'a.vue', code: sfc('.a { transition: border-top-color 0.15s; }') },
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition: color 0.15s, transform 0.2s; }'),
+					code: sfc('.a { transition: color 0.15s var(--ease-change); }'),
 				},
-				// 動かさない 0 は、どの用途でも通す
+				// 同じ長さの別の綴り
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: background-color 150ms var(--ease-change); }'),
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: border-top-color 0.15s var(--ease-change); }'),
+				},
 				{
 					filename: 'a.vue',
 					code: sfc(
-						'.a { transition: opacity 0.2s ease-out, visibility 0s linear 0.2s; }',
+						'.a { transition: color 0.15s var(--ease-change), transform 0.2s var(--ease-exit); }',
 					),
 				},
-				// 緩急の関数が持つカンマと数は、区切りでも長さでもない
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); }'),
+					code: sfc('.a { transition: grid-template-rows 0.2s var(--ease-enter); }'),
 				},
+				// 動かさない 0 と離散的な visibility は緩急を持たない
+				{
+					filename: 'a.vue',
+					code: sfc(
+						'.a { transition: opacity 0.2s var(--ease-exit), visibility 0s 0.2s; }',
+					),
+				},
+				{ filename: 'a.vue', code: sfc('.a { transition: visibility 0.2s; }') },
 				{ filename: 'a.vue', code: sfc('.a { transition: none; }') },
-				// 関数の中の語は対象の名前ではない
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition: transform 0.2s steps(4, end); }'),
+					code: sfc(
+						'.a { --panel: 0.2s; transition: opacity var(--panel) var(--ease-enter); }',
+					),
 				},
+				{ filename: 'a.vue', code: sfc('.a { animation: spin 0.2s var(--ease-change); }') },
 				{
 					filename: 'a.vue',
-					code: sfc('.a { --panel: 0.2s; transition: opacity var(--panel); }'),
+					code: sfc('.a { transition-timing-function: var(--ease-enter); }'),
 				},
-				{ filename: 'a.vue', code: sfc('.a { animation: spin 0.2s linear; }') },
 				{
 					filename: 'a.vue',
 					code: sfc('.a { transition-property: opacity; transition-duration: 0.2s; }'),
@@ -201,53 +213,104 @@ describe('no-off-purpose-motion', () => {
 					code: sfc('.a { @apply transition-color md:transition-move; }'),
 				},
 				{ filename: 'a.vue', code: sfc('.a { border-radius: 0.2s; }') },
+				{
+					filename: 'a.vue',
+					code: sfc('.a { background-image: linear-gradient(red, blue); }'),
+				},
 			],
 			invalid: [
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition: color 0.2s; }'),
+					code: sfc('.a { transition: color 0.2s var(--ease-change); }'),
 					errors: [{ messageId: 'offPurpose' }],
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition: opacity 0.16s ease-out; }'),
+					code: sfc('.a { transition: opacity 0.16s var(--ease-enter); }'),
 					errors: [{ messageId: 'offPurpose' }],
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition: border-top-color 0.2s; }'),
+					code: sfc('.a { transition: border-top-color 0.2s var(--ease-change); }'),
 					errors: [{ messageId: 'offPurpose' }],
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition: grid-template-rows 0.25s ease-in-out; }'),
-					errors: [{ messageId: 'offPurpose' }],
+					code: sfc('.a { transition: width 0.2s var(--ease-enter); }'),
+					errors: [{ messageId: 'offPurposeTarget' }],
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition: all 0.3s ease-in-out; }'),
+					code: sfc('.a { transition: all 0.3s var(--ease-change); }'),
 					errors: [{ messageId: 'mixed' }],
 				},
 				// 対象を書かない短縮形は all と同じ
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition: 0.2s ease; }'),
+					code: sfc('.a { transition: 0.2s var(--ease-change); }'),
 					errors: [{ messageId: 'mixed' }],
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { transition: 0.2s steps(4, end); }'),
-					errors: [{ messageId: 'mixed' }],
+					code: sfc('.a { transition: color 0.15s ease; }'),
+					errors: [{ messageId: 'offTokenEasing' }],
 				},
 				{
 					filename: 'a.vue',
-					code: sfc('.a { animation: spin 0.42s; }'),
+					code: sfc(
+						'.a { transition: opacity 0.2s ease-out, visibility 0s linear 0.2s; }',
+					),
+					errors: [{ messageId: 'offTokenEasing' }, { messageId: 'offTokenEasing' }],
+				},
+				// 緩急の関数が持つカンマと数は、区切りでも長さでもない
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); }'),
+					errors: [{ messageId: 'offTokenEasing' }],
+				},
+				// 関数の中の語は対象の名前ではない
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: transform 0.2s steps(4, end); }'),
+					errors: [{ messageId: 'offTokenEasing' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: opacity 0.2s var(--ease-bounce); }'),
+					errors: [{ messageId: 'offTokenEasing' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition-timing-function: ease-in-out; }'),
+					errors: [{ messageId: 'offTokenEasing' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation: spin 0.2s linear; }'),
+					errors: [{ messageId: 'offTokenEasing' }],
+				},
+				// 書かない緩急は ease になる
+				{
+					filename: 'a.vue',
+					code: sfc('.a { transition: color 0.15s; }'),
+					errors: [{ messageId: 'noEasing' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { --panel: 0.2s; transition: opacity var(--panel); }'),
+					errors: [{ messageId: 'noEasing' }],
+				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { animation: spin 0.42s var(--ease-change); }'),
 					errors: [{ messageId: 'anyPurpose' }],
 				},
 				// var() で長さを渡す経路も塞ぐ
 				{
 					filename: 'a.vue',
-					code: sfc('.a { --panel: 0.42s; transition: opacity var(--panel); }'),
+					code: sfc(
+						'.a { --panel: 0.42s; transition: opacity var(--panel) var(--ease-enter); }',
+					),
 					errors: [{ messageId: 'anyPurpose' }],
 				},
 				{

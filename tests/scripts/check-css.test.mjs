@@ -74,7 +74,10 @@ describe('check-css', () => {
 	})
 
 	it('用途に決めた長さのモーションは通す', async () => {
-		write('a.css', '.a {\n\ttransition: color 0.15s;\n\tanimation: spin 0.2s;\n}\n')
+		write(
+			'a.css',
+			'.a {\n\ttransition: color 0.15s var(--ease-change);\n\tanimation: spin 0.2s var(--ease-change);\n}\n',
+		)
 		expect((await check()).status).toBe(0)
 	})
 
