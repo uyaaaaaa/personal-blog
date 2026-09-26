@@ -6,7 +6,7 @@ interface TocLink {
 	children?: TocLink[]
 }
 
-// 着地はスクロール位置の丸めで scroll-margin-top を 1px 未満またぐ
+// 着地はスクロール位置の丸めで scroll-padding-top を 1px 未満またぐ
 const SUBPIXEL_SLACK = 1
 
 export const useTocActive = (links: Ref<TocLink[]>, enabled: Ref<boolean>) => {
@@ -23,18 +23,18 @@ export const useTocActive = (links: Ref<TocLink[]>, enabled: Ref<boolean>) => {
 		return result
 	})
 
-	const landingOffset = (el: HTMLElement) =>
-		(parseFloat(getComputedStyle(el).scrollMarginTop) || 0) + SUBPIXEL_SLACK
+	const landingOffset = () =>
+		(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0) +
+		SUBPIXEL_SLACK
 
 	const update = () => {
 		let current = ''
-		let offset: number | undefined
+		const offset = landingOffset()
 
 		for (const id of ids.value) {
 			const el = document.getElementById(id)
 			if (!el) continue
 
-			offset ??= landingOffset(el)
 			if (el.getBoundingClientRect().top <= offset) {
 				current = id
 			} else {
