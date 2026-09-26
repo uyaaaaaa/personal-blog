@@ -95,7 +95,7 @@ export const motionProperties: Record<keyof typeof durations, string[]> = {
 	move: ['transform', 'opacity', 'visibility', 'grid-template-rows'],
 }
 
-// 現れるものは減速し、消えるものは加速する。CSS は行き先の状態の transition を使うので、開いた側に enter、閉じた側に exit を書く
+// CSS は行き先の状態の transition を使うので、開いた側に enter、閉じた側に exit を書く
 export const easings = {
 	enter: 'cubic-bezier(0, 0, 0.2, 1)',
 	exit: 'cubic-bezier(0.4, 0, 1, 1)',
