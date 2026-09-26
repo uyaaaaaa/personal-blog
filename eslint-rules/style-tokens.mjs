@@ -105,7 +105,7 @@ const FONT_KEYWORDS = new Set(
 
 const FONT_PROPERTY = /^font(?:-family)?$/i
 const FONT_SIZE_PROPERTY = /^font(?:-size)?$/i
-const PX_TEXT_CLASS = /(?<![\w-])text-\[-?\d*\.?\d+px\]/gi
+const PX_TEXT_CLASS = /(?<![\w-])text-\[(?:length:)?-?\d*\.?\d+px\]/gi
 // 引用符で囲った名前と、区切りから始まる語。数に続く単位（1.5rem の rem）は語ではない
 const FONT_WORD = /'[^']*'|"[^"]*"|(?<![\w-])-?[a-zA-Z][\w-]*/g
 

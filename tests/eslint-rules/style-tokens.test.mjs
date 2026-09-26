@@ -474,6 +474,11 @@ describe('no-px-font-size', () => {
 					code: sfc('.a { @apply md:text-[26px]; }'),
 					errors: [{ messageId: 'px' }],
 				},
+				{
+					filename: 'a.vue',
+					code: sfc('.a { @apply text-[length:14px]; }'),
+					errors: [{ messageId: 'px' }],
+				},
 			],
 		})
 	})
